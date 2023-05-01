@@ -1,11 +1,12 @@
 """Utilities."""
+import sys
 import typing as ty
 
 from loguru import logger
 
-IS_WIN = False
-IS_MAC = False
-IS_LINUX = False
+IS_WIN = sys.platform == "win32"
+IS_LINUX = sys.platform == "linux"
+IS_MAC = sys.platform == "darwin"
 
 
 def get_module_path(module: str, filename: str) -> str:
@@ -32,3 +33,14 @@ def connect(connectable, func: ty.Callable, state: bool = True, source: str = ""
         if source:
             text += f"; source={source}"
         logger.debug(text)
+
+
+def check_url(url: str) -> bool:
+    """Parse typical URL.
+
+    See: https://stackoverflow.com/a/50352868
+    """
+    from urllib.parse import urljoin, urlparse
+
+    final_url = urlparse(urljoin(url, "/"))
+    return all([final_url.scheme, final_url.netloc, final_url.path]) and len(final_url.netloc.split(".")) > 1

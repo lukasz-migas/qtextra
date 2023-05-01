@@ -583,3 +583,4 @@ def get_previous_configs(base_dir: ty.Optional[str] = None, filename: str = "the
 
 THEMES: Themes = Themes()
 THEMES.register_themes()
+CANVAS: CanvasThemes = CanvasThemes()
