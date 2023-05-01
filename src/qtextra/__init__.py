@@ -1,4 +1,4 @@
-"""Extra widgets for Qt"""
+"""Extra widgets for Qt."""
 from importlib.metadata import PackageNotFoundError, version
 
 try:
