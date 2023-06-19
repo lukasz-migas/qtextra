@@ -10,7 +10,7 @@ from loguru import logger
 from natsort import natsorted
 from qtpy.QtCore import QObject, Signal
 
-from qtextra.appdirs import USER_CONFIG_DIR
+from qtextra.utils.appdirs import USER_CONFIG_DIR
 
 
 class ConfigBase(QObject):

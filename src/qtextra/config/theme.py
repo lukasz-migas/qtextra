@@ -526,7 +526,7 @@ class Themes(ConfigBase):
     @staticmethod
     def get_theme_path(theme_name: str) -> Path:
         """Get path of directory for a given theme name."""
-        from qtextra.appdirs import USER_THEME_DIR
+        from qtextra.utils.appdirs import USER_THEME_DIR
 
         return USER_THEME_DIR / theme_name
 

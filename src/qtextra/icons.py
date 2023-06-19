@@ -94,7 +94,7 @@ def generate_colorized_svgs(
         text (as read from a file, perhaps pre-colored using one of the below
         functions).
     """
-    from qtextra.theme import THEMES
+    from qtextra.config.theme import THEMES
 
     # mapping of svg_stem to theme_key
     theme_override = theme_override or {}
@@ -138,7 +138,7 @@ def write_colorized_svgs(
 
 def build_theme_svgs(theme_name: str) -> str:
     """Build SVGs for a theme."""
-    from qtextra.theme import THEMES
+    from qtextra.config.theme import THEMES
 
     out = THEMES.get_theme_path(theme_name)
     write_colorized_svgs(

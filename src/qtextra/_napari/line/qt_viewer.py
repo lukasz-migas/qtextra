@@ -16,7 +16,7 @@ from qtextra._napari.common.qt_viewer import QtViewerBase
 from qtextra._napari.line._vispy.canvas import VispyCanvas
 from qtextra._napari.line.component_controls.qt_view_toolbar import QtViewLeftToolbar, QtViewRightToolbar
 from qtextra._napari.line.layer_controls.qt_layer_buttons import QtLayerButtons, QtViewerButtons
-from qtextra.theme import CANVAS
+from qtextra.config.theme import CANVAS
 
 if TYPE_CHECKING:
     from napari_plot.viewer import ViewerModel

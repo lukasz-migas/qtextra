@@ -5,7 +5,7 @@ import numpy as np
 from qtextra._napari.common.viewer import ViewerBase
 from qtextra._napari.line._vispy.overrides.axis import tick_formatter
 from qtextra._napari.line.qt_viewer import QtViewer
-from qtextra.theme import CANVAS
+from qtextra.config.theme import CANVAS
 from koyo.secret import get_short_hash
 from napari_plot.layers import Centroids, InfLine, Line, Region, Scatter, Shapes
 from napari_plot.viewer import ViewerModel as Viewer
@@ -279,7 +279,7 @@ if __name__ == "__main__":  # pragma: no cover
 
         from qtextra._dev_tools import qframe
         from qtextra.helpers import make_btn
-        from qtextra.theme import THEMES
+        from qtextra.config.theme import THEMES
 
         def _on_btn():
             n_bins = np.random.randint(5, 100, 1)[0]

@@ -19,7 +19,7 @@ from vispy.scene.visuals import Image
 from vispy.util.dpi import get_dpi
 from vispy.util.event import Event
 
-from qtextra.color import hex_to_rgb
+from qtextra.utils.color import hex_to_rgb
 
 
 def make_vispy_colormap(cmap: str) -> LinearSegmentedColormap:

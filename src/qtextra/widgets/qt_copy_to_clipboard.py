@@ -1,7 +1,7 @@
 """Button that copies contents of QTextEdit to the clipboard."""
 from qtpy.QtGui import QGuiApplication, QImage
 
-from qtextra.theme import THEMES
+from qtextra.config.theme import THEMES
 from qtextra.widgets.qt_image_button import QtImagePushButton
 
 

@@ -56,7 +56,7 @@ class VispyCanvas(SceneCanvas):
         self.bgcolor = value or self._last_theme_color
 
     def _on_theme_change(self, event):
-        from qtextra.theme import THEMES
+        from qtextra.config.theme import THEMES
 
         # store last requested theme color, in case we need to reuse it
         # when clearing the background_color_override, without needing to

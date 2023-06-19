@@ -329,7 +329,7 @@ if __name__ == "__main__":  # pragma: no cover
         from qtextra._dev_tools import qframe
         from skimage import data
 
-        from qtextra.theme import THEMES
+        from qtextra.config.theme import THEMES
 
         def _on_btn():
             """Button action."""
