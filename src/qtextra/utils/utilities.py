@@ -1,0 +1,135 @@
+import sys
+from functools import lru_cache
+from pathlib import Path
+
+from koyo.utilities import running_as_pyinstaller_app
+
+
+def get_docs_path() -> Path:
+    """Get path to docs directory."""
+    base_path = Path(sys.executable).parent
+
+    if running_as_pyinstaller_app():
+        docs_path = base_path
+    else:
+        docs_path = base_path.parent
+    return docs_path
+
+
+def check_url(url: str) -> bool:
+    """Parse typical URL.
+
+    See: https://stackoverflow.com/a/50352868
+    """
+    from urllib.parse import urljoin, urlparse
+
+    final_url = urlparse(urljoin(url, "/"))
+    return all([final_url.scheme, final_url.netloc, final_url.path]) and len(final_url.netloc.split(".")) > 1
+
+
+def memory_usage():
+    """
+    Return physical memory usage (float)
+    Requires the cross-platform psutil (>=v0.3) library
+    (https://github.com/giampaolo/psutil).
+    """
+    import psutil
+
+    # This is needed to avoid a deprecation warning error with
+    # newer psutil versions
+    try:
+        percent = psutil.virtual_memory().percent
+    except Exception:
+        percent = psutil.phymem_usage().percent
+    return percent
+
+
+def total_ram():
+    """Retrieve total amount of RAM for the system."""
+    import psutil
+
+    total = psutil.virtual_memory().total
+    return total
+
+
+@lru_cache(maxsize=2)
+def get_system_info(as_html=False):
+    """Gathers relevant module versions for troubleshooting purposes.
+
+    Parameters
+    ----------
+    as_html : bool
+        if True, info will be returned as HTML, suitable for a QTextEdit widget
+    """
+    import platform
+    import sys
+
+    from qtextra import __version__ as qtextra_version
+
+    sys_version = sys.version.replace("\n", " ")
+
+    text = f"<b>Python</b>: {sys_version}<br>"
+    text += f"<b>Platform</b>: {platform.platform()}<br><br>"
+    text += f"<b>qtextra</b>: {qtextra_version}<br>"
+
+    try:
+        from qtpy import API_NAME, PYQT_VERSION, PYSIDE_VERSION, QtCore
+
+        if API_NAME == "PySide2":
+            API_VERSION = PYSIDE_VERSION
+        elif API_NAME == "PyQt5":
+            API_VERSION = PYQT_VERSION
+        else:
+            API_VERSION = ""
+
+        text += f"<b>Qt</b>: {QtCore.__version__}<br>"
+        text += f"<b>{API_NAME}</b>: {API_VERSION}<br>"
+
+    except Exception as e:
+        text += f"<b>Qt</b>: Import failed ({e})<br>"
+
+    modules = (
+        ("numpy", "NumPy"),
+        ("scipy", "SciPy"),
+        ("vispy", "VisPy"),
+        ("napari", "Napari"),
+        ("sklearn", "Scikit-Learn"),
+        ("xgboost", "XGBoost"),
+    )
+    loaded = {}
+    for module, name in modules:
+        try:
+            loaded[module] = __import__(module)
+            text += f"<b>{name}</b>: {loaded[module].__version__}<br>"
+        except Exception as e:
+            text += f"<b>{name}</b>: Import failed ({e})<br>"
+
+    text += "<br><b>OpenGL:</b><br>"
+
+    if loaded.get("vispy", False):
+        sys_info_text = (
+            "<br>".join([loaded["vispy"].sys_info().split("\n")[index] for index in [-4, -3]])
+            .replace("'", "")
+            .replace("<br>", "<br>  - ")
+        )
+        text += f"  - {sys_info_text}<br>"
+    else:
+        text += "  - failed to load vispy"
+
+    text += "<br><b>Screens:</b><br>"
+
+    try:
+        from qtpy.QtGui import QGuiApplication
+
+        screen_list = QGuiApplication.screens()
+        for i, screen in enumerate(screen_list, start=1):
+            text += (
+                f"  - screen {i}: resolution {screen.geometry().width()}x{screen.geometry().height()},"
+                f" scale {screen.devicePixelRatio()}<br>"
+            )
+    except Exception as e:
+        text += f"  - failed to load screen information {e}"
+
+    if not as_html:
+        text = text.replace("<br>", "\n").replace("<b>", "").replace("</b>", "")
+    return text
