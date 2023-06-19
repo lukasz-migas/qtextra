@@ -46,10 +46,6 @@ class QtViewToolbar(QWidget):
             # masks
             mask_extract=Event,
         )
-        # connect events
-        self.events.labels_cancel.connect(self._on_close_extract_layer)
-        self.events.shapes_cancel.connect(self._on_close_extract_layer)
-        self.events.selection_off.connect(self._on_close_extract_layer)
 
         # create instance
         toolbar_left, toolbar_right = QtMiniToolbar(qt_viewer, Qt.Vertical), QtMiniToolbar(qt_viewer, Qt.Vertical)
@@ -69,10 +65,6 @@ class QtViewToolbar(QWidget):
         self.tools_save_btn = toolbar_right.insert_qta_tool(
             "save", tooltip="Save figure", func=self.qt_viewer.on_save_figure
         )
-        # self.tools_settings_btn = toolbar_right.insert_qta_tool(
-        #     "settings", tooltip="Settings configuration", checkable=False
-        # )
-        # self.tools_settings_btn.evt_click.connect(show_image_config)
         self.tools_colorbar_btn = toolbar_right.insert_qta_tool(
             "colorbar", tooltip="Show/hide colorbar", checkable=True
         )
@@ -101,13 +93,6 @@ class QtViewToolbar(QWidget):
             tooltip="Show/hide grid",
             checkable=True,
         )
-        self.registration_btn = toolbar_right.insert_qta_tool(
-            "overlap",
-            tooltip="Load registered image",
-            checkable=False,
-            func=self.on_open_registered_image,
-        )
-        #         self.registration_btn.connect_to_right_click(self.on_open_registered_config)
         self.layers_btn = toolbar_right.insert_qta_tool(
             "layers",
             tooltip="Display layer controls",
@@ -118,14 +103,6 @@ class QtViewToolbar(QWidget):
         # left-side toolbar
         # this branch provides additional tools in the toolbar to allow extraction
         if self.allow_extraction:
-            if self.allow_masks:
-                self.masks_btn = toolbar_left.insert_qta_tool(
-                    "mask",
-                    tooltip="Use pre-defined image mask.",
-                    checkable=False,
-                    func=self.on_open_mask_image,
-                )
-                self.masks_btn.connect_to_right_click(self.on_open_masks_widget)
             buttons = []
             if self.allow_labels:
                 self.tools_new_labels_btn = toolbar_left.insert_qta_tool(
@@ -135,13 +112,6 @@ class QtViewToolbar(QWidget):
                     func=self.on_open_extract_labels_layer,
                 )
                 buttons.append(self.tools_new_labels_btn)
-            # self.tools_crosshair_btn = toolbar_left.insert_qta_tool(
-            #     "target",
-            #     tooltip="Cross-hair tool - press anywhere in the image to get underlying data",
-            #     set_checkable=True,
-            #     func=self.on_open_crosshair_layer,
-            # )
-            # buttons.append(self.tools_crosshair_btn)
             if self.allow_shapes:
                 self.tools_poly_btn = toolbar_left.insert_qta_tool(
                     "polygon",
@@ -169,7 +139,7 @@ class QtViewToolbar(QWidget):
                 "none",
                 tooltip="Disable data extraction (default)",
                 checkable=True,
-                func=self._on_close_extract_layer,
+                # func=self._on_close_extract_layer,
             )
             self.tools_off_btn.setChecked(True)
             buttons.append(self.tools_off_btn)

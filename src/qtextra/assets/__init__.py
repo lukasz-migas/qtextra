@@ -17,6 +17,12 @@ QTA_MAPPING: ty.Dict[str, str] = {
 }
 
 
+def update_icon_mapping(mapping: ty.Dict[str, str]):
+    """Update icon mapping."""
+    global QTA_MAPPING
+    QTA_MAPPING.update(mapping)
+
+
 def get_icon(name: str):
     """Return icon."""
     if "." not in name:

@@ -7,6 +7,7 @@ from qtpy.QtGui import QBrush, QColor, QPainter
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip
 
 from qtextra.assets import get_icon
+from qtextra.config import THEMES
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
 

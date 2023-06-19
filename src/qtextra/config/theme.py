@@ -6,7 +6,7 @@ import numpy as np
 from loguru import logger
 from napari.utils.theme import _themes
 from psygnal import EventedModel
-from pydantic import ValidationError, validator
+from pydantic import ValidationError, validator, PrivateAttr
 from pydantic.color import Color
 from qtpy.QtCore import QDateTime, QTime, Signal
 from qtpy.QtWidgets import QWidget
@@ -89,7 +89,7 @@ class CanvasTheme(EventedModel):
     axis: Color
     gridlines: Color
     label: Color
-    _canvas_backup: Color = None
+    _canvas_backup: ty.Optional[Color] = PrivateAttr(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

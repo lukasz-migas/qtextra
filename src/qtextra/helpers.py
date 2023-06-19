@@ -816,12 +816,16 @@ def make_radio_btn_group(parent, radio_buttons) -> Qw.QButtonGroup:
 
 def make_h_line(parent: Qw.QWidget = None) -> "QtHorzLine":
     """Make horizontal line."""
+    from qtextra.widgets.qt_line import QtHorzLine
+
     widget = QtHorzLine(parent)
     return widget
 
 
 def make_v_line(parent: Qw.QWidget = None) -> "QtVertLine":
     """Make horizontal line."""
+    from qtextra.widgets.qt_line import QtVertLine
+
     widget = QtVertLine(parent)
     return widget
 

@@ -6,7 +6,10 @@ from itertools import product
 from pathlib import Path
 
 ICON_PATH = (Path(__file__).parent / "svg").resolve()
-ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == ".svg"}
+if ICON_PATH.exists():
+    ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == ".svg"}
+else:
+    ICONS = {}
 
 
 def get_icon_path(name: str) -> str:

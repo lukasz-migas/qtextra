@@ -33,8 +33,6 @@ class NapariImageView(ViewerBase):
         self.main_parent = kwargs.pop("main_parent", None)
         self.PLOT_ID = get_short_hash()
 
-        self._callbacks = kwargs.pop("callbacks", {})
-
         # create instance of viewer
         self.viewer = Viewer(**kwargs)
         # create instance of qt widget
