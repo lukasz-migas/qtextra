@@ -5,7 +5,7 @@ from functools import lru_cache
 from glob import glob
 from pathlib import Path
 
-from qtextra.utilities import get_module_path
+from qtextra.utils.utilities import get_module_path
 
 HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent
 

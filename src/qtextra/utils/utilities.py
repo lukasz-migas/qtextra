@@ -3,6 +3,8 @@ from functools import lru_cache
 from pathlib import Path
 
 from koyo.utilities import running_as_pyinstaller_app
+import typing as ty
+from loguru import logger
 
 
 def get_docs_path() -> Path:
@@ -150,3 +152,17 @@ def get_module_path(module: str, filename: str) -> str:
     with importlib.resources.path(module, filename) as f:
         path = str(f)
     return path
+
+
+def connect(connectable, func: ty.Callable, state: bool = True, source: str = ""):
+    """Function that connects/disconnects."""
+    try:
+        connectable_func = connectable.connect if state else connectable.disconnect
+        connectable_func(func)
+    except Exception as exc:
+        text = (
+            f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func}; connectable={connectable}"
+        )
+        if source:
+            text += f"; source={source}"
+        logger.debug(text)

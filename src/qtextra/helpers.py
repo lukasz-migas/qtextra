@@ -16,7 +16,7 @@ from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, QTimer
 from qtpy.QtGui import QColor, QFont, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
 
-from qtextra.utilities import IS_MAC, IS_WIN
+from qtextra.utils.utilities import IS_MAC, IS_WIN
 
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_buttons import QtActivePushButton, QtRichTextButton

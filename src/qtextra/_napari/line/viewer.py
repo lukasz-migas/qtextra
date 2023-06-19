@@ -22,7 +22,7 @@ def get_font_for_os():
     """Get font that supports unicode characters."""
     from vispy.util.fonts import list_fonts
 
-    from qtextra.utilities import IS_LINUX, IS_MAC, IS_WIN
+    from qtextra.utils.utilities import IS_LINUX, IS_MAC, IS_WIN
 
     fonts = list_fonts()
     if IS_WIN:
