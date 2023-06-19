@@ -1,4 +1,4 @@
-"""Slightly modified QToolButton with nicer interface."""
+    """Slightly modified QToolButton with nicer interface."""
 from typing import Callable, List, Tuple, Union
 
 from qtpy.QtCore import QSize, Qt

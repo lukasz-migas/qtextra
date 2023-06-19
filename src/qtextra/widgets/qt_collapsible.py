@@ -55,3 +55,34 @@ class QtCheckCollapsible(QCollapsible):
         if not hasattr(self._content.layout(), "addRow"):
             raise ValueError("Layout does not havd `addRow` method.")
         self._content.layout().addRow(label, widget)
+
+
+if __name__ == "__main__":  # pragma: no cover
+
+    def _main():
+        import sys
+        from random import choice
+
+        from qtextra._dev_tools import qmain
+        from qtextra.helpers import make_btn
+        from qtextra.config.theme import THEMES
+
+        def _toggle_theme():
+            THEMES.theme = choice(THEMES.available_themes())
+            THEMES.set_theme_stylesheet(frame)
+
+        app, frame, ha = qmain(False)
+        frame.setMinimumSize(600, 600)
+
+        wdg = make_btn(frame, "Click here to toggle theme")
+        wdg.clicked.connect(_toggle_theme)
+        ha.addWidget(wdg)
+
+        wdg = QtCheckCollapsible(parent=frame)
+        wdg.setText("Advanced options")
+        ha.addWidget(wdg)
+
+        frame.show()
+        sys.exit(app.exec_())
+
+    _main()

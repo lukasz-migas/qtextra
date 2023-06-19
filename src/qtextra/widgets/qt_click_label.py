@@ -78,6 +78,7 @@ class QtClickableLabel(QtW.QLabel):
         super().setText(self._elidedText())
 
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+        """Resize event."""
         ev.accept()
         super().setText(self._elidedText())
 

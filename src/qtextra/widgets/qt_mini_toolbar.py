@@ -18,16 +18,16 @@ class QtMiniToolbar(QFrame):
         self.orientation = orientation
         self.on_color = on_color
 
-        self.layout = QHBoxLayout() if orientation == Qt.Horizontal else QVBoxLayout()
+        self.layout = QHBoxLayout(self) if orientation == Qt.Horizontal else QVBoxLayout(self)
         if add_spacer:
             self.layout.addSpacerItem(hp.make_h_spacer() if orientation == Qt.Horizontal else hp.make_v_spacer())
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
         self.max_size = 28
 
     @property
-    def max_size(self):
+    def max_size(self) -> int:
+        """Return maximum size."""
         return self.maximumHeight() if self.orientation == Qt.Horizontal else self.maximumWidth()
 
     @max_size.setter
@@ -124,7 +124,7 @@ class QtMiniToolbar(QFrame):
 
     def insert_separator(self):
         """Insert horizontal or vertical separator."""
-        sep = hp.make_v_line(self) if self.orientation == Qt.Horizontal else hp.make_h_line(self)
+        sep = hp.make_v_line() if self.orientation == Qt.Horizontal else hp.make_h_line(self)
         self.layout.insertWidget(0, sep)
 
     def insert_spacer(self):

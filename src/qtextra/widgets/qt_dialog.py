@@ -467,9 +467,8 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         title="",
         position=None,
         flags=Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup,
-        delay: bool = False,
     ):
-        super().__init__(parent, title, delay=delay)
+        super().__init__(parent, title)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.setWindowFlags(flags)
@@ -483,7 +482,8 @@ class QtFramelessPopup(QtDialog, CloseMixin):
             self, "move_handle", tooltip="Click here and drag the mouse around to move the window."
         )
         self._move_handle.setCursor(Qt.PointingHandCursor)
-        layout = QHBoxLayout()
+
+        layout = hp.make_hbox_layout(spacing=0)
         layout.addWidget(self._title_label)
         layout.addStretch(1)
         layout.addWidget(self._move_handle)

@@ -1,3 +1,4 @@
+"""Color button."""
 import typing as ty
 
 import numpy as np
@@ -25,7 +26,7 @@ class QtColorButton(QPushButton):
     # new color
     evt_color_changed: Signal = Signal(str)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, color=None, size: ty.Tuple[int, int] = (16, 16), **kwargs):
         """
         Parameters
         ----------
@@ -33,9 +34,12 @@ class QtColorButton(QPushButton):
             valid color
         size : tuple
             size of the button
+        *args
+            Args to pass to QPushButton
+        **kwargs
+            Extra kwargs to pass to QPushButton
         """
-        self._color = kwargs.pop("color", None)
-        size = kwargs.pop("size", (16, 16))
+        self._color = color
 
         super().__init__(*args, **kwargs)
 
@@ -158,6 +162,8 @@ class QtColorSwatch(QFrame):
         color : AnyColorType
             Can be any ColorType recognized by our
             utils.colormaps.standardize_color.transform_color function.
+        force : bool
+            If True, will emit the color_changed event even if the color
         """
         if isinstance(color, QColor):
             _color = (np.array(color.getRgb()) / 255).astype(np.float32)

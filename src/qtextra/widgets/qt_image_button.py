@@ -7,7 +7,6 @@ from qtpy.QtGui import QBrush, QColor, QPainter
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip
 
 from qtextra.assets import get_icon
-from qtextra.config import THEMES
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
 
@@ -280,62 +279,6 @@ class QtVisibleButton(QtImagePushButton):
         self.visible = not self.visible
 
 
-# class QtToolbarPushButton2(QPushButton):
-#     """Image button"""
-#
-#     _widget = None
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.setMouseTracking(True)
-#         self.button = QtImagePushButton(parent=self)
-#         self.button.evt_click.connect(self.unset_indicator)
-#         self.clicked.connect(self.unset_indicator)
-#
-#         max_size = (20, 20)
-#         self.ready_indicator = QtIndicator(parent=self, max_size=max_size)  # (16, 16))
-#         self.ready_indicator.state = "success"
-#         self.ready_indicator.active = True
-#         self.progress_indicator = QtIndicator(parent=self, max_size=max_size)  # (16, 16))
-#         self.progress_indicator.state = "active"
-#         self.progress_indicator.active = True
-#
-#         indicator_layout = QVBoxLayout()
-#         indicator_layout.addWidget(self.ready_indicator, stretch=True)
-#         indicator_layout.addWidget(self.progress_indicator, stretch=True)
-#         indicator_layout.setSpacing(2)
-#         indicator_layout.setContentsMargins(0, 0, 0, 0)
-#
-#         layout = QHBoxLayout()
-#         layout.addWidget(self.button)
-#         layout.addLayout(indicator_layout, stretch=True)
-#         layout.addStretch(1)
-#         layout.setContentsMargins(3, 0, 0, 0)
-#         layout.setSpacing(3)
-#         self.setLayout(layout)
-#
-#     def setObjectName(self, name: str) -> None:
-#         """Set object name - here we actually set it on the button since it uses object name to select icon"""
-#         self.button.setObjectName(name)
-#
-#     @Slot(str)
-#     @Slot(str, str)
-#     def set_indicator(self, indicator_type: str, about: str = None):
-#         """Update indicator"""
-#         if indicator_type == "active":
-#             self.progress_indicator.active = True
-#             self.progress_indicator.state = indicator_type
-#         else:
-#             self.progress_indicator.active = False
-#             self.ready_indicator.active = True
-#             self.ready_indicator.state = indicator_type
-#
-#     def unset_indicator(self):
-#         """Stop indicators"""
-#         self.ready_indicator.active = False
-#         self.progress_indicator.active = False
-
-
 class QtToolbarPushButton(QtImagePushButton):
     """Image button."""
 
@@ -453,15 +396,12 @@ if __name__ == "__main__":  # pragma: no cover
     val = True
 
     def _main():
-        import sys
-        from random import choice
+        pass
 
-        from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
-
+        from qtextra._dev_tools import qmain
         from qtextra.assets import QTA_MAPPING
-        from qtextra.config import THEMES
         from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain
+        from qtextra.config.theme import THEMES
 
         def _toggle_theme():
             THEMES.theme = choice(THEMES.available_themes())

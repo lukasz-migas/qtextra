@@ -46,7 +46,7 @@ class QtToast(SubWindowBase):
         self._timer_indicator.setTextVisible(False)
 
         horz_layout = QHBoxLayout(title_widget)
-        horz_layout.setMargin(2)
+        hp.set_layout_margin(horz_layout, 2)
         horz_layout.addWidget(self._icon_label)
         horz_layout.addWidget(self._title_label, stretch=True)
         horz_layout.addWidget(self._date_label)
@@ -139,7 +139,7 @@ if __name__ == "__main__":  # pragma: no cover
             THEMES.set_theme_stylesheet(frame)
 
         def _reload_theme():
-            from ionglow.assets import get_stylesheet
+            from qtextra.assets import get_stylesheet
 
             get_stylesheet.cache_clear()
             THEMES.set_theme_stylesheet(frame)

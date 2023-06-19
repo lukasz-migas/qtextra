@@ -33,6 +33,12 @@ dependencies = [
     "superqt",
     "koyo",
     "numpy"
+    "appdirs",
+    "qtawesome",
+    "psygnal",
+    "vispy",
+    "napari",
+    "napari_plot",
 ]
 
 # extras
@@ -102,13 +108,30 @@ extend-select = [
 # https://github.com/charliermarsh/ruff/issues/2606
 extend-ignore = [
     "D100", # Missing docstring in public module
+    "D105", # Missing docstring in magic method
     "D107", # Missing docstring in __init__
     "D203", # 1 blank line required before class docstring
     "D212", # Multi-line docstring summary should start at the first line
     "D213", # Multi-line docstring summary should start at the second line
     "D401", # First line should be in imperative mood
+    "D404", # First word of the docstring should not be This
     "D413", # Missing blank line after last section
     "D416", # Section name should end with a colon
+    "E501",
+    "UP006",
+    "UP007",
+    "TCH001",
+    "TCH002",
+    "TCH003",
+    "S101",  # Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+    "B019",
+    "S311",
+    "C901", # too complex
+    "S603",
+    # temporary
+    "D205", # 1 blank line required between summary line and description
+    "S606",
+    "S607",
 ]
 
 [tool.ruff.per-file-ignores]
