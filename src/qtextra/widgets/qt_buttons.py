@@ -92,7 +92,7 @@ class QtRichTextButton(QtPushButton):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from qtextra._dev_tools import qframe
+    from qtextra.utils.dev import qframe
 
     def _test():
         btn1.active = not btn1.active

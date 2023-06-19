@@ -81,7 +81,7 @@ if __name__ == "__main__":  # pragma: no cover
     from qtpy.QtCore import QTimer  # noqa
     from qtpy.QtWidgets import QDialog, QVBoxLayout
 
-    from qtextra._dev_tools import qapplication
+    from qtextra.utils.dev import qapplication
 
     _ = qapplication()  # analysis:ignore
 

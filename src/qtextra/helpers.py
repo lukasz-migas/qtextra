@@ -1,10 +1,15 @@
 """Various helpers to make making of UI elements easier."""
 import os.path
 import typing as ty
+from contextlib import contextmanager
+from enum import Enum
 from functools import partial
 
 import numpy as np
+import qtawesome as qta
 import qtpy.QtWidgets as Qw
+from koyo.typing import PathLike
+from loguru import logger
 from napari.utils.colormaps.standardize_color import transform_color
 from napari.utils.events.custom_types import Array
 from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, QTimer
@@ -159,7 +164,7 @@ def make_click_label(
     tooltip: str = "",
 ) -> "QtClickableLabel":
     """Make clickable label."""
-    from qtextra.widgets.qt_clickable_label import QtClickableLabel
+    from qtextra.widgets.qt_click_label import QtClickableLabel
 
     widget = QtClickableLabel(text, parent)
     widget.setElideMode(elide)
@@ -176,6 +181,8 @@ def make_qta_label(
     parent, icon_name: str, alignment=None, tooltip: str = None, small: bool = False, xsmall: bool = False, **kwargs
 ) -> "QtQtaLabel":
     """Make QLabel element."""
+    from qtextra.widgets.qt_icon_label import QtQtaLabel
+
     widget = QtQtaLabel(parent=parent)
     widget.set_qta(icon_name, **kwargs)
     if small:
@@ -207,6 +214,8 @@ def make_eliding_label(
     font_size: ty.Optional[int] = None,
 ) -> "QtElidingLabel":
     """Make single-line QLabel with automatic eliding."""
+    from qtextra.widgets.qt_eliding_label import QtElidingLabel
+
     widget = QtElidingLabel(parent=parent, elide=elide)
     widget.setElideMode(elide)
     widget.setText(text)
@@ -413,19 +422,18 @@ def make_icon(path: str) -> QIcon:
 
 def make_qta_icon(name: str, color: str = None, **kwargs):
     """Make QTA label."""
-
-    from qtextra.config.theme import THEMES
+    from qtextra.assets import get_icon
+    from qtextra.config import THEMES
 
     name = get_icon(name)
     if color is None:
         color = THEMES.get_hex_color("icon")
-    icon = qtawesome.icon(name, color=color, **kwargs)
+    icon = qta.icon(name, color=color, **kwargs)
     return icon
 
 
 def make_svg_label(parent, object_name: str, tooltip: str = None) -> "QtIconLabel":
     """Make icon label."""
-
     widget = QtIconLabel(parent=parent, object_name=object_name)
     if tooltip:
         widget.setToolTip(tooltip)
@@ -436,6 +444,7 @@ def make_btn(
     parent, text: str, tooltip: str = None, flat: bool = False, checkable=False, func: ty.Optional[ty.Callable] = None
 ) -> "QtPushButton":
     """Make button."""
+    from qtextra.widgets.qt_button import QtPushButton
 
     widget = QtPushButton(parent=parent)
     widget.setText(text)
@@ -451,7 +460,6 @@ def make_btn(
 
 def make_rich_btn(parent, text: str, tooltip: str = None, flat: bool = False) -> "QtRichTextButton":
     """Make button."""
-
     widget = QtRichTextButton(parent, text)
     if tooltip:
         widget.setToolTip(tooltip)
@@ -462,8 +470,6 @@ def make_rich_btn(parent, text: str, tooltip: str = None, flat: bool = False) ->
 
 def make_active_btn(parent, text: str, tooltip: str = None, flat: bool = False) -> "QtActivePushButton":
     """Make button with activity indicator."""
-
-
     widget = QtActivePushButton(parent=parent)
     widget.setParent(parent)
     widget.setText(text)
@@ -500,6 +506,7 @@ def make_qta_btn(
     **kwargs,
 ) -> "QtImagePushButton":
     """Make button with qtawesome icon."""
+    from qtextra.widgets.qt_image_button import QtImagePushButton
 
     widget = QtImagePushButton(parent=parent)
     widget.set_qta(icon_name, **kwargs)
@@ -526,6 +533,7 @@ def make_svg_btn(
     parent, object_name: str, text: str = "", tooltip: str = None, flat: bool = False, checkable: bool = False
 ) -> "QtImagePushButton":
     """Make button."""
+    from qtextra.widgets.qt_image_button import QtImagePushButton
 
     widget = QtImagePushButton(parent=parent)
     widget.setObjectName(object_name)
@@ -551,6 +559,8 @@ def make_tool_btn(
     icon_kwargs=None,
 ) -> "QtToolbarPushButton":
     """Make button."""
+    from qtextra.widgets.qt_image_button import QtToolbarPushButton
+
     if icon_kwargs is None:
         icon_kwargs = {}
 
@@ -621,6 +631,7 @@ def make_bitmap_tool_btn(
     parent, icon: QIcon, min_size: ty.Tuple[int] = None, max_size: ty.Tuple[int] = None, tooltip: str = None
 ) -> "QtToolButton":
     """Make bitmap button."""
+    from qtextra.widgets.qt_tool_button import QtToolButton
 
     widget = QtToolButton(parent)
     widget.setIcon(icon)
@@ -805,14 +816,12 @@ def make_radio_btn_group(parent, radio_buttons) -> Qw.QButtonGroup:
 
 def make_h_line(parent: Qw.QWidget = None) -> "QtHorzLine":
     """Make horizontal line."""
-
     widget = QtHorzLine(parent)
     return widget
 
 
 def make_v_line(parent: Qw.QWidget = None) -> "QtVertLine":
     """Make horizontal line."""
-
     widget = QtVertLine(parent)
     return widget
 
@@ -917,7 +926,6 @@ def polish_widget(widget: Qw.QWidget):
 
 def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options") -> "QtCheckCollapsible":
     """Make collapsible widget."""
-
     content = Qw.QWidget()
     content.setLayout(make_form_layout())
     advanced_widget = QtCheckCollapsible(title, parent)
@@ -1000,6 +1008,7 @@ def make_menu_item(
     checkable: bool = False,
 ) -> "QtQtaAction":
     """Make menu item."""
+    from qtextra.widgets.qt_action import QtQtaAction
 
     widget = QtQtaAction(parent=parent)
     widget.setText(title)
@@ -1173,7 +1182,7 @@ def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True
         color = QColor(*color.astype(int))
 
     # settings = get_settings()
-    dlg = QColorDialog(color, parent=parent)
+    dlg = Qw.QColorDialog(color, parent=parent)
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
     new_color: ty.Optional[QColor, str, np.ndarray] = None
@@ -1544,19 +1553,18 @@ def parse_title_message_to_html(title: str, message: str = ""):
 
 def get_icon_from_img(path):
     """Get icon
-any type.
+    any type.
 
     Parameters
     ----------
-    path : str
-        relative or absolute path to the image file
+        path : str
+            relative or absolute path to the image file
 
     Returns
     -------
-    icon : QIcon
-        icon obtained
-
-"""
+        icon : QIcon
+            icon obtained
+    """
     if not os.path.exists(path):
         return None
 
@@ -1566,7 +1574,7 @@ any type.
 
 
 def disconnect_event(widget: Qw.QWidget, evt_name, func):
-"""Safely disconnect event without raising RuntimeError."""
+    """Safely disconnect event without raising RuntimeError."""
     try:
         getattr(widget, evt_name).disconnect(func)
     except RuntimeError:

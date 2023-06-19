@@ -1,10 +1,8 @@
 """Toolbar."""
-from napari.utils.events.event import EmitterGroup, Event
 from napari_plot.components.dragtool import DragMode
-from napari_plot.layers.region._region_constants import Mode as RegionMode
 from qtpy.QtCore import Qt
 
-from qtextra.helpers import make_radio_btn_group, qt_signals_blocked
+from qtextra.helpers import make_radio_btn_group
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
 
 

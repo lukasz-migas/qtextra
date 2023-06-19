@@ -181,8 +181,8 @@ if __name__ == "__main__":  # pragma: no cover
 
     from qtpy.QtWidgets import QVBoxLayout
 
-    from qtextra.utils.dev import qframe
     from qtextra.assets import QTA_MAPPING
+    from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe()
 

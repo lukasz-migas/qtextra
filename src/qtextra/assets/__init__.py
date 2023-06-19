@@ -56,8 +56,8 @@ def get_stylesheet(theme: str = None, extra: ty.Optional[ty.List[str]] = None) -
                 stylesheet += f.read()
 
     if theme:
-        from qtextra.template import template
         from qtextra.config.theme import THEMES
+        from qtextra.utils.template import template
 
         return template(stylesheet, **THEMES.get_theme(theme, as_dict=True))
 

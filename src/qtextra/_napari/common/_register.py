@@ -51,7 +51,7 @@ def create_func(cls, name=None, doc=None, filename: str = "<string>"):
         "qtextra": sys.modules.get("qtextra"),
         "napari_plot": sys.modules.get("napari_plot"),
     }
-    exec(src, execdict)  # noqa: S102
+    exec(src, execdict)
     func = execdict[name]
 
     func.__doc__ = doc

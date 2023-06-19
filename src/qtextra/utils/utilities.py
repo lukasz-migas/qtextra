@@ -133,3 +133,20 @@ def get_system_info(as_html=False):
     if not as_html:
         text = text.replace("<br>", "\n").replace("<b>", "").replace("</b>", "")
     return text
+
+
+IS_WIN = sys.platform == "win32"
+IS_LINUX = sys.platform == "linux"
+IS_MAC = sys.platform == "darwin"
+
+
+def get_module_path(module: str, filename: str) -> str:
+    """Get module path."""
+    import importlib.resources
+
+    if not filename.endswith(".py"):
+        filename += ".py"
+
+    with importlib.resources.path(module, filename) as f:
+        path = str(f)
+    return path

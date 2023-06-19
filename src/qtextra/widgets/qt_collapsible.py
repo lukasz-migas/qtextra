@@ -63,9 +63,9 @@ if __name__ == "__main__":  # pragma: no cover
         import sys
         from random import choice
 
-        from qtextra._dev_tools import qmain
-        from qtextra.helpers import make_btn
         from qtextra.config.theme import THEMES
+        from qtextra.helpers import make_btn
+        from qtextra.utils.dev import qmain
 
         def _toggle_theme():
             THEMES.theme = choice(THEMES.available_themes())

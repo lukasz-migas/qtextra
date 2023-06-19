@@ -199,7 +199,7 @@ class QtTutorial(QDialog):
 
 #
 def _popover(frame, widget):
-    text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Vestibulum lorem sed risus ultricies tristique nulla aliquet. Malesuada nunc vel risus commodo viverra maecenas. Nascetur ridiculus mus mauris vitae ultricies leo. Tellus in hac habitasse platea dictumst vestibulum rhoncus. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate. Amet nulla facilisi morbi tempus iaculis urna id volutpat lacus. Aliquet nec ullamcorper sit amet risus nullam eget felis. Pharetra magna ac placerat vestibulum lectus. Dignissim convallis aenean et tortor at risus. Vitae tempus quam pellentesque nec nam aliquam sem et. Pulvinar proin gravida hendrerit lectus."""  # noqa
+    text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Vestibulum lorem sed risus ultricies tristique nulla aliquet. Malesuada nunc vel risus commodo viverra maecenas. Nascetur ridiculus mus mauris vitae ultricies leo. Tellus in hac habitasse platea dictumst vestibulum rhoncus. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate. Amet nulla facilisi morbi tempus iaculis urna id volutpat lacus. Aliquet nec ullamcorper sit amet risus nullam eget felis. Pharetra magna ac placerat vestibulum lectus. Dignissim convallis aenean et tortor at risus. Vitae tempus quam pellentesque nec nam aliquam sem et. Pulvinar proin gravida hendrerit lectus."""
     pop = QtTutorial(frame)
     pop.set_steps(
         [

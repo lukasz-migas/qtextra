@@ -314,14 +314,14 @@ class QtShapesControls(QtLayerControls):
             self.text_display_checkbox.setChecked(self.layer.text.visible)
 
     def _on_edge_width_change(self, event=None):
-        """Receive layer model edge line width change event and update slider.        """
+        """Receive layer model edge line width change event and update slider."""
         with self.layer.events.edge_width.blocker():
             value = self.layer.current_edge_width
             value = np.clip(int(2 * value), 0, 40)
             self.current_width_slider.setValue(value)
 
     def _on_current_edge_color_change(self, event=None):
-        """Receive layer model edge color change event and update color swatch.        """
+        """Receive layer model edge color change event and update color swatch."""
         with hp.qt_signals_blocked(self.edge_color_swatch):
             self.edge_color_swatch.set_color(self.layer.current_edge_color)
 

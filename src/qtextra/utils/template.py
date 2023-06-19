@@ -6,7 +6,7 @@ from ast import literal_eval
 
 from pydantic.color import Color
 
-from qtextra._extra import hex_to_qt_rgb
+from qtextra.utils.color import hex_to_qt_rgb
 
 try:
     from qtpy import QT_VERSION

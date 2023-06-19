@@ -4,26 +4,24 @@ import sys
 import typing as ty
 
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
-from qtpy.QtWidgets import QApplication
-
-IS_WIN = sys.platform == "win32"
-IS_LINUX = sys.platform == "linux"
-IS_MAC = sys.platform == "darwin"
+from qtpy.QtWidgets import QApplication, QMainWindow
 
 
-def get_module_path(module: str, filename: str) -> str:
-    """Get module path."""
-    import importlib.resources
+def disable_warnings():
+    """Disable warnings."""
+    import warnings
 
-    if not filename.endswith(".py"):
-        filename += ".py"
+    # disable warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning, module="vispy")
+    warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
+    warnings.filterwarnings("ignore", category=DeprecationWarning, module="numpy")
+    warnings.filterwarnings("ignore", category=FutureWarning, module="shiboken2")
+    warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
+    warnings.filterwarnings("ignore", category=FutureWarning, module="xgboost")
+    warnings.filterwarnings("ignore", category=ResourceWarning, module="sentry_sdk")
 
-    with importlib.resources.path(module, filename) as f:
-        path = str(f)
-    return path
 
-
-def qdev(parent=None, modules: ty.List[str] = ("qtextra",)):
+def qdev(parent=None, modules: ty.List[str] = ("qtextra", "koyo", "napari_plot")):
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
 
@@ -31,39 +29,46 @@ def qdev(parent=None, modules: ty.List[str] = ("qtextra",)):
 
 
 def qapplication(test_time: int = 3):
-    """
-    Return QApplication instance
+    """Return QApplication instance.
+
     Creates it if it doesn't already exist.
 
-    test_time: Time to maintain open the application when testing. It's given
-    in seconds
+    Parameters
+    ----------
+    test_time: int
+        Time to maintain open the application when testing. It's given in seconds
     """
+    import faulthandler
+
+    disable_warnings()
+
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     QApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
     QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
 
-    Application = MacApplication if IS_MAC else QApplication
+    faulthandler.enable()
+
+    Application = MacApplication if sys.platform == "darwin" else QApplication
     app = Application.instance()
     if app is None:
         # Set Application name for Gnome 3
         # https://groups.google.com/forum/#!topic/pyside/24qxvwfrRDs
-        app = Application([""])
+        app = Application(["qtextra"])
 
         # Set application name for KDE. See spyder-ide/spyder#2207.
-        app.setApplicationName("")
+        app.setApplicationName("qtextra")
 
     test_ci = os.environ.get("TEST_CI_WIDGETS", None)
     if test_ci is not None:
         timer_shutdown = QTimer(app)
         timer_shutdown.timeout.connect(app.quit)
         timer_shutdown.start(test_time * 1000)
-
     return app
 
 
-def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True):
+def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True, set_style: bool = True):
     """Create frame widget."""
     from qtpy import QtWidgets
 
@@ -79,10 +84,14 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True)
             w = qdev()
             ha.addWidget(w)
         frame.setLayout(ha)
+    if set_style:
+        from qtextra.config.theme import THEMES
+
+        THEMES.set_theme_stylesheet(frame)
     return app, frame, ha
 
 
-def qmain(horz: bool = True):
+def qmain(horz: bool = True, set_style: bool = True):
     """Create main widget."""
     from qtpy import QtWidgets
 
@@ -94,8 +103,23 @@ def qmain(horz: bool = True):
         ha = QtWidgets.QVBoxLayout()
     main.setCentralWidget(QtWidgets.QWidget())
     main.centralWidget().setLayout(ha)
+    if set_style:
+        from qtextra.config.theme import THEMES
 
+        THEMES.set_theme_stylesheet(main)
     return app, main, ha
+
+
+def get_parent(parent):
+    """Get top level parent."""
+    if parent is None:
+        app = QApplication.instance()
+        if app:
+            for i in app.topLevelWidgets():
+                if isinstance(i, QMainWindow):  # pragma: no cover
+                    parent = i
+                    break
+    return parent
 
 
 class MacApplication(QApplication):

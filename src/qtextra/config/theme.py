@@ -11,7 +11,7 @@ from pydantic.color import Color
 from qtpy.QtCore import QDateTime, QTime, Signal
 from qtpy.QtWidgets import QWidget
 
-from qtextra.config import ConfigBase, _get_previous_configs
+from qtextra.config.config import ConfigBase, _get_previous_configs
 
 DARK_THEME = {
     "name": "dark",
@@ -511,7 +511,7 @@ class Themes(ConfigBase):
     def get_theme_stylesheet(self, theme_name: str = None):
         """Get stylesheet."""
         from qtextra.assets import get_stylesheet
-        from qtextra.template import template
+        from qtextra.utils.template import template
 
         if theme_name is None:
             theme_name = self.theme

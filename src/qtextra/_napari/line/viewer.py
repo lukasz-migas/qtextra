@@ -2,14 +2,15 @@
 import typing as ty
 
 import numpy as np
-from qtextra._napari.common.viewer import ViewerBase
-from qtextra._napari.line._vispy.overrides.axis import tick_formatter
-from qtextra._napari.line.qt_viewer import QtViewer
-from qtextra.config.theme import CANVAS
 from koyo.secret import get_short_hash
 from napari_plot.layers import Centroids, InfLine, Line, Region, Scatter, Shapes
 from napari_plot.viewer import ViewerModel as Viewer
 from qtpy.QtCore import QMutex
+
+from qtextra._napari.common.viewer import ViewerBase
+from qtextra._napari.line._vispy.overrides.axis import tick_formatter
+from qtextra._napari.line.qt_viewer import QtViewer
+from qtextra.config.theme import CANVAS
 
 MUTEX = QMutex()
 
@@ -19,8 +20,9 @@ EXTRACT_NAME = "Extract mask"
 
 def get_font_for_os():
     """Get font that supports unicode characters."""
-    from qtextra.utilities import IS_LINUX, IS_MAC, IS_WIN
     from vispy.util.fonts import list_fonts
+
+    from qtextra.utilities import IS_LINUX, IS_MAC, IS_WIN
 
     fonts = list_fonts()
     if IS_WIN:
@@ -277,9 +279,9 @@ if __name__ == "__main__":  # pragma: no cover
     def _main():
         import sys
 
-        from qtextra._dev_tools import qframe
-        from qtextra.helpers import make_btn
         from qtextra.config.theme import THEMES
+        from qtextra.helpers import make_btn
+        from qtextra.utils.dev import qframe
 
         def _on_btn():
             n_bins = np.random.randint(5, 100, 1)[0]

@@ -1,12 +1,11 @@
 """Toolbar."""
 
-from napari.layers.labels._labels_constants import Mode as LabelsMode
 from napari.layers.shapes._shapes_constants import Mode as ShapesMode
 from napari.utils.events.event import EmitterGroup, Event
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QWidget
 
-from qtextra.helpers import make_radio_btn_group, qt_signals_blocked
+from qtextra.helpers import make_radio_btn_group
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
 
 

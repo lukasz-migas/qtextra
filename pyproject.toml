@@ -32,7 +32,7 @@ dependencies = [
     "qtpy",
     "superqt",
     "koyo",
-    "numpy"
+    "numpy",
     "appdirs",
     "qtawesome",
     "psygnal",

@@ -1,8 +1,9 @@
 from weakref import ref
 
+from qtpy.QtWidgets import QFormLayout
+
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtFramelessPopup
-from qtpy.QtWidgets import QFormLayout
 
 
 class ZoomPopup(QtFramelessPopup):

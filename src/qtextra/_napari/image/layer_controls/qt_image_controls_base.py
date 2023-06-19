@@ -59,7 +59,7 @@ class QtBaseImageControls(QtLayerControls):
         self.contrast_limits_slider = QRangeSlider(Qt.Horizontal, self)
         self.contrast_limits_slider.setRange(*self.layer.contrast_limits_range)
         decimals = range_to_decimals(self.layer.contrast_limits_range, self.layer.dtype)
-        self.contrast_limits_slider.setSingleStep(10**-decimals)
+        self.contrast_limits_slider.setSingleStep(10 ** -decimals)
         self.contrast_limits_slider.setValue(self.layer.contrast_limits)
         self.contrast_limits_slider.mousePressEvent = self._clim_mousepress
         set_clim = partial(setattr, self.layer, "contrast_limits")
@@ -91,7 +91,8 @@ class QtBaseImageControls(QtLayerControls):
         """Update the slider, or, on right-click, pop-up an expanded slider.
 
         The expanded slider provides finer control, directly editable values,
-        and the ability to change the available range of the sliders."""
+        and the ability to change the available range of the sliders.
+        """
         return QRangeSlider.mousePressEvent(self.contrast_limits_slider, event)
 
     def _on_contrast_limits_change(self, event=None):
