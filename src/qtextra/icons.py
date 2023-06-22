@@ -5,15 +5,11 @@ from functools import lru_cache
 from itertools import product
 from pathlib import Path
 
-ICON_PATH = (Path(__file__).parent / "svg").resolve()
-if ICON_PATH.exists():
-    ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == ".svg"}
-else:
-    ICONS = {}
-
 
 def get_icon_path(name: str) -> str:
     """Return path to an SVG in the theme icons."""
+    from qtextra.assets import ICONS
+
     if name not in ICONS:
         raise ValueError(f"unrecognized icon name: {name!r}. Known names: {ICONS}")
     return ICONS[name]
@@ -141,6 +137,7 @@ def write_colorized_svgs(
 
 def build_theme_svgs(theme_name: str) -> str:
     """Build SVGs for a theme."""
+    from qtextra.assets import ICONS
     from qtextra.config.theme import THEMES
 
     out = THEMES.get_theme_path(theme_name)

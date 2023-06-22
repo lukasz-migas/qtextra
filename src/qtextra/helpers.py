@@ -27,6 +27,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
+    from qtextra.widgets.qt_button import QtPushButton
 
 
 def make_form_layout(widget: Qw.QWidget = None):
@@ -269,10 +270,21 @@ def make_eliding_label2(
     return widget
 
 
-def make_line_edit(parent, text: str = "", tooltip: str = None, placeholder: str = "") -> Qw.QLineEdit:
+def make_line_edit(
+    parent,
+    text: str = "",
+    tooltip: str = None,
+    placeholder: str = "",
+    bold: bool = False,
+    font_size: ty.Optional[int] = None,
+) -> Qw.QLineEdit:
     """Make QLineEdit."""
     widget = Qw.QLineEdit(parent)
     widget.setText(text)
+    if font_size:
+        set_font(widget, font_size=font_size, bold=bold)
+    if bold:
+        set_bold(widget, bold)
     if tooltip:
         widget.setToolTip(tooltip)
     widget.setPlaceholderText(placeholder)
@@ -298,6 +310,7 @@ def make_combobox(
     default: str = None,
     func: ty.Callable = None,
     expand: bool = True,
+    data=None,
     **kwargs,
 ) -> Qw.QComboBox:
     """Make QComboBox."""
@@ -308,13 +321,15 @@ def make_combobox(
     widget = Qw.QComboBox(parent)
     if items:
         widget.addItems(items)
-    if value:
+    if value and not data:
         widget.setCurrentText(value)
     tooltip = kwargs.get("description", tooltip)
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if data:
+        set_combobox_data(widget, data, value)
     if func:
         widget.currentTextChanged.connect(func)
     return widget
@@ -441,7 +456,13 @@ def make_svg_label(parent, object_name: str, tooltip: str = None) -> "QtIconLabe
 
 
 def make_btn(
-    parent, text: str, tooltip: str = None, flat: bool = False, checkable=False, func: ty.Optional[ty.Callable] = None
+    parent,
+    text: str,
+    tooltip: str = None,
+    flat: bool = False,
+    checkable=False,
+    func: ty.Optional[ty.Callable] = None,
+    font_size: int = None,
 ) -> "QtPushButton":
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
@@ -453,6 +474,8 @@ def make_btn(
         widget.setToolTip(tooltip)
     if flat:
         widget.setFlat(flat)
+    if font_size:
+        set_font(widget, font_size=font_size)
     if func and callable(func):
         widget.clicked.connect(func)
     return widget
@@ -651,6 +674,7 @@ def make_checkbox(
     default: bool = False,
     value: ty.Optional[bool] = None,
     expand: bool = True,
+    func: ty.Callable = None,
     **kwargs,
 ) -> Qw.QCheckBox:
     """Make checkbox."""
@@ -664,6 +688,8 @@ def make_checkbox(
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if func:
+        widget.stateChanged.connect(func)
     return widget
 
 
@@ -812,6 +838,11 @@ def make_radio_btn_group(parent, radio_buttons) -> Qw.QButtonGroup:
     for btn_id, radio_btn in enumerate(radio_buttons):
         widget.addButton(radio_btn, btn_id)
     return widget
+
+
+def make_h_line_with_text(label: str, parent: Qw.QWidget = None):
+    """Make horizontal line with text."""
+    return make_h_layout(make_h_line(parent), make_label(parent, label), make_h_line(parent), stretch_id=(0, 2))
 
 
 def make_h_line(parent: Qw.QWidget = None) -> "QtHorzLine":
@@ -1101,11 +1132,7 @@ def open_filename(parent, title: str = "Select file...", base_dir: str = "", fil
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
-    # if not base_dir:
-    #     base_dir = get_settings().history.last_open
     filename, _ = QFileDialog.getOpenFileName(parent, title, base_dir, file_filter)
-    # if filename:
-    #     get_settings().history.update_open_history(filename)
     return filename
 
 
@@ -1113,16 +1140,11 @@ def get_directory(parent, title: str = "Select directory...", base_dir: str = ""
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
-    # if not base_dir:
-    #     base_dir = get_settings().history.last_open
-
     options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
     if not native:
         options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks | QFileDialog.DontUseNativeDialog
 
     directory = QFileDialog.getExistingDirectory(parent, title, base_dir, options=options)
-    # if directory:
-    #     get_settings().history.update_open_history(directory)
     return directory
 
 
@@ -1132,13 +1154,9 @@ def get_filename(
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
-    # if not base_dir:
-    #     base_dir = get_settings().history.last_open
     if base_filename:
         base_dir = os.path.join(base_dir, base_filename)
-    filename, _ = QFileDialog.getOpenFileName(parent, title, base_dir, file_filter)
-    # if filename:
-    #     get_settings().history.update_open_history(filename)
+    filename, _ = QFileDialog.getOpenFileName(parent, title, str(base_dir), file_filter)
     return filename
 
 
@@ -1148,13 +1166,9 @@ def get_save_filename(
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
-    # if not base_dir:
-    #     base_dir = get_settings().history.last_save
     if base_filename:
         base_dir = os.path.join(base_dir, base_filename)
     filename, _ = QFileDialog.getSaveFileName(parent, title, base_dir, file_filter)
-    # if filename:
-    #     get_settings().history.update_save_history(filename)
     return filename
 
 

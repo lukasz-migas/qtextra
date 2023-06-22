@@ -1,7 +1,7 @@
 """Events emitter."""
 from qtpy.QtCore import QObject, Signal
 
-from ionglow.utils.notifications import Notification
+from qtextra.utils.notifications import Notification
 
 
 class Events(QObject):

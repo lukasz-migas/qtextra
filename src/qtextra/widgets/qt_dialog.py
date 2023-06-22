@@ -548,9 +548,8 @@ class QtFramelessTool(QtFramelessPopup):
         title: str = "",
         position=None,
         flags=Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool,
-        delay: bool = False,
     ):
-        super().__init__(parent, title, position, flags, delay)
+        super().__init__(parent, title, position, flags)
 
 
 class QtCollapsibleFramelessTool(QtFramelessTool):

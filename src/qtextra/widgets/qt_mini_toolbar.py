@@ -136,6 +136,13 @@ class QtMiniToolbar(QFrame):
         """Show border."""
         self.setFrameShape(QFrame.Box)
 
+    def swap_orientation(self):
+        """Swap orientation."""
+        self.orientation = QHBoxLayout.LeftToRight if self.orientation == Qt.Vertical else QVBoxLayout.TopToBottom
+        self.layout.setDirection(self.orientation)
+        self.layout.invalidate()
+        self.layout.update()
+
 
 if __name__ == "__main__":
     import sys

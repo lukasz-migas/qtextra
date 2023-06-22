@@ -286,6 +286,11 @@ class Theme(EventedModel):
             return value + "px"
         return value
 
+    @property
+    def id(self) -> str:
+        """Return theme id."""
+        return self.name
+
     def to_dict(self):
         """Export as dictionary."""
         data = {}
@@ -517,7 +522,8 @@ class Themes(ConfigBase):
             theme_name = self.theme
         palette = self.themes[theme_name].dict()
         stylesheet = get_stylesheet()
-        return template(stylesheet, **palette)
+        stylesheet = template(stylesheet, **palette)
+        return stylesheet
 
     def set_theme_stylesheet(self, widget: QWidget, theme_name: str = None):
         """Set stylesheet on widget."""

@@ -21,7 +21,7 @@ def disable_warnings():
     warnings.filterwarnings("ignore", category=ResourceWarning, module="sentry_sdk")
 
 
-def qdev(parent=None, modules: ty.List[str] = ("qtextra", "koyo", "napari_plot")):
+def qdev(parent=None, modules: ty.List[str] = ("qtextra", "koyo")):
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
 

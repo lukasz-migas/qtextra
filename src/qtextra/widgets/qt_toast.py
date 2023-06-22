@@ -39,7 +39,7 @@ class QtToast(SubWindowBase):
         self._date_label = hp.make_label(title_widget, "")
         self._close_btn = hp.make_qta_btn(title_widget, "cross", small=True, medium=False, func=self.close)
 
-        self._message_label = hp.make_label(self, "", wrap=True)
+        self._message_label = hp.make_label(self, "", wrap=True, enable_url=True)
 
         self._timer_indicator = QProgressBar(self)
         self._timer_indicator.setObjectName("progress_timer")

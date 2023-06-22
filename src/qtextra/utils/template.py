@@ -17,22 +17,22 @@ except Exception:
     use_gradients = False
 
 
-add_pattern = re.compile(r"{{\s?add\((\w+),?\s?([-\d]+)?\)\s?}}")
-subtract_pattern = re.compile(r"{{\s?subtract\((\w+),?\s?([-\d]+)?\)\s?}}")
+increase_pattern = re.compile(r"{{\s?increase\((\w+),?\s?([-\d]+)?\)\s?}}")
+decrease_pattern = re.compile(r"{{\s?decrease\((\w+),?\s?([-\d]+)?\)\s?}}")
 gradient_pattern = re.compile(r"([vh])gradient\((.+)\)")
 darken_pattern = re.compile(r"{{\s?darken\((\w+),?\s?([-\d]+)?\)\s?}}")
 lighten_pattern = re.compile(r"{{\s?lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
 opacity_pattern = re.compile(r"{{\s?opacity\((\w+),?\s?([-\d]+)?\)\s?}}")
 
 
-def subtract(px_size: str, px: int):
-    """Subtract pixels from a string."""
-    return f"{int(px_size[:-2]) - int(px)}px"
+def decrease(font_size: str, pt: int):
+    """Decrease fontsize."""
+    return f"{int(font_size[:-2]) - int(pt)}pt"
 
 
-def add(px_size: str, px: int):
-    """Add pixels to a string."""
-    return f"{int(px_size[:-2]) + int(px)}px"
+def increase(font_size: str, pt: int):
+    """Increase fontsize."""
+    return f"{int(font_size[:-2]) + int(pt)}pt"
 
 
 def darken(color: ty.Union[str, Color], percentage=10):
@@ -101,13 +101,13 @@ def gradient(stops, horizontal=True):
 def template(css, **theme):
     """Generate template."""
 
-    def _add_match(matchobj):
-        px_size, px = matchobj.groups()
-        return add(theme[px_size], px)
+    def _increase_match(matchobj):
+        font_size, to_add = matchobj.groups()
+        return increase(theme[font_size], to_add)
 
-    def _subtract_match(matchobj):
-        px_size, px = matchobj.groups()
-        return subtract(theme[px_size], px)
+    def _decrease_match(matchobj):
+        font_size, to_subtract = matchobj.groups()
+        return decrease(theme[font_size], to_subtract)
 
     def _darken_match(matchobj):
         color, percentage = matchobj.groups()
@@ -127,8 +127,10 @@ def template(css, **theme):
         return gradient(stops, horizontal)
 
     for k, v in theme.items():
-        css = add_pattern.sub(_add_match, css)
-        css = subtract_pattern.sub(_subtract_match, css)
+        if k == "name":
+            k = "id"
+        css = increase_pattern.sub(_increase_match, css)
+        css = decrease_pattern.sub(_decrease_match, css)
         css = gradient_pattern.sub(_gradient_match, css)
         css = darken_pattern.sub(_darken_match, css)
         css = lighten_pattern.sub(_lighten_match, css)
