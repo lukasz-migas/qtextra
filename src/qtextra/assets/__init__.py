@@ -11,6 +11,7 @@ ICON_PATH.mkdir(exist_ok=True)
 ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == ".svg"}
 
 STYLE_PATH = HERE / "stylesheets"
+STYLE_PATH.mkdir(exist_ok=True)
 STYLES = {x.stem: str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
 
 LOADING_SQUARE_GIF = str(HERE / "loading-square.gif")

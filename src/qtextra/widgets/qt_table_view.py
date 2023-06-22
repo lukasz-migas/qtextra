@@ -12,8 +12,9 @@ from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 
 from qtextra.config import THEMES
 from qtextra.helpers import make_qta_icon
+from qtextra.utils.color import get_text_color
 from qtextra.utils.table_config import TableConfig
-from qtextra.utils.utilities import connect, get_text_color
+from qtextra.utils.utilities import connect
 
 TEXT_COLOR: str = "#000000"
 LINK_COLOR: str = "#0000FF"
@@ -88,12 +89,15 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Return number of columns."""
         return len(self._table[0]) if self._table else 0
 
-    def removeRow(self, row: int, parent: QModelIndex = QModelIndex()) -> bool:
+    def removeRow(self, row: int, parent: QModelIndex = None) -> bool:
         """Remove row."""
+        if parent is None:
+            parent = QModelIndex()
         self.beginRemoveRows(parent, row, row)
         self._table.pop(row)
         self.original_index.pop(row)
         self.endRemoveRows()
+        return True
 
     def data(self, index, role=None):
         """Parse data."""
@@ -186,7 +190,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
         if change:
             self._table[row][column] = value
-            self.dataChanged.emit(row, column)
+            self.dataChanged.emit(index, index)
             if column == 0:
                 self.evt_checked.emit(row, value)
             return True
