@@ -675,21 +675,28 @@ def make_checkbox(
     value: ty.Optional[bool] = None,
     expand: bool = True,
     func: ty.Callable = None,
+    clicked: ty.Callable = None,
+    tristate: bool = False,
+    model: ty.Callable = None,
     **kwargs,
 ) -> Qw.QCheckBox:
     """Make checkbox."""
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    widget = Qw.QCheckBox(parent)
+    widget = (model or Qw.QCheckBox)(parent)
     widget.setText(text)
     widget.setChecked(value)
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if tristate:
+        widget.setTristate(tristate)
     if func:
         widget.stateChanged.connect(func)
+    if clicked:
+        widget.clicked.connect(clicked)
     return widget
 
 

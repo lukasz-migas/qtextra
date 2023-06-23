@@ -1,0 +1,17 @@
+from qtpy.QtWidgets import QCheckBox
+from qtpy.QtCore import Qt
+
+
+class QtTriCheckBox(QCheckBox):
+    """Custom checkbox that can be in three states but only toggles true/false when user clicks."""
+
+    def __init__(self, *args, **kwargs):
+        QCheckBox.__init__(self, *args, **kwargs)
+        self.clicked.connect(self.on_clicked)
+
+    def on_clicked(self):
+        """On clicked."""
+        state = self.checkState()
+        new_state = Qt.Unchecked if state == Qt.Checked else Qt.Checked
+        print("current", state, new_state)
+        self.setCheckState(new_state)
