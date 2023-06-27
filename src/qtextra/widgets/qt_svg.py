@@ -44,7 +44,7 @@ class QtColoredSVGIcon(QIcon):
         color: Optional[str] = None,
         opacity: float = 1.0,
     ) -> None:
-        from ionglow.assets._icons import get_colorized_svg
+        from qtextra.icons import get_colorized_svg
 
         self._svg = path_or_xml
         colorized = get_colorized_svg(path_or_xml, color, opacity)
@@ -102,7 +102,7 @@ class QtColoredSVGIcon(QIcon):
         QtColoredSVGIcon
             A colorizeable QIcon
         """
-        from ionglow.assets._icons import get_icon_path
+        from qtextra.icons import get_icon_path
 
         path = get_icon_path(icon_name)
         return QtColoredSVGIcon(path)

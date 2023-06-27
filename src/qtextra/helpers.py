@@ -19,15 +19,20 @@ from superqt import QElidingLabel, QLabeledSlider
 from qtextra.utils.utilities import IS_MAC, IS_WIN
 
 if ty.TYPE_CHECKING:
+    from qtextra.widgets.qt_action import QtQtaAction
+    from qtextra.widgets.qt_button import QtPushButton
     from qtextra.widgets.qt_buttons import QtActivePushButton, QtRichTextButton
+    from qtextra.widgets.qt_click_label import QtClickableLabel
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
     from qtextra.widgets.qt_color_button import QtColorSwatch
-    from qtextra.widgets.qt_icon_label import QtIconLabel
+    from qtextra.widgets.qt_eliding_label import QtElidingLabel
+    from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel
+    from qtextra.widgets.qt_image_button import QtImagePushButton, QtToolbarPushButton
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
-    from qtextra.widgets.qt_button import QtPushButton
+    from qtextra.widgets.qt_tool_button import QtToolButton
 
 
 def make_form_layout(widget: Qw.QWidget = None):
@@ -1048,6 +1053,7 @@ def make_menu_item(
     status_tip: str = None,
     tooltip: str = None,
     checkable: bool = False,
+    func: ty.Callable = None,
 ) -> "QtQtaAction":
     """Make menu item."""
     from qtextra.widgets.qt_action import QtQtaAction
@@ -1069,6 +1075,8 @@ def make_menu_item(
         widget.setCheckable(checkable)
     if menu is not None:
         menu.addAction(widget)
+    if func is not None:
+        widget.triggered.connect(func)
     return widget
 
 
@@ -1582,13 +1590,13 @@ def get_icon_from_img(path):
 
     Parameters
     ----------
-        path : str
-            relative or absolute path to the image file
+    path: str
+        relative or absolute path to the image file
 
     Returns
     -------
-        icon : QIcon
-            icon obtained
+    icon : QIcon
+        icon obtained
     """
     if not os.path.exists(path):
         return None
