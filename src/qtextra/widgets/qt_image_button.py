@@ -179,6 +179,14 @@ class QtLockButton(QtImagePushButton):
         self._locked = False
         self.locked = False
 
+    def auto_connect(self):
+        """Automatically connect."""
+        self.evt_click.connect(self.toggle_lock)
+
+    def toggle_lock(self):
+        """Toggle lock."""
+        self.locked = not self.locked
+
     @property
     def locked(self) -> bool:
         """Get playing state."""

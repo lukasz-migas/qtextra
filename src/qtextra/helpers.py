@@ -27,7 +27,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_color_button import QtColorSwatch
     from qtextra.widgets.qt_eliding_label import QtElidingLabel
     from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel
-    from qtextra.widgets.qt_image_button import QtImagePushButton, QtToolbarPushButton
+    from qtextra.widgets.qt_image_button import QtImagePushButton, QtToolbarPushButton, QtLockButton
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
@@ -554,6 +554,32 @@ def make_qta_btn(
         widget.setCheckable(checkable)
     if func is not None:
         widget.clicked.connect(func)
+    return widget
+
+
+def make_lock_btn(
+    parent,
+    small: bool = False,
+    medium: bool = False,
+    large: bool = False,
+    size: ty.Optional[ty.Tuple[int, int]] = None,
+    func: ty.Optional[ty.Callable] = None,
+) -> "QtLockButton":
+    """Make lock button."""
+    from qtextra.widgets.qt_image_button import QtLockButton
+
+    widget = QtLockButton(parent=parent)
+    widget.auto_connect()
+    if func is not None:
+        widget.clicked.connect(func)
+    if small:
+        widget.set_small()
+    if medium:
+        widget.set_medium()
+    if large:
+        widget.set_large()
+    if size and len(size) == 2:
+        widget.set_size(size)
     return widget
 
 
