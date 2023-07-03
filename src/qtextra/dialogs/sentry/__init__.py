@@ -5,7 +5,8 @@ import typing as ty
 import sentry_sdk
 
 from qtextra.dialogs.sentry.utilities import SENTRY_SETTINGS, _get_tags, get_sample_event
-from qtextra.dialogs.sentry.dialog import TelemetryOptInDialog
+from qtextra.dialogs.sentry.telemetry import TelemetryOptInDialog
+from qtextra.dialogs.sentry.feedback import FeedbackDialog
 
 INSTALLED = False
 
@@ -21,7 +22,7 @@ __all__ = [
 capture_exception = sentry_sdk.capture_exception
 
 
-def ask_opt_in(settings, force=False):
+def ask_opt_in(settings, force=False, parent=None):
     """Show the dialog asking the user to opt in.
 
     Parameters
@@ -31,6 +32,8 @@ def ask_opt_in(settings, force=False):
     force : bool, optional
         If True, will show opt_in even if user has already opted in/out,
         by default False.
+    parent : QWidget, optional
+        Parent widget, by default None.
 
     Returns
     -------
@@ -41,11 +44,10 @@ def ask_opt_in(settings, force=False):
     assert hasattr(settings, "telemetry_enabled"), "Settings must have telemetry_enabled attribute."
     assert hasattr(settings, "telemetry_with_locals"), "Settings must have telemetry_with_locals attribute."
 
-
     if not force and settings.telemetry_enabled:
         return settings
 
-    dlg = TelemetryOptInDialog(with_locals=settings.telemetry_with_locals)
+    dlg = TelemetryOptInDialog(parent=parent, with_locals=settings.telemetry_with_locals)
     send: ty.Optional[bool] = None
     if bool(dlg.exec()):
         send = True  # pragma: no cover

@@ -63,13 +63,13 @@ class TelemetryOptInDialog(QtDialog):
         self.send_locals.stateChanged.connect(self._update_example)
         self.send_locals.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         _lbl = QLabel(
-            "<small><em><b>greatly</b> improves interpretability of errors, but may "
-            "leak personal identifiable information like file paths</em></small>"
+            "<small><b>greatly</b> improves interpretability of errors, but may "
+            "leak personal identifiable information like file paths</small>"
         )
         _lbl.setWordWrap(True)
         _lbl.setStyleSheet("color: #999;")
 
-        _lbl2 = QLabel("<small>You may change your settings at any time in the " "Help menu.</small>")
+        _lbl2 = QLabel("<small>You may change your settings at any time in the Help menu.</small>")
         _lbl2.setStyleSheet("color: #999;")
         _lbl2.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
@@ -94,7 +94,14 @@ class TelemetryOptInDialog(QtDialog):
     def _update_example(self):
         self._send_locals = self.send_locals.isChecked()
         event = get_sample_event(with_locals=self._send_locals)
-        self.txt.setText(pformat(event, indent=2, width=120))
+
+        try:
+            import yaml
+
+            estring = yaml.safe_dump(event, indent=4, width=120)
+        except Exception:
+            estring = pformat(event, indent=2, width=120)
+        self.txt.setText(estring)
 
 
 if __name__ == "__main__":  # pragma: no cover

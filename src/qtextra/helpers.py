@@ -78,6 +78,7 @@ def call_later(parent: Qw.QWidget, func: ty.Callable, delay: int):
     """Call later."""
     QTimer(parent).singleShot(int(delay), func)
 
+
 run_delayed = call_later
 
 
@@ -1176,12 +1177,12 @@ def make_overlay_message(
     return _widget
 
 
-def warn(parent, message: str):
-    """Create pop up dialog with warning message."""
+def warn(parent, message: str, title: str = "Warning"):
+    """Create a pop up dialog with a warning message."""
     from qtpy.QtWidgets import QMessageBox
 
     dlg = QMessageBox(parent=parent, icon=QMessageBox.Warning)
-    dlg.setWindowTitle("Warning")
+    dlg.setWindowTitle(title)
     dlg.setText(message)
     dlg.exec_()
 
