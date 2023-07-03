@@ -130,7 +130,7 @@ class QtPanelWidget(QWidget):
             `bottom` will be simple click-buttons without widgets associated with them.
         """
         assert location in ["top", "bottom"], "Incorrect location provided - use `top` or `bottom`"
-        button: QtToolbarPushButton = hp.make_tool_btn(
+        button: QtToolbarPushButton = hp.make_toolbar_btn(
             self,
             name,
             checkable=widget is not None,

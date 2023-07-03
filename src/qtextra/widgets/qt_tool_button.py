@@ -13,16 +13,14 @@ class QtToolButton(QToolButton):
 
     def __init__(self, parent, text="", icon: Union[QIcon, None] = None):
         super().__init__(parent)
-
-        self._icon_size = QSize(16, 16)
-
-        # add queue widget
-        self.setPopupMode(self.MenuButtonPopup)
         self.setText(text)
+        self.setPopupMode(self.MenuButtonPopup)
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
         # Widget setup
-        self.set_icon(icon)
+        if icon:
+            self._icon_size = QSize(16, 16)
+            self.set_icon(icon)
 
     def set_menu(self, menu: QMenu, action: Callable = None, auto_pop: bool = True) -> None:
         """Set tool button menu."""

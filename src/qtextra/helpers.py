@@ -488,6 +488,30 @@ def make_btn(
     return widget
 
 
+def make_tool_btn(
+    parent,
+    text: str,
+    tooltip: str = None,
+    flat: bool = False,
+    func: ty.Optional[ty.Callable] = None,
+    font_size: int = None,
+) -> "QtPushButton":
+    """Make button."""
+    from qtextra.widgets.qt_tool_button import QtToolButton
+
+    widget = QtToolButton(parent=parent)
+    widget.setText(text)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if flat:
+        widget.setFlat(flat)
+    if font_size:
+        set_font(widget, font_size=font_size)
+    if func and callable(func):
+        widget.clicked.connect(func)
+    return widget
+
+
 def make_rich_btn(parent, text: str, tooltip: str = None, flat: bool = False) -> "QtRichTextButton":
     """Make button."""
     widget = QtRichTextButton(parent, text)
@@ -529,7 +553,8 @@ def make_qta_btn(
     flat: bool = False,
     checkable: bool = False,
     small: bool = False,
-    medium: bool = True,
+    normal: bool = False,
+    medium: bool = False,
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
     func: ty.Optional[ty.Callable] = None,
@@ -542,9 +567,11 @@ def make_qta_btn(
     widget.set_qta(icon_name, **kwargs)
     if small:
         widget.set_small()
-    if medium:
+    elif normal:
+        widget.set_normal()
+    elif medium:
         widget.set_medium()
-    if large:
+    elif large:
         widget.set_large()
     if size and len(size) == 2:
         widget.set_size(size)
@@ -562,6 +589,7 @@ def make_qta_btn(
 def make_lock_btn(
     parent,
     small: bool = False,
+    normal: bool = False,
     medium: bool = False,
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
@@ -576,9 +604,11 @@ def make_lock_btn(
         widget.clicked.connect(func)
     if small:
         widget.set_small()
-    if medium:
+    elif normal:
+        widget.set_normal()
+    elif medium:
         widget.set_medium()
-    if large:
+    elif large:
         widget.set_large()
     if size and len(size) == 2:
         widget.set_size(size)
@@ -603,7 +633,7 @@ def make_svg_btn(
     return widget
 
 
-def make_tool_btn(
+def make_toolbar_btn(
     parent,
     name: str,
     text: str = "",
