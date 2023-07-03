@@ -141,7 +141,7 @@ class CloseMixin:
     HIDE_WHEN_CLOSE = False
 
     def _make_close_handle(self, title: str = ""):
-        close_btn = hp.make_qta_btn(self, "cross", tooltip="Click here to close the popup window")
+        close_btn = hp.make_qta_btn(self, "cross", tooltip="Click here to close the popup window", normal=True)
         close_btn.clicked.connect(self.close)
 
         handle_layout = self._make_move_handle()

@@ -157,9 +157,6 @@ def get_sample_event(**kwargs) -> dict:
     return EVENT
 
 
-print(">?>>", SENTRY_DSN)
-
-
 SENTRY_SETTINGS = {
     "dsn": SENTRY_DSN,
     "release": VERSION,
@@ -167,6 +164,7 @@ SENTRY_SETTINGS = {
     # This can have a performance and PII impact.
     # Enabled by default on platforms where this is available.
     "with_locals": SHOW_LOCALS,
+    "include_local_variables": SHOW_LOCALS,
     # A number between 0 and 1, controlling the percentage chance
     # a given transaction will be sent to Sentry.
     # (0 represents 0% while 1 represents 100%.)
