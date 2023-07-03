@@ -78,6 +78,8 @@ def call_later(parent: Qw.QWidget, func: ty.Callable, delay: int):
     """Call later."""
     QTimer(parent).singleShot(int(delay), func)
 
+run_delayed = call_later
+
 
 def combobox_setter(
     widget: Qw.QComboBox,

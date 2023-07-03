@@ -85,10 +85,15 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
             ha.addWidget(w)
         frame.setLayout(ha)
     if set_style:
-        from qtextra.config.theme import THEMES
-
-        THEMES.set_theme_stylesheet(frame)
+        apply_style(frame)
     return app, frame, ha
+
+
+def apply_style(widget):
+    """Apply stylesheet(s) on the widget."""
+    from qtextra.config.theme import THEMES
+
+    THEMES.set_theme_stylesheet(widget)
 
 
 def qmain(horz: bool = True, set_style: bool = True):
@@ -104,9 +109,7 @@ def qmain(horz: bool = True, set_style: bool = True):
     main.setCentralWidget(QtWidgets.QWidget())
     main.centralWidget().setLayout(ha)
     if set_style:
-        from qtextra.config.theme import THEMES
-
-        THEMES.set_theme_stylesheet(main)
+        apply_style(main)
     return app, main, ha
 
 

@@ -39,6 +39,7 @@ dependencies = [
     "vispy",
     "napari",
     "napari_plot",
+    "sentry_sdk",
 ]
 
 # extras
