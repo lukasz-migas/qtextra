@@ -868,6 +868,7 @@ def make_double_spin_box(
     prefix: ty.Optional[str] = None,
     suffix: ty.Optional[str] = None,
     expand: bool = True,
+    func: ty.Callable = None,
     **kwargs,
 ) -> Qw.QDoubleSpinBox:
     """Make double spinbox."""
@@ -889,6 +890,8 @@ def make_double_spin_box(
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if func:
+        widget.valueChanged.connect(func)
     return widget
 
 

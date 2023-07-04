@@ -43,10 +43,14 @@ def qapplication(test_time: int = 3):
     disable_warnings()
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    QApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
-    QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
+    if hasattr(Qt, "AA_EnableHighDpiScaling"):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    if hasattr(Qt, "AA_UseHighDpiPixmaps"):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    if hasattr(Qt, "AA_UseStyleSheetPropagationInWidgetStyles"):
+        QApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
+    if hasattr(Qt, "AA_ShareOpenGLContexts"):
+        QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
 
     faulthandler.enable()
 
