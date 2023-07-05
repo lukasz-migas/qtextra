@@ -1,13 +1,13 @@
 """Feedback dialog."""
-import os
 import getpass
+import os
+
 from loguru import logger
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFormLayout
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtDialog
-
 
 SENTRY_DSN: str = os.getenv("QTEXTRA_TELEMETRY_SENTRY_DSN", "")
 ORGANIZATION_SLUG: str = os.getenv("QTEXTRA_TELEMETRY_ORGANIZATION", "")
@@ -38,6 +38,8 @@ class FeedbackDialog(QtDialog):
             message="Feedback submitted successfully."
             if event_id
             else "Feedback submission failed. Please try again later.",
+            icon="success" if event_id else "error",
+            position="top_left",
         )
         super().accept()
 
@@ -107,8 +109,8 @@ def submit_feedback(title: str, message: str, name: str = "", email: str = ""):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.utils.dev import qapplication, apply_style
     from qtextra.dialogs.sentry import install_error_monitor
+    from qtextra.utils.dev import apply_style, qapplication
 
     app = qapplication(1)
     install_error_monitor()

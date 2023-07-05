@@ -179,7 +179,8 @@ class QtCheckableItemModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.CheckStateRole:
-            value = value != Qt.Unchecked
+            old_value = index.data()
+            value = not old_value
             change = True
         else:
             old_value = index.data()
@@ -242,7 +243,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.state = not self.state
         for row, __ in enumerate(self._table):
             self._table[row][0] = self.state
-            self.dataChanged.emit(row, 0)
+            self.dataChanged.emit(self.createIndex(row), 0)
         self.evt_checked.emit(-1, self.state)
 
     def uncheck_all_rows(self):
@@ -478,10 +479,10 @@ class QtCheckableTableView(QTableView):
     def setup_model(
         self,
         header: ty.List[str],
-        no_sort_col: ty.List[int] = None,
-        hidden_col: ty.List[int] = None,
-        html_col: ty.List[int] = None,
-        icon_col: ty.List[int] = None,
+        no_sort_col: ty.Optional[ty.List[int]] = None,
+        hidden_col: ty.Optional[ty.List[int]] = None,
+        html_col: ty.Optional[ty.List[int]] = None,
+        icon_col: ty.Optional[ty.List[int]] = None,
     ):
         """Setup model in the table."""
         if hidden_col is None:
@@ -498,10 +499,10 @@ class QtCheckableTableView(QTableView):
         self,
         data: ty.List,
         header: ty.List[str],
-        no_sort_col: ty.List[int] = None,
-        hidden_col: ty.List[int] = None,
-        html_col: ty.List[int] = None,
-        icon_col: ty.List[int] = None,
+        no_sort_col: ty.Optional[ty.List[int]] = None,
+        hidden_col: ty.Optional[ty.List[int]] = None,
+        html_col: ty.Optional[ty.List[int]] = None,
+        icon_col: ty.Optional[ty.List[int]] = None,
     ) -> None:
         """Set data."""
         if hidden_col is None:
@@ -670,7 +671,7 @@ class QtCheckableTableView(QTableView):
         except ValueError:
             return -1
 
-    def sortByColumn(self, index):
+    def sortByColumn(self, index: int):
         """Override method."""
         if index == 0 and self._enable_all_check:
             self.header.setSortIndicatorShown(False)
@@ -678,7 +679,8 @@ class QtCheckableTableView(QTableView):
             return
         else:
             self.header.setSortIndicatorShown(True)
-        return QTableView.sortByColumn(self, index)
+        order = self.horizontalHeader().sortIndicatorOrder()
+        return QTableView.sortByColumn(self, index, order)
 
     def keyPressEvent(self, event):
         """Process key event press."""

@@ -27,7 +27,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_color_button import QtColorSwatch
     from qtextra.widgets.qt_eliding_label import QtElidingLabel
     from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel
-    from qtextra.widgets.qt_image_button import QtImagePushButton, QtToolbarPushButton, QtLockButton
+    from qtextra.widgets.qt_image_button import QtImagePushButton, QtLockButton, QtToolbarPushButton
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
@@ -45,7 +45,9 @@ def make_form_layout(widget: Qw.QWidget = None):
     return layout
 
 
-def make_hbox_layout(widget: Qw.QWidget = None, spacing: int = 0, content_margins: ty.Tuple[int, int, int, int] = None):
+def make_hbox_layout(
+    widget: Qw.QWidget = None, spacing: int = 0, content_margins: ty.Optional[ty.Tuple[int, int, int, int]] = None
+):
     """Make horizontal box layout."""
     layout = Qw.QHBoxLayout(widget)
     layout.setSpacing(spacing)
@@ -85,9 +87,9 @@ run_delayed = call_later
 def combobox_setter(
     widget: Qw.QComboBox,
     clear: bool = True,
-    items: ty.List[str] = None,
-    find_item: str = None,
-    set_item: str = None,
+    items: ty.Optional[ty.List[str]] = None,
+    find_item: ty.Optional[str] = None,
+    set_item: ty.Optional[str] = None,
 ):
     """Combobox setter that blocks any signals."""
     with qt_signals_blocked(widget):
@@ -114,7 +116,7 @@ def check_if_combobox_needs_update(combobox: Qw.QComboBox, new_data: ty.Dict[ty.
     return new_data != existing_data
 
 
-def increment_combobox(combobox: Qw.QComboBox, direction: int, reset_func: ty.Callable = None):
+def increment_combobox(combobox: Qw.QComboBox, direction: int, reset_func: ty.Optional[ty.Callable] = None):
     """Increment combobox."""
     idx = combobox.currentIndex()
     count = combobox.count()
@@ -137,7 +139,7 @@ def make_label(
     object_name: str = "",
     bold: bool = False,
     font_size: ty.Optional[int] = None,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     selectable: bool = False,
     visible: bool = True,
 ) -> Qw.QLabel:
@@ -167,7 +169,7 @@ def make_label(
 def make_click_label(
     parent,
     text: str = "",
-    func: ty.Callable = None,
+    func: ty.Optional[ty.Callable] = None,
     bold: bool = False,
     elide: Qt.TextElideMode = Qt.ElideNone,
     tooltip: str = "",
@@ -187,7 +189,13 @@ def make_click_label(
 
 
 def make_qta_label(
-    parent, icon_name: str, alignment=None, tooltip: str = None, small: bool = False, xsmall: bool = False, **kwargs
+    parent,
+    icon_name: str,
+    alignment=None,
+    tooltip: ty.Optional[str] = None,
+    small: bool = False,
+    xsmall: bool = False,
+    **kwargs,
 ) -> "QtQtaLabel":
     """Make QLabel element."""
     from qtextra.widgets.qt_icon_label import QtQtaLabel
@@ -218,7 +226,7 @@ def make_eliding_label(
     wrap: bool = False,
     object_name: str = "",
     bold: bool = False,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     elide: Qt.TextElideMode = Qt.ElideMiddle,
     font_size: ty.Optional[int] = None,
 ) -> "QtElidingLabel":
@@ -253,7 +261,7 @@ def make_eliding_label2(
     wrap: bool = False,
     object_name: str = "",
     bold: bool = False,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     elide: Qt.TextElideMode = Qt.ElideMiddle,
     font_size: ty.Optional[int] = None,
 ) -> QElidingLabel:
@@ -281,7 +289,7 @@ def make_eliding_label2(
 def make_line_edit(
     parent,
     text: str = "",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     placeholder: str = "",
     bold: bool = False,
     font_size: ty.Optional[int] = None,
@@ -299,7 +307,7 @@ def make_line_edit(
     return widget
 
 
-def make_text_edit(parent, text: str = "", tooltip: str = None, placeholder: str = "") -> Qw.QTextEdit:
+def make_text_edit(parent, text: str = "", tooltip: ty.Optional[str] = None, placeholder: str = "") -> Qw.QTextEdit:
     """Make QTextEdit - a multiline version of QLineEdit."""
     widget = Qw.QTextEdit(parent)
     widget.setText(text)
@@ -311,12 +319,12 @@ def make_text_edit(parent, text: str = "", tooltip: str = None, placeholder: str
 
 def make_combobox(
     parent,
-    items: ty.Iterable[str] = None,
-    tooltip: str = None,
-    enum: ty.List[str] = None,
-    value: str = None,
-    default: str = None,
-    func: ty.Callable = None,
+    items: ty.Optional[ty.Iterable[str]] = None,
+    tooltip: ty.Optional[str] = None,
+    enum: ty.Optional[ty.List[str]] = None,
+    value: ty.Optional[str] = None,
+    default: ty.Optional[str] = None,
+    func: ty.Optional[ty.Callable] = None,
     expand: bool = True,
     data=None,
     **kwargs,
@@ -343,7 +351,9 @@ def make_combobox(
     return widget
 
 
-def make_colormap_combobox(parent, func: ty.Callable = None, default: str = "magma", label_min_width: int = 0):
+def make_colormap_combobox(
+    parent, func: ty.Optional[ty.Callable] = None, default: str = "magma", label_min_width: int = 0
+):
     """Make colormap combobox."""
     from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
     from napari.utils.colormaps import AVAILABLE_COLORMAPS
@@ -375,7 +385,9 @@ def make_colormap_combobox(parent, func: ty.Callable = None, default: str = "mag
     return widget, make_h_layout(widget_label, widget, stretch_id=[1], spacing=0)
 
 
-def make_colormap_combobox_alone(parent: Qw.QWidget = None, func: ty.Callable = None, default: str = "magma"):
+def make_colormap_combobox_alone(
+    parent: Qw.QWidget = None, func: ty.Optional[ty.Callable] = None, default: str = "magma"
+):
     """Make colormap combobox."""
     from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
     from napari.utils.colormaps import AVAILABLE_COLORMAPS
@@ -390,7 +402,9 @@ def make_colormap_combobox_alone(parent: Qw.QWidget = None, func: ty.Callable = 
     return widget
 
 
-def make_searchable_combobox(parent, items: ty.Iterable[str] = None, tooltip: str = None) -> "QtSearchableComboBox":
+def make_searchable_combobox(
+    parent, items: ty.Optional[ty.Iterable[str]] = None, tooltip: ty.Optional[str] = None
+) -> "QtSearchableComboBox":
     """Make QComboBox."""
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
 
@@ -403,7 +417,7 @@ def make_searchable_combobox(parent, items: ty.Iterable[str] = None, tooltip: st
 
 
 def set_combobox_data(
-    widget: Qw.QComboBox, data: ty.Union[ty.Dict, ty.OrderedDict, Enum], current_item: ty.Optional = None
+    widget: Qw.QComboBox, data: ty.Union[ty.Dict, ty.OrderedDict, Enum], current_item: ty.Optional[str] = None
 ):
     """Set data/value on combobox."""
     if not isinstance(data, (ty.Dict, ty.OrderedDict)):
@@ -443,7 +457,7 @@ def make_icon(path: str) -> QIcon:
     return icon
 
 
-def make_qta_icon(name: str, color: str = None, **kwargs):
+def make_qta_icon(name: str, color: ty.Optional[str] = None, **kwargs):
     """Make QTA label."""
     from qtextra.assets import get_icon
     from qtextra.config import THEMES
@@ -455,7 +469,7 @@ def make_qta_icon(name: str, color: str = None, **kwargs):
     return icon
 
 
-def make_svg_label(parent, object_name: str, tooltip: str = None) -> "QtIconLabel":
+def make_svg_label(parent, object_name: str, tooltip: ty.Optional[str] = None) -> "QtIconLabel":
     """Make icon label."""
     widget = QtIconLabel(parent=parent, object_name=object_name)
     if tooltip:
@@ -466,11 +480,11 @@ def make_svg_label(parent, object_name: str, tooltip: str = None) -> "QtIconLabe
 def make_btn(
     parent,
     text: str,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     flat: bool = False,
     checkable=False,
     func: ty.Optional[ty.Callable] = None,
-    font_size: int = None,
+    font_size: ty.Optional[int] = None,
 ) -> "QtPushButton":
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
@@ -492,10 +506,10 @@ def make_btn(
 def make_tool_btn(
     parent,
     text: str,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     flat: bool = False,
     func: ty.Optional[ty.Callable] = None,
-    font_size: int = None,
+    font_size: ty.Optional[int] = None,
 ) -> "QtPushButton":
     """Make button."""
     from qtextra.widgets.qt_tool_button import QtToolButton
@@ -513,7 +527,7 @@ def make_tool_btn(
     return widget
 
 
-def make_rich_btn(parent, text: str, tooltip: str = None, flat: bool = False) -> "QtRichTextButton":
+def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> "QtRichTextButton":
     """Make button."""
     widget = QtRichTextButton(parent, text)
     if tooltip:
@@ -523,7 +537,7 @@ def make_rich_btn(parent, text: str, tooltip: str = None, flat: bool = False) ->
     return widget
 
 
-def make_active_btn(parent, text: str, tooltip: str = None, flat: bool = False) -> "QtActivePushButton":
+def make_active_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> "QtActivePushButton":
     """Make button with activity indicator."""
     widget = QtActivePushButton(parent=parent)
     widget.setParent(parent)
@@ -550,7 +564,7 @@ def make_scroll_area(parent, vertical=Qt.ScrollBarAsNeeded, horizontal=Qt.Scroll
 def make_qta_btn(
     parent,
     icon_name: str,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     flat: bool = False,
     checkable: bool = False,
     small: bool = False,
@@ -617,7 +631,12 @@ def make_lock_btn(
 
 
 def make_svg_btn(
-    parent, object_name: str, text: str = "", tooltip: str = None, flat: bool = False, checkable: bool = False
+    parent,
+    object_name: str,
+    text: str = "",
+    tooltip: ty.Optional[str] = None,
+    flat: bool = False,
+    checkable: bool = False,
 ) -> "QtImagePushButton":
     """Make button."""
     from qtextra.widgets.qt_image_button import QtImagePushButton
@@ -638,7 +657,7 @@ def make_toolbar_btn(
     parent,
     name: str,
     text: str = "",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     flat: bool = False,
     checkable: bool = False,
     medium: bool = False,
@@ -715,7 +734,11 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu):
 
 
 def make_bitmap_tool_btn(
-    parent, icon: QIcon, min_size: ty.Tuple[int] = None, max_size: ty.Tuple[int] = None, tooltip: str = None
+    parent,
+    icon: QIcon,
+    min_size: ty.Optional[ty.Tuple[int]] = None,
+    max_size: ty.Optional[ty.Tuple[int]] = None,
+    tooltip: ty.Optional[str] = None,
 ) -> "QtToolButton":
     """Make bitmap button."""
     from qtextra.widgets.qt_tool_button import QtToolButton
@@ -734,14 +757,14 @@ def make_bitmap_tool_btn(
 def make_checkbox(
     parent,
     text: str = "",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     default: bool = False,
     value: ty.Optional[bool] = None,
     expand: bool = True,
-    func: ty.Callable = None,
-    clicked: ty.Callable = None,
+    func: ty.Optional[ty.Callable] = None,
+    clicked: ty.Optional[ty.Callable] = None,
     tristate: bool = False,
-    model: ty.Callable = None,
+    model: ty.Optional[ty.Callable] = None,
     **kwargs,
 ) -> Qw.QCheckBox:
     """Make checkbox."""
@@ -770,7 +793,7 @@ def make_slider(
     maximum: float = 100,
     step_size: float = 1,
     orientation="horizontal",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     default: float = 1,
     value: ty.Optional[float] = None,
     expand: bool = True,
@@ -799,7 +822,7 @@ def make_labelled_slider(
     maximum: float = 100,
     step_size: float = 1,
     orientation="horizontal",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     default: float = 1,
     value: ty.Optional[float] = None,
     expand: bool = True,
@@ -828,7 +851,7 @@ def make_int_spin_box(
     maximum: int = 100,
     step_size: int = 1,
     default: int = 1,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     value: ty.Optional[int] = None,
     prefix: ty.Optional[str] = None,
     suffix: ty.Optional[str] = None,
@@ -863,12 +886,12 @@ def make_double_spin_box(
     step_size: float = 0.01,
     default: float = 1,
     n_decimals: int = 1,
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     value: ty.Optional[float] = None,
     prefix: ty.Optional[str] = None,
     suffix: ty.Optional[str] = None,
     expand: bool = True,
-    func: ty.Callable = None,
+    func: ty.Optional[ty.Callable] = None,
     **kwargs,
 ) -> Qw.QDoubleSpinBox:
     """Make double spinbox."""
@@ -895,7 +918,9 @@ def make_double_spin_box(
     return widget
 
 
-def make_radio_btn(parent, title: str, tooltip: str = None, expand: bool = True, **_kwargs) -> Qw.QRadioButton:
+def make_radio_btn(
+    parent, title: str, tooltip: ty.Optional[str] = None, expand: bool = True, **_kwargs
+) -> Qw.QRadioButton:
     """Make radio button."""
     widget = Qw.QRadioButton(parent)
     widget.setText(title)
@@ -949,7 +974,7 @@ def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
 
 def make_v_layout(
     *widgets: ty.Tuple[Qw.QWidget],
-    stretch_id: ty.Union[int, ty.Sequence[int]] = None,
+    stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
 ) -> Qw.QVBoxLayout:
@@ -961,8 +986,8 @@ def make_v_layout(
 
 
 def make_h_layout(
-    *widgets: ty.Tuple[Qw.QWidget],
-    stretch_id: ty.Union[int, ty.Sequence[int]] = None,
+    *widgets: Qw.QWidget,
+    stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
 ) -> Qw.QHBoxLayout:
@@ -1109,13 +1134,13 @@ def make_menu(parent, title: str = "") -> Qw.QMenu:
 def make_menu_item(
     parent,
     title: str,
-    shortcut: str = None,
+    shortcut: ty.Optional[str] = None,
     icon: ty.Union[QPixmap, str] = None,
     menu: Qw.QMenu = None,
-    status_tip: str = None,
-    tooltip: str = None,
+    status_tip: ty.Optional[str] = None,
+    tooltip: ty.Optional[str] = None,
     checkable: bool = False,
-    func: ty.Callable = None,
+    func: ty.Optional[ty.Callable] = None,
 ) -> "QtQtaAction":
     """Make menu item."""
     from qtextra.widgets.qt_action import QtQtaAction
@@ -1190,19 +1215,33 @@ def warn(parent, message: str, title: str = "Warning"):
     dlg.exec_()
 
 
-def toast(parent, title: str, message: str, func: ty.Callable = logger.info):
+def toast(
+    parent,
+    title: str,
+    message: str,
+    func: ty.Callable = logger.info,
+    position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
+    icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
+):
     """Show notification."""
     from qtextra.widgets.qt_toast import QtToast
 
     func(message)
-    QtToast(parent).show_message(title, message)
+    QtToast(parent).show_message(title, message, position=position, icon=icon)
 
 
-def long_toast(parent, title: str, message: str, duration: int = 10000, position="top_right", icon: str = "none"):
+def long_toast(
+    parent,
+    title: str,
+    message: str,
+    duration: int = 10000,
+    position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
+    icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
+):
     """Show notification."""
     from qtextra.widgets.qt_toast import QtToast
 
-    QtToast(parent).show_long_message(title, message, duration, position)
+    QtToast(parent).show_long_message(title, message, duration, position=position, icon=icon)
 
 
 def open_filename(parent, title: str = "Select file...", base_dir: str = "", file_filter: str = "*") -> str:
@@ -1226,7 +1265,11 @@ def get_directory(parent, title: str = "Select directory...", base_dir: str = ""
 
 
 def get_filename(
-    parent, title: str = "Save file...", base_dir: str = "", file_filter: str = "*", base_filename: str = None
+    parent,
+    title: str = "Save file...",
+    base_dir: str = "",
+    file_filter: str = "*",
+    base_filename: ty.Optional[str] = None,
 ) -> str:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
@@ -1238,7 +1281,11 @@ def get_filename(
 
 
 def get_save_filename(
-    parent, title: str = "Save file...", base_dir: str = "", file_filter: str = "*", base_filename: str = None
+    parent,
+    title: str = "Save file...",
+    base_dir: str = "",
+    file_filter: str = "*",
+    base_filename: ty.Optional[str] = None,
 ) -> str:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
@@ -1292,12 +1339,23 @@ def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True
 
 def confirm(parent, message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
-    from qtpy.QtWidgets import QMessageBox
+    from qtpy.QtWidgets import QDialog
 
-    ret = QMessageBox.question(parent, title, message)
-    if ret in [QMessageBox.Yes, QMessageBox.Ok]:
-        return True
-    return False
+    dlg = QDialog(parent)
+    dlg.setObjectName("confirm_dialog")
+    dlg.setMinimumSize(300, 200)
+    dlg.setWindowTitle(title)
+    layout = make_v_layout()
+    layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True), stretch=True)
+    layout.addLayout(
+        make_h_layout(
+            make_btn(dlg, "Yes", func=dlg.accept),
+            make_btn(dlg, "No", func=dlg.reject),
+        )
+    )
+    dlg.setLayout(layout)
+    ret = dlg.exec_()
+    return bool(ret)
 
 
 def get_text(parent, label: str = "New value", title: str = "Text", value: str = "") -> ty.Optional[str]:

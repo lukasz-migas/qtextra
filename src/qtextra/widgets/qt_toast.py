@@ -62,8 +62,9 @@ class QtToast(SubWindowBase):
         layout.addStretch(1)
         layout.addWidget(self._timer_indicator)
 
-    def show_message(self, title: str, message: str, icon: str = "info"):
+    def show_message(self, title: str, message: str, icon: str = "info", position: str = "top_right"):
         """Show message."""
+        self.POSITION = position
         self._title_label.setText(title)
         self._message_label.setText(message)
         self._icon_label.severity = str(icon)

@@ -1,6 +1,8 @@
 """Table configuration class."""
 import typing as ty
 
+from koyo.utilities import is_valid_python_name
+
 
 class TableConfig(dict):
     """Table configuration object."""
@@ -20,6 +22,16 @@ class TableConfig(dict):
         if val == -1:
             raise KeyError("Could not retrieve value")
         return val
+
+    def __dir__(self):
+        # noinspection PyUnresolvedReferences
+        base = super().__dir__()
+        keys = sorted(set(base + list(self) + list(self.keys())))
+        keys = [k for k in keys if is_valid_python_name(k)]
+        return keys
+
+    def _ipython_key_completions_(self):
+        return sorted(self)
 
     def __getattr__(self, item: ty.Union[int, str]):
         # allow access to group members via dot notation
