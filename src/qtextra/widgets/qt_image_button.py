@@ -78,6 +78,21 @@ class QtImagePushButton(QPushButton):
         self.setObjectName("large_icon")
         self.setIconSize(QSize(32, 32))
 
+    def set_xlarge(self):
+        """Set large."""
+        self.setObjectName("xlarge_icon")
+        self.setIconSize(QSize(60, 60))
+
+    def set_xxlarge(self):
+        """Set large."""
+        self.setObjectName("xxlarge_icon")
+        self.setIconSize(QSize(80, 80))
+
+    def set_xxxlarge(self):
+        """Set large."""
+        self.setObjectName("xxxlarge_icon")
+        self.setIconSize(QSize(120, 120))
+
     def _update_qta(self):
         """Update qta icon."""
         if self._qta_data:

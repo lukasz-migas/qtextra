@@ -573,6 +573,7 @@ def make_qta_btn(
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
     func: ty.Optional[ty.Callable] = None,
+    object_name: str = "",
     **kwargs,
 ) -> "QtImagePushButton":
     """Make button with qtawesome icon."""
@@ -596,6 +597,8 @@ def make_qta_btn(
         widget.setFlat(flat)
     if checkable:
         widget.setCheckable(checkable)
+        if object_name:
+            widget.setObjectName(object_name)
     if func is not None:
         widget.clicked.connect(func)
     return widget

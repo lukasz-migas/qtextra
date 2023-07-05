@@ -243,7 +243,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.state = not self.state
         for row, __ in enumerate(self._table):
             self._table[row][0] = self.state
-            self.dataChanged.emit(self.createIndex(row), 0)
+            self.dataChanged.emit(self.createIndex(row, 0), 0)
         self.evt_checked.emit(-1, self.state)
 
     def uncheck_all_rows(self):
