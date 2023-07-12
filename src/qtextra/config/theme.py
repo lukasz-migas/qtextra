@@ -264,10 +264,13 @@ class Theme(EventedModel):
         "standout",
         pre=True,
     )
-    def _ensure_list(cls, value):
+    def _validate_color(cls, value) -> Color:
+        # print("VALIDATING", value)
         if isinstance(value, np.ndarray):
             value = value.tolist()
-        return value
+        elif isinstance(value, str):
+            value = Color(value).as_hex()
+        return Color(value)
 
     @validator("syntax_style", pre=True)
     def _ensure_syntax_style(value: str) -> str:
@@ -358,6 +361,9 @@ class Themes(ConfigBase):
         # synchronize our icon with napari icon color
         for name in _themes:
             _themes[name].icon = self.get_hex_color("icon")
+
+        for theme in self.themes.values():
+            theme.events.connect(lambda _: self.evt_theme_changed.emit())
 
     def __getitem__(self, item):
         return self.themes[item]

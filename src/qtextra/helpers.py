@@ -293,6 +293,9 @@ def make_line_edit(
     placeholder: str = "",
     bold: bool = False,
     font_size: ty.Optional[int] = None,
+    object_name: str = "",
+    validator=None,
+    func: ty.Callable = None,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
     widget = Qw.QLineEdit(parent)
@@ -303,6 +306,12 @@ def make_line_edit(
         set_bold(widget, bold)
     if tooltip:
         widget.setToolTip(tooltip)
+    if object_name:
+        widget.setObjectName(object_name)
+    if validator:
+        widget.setValidator(validator)
+    if func:
+        widget.textChanged.connect(func)
     widget.setPlaceholderText(placeholder)
     return widget
 
@@ -1144,6 +1153,7 @@ def make_menu_item(
     tooltip: ty.Optional[str] = None,
     checkable: bool = False,
     func: ty.Optional[ty.Callable] = None,
+    disabled: bool = False,
 ) -> "QtQtaAction":
     """Make menu item."""
     from qtextra.widgets.qt_action import QtQtaAction
@@ -1167,6 +1177,8 @@ def make_menu_item(
         menu.addAction(widget)
     if func is not None:
         widget.triggered.connect(func)
+    if disabled:
+        widget.setDisabled(disabled)
     return widget
 
 
@@ -1213,6 +1225,7 @@ def warn(parent, message: str, title: str = "Warning"):
     from qtpy.QtWidgets import QMessageBox
 
     dlg = QMessageBox(parent=parent, icon=QMessageBox.Warning)
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)
     dlg.setWindowTitle(title)
     dlg.setText(message)
     dlg.exec_()
@@ -1398,11 +1411,11 @@ def get_double(
 
 
 @contextmanager
-def qt_signals_blocked(obj):
+def qt_signals_blocked(*obj):
     """Context manager to temporarily block signals from `obj`."""
-    obj.blockSignals(True)
+    [_obj.blockSignals(True) for _obj in obj]
     yield
-    obj.blockSignals(False)
+    [_obj.blockSignals(False) for _obj in obj]
 
 
 @contextmanager
@@ -1605,16 +1618,40 @@ def make_gif(which: str = "square", size=(20, 20), start: bool = True) -> QMovie
     return movie
 
 
-def make_progress_widget(widget, tooltip: str = "Click here to cancel the task.", with_progress: bool = False):
+def find_in_table(table: Qw.QTableWidget, column: int, text: str) -> ty.Optional[int]:
+    """Find text in table."""
+    for row in range(table.rowCount()):
+        item = table.item(row, column)
+        if item is not None and item.text() == text:
+            return row
+    return None
+
+
+def make_progress_widget(
+    widget,
+    tooltip: str = "Click here to cancel the task.",
+    with_progress: bool = False,
+    with_cancel: bool = True,
+    with_layout: bool = True,
+):
     """Create progress widget and all other elements."""
+    if with_cancel and not with_layout:
+        raise ValueError("Cannot have cancel button without layout.")
+
     progress_widget = Qw.QWidget(widget)
     progress_widget.hide()
     progress_bar = make_progressbar(progress_widget, with_progress=with_progress)
-    cancel_btn = make_qta_btn(progress_widget, "cross_full", tooltip=tooltip)
 
-    progress_layout = Qw.QHBoxLayout(progress_widget)
-    progress_layout.addWidget(progress_bar, stretch=True, alignment=Qt.AlignVCenter)
-    progress_layout.addWidget(cancel_btn, alignment=Qt.AlignVCenter)
+    if with_layout:
+        progress_layout = Qw.QHBoxLayout(progress_widget)
+        progress_layout.addWidget(progress_bar, stretch=True, alignment=Qt.AlignVCenter)
+    else:
+        progress_layout = None
+    if with_cancel:
+        cancel_btn = make_qta_btn(progress_widget, "cross_full", tooltip=tooltip)
+        progress_layout.addWidget(cancel_btn, alignment=Qt.AlignVCenter)
+    else:
+        cancel_btn = None
     return progress_layout, progress_widget, progress_bar, cancel_btn
 
 
