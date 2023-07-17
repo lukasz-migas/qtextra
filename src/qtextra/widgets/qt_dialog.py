@@ -487,6 +487,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         layout.addWidget(self._title_label)
         layout.addStretch(1)
         layout.addWidget(self._move_handle)
+        self._title_layout = layout
         return layout
 
     def mousePressEvent(self, event):

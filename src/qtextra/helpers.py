@@ -989,12 +989,13 @@ def make_v_layout(
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
+    alignment: ty.Optional[Qt.Alignment] = None,
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
     layout = Qw.QVBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
-    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id)
+    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment)
 
 
 def make_h_layout(
@@ -1002,15 +1003,16 @@ def make_h_layout(
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
+    alignment: ty.Optional[Qt.Alignment] = None,
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
-    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id)
+    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment)
 
 
-def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int):
+def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.Optional[Qt.Alignment] = None):
     for widget in widgets:
         if isinstance(widget, Qw.QLayout):
             layout.addLayout(widget)
@@ -1023,6 +1025,8 @@ def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int):
             stretch_id = (stretch_id,)
         for st_id in stretch_id:
             layout.setStretch(st_id, True)
+    if alignment:
+        layout.setAlignment(alignment)
     return layout
 
 
@@ -1358,6 +1362,7 @@ def confirm(parent, message: str, title: str = "Are you sure?") -> bool:
     from qtpy.QtWidgets import QDialog
 
     dlg = QDialog(parent)
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)
     dlg.setObjectName("confirm_dialog")
     dlg.setMinimumSize(300, 200)
     dlg.setWindowTitle(title)
