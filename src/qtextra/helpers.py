@@ -621,6 +621,7 @@ def make_lock_btn(
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
     func: ty.Optional[ty.Callable] = None,
+    tooltip: ty.Optional[str] = None,
 ) -> "QtLockButton":
     """Make lock button."""
     from qtextra.widgets.qt_image_button import QtLockButton
@@ -639,6 +640,8 @@ def make_lock_btn(
         widget.set_large()
     if size and len(size) == 2:
         widget.set_size(size)
+    if tooltip:
+        widget.setToolTip(tooltip)
     return widget
 
 

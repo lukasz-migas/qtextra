@@ -105,3 +105,4 @@ ENV/
 .vscode/
 
 _version.py
+*.iml
