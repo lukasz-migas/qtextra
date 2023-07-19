@@ -295,7 +295,7 @@ def make_line_edit(
     font_size: ty.Optional[int] = None,
     object_name: str = "",
     validator=None,
-    func: ty.Callable = None,
+    func: ty.Optional[ty.Callable] = None,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
     widget = Qw.QLineEdit(parent)
@@ -583,6 +583,7 @@ def make_qta_btn(
     size: ty.Optional[ty.Tuple[int, int]] = None,
     func: ty.Optional[ty.Callable] = None,
     object_name: str = "",
+    retain_size: bool = False,
     **kwargs,
 ) -> "QtImagePushButton":
     """Make button with qtawesome icon."""
@@ -610,6 +611,8 @@ def make_qta_btn(
             widget.setObjectName(object_name)
     if func is not None:
         widget.clicked.connect(func)
+    if retain_size:
+        set_retain_hidden_size_policy(widget)
     return widget
 
 
@@ -959,19 +962,25 @@ def make_h_line_with_text(label: str, parent: Qw.QWidget = None):
     return make_h_layout(make_h_line(parent), make_label(parent, label), make_h_line(parent), stretch_id=(0, 2))
 
 
-def make_h_line(parent: Qw.QWidget = None) -> "QtHorzLine":
+def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtHorzLine":
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtHorzLine
 
     widget = QtHorzLine(parent)
+    if thin:
+        widget.setFrameShape(Qw.QFrame.HLine)
+        widget.setFrameShadow(Qw.QFrame.Plain)
+        widget.setObjectName("thin")
     return widget
 
 
-def make_v_line(parent: Qw.QWidget = None) -> "QtVertLine":
+def make_v_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtVertLine":
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtVertLine
 
     widget = QtVertLine(parent)
+    if thin:
+        widget.setObjectName("thin")
     return widget
 
 
@@ -992,7 +1001,7 @@ def make_v_layout(
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
-    alignment: ty.Optional[Qt.Alignment] = None,
+    alignment: ty.Optional = None,
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
     layout = Qw.QVBoxLayout()
@@ -1006,7 +1015,7 @@ def make_h_layout(
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
-    alignment: ty.Optional[Qt.Alignment] = None,
+    alignment: ty.Optional = None,
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout()
@@ -1015,7 +1024,7 @@ def make_h_layout(
     return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment)
 
 
-def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.Optional[Qt.Alignment] = None):
+def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.Optional = None):
     for widget in widgets:
         if isinstance(widget, Qw.QLayout):
             layout.addLayout(widget)
@@ -1466,6 +1475,8 @@ def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.5)
         if disabled:
             op = Qw.QGraphicsOpacityEffect(wdg)
             op.setOpacity(min_opacity if disabled else 1.0)
+        if wdg.graphicsEffect() is not None and disabled:
+            wdg.graphicsEffect().setEnabled(False)
         wdg.setGraphicsEffect(op)
 
 
@@ -1807,3 +1818,11 @@ def trim_dialog_size(dlg) -> ty.Tuple[int, int]:
         if ch > mh:
             ch = mh - 50
     return cw, ch
+
+
+def style_form_layout(layout):
+    """Override certain styles for macOS."""
+    from qtextra.utils.utilities import IS_MAC
+
+    if IS_MAC:
+        layout.setVerticalSpacing(4)

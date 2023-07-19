@@ -1,17 +1,21 @@
 """Themes configuration file."""
+import re
 import typing as ty
+from functools import lru_cache
+from itertools import product
 from pathlib import Path
 
 import numpy as np
 from loguru import logger
 from napari.utils.theme import _themes
 from psygnal import EventedModel
-from pydantic import ValidationError, validator, PrivateAttr
+from pydantic import PrivateAttr, ValidationError, validator
 from pydantic.color import Color
 from qtpy.QtCore import QDateTime, QTime, Signal
 from qtpy.QtWidgets import QWidget
 
 from qtextra.config.config import ConfigBase, _get_previous_configs
+from qtextra.utils.appdirs import USER_CACHE_DIR
 
 DARK_THEME = {
     "name": "dark",
@@ -451,7 +455,9 @@ class Themes(ConfigBase):
         color: Color = getattr(self.active, name)
         return color.as_hex()
 
-    def get_theme(self, theme_name: str = None, as_dict: bool = False) -> ty.Union[Theme, ty.Dict[str, str]]:
+    def get_theme(
+        self, theme_name: ty.Optional[str] = None, as_dict: bool = False
+    ) -> ty.Union[Theme, ty.Dict[str, str]]:
         """Get a theme based on its name.
 
         Parameters
@@ -498,7 +504,7 @@ class Themes(ConfigBase):
         QDir.addSearchPath(f"theme_{name}", str(self.get_theme_path(name)))
         logger.debug(f"Added '{name}' theme to resources path")
 
-    def register_themes(self, names: ty.List[str] = None):
+    def register_themes(self, names: ty.Optional[ty.List[str]] = None):
         """Register themes."""
         from qtextra.icons import build_theme_svgs
 
@@ -512,14 +518,14 @@ class Themes(ConfigBase):
         """Get list of available themes."""
         return tuple(self.themes)
 
-    def get_theme_color(self, theme_name: str = None, key: str = "text"):
+    def get_theme_color(self, theme_name: ty.Optional[str] = None, key: str = "text"):
         """Get text color appropriate for the theme."""
         if theme_name is None:
             theme_name = self.theme
         palette = self.themes[theme_name]
         return getattr(palette, key).as_hex()
 
-    def get_theme_stylesheet(self, theme_name: str = None):
+    def get_theme_stylesheet(self, theme_name: ty.Optional[str] = None):
         """Get stylesheet."""
         from qtextra.assets import get_stylesheet
         from qtextra.utils.template import template
@@ -531,7 +537,7 @@ class Themes(ConfigBase):
         stylesheet = template(stylesheet, **palette)
         return stylesheet
 
-    def set_theme_stylesheet(self, widget: QWidget, theme_name: str = None):
+    def set_theme_stylesheet(self, widget: QWidget, theme_name: ty.Optional[str] = None):
         """Set stylesheet on widget."""
         widget.setStyleSheet(self.get_theme_stylesheet(theme_name))
 
@@ -591,6 +597,143 @@ class Themes(ConfigBase):
 def get_previous_configs(base_dir: ty.Optional[str] = None, filename: str = "themes-config.json") -> ty.Dict[str, str]:
     """Return dictionary of version : path of previous configuration files."""
     return _get_previous_configs(base_dir, filename)
+
+
+svg_elem = re.compile(r"(<svg[^>]*>)")
+svg_style = """<style type="text/css">
+path {{fill: {0}; opacity: {1};}}
+polygon {{fill: {0}; opacity: {1};}}
+circle {{fill: {0}; opacity: {1};}}
+rect {{fill: {0}; opacity: {1};}}
+</style>"""
+
+
+def get_theme_cache_dir(theme_name: str) -> Path:
+    """Get theme cache directory."""
+    return Path(USER_CACHE_DIR) / "_themes" / theme_name
+
+
+@lru_cache
+def get_raw_svg(path: str) -> str:
+    """Get and cache SVG XML."""
+    return Path(path).read_text()
+
+
+@lru_cache
+def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: ty.Optional[str] = None, opacity=1) -> str:
+    """Return a colorized version of the SVG XML at ``path``.
+
+    Raises
+    ------
+    ValueError
+        If the path exists but does not contain valid SVG data.
+    """
+    path_or_xml = str(path_or_xml)
+    xml = path_or_xml if "</svg>" in path_or_xml else get_raw_svg(path_or_xml)
+    if not color:
+        return xml
+
+    if not svg_elem.search(xml):
+        raise ValueError(f"Could not detect svg tag in {path_or_xml!r}")
+    # use regex to find the svg tag and insert css right after
+    # (the '\\1' syntax includes the matched tag in the output)
+    return svg_elem.sub(f"\\1{svg_style.format(color, opacity)}", xml)
+
+
+def generate_colorized_svgs(
+    svg_paths: ty.Iterable[ty.Union[str, Path]],
+    colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
+    opacities: ty.Iterable[float] = (1.0,),
+    theme_override: ty.Optional[ty.Optional[ty.Dict[str, str]]] = None,
+) -> ty.Iterator[ty.Tuple[str, str]]:
+    """Helper function to generate colorized SVGs.
+
+    This is a generator that yields tuples of ``(alias, icon_xml)`` for every
+    combination (Cartesian product) of `svg_path`, `color`, and `opacity`
+    provided. It can be used as input to :func:`_temporary_qrc_file`.
+
+    Parameters
+    ----------
+    svg_paths : Iterable[Union[str, Path]]
+        An iterable of paths to svg files
+    colors : Iterable[Union[str, Tuple[str, str]]]
+        An iterable of colors.  Every icon will be generated in every color. If
+        a `color` item is a string, it should be valid svg color style. Items
+        may also be a 2-tuple of strings, in which case the first item should
+        be an available theme name
+        (:func:`~napari.utils.theme.available_themes`), and the second item
+        should be a key in the theme (:func:`~napari.utils.theme.get_theme`),
+    opacities : Iterable[float], optional
+        An iterable of opacities to generate, by default (1.0,) Opacities less
+        than one can be accessed in qss with the opacity as a percentage
+        suffix, e.g.: ``my_svg_50.svg`` for opacity 0.5.
+    theme_override : Optional[Dict[str, str]], optional
+        When one of the `colors` is a theme ``(name, key)`` tuple,
+        `theme_override` may be used to override the `key` for a specific icon
+        name in `svg_paths`.  For example ``{'exclamation': 'warning'}``, would
+        use the theme "warning" color for any icon named "exclamation.svg" by
+        default `None`
+
+    Yields
+    ------
+    (alias, xml) : Iterator[Tuple[str, str]]
+        `alias` is the name that will used to access the icon in the Qt
+        Resource system (such as QSS), and `xml` is the *raw* colorzied SVG
+        text (as read from a file, perhaps pre-colored using one of the below
+        functions).
+    """
+    # mapping of svg_stem to theme_key
+    theme_override = theme_override or {}
+
+    ALIAS_T = "{color}/{svg_stem}{opacity}.svg"
+
+    for color, path, op in product(colors, svg_paths, opacities):
+        clrkey = color
+        svg_stem = Path(path).stem
+        if isinstance(color, tuple):
+            clrkey, theme_key = color
+            theme_key = theme_override.get(svg_stem, theme_key)
+            color = getattr(THEMES.get_theme(clrkey, False), theme_key).as_hex()
+            # convert color to string to fit get_colorized_svg signature
+
+        op_key = "" if op == 1 else f"_{op * 100:.0f}"
+        alias = ALIAS_T.format(color=clrkey, svg_stem=svg_stem, opacity=op_key)
+        yield alias, get_colorized_svg(path, color, op)
+
+
+def write_colorized_svgs(
+    dest: ty.Union[str, Path],
+    svg_paths: ty.Iterable[ty.Union[str, Path]],
+    colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
+    opacities: ty.Iterable[float] = (1.0,),
+    theme_override: ty.Optional[ty.Optional[ty.Dict[str, str]]] = None,
+):
+    dest = Path(dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    svgs = generate_colorized_svgs(
+        svg_paths=svg_paths,
+        colors=colors,
+        opacities=opacities,
+        theme_override=theme_override,
+    )
+
+    for alias, svg in svgs:
+        (dest / Path(alias).name).write_text(svg)
+
+
+def build_theme_svgs(theme_name: str) -> str:
+    """Build theme SVGs."""
+    from qtextra.assets import ICONS
+
+    out = get_theme_cache_dir(theme_name)
+    write_colorized_svgs(
+        out,
+        svg_paths=ICONS.values(),
+        colors=[(theme_name, "icon")],
+        opacities=(0.5, 1),
+        theme_override={"warning": "warning", "logo_silhouette": "background"},
+    )
+    return str(out)
 
 
 THEMES: Themes = Themes()
