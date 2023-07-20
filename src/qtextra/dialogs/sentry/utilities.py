@@ -16,6 +16,11 @@ except ImportError:  # pragma: no cover
     from pprint import pprint
 
 import sentry_sdk
+from getpass import getuser
+
+from koyo.utilities import running_as_pyinstaller_app
+
+sentry_sdk.set_user({"username": getuser(), "ip_address": "{{auto}}"})
 
 # disable logging from sentry_sdk
 logging.getLogger("sentry_sdk").setLevel(logging.ERROR)
@@ -118,6 +123,8 @@ def _get_tags() -> dict:
 
     with suppress(ModuleNotFoundError, ImportError):
         tags["editable_install"] = str(is_editable_install(PACKAGE))
+    tags["frozen"] = running_as_pyinstaller_app()
+    tags["username"] = getuser()
     return tags
 
 
@@ -176,10 +183,10 @@ SENTRY_SETTINGS = {
     # corresponds to the device hostname, even in situations where the
     # machine is not actually a server. Most SDKs will attempt to
     # auto-discover this value. (computer name: potentially PII)
-    "server_name": "",
+    # "server_name": "",
     # If this flag is enabled, certain personally identifiable information (PII)
     # is added by active integrations. By default, no such data is sent.
-    "send_default_pii": False,
+    "send_default_pii": True,
     # This function is called with an SDK-specific event object, and can return a
     # modified event object or nothing to skip reporting the event.
     # This can be used, for instance, for manual PII stripping before sending.
