@@ -1002,12 +1002,13 @@ def make_v_layout(
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
     alignment: ty.Optional = None,
+stretch_before: bool = False, stretch_after: bool = False
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
     layout = Qw.QVBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
-    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment)
+    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment, stretch_before=stretch_before, stretch_after=stretch_after)
 
 
 def make_h_layout(
@@ -1016,15 +1017,18 @@ def make_h_layout(
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
     alignment: ty.Optional = None,
+stretch_before: bool = False, stretch_after: bool = False
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
-    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment)
+    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment, stretch_before=stretch_before, stretch_after=stretch_after)
 
 
-def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.Optional = None):
+def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.Optional = None, stretch_before: bool = False, stretch_after: bool = False):
+    if stretch_before:
+        layout.addStretch(True)
     for widget in widgets:
         if isinstance(widget, Qw.QLayout):
             layout.addLayout(widget)
@@ -1039,6 +1043,8 @@ def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.
             layout.setStretch(st_id, True)
     if alignment:
         layout.setAlignment(alignment)
+    if stretch_after:
+        layout.addStretch(True)
     return layout
 
 
@@ -1284,7 +1290,7 @@ def open_filename(parent, title: str = "Select file...", base_dir: str = "", fil
     return filename
 
 
-def get_directory(parent, title: str = "Select directory...", base_dir: str = "", native: bool = True) -> str:
+def get_directory(parent, title: str = "Select directory...", base_dir: PathLike = "", native: bool = True) -> str:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
@@ -1292,7 +1298,7 @@ def get_directory(parent, title: str = "Select directory...", base_dir: str = ""
     if not native:
         options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks | QFileDialog.DontUseNativeDialog
 
-    directory = QFileDialog.getExistingDirectory(parent, title, base_dir, options=options)
+    directory = QFileDialog.getExistingDirectory(parent, title, str(base_dir), options=options)
     return directory
 
 
@@ -1763,7 +1769,7 @@ def parse_title_message_to_html(title: str, message: str = ""):
     return f"<strong>{title}</strong><p>{message}</p>"
 
 
-def get_icon_from_img(path):
+def get_icon_from_img(path: PathLike) -> ty.Optional[QIcon]:
     """Get icon
     any type.
 
@@ -1781,7 +1787,7 @@ def get_icon_from_img(path):
         return None
 
     icon = QIcon()
-    icon.addPixmap(QPixmap(path), QIcon.Normal, QIcon.Off)
+    icon.addPixmap(QPixmap(str(path)), QIcon.Normal, QIcon.Off)
     return icon
 
 

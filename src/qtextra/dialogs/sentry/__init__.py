@@ -21,8 +21,15 @@ __all__ = [
 
 capture_exception = sentry_sdk.capture_exception
 
+class Settings(ty.Protocol):
+    """Settings protocol."""
 
-def ask_opt_in(settings, force=False, parent=None):
+    telemetry_enabled: bool
+    telemetry_with_locals: bool
+
+
+
+def ask_opt_in(settings: Settings, force=False, parent=None):
     """Show the dialog asking the user to opt in.
 
     Parameters
@@ -60,7 +67,7 @@ def ask_opt_in(settings, force=False, parent=None):
     return settings
 
 
-def install_error_monitor(settings):
+def install_error_monitor(settings: Settings):
     """Initialize the error monitor with sentry.io."""
     global INSTALLED
     if INSTALLED:

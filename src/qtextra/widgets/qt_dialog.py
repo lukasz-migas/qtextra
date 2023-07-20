@@ -463,10 +463,10 @@ class QtFramelessPopup(QtDialog, CloseMixin):
 
     def __init__(
         self,
-        parent,
-        title="",
-        position=None,
-        flags=Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup,
+        parent: ty.Optional[QWidget],
+        title: str="",
+        position: ty.Any=None,
+        flags: ty.Any =Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup,
     ):
         super().__init__(parent, title)
         self.setAttribute(Qt.WA_DeleteOnClose)

@@ -22,7 +22,7 @@ from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QFormLayout
+from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtFramelessTool
@@ -169,7 +169,7 @@ class QtConsoleDialog(QtFramelessTool):
 
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent):
+    def __init__(self, parent: ty.Optional[QWidget])-> None:
         super().__init__(parent)
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
@@ -188,6 +188,6 @@ class QtConsoleDialog(QtFramelessTool):
         layout.addRow(self._console)
         return layout
 
-    def push_variables(self, variables: ty.Dict[str, ty.Any]):
+    def push_variables(self, variables: ty.Dict[str, ty.Any]) -> None:
         """Push variables to console."""
         self._console.push(variables)

@@ -28,7 +28,7 @@ class QtImagePushButton(QPushButton):
         self.transparent = False
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
-    def set_transparent(self, transparent: bool):
+    def set_transparent(self, transparent: bool) -> None:
         """Set transparency."""
         from qtextra.helpers import polish_widget
 
@@ -43,7 +43,7 @@ class QtImagePushButton(QPushButton):
             self.on_click()
         super().mousePressEvent(evt)
 
-    def set_qta(self, name: str, **kwargs):
+    def set_qta(self, name: str, **kwargs) -> None:
         """Set QtAwesome icon."""
         name = get_icon(name)
         self._qta_data = (name, kwargs)
@@ -51,63 +51,63 @@ class QtImagePushButton(QPushButton):
         icon = qtawesome.icon(name, **self._qta_data[1], color=color)
         self.setIcon(icon)
 
-    def set_size(self, size: ty.Tuple[int, int]):
+    def set_size(self, size: ty.Tuple[int, int]) -> None:
         """Set maximum size of the icon."""
         size = QSize(*size)
         self.setMinimumSize(size)
         self.setMaximumSize(size)
         self.setIconSize(size)
 
-    def set_small(self):
+    def set_small(self) -> None:
         """Set large font."""
         self.setObjectName("small_icon")
         self.setIconSize(QSize(16, 16))
 
-    def set_normal(self):
+    def set_normal(self) -> None:
         """Set medium font."""
         self.setObjectName("normal_icon")
         self.setIconSize(QSize(20, 20))
 
-    def set_medium(self):
+    def set_medium(self) -> None:
         """Set medium font."""
         self.setObjectName("medium_icon")
         self.setIconSize(QSize(28, 28))
 
-    def set_large(self):
+    def set_large(self) -> None:
         """Set large font."""
         self.setObjectName("large_icon")
         self.setIconSize(QSize(32, 32))
 
-    def set_xlarge(self):
+    def set_xlarge(self) -> None:
         """Set large."""
         self.setObjectName("xlarge_icon")
         self.setIconSize(QSize(60, 60))
 
-    def set_xxlarge(self):
+    def set_xxlarge(self) -> None:
         """Set large."""
         self.setObjectName("xxlarge_icon")
         self.setIconSize(QSize(80, 80))
 
-    def set_xxxlarge(self):
+    def set_xxxlarge(self) -> None:
         """Set large."""
         self.setObjectName("xxxlarge_icon")
         self.setIconSize(QSize(120, 120))
 
-    def _update_qta(self):
+    def _update_qta(self) -> None:
         """Update qta icon."""
         if self._qta_data:
             name, kwargs = self._qta_data
             self.set_qta(name, **kwargs)
 
-    def on_click(self):
+    def on_click(self) -> None:
         """Click event."""
         self.evt_click.emit(self)
 
-    def on_right_click(self):
+    def on_right_click(self) -> None:
         """Right click event."""
         self.evt_right_click.emit(self)
 
-    def connect_to_right_click(self, func):
+    def connect_to_right_click(self, func) -> None:
         """Connect function right right-click.
 
         It is not possible to check whether a function is connected to a signal so its better to use this function to
@@ -117,7 +117,7 @@ class QtImagePushButton(QPushButton):
         self.evt_right_click.connect(func)
         self.has_right_click = True
 
-    def paintEvent(self, *args):
+    def paintEvent(self, *args) -> None:
         """Paint event."""
         # default paint
         super().paintEvent(*args)
@@ -181,7 +181,7 @@ class QtPauseButton(QtImagePushButton):
         return self._paused
 
     @paused.setter
-    def paused(self, state: bool):
+    def paused(self, state: bool) -> None:
         self._paused = state
         self.set_qta("start" if state else "pause")
 
