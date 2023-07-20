@@ -997,7 +997,7 @@ def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
 
 
 def make_v_layout(
-    *widgets: ty.Tuple[Qw.QWidget],
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem],
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
@@ -1012,7 +1012,7 @@ stretch_before: bool = False, stretch_after: bool = False
 
 
 def make_h_layout(
-    *widgets: Qw.QWidget,
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem],
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,

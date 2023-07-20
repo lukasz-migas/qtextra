@@ -17,6 +17,7 @@ __all__ = [
     "get_sample_event",
     "install_error_monitor",
     "TelemetryOptInDialog",
+    "FeedbackDialog",
 ]
 
 capture_exception = sentry_sdk.capture_exception
