@@ -388,7 +388,6 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
         self.connect_events(False)
         if hasattr(self, "evt_close"):
             self.evt_close.emit()
-        self.logger.debug("Teardown")
         self.close()
 
 
@@ -528,7 +527,6 @@ class QtFramelessPopup(QtDialog, CloseMixin):
             self.connect_events(False)
             if hasattr(self, "evt_close"):
                 self.evt_close.emit()
-            self.logger.debug("Teardown")
             super().closeEvent(event)
 
     def close(self):

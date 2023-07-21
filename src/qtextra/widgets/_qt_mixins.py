@@ -444,5 +444,4 @@ class QtBase(TimerMixin, ScreenshotMixin):
         self.connect_events(False)
         if hasattr(self, "evt_close"):
             self.evt_close.emit()
-        self.logger.debug("Teardown")
         self.close()
