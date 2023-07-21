@@ -345,6 +345,8 @@ class Themes(ConfigBase):
     evt_update_timer = Signal()
     # event emitted whenever icon color is changed
     evt_theme_icon_changed = Signal()
+    # event emitted whenever stylesheets are changed
+    evt_qss_changed = Signal()
 
     def __init__(self):
         super().__init__(None)

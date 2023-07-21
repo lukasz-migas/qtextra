@@ -475,9 +475,9 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         if position is not None:
             self.move(position)
 
-    def _make_move_handle(self) -> QHBoxLayout:
+    def _make_move_handle(self, title: str="") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
-        self._title_label = hp.make_label(self, "", bold=True, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+        self._title_label = hp.make_label(self, title, bold=True, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         self._move_handle = hp.make_qta_label(
             self, "move_handle", tooltip="Click here and drag the mouse around to move the window."
         )

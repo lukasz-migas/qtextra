@@ -12,8 +12,8 @@ from koyo.typing import PathLike
 from loguru import logger
 from napari.utils.colormaps.standardize_color import transform_color
 from napari.utils.events.custom_types import Array
-from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, QTimer
-from qtpy.QtGui import QColor, QFont, QIcon, QImage, QMovie, QPixmap
+from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, QTimer, QPoint
+from qtpy.QtGui import QColor, QFont, QIcon, QImage, QMovie, QPixmap, QCursor
 from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.utils.utilities import IS_MAC, IS_WIN
@@ -35,7 +35,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_tool_button import QtToolButton
 
 
-def make_form_layout(widget: Qw.QWidget = None):
+def make_form_layout(widget: Qw.QWidget = None) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
     layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
@@ -1832,3 +1832,33 @@ def style_form_layout(layout):
 
     if IS_MAC:
         layout.setVerticalSpacing(4)
+
+
+def show_above_mouse(widget: Qw.QWidget, show: bool = True):
+    """Show popup dialog above the mouse cursor position."""
+    pos = QCursor().pos()  # mouse position
+    sz_hint = widget.sizeHint()
+    pos -= QPoint(sz_hint.width() / 2, sz_hint.height() + 14)
+    widget.move(pos)
+    if show:
+        widget.show()
+
+
+def show_below_mouse(widget: Qw.QWidget, show: bool = True):
+    """Show popup dialog below the mouse cursor position."""
+    pos = QCursor().pos()  # mouse position
+    sz_hint = widget.sizeHint()
+    pos -= QPoint(sz_hint.width() / 2, -14)
+    widget.move(pos)
+    if show:
+        widget.show()
+
+def show_below_widget(widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0):
+    """Show popup dialog above the widget."""
+    rect = parent.rect()
+    pos = parent.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
+    sz_hint = widget.size()
+    pos -= QPoint((sz_hint.width() / 2) - x_offset, -y_offset)
+    widget.move(pos)
+    if show:
+        widget.show()
