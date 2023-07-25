@@ -4,8 +4,9 @@ import typing as ty
 import qtawesome
 from qtpy.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QBrush, QColor, QPainter
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip
+from qtpy.QtWidgets import QGraphicsOpacityEffect, QHBoxLayout, QPushButton, QToolTip, QVBoxLayout
 
+import qtextra.helpers as hp
 from qtextra.assets import get_icon
 from qtextra.config import THEMES
 
@@ -360,7 +361,7 @@ class QtToolbarPushButton(QtImagePushButton):
 
     @Slot(str)
     @Slot(str, str)
-    def set_indicator(self, indicator_type: str, about: str = None):
+    def set_indicator(self, indicator_type: str, about: ty.Optional[str] = None):
         """Set indicator type."""
         assert indicator_type in [
             "",
@@ -416,7 +417,52 @@ class QtToolbarPushButton(QtImagePushButton):
         self.opacity.setOpacity(1.0)
 
 
+class QtPriorityButton(QtImagePushButton):
+    """Play button with multiple states to indicate current state."""
+
+    PRIORITY_TO_ICON = {
+        "normal": "priority_normal",
+        "high": "priority_high",
+        "low": "priority_low",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setMouseTracking(True)
+        self._priority: str = "normal"
+        self._menu = None
+        self.priority = self._priority
+
+    @property
+    def priority(self) -> str:
+        """Get playing state."""
+        return self._priority
+
+    @priority.setter
+    def priority(self, state: str) -> None:
+        self._priority = state
+        self.set_qta(self.PRIORITY_TO_ICON[state])
+
+    def enterEvent(self, event):
+        """Event."""
+        menu = hp.make_menu(self)
+        menu.addAction("Low", lambda: setattr(self, "priority", "low"))
+        menu.addAction("Normal", lambda: setattr(self, "priority", "normal"))
+        menu.addAction("High", lambda: setattr(self, "priority", "high"))
+        self._menu = menu
+        hp.show_below_widget(menu, self)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        """Event."""
+        self._menu.close()
+        self._menu = None
+        super().leaveEvent(event)
+
+
 if __name__ == "__main__":  # pragma: no cover
+    import sys
+
     val = True
 
     def _main():

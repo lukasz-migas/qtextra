@@ -169,7 +169,7 @@ def make_label(
 def make_click_label(
     parent,
     text: str = "",
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     bold: bool = False,
     elide: Qt.TextElideMode = Qt.ElideNone,
     tooltip: str = "",
@@ -184,7 +184,7 @@ def make_click_label(
     if tooltip:
         widget.setToolTip(tooltip)
     if func:
-        widget.evt_clicked.connect(func)
+        [widget.evt_clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -295,9 +295,13 @@ def make_line_edit(
     font_size: ty.Optional[int] = None,
     object_name: str = "",
     validator=None,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    default: str = "",
+        **_kwargs,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
+    if default:
+        text = default
     widget = Qw.QLineEdit(parent)
     widget.setText(text)
     if font_size:
@@ -311,7 +315,7 @@ def make_line_edit(
     if validator:
         widget.setValidator(validator)
     if func:
-        widget.textChanged.connect(func)
+        [widget.textChanged.connect(func_) for func_ in _validate_func(func)]
     widget.setPlaceholderText(placeholder)
     return widget
 
@@ -331,9 +335,10 @@ def make_combobox(
     items: ty.Optional[ty.Iterable[str]] = None,
     tooltip: ty.Optional[str] = None,
     enum: ty.Optional[ty.List[str]] = None,
+options: ty.Optional[ty.List[str]] = None,
     value: ty.Optional[str] = None,
     default: ty.Optional[str] = None,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     expand: bool = True,
     data=None,
     **kwargs,
@@ -356,12 +361,52 @@ def make_combobox(
     if data:
         set_combobox_data(widget, data, value)
     if func:
-        widget.currentTextChanged.connect(func)
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
+    return widget
+
+
+def make_checkable_combobox(
+    parent,
+    items: ty.Optional[ty.Iterable[str]] = None,
+    tooltip: ty.Optional[str] = None,
+    enum: ty.Optional[ty.List[str]] = None,
+    options: ty.Optional[ty.List[str]] = None,
+    value: ty.Optional[str] = None,
+    default: ty.Optional[str] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    expand: bool = True,
+    data=None,
+    **kwargs,
+) -> Qw.QComboBox:
+    """Make QComboBox."""
+    from qtextra.widgets.qt_checkable_combobox import QtCheckableComboBox
+
+    if enum is not None:
+        items = enum
+    if options is not None:
+        items = options
+    if value is None:
+        value = default
+    widget = QtCheckableComboBox(parent)
+    if items:
+        widget.addItems(items)
+    if value and not data:
+        widget.setCurrentText(value)
+    tooltip = kwargs.get("description", tooltip)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if expand:
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if data:
+        set_combobox_data(widget, data, value)
+    if func:
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
+        [widget.evt_checked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
 def make_colormap_combobox(
-    parent, func: ty.Optional[ty.Callable] = None, default: str = "magma", label_min_width: int = 0
+    parent, func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None, default: str = "magma", label_min_width: int = 0
 ):
     """Make colormap combobox."""
     from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
@@ -389,13 +434,13 @@ def make_colormap_combobox(
     widget.addItems(AVAILABLE_COLORMAPS)
     widget._allitems = set(AVAILABLE_COLORMAPS)
     widget.setCurrentText(default)
-    if func is not None:
-        widget.currentTextChanged.connect(func)
+    if func:
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
     return widget, make_h_layout(widget_label, widget, stretch_id=[1], spacing=0)
 
 
 def make_colormap_combobox_alone(
-    parent: Qw.QWidget = None, func: ty.Optional[ty.Callable] = None, default: str = "magma"
+    parent: Qw.QWidget = None, func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None, default: str = "magma"
 ):
     """Make colormap combobox."""
     from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
@@ -406,8 +451,8 @@ def make_colormap_combobox_alone(
     widget.addItems(AVAILABLE_COLORMAPS)
     widget._allitems = set(AVAILABLE_COLORMAPS)
     widget.setCurrentText(default)
-    if func is not None:
-        widget.currentTextChanged.connect(func)
+    if func:
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -492,7 +537,7 @@ def make_btn(
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
     checkable=False,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     font_size: ty.Optional[int] = None,
 ) -> "QtPushButton":
     """Make button."""
@@ -507,8 +552,8 @@ def make_btn(
         widget.setFlat(flat)
     if font_size:
         set_font(widget, font_size=font_size)
-    if func and callable(func):
-        widget.clicked.connect(func)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -517,7 +562,7 @@ def make_tool_btn(
     text: str,
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     font_size: ty.Optional[int] = None,
 ) -> "QtPushButton":
     """Make button."""
@@ -531,8 +576,8 @@ def make_tool_btn(
         widget.setFlat(flat)
     if font_size:
         set_font(widget, font_size=font_size)
-    if func and callable(func):
-        widget.clicked.connect(func)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -581,7 +626,7 @@ def make_qta_btn(
     medium: bool = False,
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     object_name: str = "",
     retain_size: bool = False,
     **kwargs,
@@ -609,8 +654,8 @@ def make_qta_btn(
         widget.setCheckable(checkable)
         if object_name:
             widget.setObjectName(object_name)
-    if func is not None:
-        widget.clicked.connect(func)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     if retain_size:
         set_retain_hidden_size_policy(widget)
     return widget
@@ -623,7 +668,7 @@ def make_lock_btn(
     medium: bool = False,
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     tooltip: ty.Optional[str] = None,
 ) -> "QtLockButton":
     """Make lock button."""
@@ -631,8 +676,8 @@ def make_lock_btn(
 
     widget = QtLockButton(parent=parent)
     widget.auto_connect()
-    if func is not None:
-        widget.clicked.connect(func)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     if small:
         widget.set_small()
     elif normal:
@@ -771,6 +816,11 @@ def make_bitmap_tool_btn(
         widget.setToolTip(tooltip)
     return widget
 
+def _validate_func(func: ty.Union[ty.Callable, ty.Sequence[ty.Callable]]) -> ty.Sequence[ty.Callable]:
+    if callable(func):
+        func = [func]
+    return [func for func in func if callable(func)]
+
 
 def make_checkbox(
     parent,
@@ -779,7 +829,7 @@ def make_checkbox(
     default: bool = False,
     value: ty.Optional[bool] = None,
     expand: bool = True,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     clicked: ty.Optional[ty.Callable] = None,
     tristate: bool = False,
     model: ty.Optional[ty.Callable] = None,
@@ -799,7 +849,7 @@ def make_checkbox(
     if tristate:
         widget.setTristate(tristate)
     if func:
-        widget.stateChanged.connect(func)
+        [widget.stateChanged.connect(func_) for func_ in _validate_func(func)]
     if clicked:
         widget.clicked.connect(clicked)
     return widget
@@ -909,7 +959,7 @@ def make_double_spin_box(
     prefix: ty.Optional[str] = None,
     suffix: ty.Optional[str] = None,
     expand: bool = True,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     **kwargs,
 ) -> Qw.QDoubleSpinBox:
     """Make double spinbox."""
@@ -932,7 +982,7 @@ def make_double_spin_box(
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
     if func:
-        widget.valueChanged.connect(func)
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1174,7 +1224,7 @@ def make_menu_item(
     status_tip: ty.Optional[str] = None,
     tooltip: ty.Optional[str] = None,
     checkable: bool = False,
-    func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     disabled: bool = False,
 ) -> "QtQtaAction":
     """Make menu item."""
@@ -1197,8 +1247,8 @@ def make_menu_item(
         widget.setCheckable(checkable)
     if menu is not None:
         menu.addAction(widget)
-    if func is not None:
-        widget.triggered.connect(func)
+    if func:
+        [widget.triggered.connect(func_) for func_ in _validate_func(func)]
     if disabled:
         widget.setDisabled(disabled)
     return widget
@@ -1682,16 +1732,16 @@ def make_progress_widget(
 
 def make_auto_update_layout(parent: Qw.QWidget, func: ty.Callable):
     """Make layout."""
-    apply_btn = make_btn(parent, "Update")
+    widget = make_btn(parent, "Update")
     if func:
-        apply_btn.clicked.connect(func)
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
 
     auto_update_check = make_checkbox(parent, "Auto-update")
-    auto_update_check.stateChanged.connect(lambda check: disable_widgets(apply_btn, disabled=check))
+    auto_update_check.stateChanged.connect(lambda check: disable_widgets(widget, disabled=check))
     auto_update_check.setChecked(True)
 
-    layout = make_h_layout(apply_btn, auto_update_check, stretch_id=(0,))
-    return apply_btn, auto_update_check, layout
+    layout = make_h_layout(widget, auto_update_check, stretch_id=(0,))
+    return widget, auto_update_check, layout
 
 
 def make_line_label(parent, text: str, bold: bool = False) -> Qw.QHBoxLayout:
@@ -1826,7 +1876,7 @@ def trim_dialog_size(dlg) -> ty.Tuple[int, int]:
     return cw, ch
 
 
-def style_form_layout(layout):
+def style_form_layout(layout: Qw.QFormLayout) -> None:
     """Override certain styles for macOS."""
     from qtextra.utils.utilities import IS_MAC
 
