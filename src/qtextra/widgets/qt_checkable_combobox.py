@@ -1,6 +1,8 @@
 """Checkable combobox."""
 import typing as ty
+from functools  import partial
 
+from qtextra.helpers import call_later, qt_signals_blocked
 from qtpy.QtGui import QStandardItemModel
 from qtpy.QtWidgets import QComboBox
 from qtpy.QtCore import Qt, Signal, QModelIndex
@@ -13,7 +15,8 @@ class CheckableAbstractModel(QStandardItemModel):
     def setData(self, index: QModelIndex, value: ty.Any, role: int = ...) -> bool:
         """Set data."""
         if role == Qt.CheckStateRole:
-            self.evt_checked.emit(index.row(), value)
+            # self.evt_checked.emit(index.row(), not value)
+            call_later(self, partial(self.evt_checked.emit, index.row(), not value), delay=50)
         return super().setData(index, value, role)
 
 
@@ -54,6 +57,23 @@ class QtCheckableComboBox(QComboBox):
     def get_checked(self) -> ty.List[int]:
         """Get all checked items."""
         return [index for index in range(self.count()) if self.itemChecked(index)]
+
+    def checked_texts(self) -> ty.List[str]:
+        """Get text for all checked items."""
+        return [self.itemText(index) for index in self.get_checked()]
+
+    def checked_data(self):
+        """Get data for all checked items."""
+        return [self.itemData(index) for index in self.get_checked()]
+
+    def set_checked_texts(self, texts: ty.List[str]):
+        """Set checked texts."""
+        with qt_signals_blocked(self):
+            [self.setItemChecked(index, False) for index in range(self.count())]
+            for text in texts:
+                index = self.findText(text)
+                if index != -1:
+                    self.setItemChecked(index, True)
 
 
 if __name__ == "__main__":  # pragma: no cover

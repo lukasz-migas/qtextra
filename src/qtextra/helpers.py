@@ -87,7 +87,7 @@ run_delayed = call_later
 def combobox_setter(
     widget: Qw.QComboBox,
     clear: bool = True,
-    items: ty.Optional[ty.List[str]] = None,
+    items: ty.Optional[ty.Iterable[str]] = None,
     find_item: ty.Optional[str] = None,
     set_item: ty.Optional[str] = None,
 ):
@@ -924,6 +924,7 @@ def make_int_spin_box(
     prefix: ty.Optional[str] = None,
     suffix: ty.Optional[str] = None,
     expand: bool = True,
+func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     **kwargs,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""
@@ -944,6 +945,8 @@ def make_int_spin_box(
         widget.setSuffix(suffix)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1307,14 +1310,15 @@ def toast(
     parent,
     title: str,
     message: str,
-    func: ty.Callable = logger.info,
+    func: ty.Optional[ty.Callable] = None,
     position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
     icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
 ):
     """Show notification."""
     from qtextra.widgets.qt_toast import QtToast
 
-    func(message)
+    if callable(func):
+        func(message)
     QtToast(parent).show_message(title, message, position=position, icon=icon)
 
 
@@ -1323,12 +1327,15 @@ def long_toast(
     title: str,
     message: str,
     duration: int = 10000,
+func: ty.Optional[ty.Callable] = None,
     position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
     icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
 ):
     """Show notification."""
     from qtextra.widgets.qt_toast import QtToast
 
+    if callable(func):
+        func(message)
     QtToast(parent).show_long_message(title, message, duration, position=position, icon=icon)
 
 

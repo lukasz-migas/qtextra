@@ -1,7 +1,7 @@
 """Toast."""
 from contextlib import suppress
 
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QTimer, Qt
 from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -30,7 +30,8 @@ class QtToast(SubWindowBase):
     # noinspection PyAttributeOutsideInit
     def make_ui(self):
         """Setup UI."""
-        title_widget = QWidget(self)
+        title_widget = QWidget()
+        # title_widget.setMaximumHeight(30)
         title_widget.setObjectName("toast_header")
         self._icon_label = QtSeverityLabel(title_widget)
         self._icon_label.setMaximumWidth(20)
@@ -45,13 +46,13 @@ class QtToast(SubWindowBase):
         self._timer_indicator.setObjectName("progress_timer")
         self._timer_indicator.setTextVisible(False)
 
-        horz_layout = QHBoxLayout(title_widget)
-        hp.set_layout_margin(horz_layout, 2)
-        horz_layout.addWidget(self._icon_label)
-        horz_layout.addWidget(self._title_label, stretch=True)
-        horz_layout.addWidget(self._date_label)
-        horz_layout.addStretch(1)
-        horz_layout.addWidget(self._close_btn)
+        title_layout = QHBoxLayout(title_widget)
+        hp.set_layout_margin(title_layout, 2)
+        title_layout.addWidget(self._icon_label, alignment=Qt.AlignVCenter)
+        title_layout.addWidget(self._title_label, stretch=True, alignment=Qt.AlignVCenter)
+        title_layout.addWidget(self._date_label, alignment=Qt.AlignVCenter)
+        title_layout.addStretch(1)
+        title_layout.addWidget(self._close_btn, alignment=Qt.AlignVCenter)
 
         # layout
         layout = QVBoxLayout(self)
