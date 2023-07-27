@@ -45,6 +45,15 @@ def make_form_layout(widget: Qw.QWidget = None) -> Qw.QFormLayout:
     return layout
 
 
+def find_in_form_layout(layout: Qw.QFormLayout, label: str) -> ty.Optional[int]:
+    """Find index at which label is located in form layout."""
+    for row in range(layout.rowCount()):
+        item = layout.itemAt(row, Qw.QFormLayout.ItemRole.LabelRole)
+        if item and item.widget().text() == label:
+            break
+    return row
+
+
 def make_hbox_layout(
     widget: Qw.QWidget = None, spacing: int = 0, content_margins: ty.Optional[ty.Tuple[int, int, int, int]] = None
 ):
@@ -1439,7 +1448,7 @@ def confirm(parent, message: str, title: str = "Are you sure?") -> bool:
     dlg = QDialog(parent)
     dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)
     dlg.setObjectName("confirm_dialog")
-    dlg.setMinimumSize(300, 200)
+    dlg.setMinimumSize(200, 200)
     dlg.setWindowTitle(title)
     layout = make_v_layout()
     layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True), stretch=True)

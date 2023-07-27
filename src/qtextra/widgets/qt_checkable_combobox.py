@@ -28,9 +28,9 @@ class QtCheckableComboBox(QComboBox):
         self.setModel(CheckableAbstractModel(self))
         self.evt_checked = self.model().evt_checked
 
-    def addItem(self, item):
+    def addItem(self, item: str, data: ty.Any=None):
         """Add item."""
-        super().addItem(item)
+        super().addItem(item, data)
         item = self.model().item(self.count() - 1, 0)
         item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
         item.setCheckState(Qt.Unchecked)
