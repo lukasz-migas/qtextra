@@ -35,13 +35,17 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_tool_button import QtToolButton
 
 
-def make_form_layout(widget: Qw.QWidget = None) -> Qw.QFormLayout:
+def make_form_layout(widget: ty.Optional[Qw.QWidget] = None, *widgets: ty.Tuple, stretch_after: bool = False) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
     layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
     layout.setLabelAlignment(Qt.AlignRight)
     layout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
     layout.setRowWrapPolicy(Qw.QFormLayout.DontWrapRows)
+    for widget_ in widgets:
+        layout.addRow(*widget_)
+    if stretch_after:
+        layout.addRow(make_spacer_widget())
     return layout
 
 
@@ -1059,12 +1063,12 @@ def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
 
 
 def make_v_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem],
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
     alignment: ty.Optional = None,
-stretch_before: bool = False, stretch_after: bool = False
+    stretch_before: bool = False, stretch_after: bool = False
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
     layout = Qw.QVBoxLayout()
@@ -1074,7 +1078,7 @@ stretch_before: bool = False, stretch_after: bool = False
 
 
 def make_h_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem],
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
