@@ -1375,7 +1375,7 @@ def get_directory(parent, title: str = "Select directory...", base_dir: PathLike
 def get_filename(
     parent,
     title: str = "Save file...",
-    base_dir: str = "",
+    base_dir: ty.Optional[PathLike] = "",
     file_filter: str = "*",
     base_filename: ty.Optional[str] = None,
 ) -> str:
@@ -1384,14 +1384,14 @@ def get_filename(
 
     if base_filename:
         base_dir = os.path.join(base_dir, base_filename)
-    filename, _ = QFileDialog.getOpenFileName(parent, title, str(base_dir), file_filter)
+    filename, _ = QFileDialog.getOpenFileName(parent, title, str(base_dir) or "", file_filter)
     return filename
 
 
 def get_save_filename(
     parent,
     title: str = "Save file...",
-    base_dir: str = "",
+    base_dir: ty.Optional[PathLike] = "",
     file_filter: str = "*",
     base_filename: ty.Optional[str] = None,
 ) -> str:
@@ -1400,7 +1400,7 @@ def get_save_filename(
 
     if base_filename:
         base_dir = os.path.join(base_dir, base_filename)
-    filename, _ = QFileDialog.getSaveFileName(parent, title, base_dir, file_filter)
+    filename, _ = QFileDialog.getSaveFileName(parent, title, str(base_dir) or "", file_filter)
     return filename
 
 
