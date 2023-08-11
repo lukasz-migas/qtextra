@@ -49,13 +49,31 @@ def make_form_layout(widget: ty.Optional[Qw.QWidget] = None, *widgets: ty.Tuple,
     return layout
 
 
-def find_in_form_layout(layout: Qw.QFormLayout, label: str) -> ty.Optional[int]:
+def find_row_for_label_in_form_layout(layout: Qw.QFormLayout, label: str) -> ty.Optional[int]:
     """Find index at which label is located in form layout."""
     for row in range(layout.rowCount()):
         item = layout.itemAt(row, Qw.QFormLayout.ItemRole.LabelRole)
         if item and item.widget().text() == label:
             break
     return row
+
+def remove_widget_in_form_layout(layout: Qw.QFormLayout, label: str):
+    """Replace widget in form layout."""
+    row = find_row_for_label_in_form_layout(layout, label)
+    if row is not None:
+        label = layout.itemAt(row, Qw.QFormLayout.LabelRole)  # type: ignore
+        label_widget = label.widget()
+        field = layout.itemAt(row, Qw.QFormLayout.FieldRole)  # type: ignore
+        field_widget = field.widget()
+        layout.removeItem(label)
+        layout.removeItem(field)
+        layout.removeRow(row)
+        return row, label_widget, field_widget
+    return None, None, None
+
+def insert_widget_in_form_layout(layout: Qw.QFormLayout, row: int, label: Qw.QWidget, widget_or_layout: ty.Union[Qw.QWidget, Qw.QLayout]):
+    """Insert widget in form layout."""
+    layout.insertRow(row, label, widget_or_layout)
 
 
 def make_hbox_layout(
@@ -636,6 +654,7 @@ def make_qta_btn(
     checkable: bool = False,
     small: bool = False,
     normal: bool = False,
+    average: bool = False,
     medium: bool = False,
     large: bool = False,
     size: ty.Optional[ty.Tuple[int, int]] = None,
@@ -653,6 +672,8 @@ def make_qta_btn(
         widget.set_small()
     elif normal:
         widget.set_normal()
+    elif average:
+        widget.set_average()
     elif medium:
         widget.set_medium()
     elif large:
