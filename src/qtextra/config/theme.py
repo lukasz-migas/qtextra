@@ -7,7 +7,6 @@ from pathlib import Path
 
 import numpy as np
 from loguru import logger
-from napari.utils.theme import _themes
 from psygnal import EventedModel
 from pydantic import PrivateAttr, ValidationError, validator
 from pydantic.color import Color
@@ -365,8 +364,13 @@ class Themes(ConfigBase):
             Theme(**LIGHT_THEME),
         )
         # synchronize our icon with napari icon color
-        for name in _themes:
-            _themes[name].icon = self.get_hex_color("icon")
+        try:
+            from napari.utils.theme import _themes
+
+            for name in _themes:
+                _themes[name].icon = self.get_hex_color("icon")
+        except ImportError:
+            pass
 
         for theme in self.themes.values():
             theme.events.connect(lambda _: self.evt_theme_changed.emit())
