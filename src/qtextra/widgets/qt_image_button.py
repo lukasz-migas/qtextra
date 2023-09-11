@@ -69,6 +69,11 @@ class QtImagePushButton(QPushButton):
         self.setObjectName("normal_icon")
         self.setIconSize(QSize(20, 20))
 
+    def set_average(self) -> None:
+        """Set medium font."""
+        self.setObjectName("average_icon")
+        self.setIconSize(QSize(24, 24))
+
     def set_medium(self) -> None:
         """Set medium font."""
         self.setObjectName("medium_icon")
