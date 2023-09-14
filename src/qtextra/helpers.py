@@ -1059,9 +1059,11 @@ def make_radio_btn_group(parent, radio_buttons) -> Qw.QButtonGroup:
     return widget
 
 
-def make_h_line_with_text(label: str, parent: Qw.QWidget = None):
+def make_h_line_with_text(label: str, parent: Qw.QWidget = None, bold: bool = False):
     """Make horizontal line with text."""
-    return make_h_layout(make_h_line(parent), make_label(parent, label), make_h_line(parent), stretch_id=(0, 2))
+    return make_h_layout(
+        make_h_line(parent), make_label(parent, label, bold=bold), make_h_line(parent), stretch_id=(0, 2)
+    )
 
 
 def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtHorzLine":
