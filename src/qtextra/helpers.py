@@ -12,8 +12,8 @@ from koyo.typing import PathLike
 from loguru import logger
 from napari.utils.colormaps.standardize_color import transform_color
 from napari.utils.events.custom_types import Array
-from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QSize, Qt, QTimer, QPoint
-from qtpy.QtGui import QColor, QFont, QIcon, QImage, QMovie, QPixmap, QCursor
+from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, QTimer
+from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.utils.utilities import IS_MAC, IS_WIN
@@ -35,7 +35,9 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_tool_button import QtToolButton
 
 
-def make_form_layout(widget: ty.Optional[Qw.QWidget] = None, *widgets: ty.Tuple, stretch_after: bool = False) -> Qw.QFormLayout:
+def make_form_layout(
+    widget: ty.Optional[Qw.QWidget] = None, *widgets: ty.Tuple, stretch_after: bool = False
+) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
     layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
@@ -57,6 +59,7 @@ def find_row_for_label_in_form_layout(layout: Qw.QFormLayout, label: str) -> ty.
             break
     return row
 
+
 def remove_widget_in_form_layout(layout: Qw.QFormLayout, label: str):
     """Replace widget in form layout."""
     row = find_row_for_label_in_form_layout(layout, label)
@@ -71,7 +74,10 @@ def remove_widget_in_form_layout(layout: Qw.QFormLayout, label: str):
         return row, label_widget, field_widget
     return None, None, None
 
-def insert_widget_in_form_layout(layout: Qw.QFormLayout, row: int, label: Qw.QWidget, widget_or_layout: ty.Union[Qw.QWidget, Qw.QLayout]):
+
+def insert_widget_in_form_layout(
+    layout: Qw.QFormLayout, row: int, label: Qw.QWidget, widget_or_layout: ty.Union[Qw.QWidget, Qw.QLayout]
+):
     """Insert widget in form layout."""
     layout.insertRow(row, label, widget_or_layout)
 
@@ -328,7 +334,7 @@ def make_line_edit(
     validator=None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     default: str = "",
-        **_kwargs,
+    **_kwargs,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
     if default:
@@ -346,7 +352,8 @@ def make_line_edit(
     if validator:
         widget.setValidator(validator)
     if func:
-        [widget.textChanged.connect(func_) for func_ in _validate_func(func)]
+        [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
+        # [widget.textChanged.connect(func_) for func_ in _validate_func(func)]
     widget.setPlaceholderText(placeholder)
     return widget
 
@@ -366,7 +373,7 @@ def make_combobox(
     items: ty.Optional[ty.Iterable[str]] = None,
     tooltip: ty.Optional[str] = None,
     enum: ty.Optional[ty.List[str]] = None,
-options: ty.Optional[ty.List[str]] = None,
+    options: ty.Optional[ty.List[str]] = None,
     value: ty.Optional[str] = None,
     default: ty.Optional[str] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
@@ -379,6 +386,8 @@ options: ty.Optional[ty.List[str]] = None,
         items = enum
     if value is None:
         value = default
+    if options is not None:
+        items = options
     widget = Qw.QComboBox(parent)
     if items:
         widget.addItems(items)
@@ -437,7 +446,10 @@ def make_checkable_combobox(
 
 
 def make_colormap_combobox(
-    parent, func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None, default: str = "magma", label_min_width: int = 0
+    parent,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    default: str = "magma",
+    label_min_width: int = 0,
 ):
     """Make colormap combobox."""
     from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
@@ -471,7 +483,9 @@ def make_colormap_combobox(
 
 
 def make_colormap_combobox_alone(
-    parent: Qw.QWidget = None, func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None, default: str = "magma"
+    parent: Qw.QWidget = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    default: str = "magma",
 ):
     """Make colormap combobox."""
     from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
@@ -850,6 +864,7 @@ def make_bitmap_tool_btn(
         widget.setToolTip(tooltip)
     return widget
 
+
 def _validate_func(func: ty.Union[ty.Callable, ty.Sequence[ty.Callable]]) -> ty.Sequence[ty.Callable]:
     if callable(func):
         func = [func]
@@ -958,7 +973,7 @@ def make_int_spin_box(
     prefix: ty.Optional[str] = None,
     suffix: ty.Optional[str] = None,
     expand: bool = True,
-func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     **kwargs,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""
@@ -1088,14 +1103,22 @@ def make_v_layout(
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
-    alignment: ty.Optional = None,
-    stretch_before: bool = False, stretch_after: bool = False
+    alignment: ty.Optional[str] = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
     layout = Qw.QVBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
-    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment, stretch_before=stretch_before, stretch_after=stretch_after)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
 
 
 def make_h_layout(
@@ -1103,17 +1126,32 @@ def make_h_layout(
     stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
     spacing: ty.Optional[int] = None,
     margin: ty.Optional[int] = None,
-    alignment: ty.Optional = None,
-stretch_before: bool = False, stretch_after: bool = False
+    alignment: ty.Optional[str] = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
-    return _set_in_layout(*widgets, layout=layout, stretch_id=stretch_id, alignment=alignment, stretch_before=stretch_before, stretch_after=stretch_after)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
 
 
-def _set_in_layout(*widgets, layout: Qw.QLayout, stretch_id: int, alignment: ty.Optional = None, stretch_before: bool = False, stretch_after: bool = False):
+def _set_in_layout(
+    *widgets,
+    layout: Qw.QLayout,
+    stretch_id: int,
+    alignment: ty.Optional[str] = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+):
     if stretch_before:
         layout.addStretch(True)
     for widget in widgets:
@@ -1361,7 +1399,7 @@ def long_toast(
     title: str,
     message: str,
     duration: int = 10000,
-func: ty.Optional[ty.Callable] = None,
+    func: ty.Optional[ty.Callable] = None,
     position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
     icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
 ):
@@ -1473,7 +1511,7 @@ def confirm(parent, message: str, title: str = "Are you sure?") -> bool:
     dlg = QDialog(parent)
     dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)
     dlg.setObjectName("confirm_dialog")
-    dlg.setMinimumSize(200, 200)
+    dlg.setMinimumSize(350, 200)
     dlg.setWindowTitle(title)
     layout = make_v_layout()
     layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True), stretch=True)
@@ -1944,6 +1982,7 @@ def show_below_mouse(widget: Qw.QWidget, show: bool = True):
     if show:
         widget.show()
 
+
 def show_below_widget(widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0):
     """Show popup dialog above the widget."""
     rect = parent.rect()
@@ -1953,3 +1992,15 @@ def show_below_widget(widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True,
     widget.move(pos)
     if show:
         widget.show()
+
+
+def copy_text_to_clipboard(text: str) -> None:
+    """Helper function to easily copy text to clipboard while notifying the user."""
+    cb = QGuiApplication.clipboard()
+    cb.setText(text)
+
+
+def copy_image_to_clipboard(image: QImage) -> None:
+    """Helper function to easily copy image to clipboard while notifying the user."""
+    cb = QGuiApplication.clipboard()
+    cb.setImage(image)
