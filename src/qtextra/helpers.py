@@ -584,6 +584,7 @@ def make_btn(
     checkable=False,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     font_size: ty.Optional[int] = None,
+    bold: bool = False,
 ) -> "QtPushButton":
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
@@ -597,6 +598,8 @@ def make_btn(
         widget.setFlat(flat)
     if font_size:
         set_font(widget, font_size=font_size)
+    if bold:
+        set_bold(widget, bold)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
@@ -1131,7 +1134,7 @@ def make_h_layout(
     alignment: ty.Optional[str] = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
-) -> Qw.QHBoxLayout:
+) -> Qw.QLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout()
     if spacing is not None:

@@ -1,7 +1,7 @@
 """Toast."""
 from contextlib import suppress
 
-from qtpy.QtCore import QTimer, Qt
+from qtpy.QtCore import Qt, QTimer
 from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -86,7 +86,7 @@ class QtToast(SubWindowBase):
 
         def _update_timer_indicator():
             with suppress(RuntimeError):
-                self._timer_indicator.setValue(self.timer_dismiss.remainingTime() / self.DISMISS_AFTER * 100)
+                self._timer_indicator.setValue(int(self.timer_dismiss.remainingTime() / self.DISMISS_AFTER * 100))
 
         super().show()
         self.slide_in()
@@ -141,9 +141,6 @@ if __name__ == "__main__":  # pragma: no cover
             THEMES.set_theme_stylesheet(frame)
 
         def _reload_theme():
-            from qtextra.assets import get_stylesheet
-
-            get_stylesheet.cache_clear()
             THEMES.set_theme_stylesheet(frame)
 
         #
