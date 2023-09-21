@@ -4,9 +4,9 @@ import typing as ty
 
 import sentry_sdk
 
-from qtextra.dialogs.sentry.utilities import SENTRY_SETTINGS, _get_tags, get_sample_event
-from qtextra.dialogs.sentry.telemetry import TelemetryOptInDialog
 from qtextra.dialogs.sentry.feedback import FeedbackDialog
+from qtextra.dialogs.sentry.telemetry import TelemetryOptInDialog
+from qtextra.dialogs.sentry.utilities import SENTRY_SETTINGS, _get_tags, get_sample_event
 
 INSTALLED = False
 
@@ -22,12 +22,12 @@ __all__ = [
 
 capture_exception = sentry_sdk.capture_exception
 
+
 class Settings(ty.Protocol):
     """Settings protocol."""
 
     telemetry_enabled: bool
     telemetry_with_locals: bool
-
 
 
 def ask_opt_in(settings: Settings, force=False, parent=None):
@@ -68,7 +68,7 @@ def ask_opt_in(settings: Settings, force=False, parent=None):
     return settings
 
 
-def install_error_monitor(settings: Settings):
+def install_error_monitor(settings: Settings, **extra_kws):
     """Initialize the error monitor with sentry.io."""
     global INSTALLED
     if INSTALLED:
@@ -83,4 +83,12 @@ def install_error_monitor(settings: Settings):
     sentry_sdk.init(**_settings)
     for k, v in _get_tags().items():
         sentry_sdk.set_tag(k, v)
+    if extra_kws:
+        set_extra_tags(**extra_kws)
     INSTALLED = True
+
+
+def set_extra_tags(**kwargs) -> None:
+    """Set extra tags."""
+    for k, v in kwargs.items():
+        sentry_sdk.set_tag(k, v)

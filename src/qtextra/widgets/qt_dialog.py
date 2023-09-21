@@ -307,7 +307,7 @@ class ScreenshotMixin:
         if dialog.exec_():
             pass
 
-    def screenshot(self, path: str = None):
+    def screenshot(self, path: ty.Optional[str] = None):
         """Take screenshot of the viewer."""
         from napari._qt.utils import QImg2array
 
@@ -463,9 +463,9 @@ class QtFramelessPopup(QtDialog, CloseMixin):
     def __init__(
         self,
         parent: ty.Optional[QWidget],
-        title: str="",
-        position: ty.Any=None,
-        flags: ty.Any =Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup,
+        title: str = "",
+        position: ty.Any = None,
+        flags: ty.Any = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup,
     ):
         super().__init__(parent, title)
         self.setAttribute(Qt.WA_DeleteOnClose)
@@ -474,7 +474,17 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         if position is not None:
             self.move(position)
 
-    def _make_move_handle(self, title: str="") -> QHBoxLayout:
+    def _make_title_handle(self, title: str = "") -> QHBoxLayout:
+        """Make handle button that helps move the window around."""
+        self._title_label = hp.make_label(self, title, bold=True, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+
+        layout = hp.make_hbox_layout(spacing=0)
+        layout.addWidget(self._title_label)
+        layout.addStretch(1)
+        self._title_layout = layout
+        return layout
+
+    def _make_move_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
         self._title_label = hp.make_label(self, title, bold=True, alignment=Qt.AlignLeft | Qt.AlignVCenter)
         self._move_handle = hp.make_qta_label(

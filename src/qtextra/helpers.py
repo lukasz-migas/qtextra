@@ -9,7 +9,6 @@ import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
-from loguru import logger
 from napari.utils.colormaps.standardize_color import transform_color
 from napari.utils.events.custom_types import Array
 from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, QTimer
@@ -31,6 +30,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
+    from qtextra.widgets.qt_scroll_label import QtScrollableLabel
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
     from qtextra.widgets.qt_tool_button import QtToolButton
 
@@ -186,7 +186,7 @@ def make_label(
     widget.setObjectName(object_name)
     if enable_url:
         widget.setTextFormat(Qt.RichText)
-        widget.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextBrowserInteraction)
         widget.setOpenExternalLinks(True)
     if alignment is not None:
         widget.setAlignment(alignment)
@@ -197,8 +197,46 @@ def make_label(
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)
     if selectable:
-        widget.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextSelectableByMouse)
     widget.setWordWrap(wrap)
+    widget.setVisible(visible)
+    return widget
+
+
+def make_scrollable_label(
+    parent,
+    text: str = "",
+    enable_url: bool = False,
+    alignment=None,
+    wrap: bool = False,
+    object_name: str = "",
+    bold: bool = False,
+    font_size: ty.Optional[int] = None,
+    tooltip: ty.Optional[str] = None,
+    selectable: bool = False,
+    visible: bool = True,
+) -> "QtScrollableLabel":
+    """Make QLabel element."""
+    from qtextra.widgets.qt_scroll_label import QtScrollableLabel
+
+    widget = QtScrollableLabel(parent, text=text)
+    widget.setObjectName(object_name)
+    widget.label.setObjectName(object_name)
+    if enable_url:
+        widget.label.setTextFormat(Qt.RichText)
+        widget.label.setTextInteractionFlags(widget.label.textInteractionFlags() | Qt.TextBrowserInteraction)
+        widget.label.setOpenExternalLinks(True)
+    if alignment is not None:
+        widget.label.setAlignment(alignment)
+    if bold:
+        set_bold(widget.label, bold)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if font_size:
+        set_font(widget.label, font_size=font_size, bold=bold)
+    if selectable:
+        widget.label.setTextInteractionFlags(widget.label.textInteractionFlags() | Qt.TextSelectableByMouse)
+    widget.label.setWordWrap(wrap)
     widget.setVisible(visible)
     return widget
 
@@ -333,6 +371,7 @@ def make_line_edit(
     object_name: str = "",
     validator=None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    func_changed: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     default: str = "",
     **_kwargs,
 ) -> Qw.QLineEdit:
@@ -353,7 +392,8 @@ def make_line_edit(
         widget.setValidator(validator)
     if func:
         [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
-        # [widget.textChanged.connect(func_) for func_ in _validate_func(func)]
+    if func_changed:
+        [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     widget.setPlaceholderText(placeholder)
     return widget
 
@@ -1527,8 +1567,23 @@ def confirm(parent, message: str, title: str = "Are you sure?") -> bool:
         )
     )
     dlg.setLayout(layout)
-    ret = dlg.exec_()
-    return bool(ret)
+    return bool(dlg.exec_())
+
+
+def confirm_with_text(
+    parent,
+    message: str = "Please confirm action by typing <b>confirm</b> to continue.",
+    request: str = "confirm",
+    title: str = "Please confirm...",
+) -> bool:
+    """Confirm action."""
+    from qtextra.widgets.qt_confirm import ConfirmWithTextDialog
+
+    if request not in message:
+        raise ValueError("Request string must be part of the message.")
+
+    dlg = ConfirmWithTextDialog(parent, title, message, request)
+    return bool(dlg.exec_())
 
 
 def get_text(parent, label: str = "New value", title: str = "Text", value: str = "") -> ty.Optional[str]:

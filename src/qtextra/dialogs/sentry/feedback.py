@@ -1,7 +1,7 @@
 """Feedback dialog."""
-import typing as ty
 import getpass
 import os
+import typing as ty
 
 from loguru import logger
 from qtpy.QtCore import Qt
@@ -20,8 +20,8 @@ FEEDBACK_URL = f"https://sentry.io/api/0/projects/{ORGANIZATION_SLUG}/{PROJECT_S
 class FeedbackDialog(QtDialog):
     """Dialog to give the user an option to provide feedback."""
 
-    def __init__(self, parent: ty.Optional[QWidget]=None):
-        super().__init__(parent=parent)
+    def __init__(self, parent: ty.Optional[QWidget] = None):
+        super().__init__(parent=parent, title="Feedback")
         self.setMinimumSize(600, 400)
 
     def accept(self):

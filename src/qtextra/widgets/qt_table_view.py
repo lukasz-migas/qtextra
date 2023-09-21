@@ -491,7 +491,7 @@ class QtCheckableTableView(QTableView):
             no_sort_col = []
         self.set_data([], header, no_sort_col, hidden_col, html_col, icon_col)
 
-    def reset_data(self):
+    def reset_data(self) -> None:
         """Clear table."""
         self.model().reset_data()
 

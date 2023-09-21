@@ -21,6 +21,7 @@ from IPython import get_ipython
 from IPython.terminal.interactiveshell import TerminalInteractiveShell
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QFormLayout, QWidget
 
@@ -169,10 +170,11 @@ class QtConsoleDialog(QtFramelessTool):
 
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent: ty.Optional[QWidget])-> None:
+    def __init__(self, parent: ty.Optional[QWidget]) -> None:
         super().__init__(parent)
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:

@@ -1,15 +1,17 @@
 """Checkable combobox."""
 import typing as ty
-from functools  import partial
+from functools import partial
 
-from qtextra.helpers import call_later, qt_signals_blocked
+from qtpy.QtCore import QModelIndex, Qt, Signal
 from qtpy.QtGui import QStandardItemModel
 from qtpy.QtWidgets import QComboBox
-from qtpy.QtCore import Qt, Signal, QModelIndex
+
+from qtextra.helpers import call_later, qt_signals_blocked
 
 
 class CheckableAbstractModel(QStandardItemModel):
     """Abstract model."""
+
     evt_checked = Signal(int, bool)
 
     def setData(self, index: QModelIndex, value: ty.Any, role: int = ...) -> bool:
@@ -28,7 +30,7 @@ class QtCheckableComboBox(QComboBox):
         self.setModel(CheckableAbstractModel(self))
         self.evt_checked = self.model().evt_checked
 
-    def addItem(self, item: str, data: ty.Any=None):
+    def addItem(self, item: str, data: ty.Any = None):
         """Add item."""
         super().addItem(item, data)
         item = self.model().item(self.count() - 1, 0)
