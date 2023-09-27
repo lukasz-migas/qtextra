@@ -10,8 +10,12 @@ from types import TracebackType
 from typing import Callable, List, Optional, Sequence, Tuple, Type, Union
 
 from loguru import logger
-from napari.utils.events import Event, EventEmitter
 from napari.utils.misc import StringEnum
+
+try:
+    from napari.utils.events import Event, EventEmitter
+except ImportError:
+    raise ImportError("please install napari using 'pip install napari'") from None
 
 name2num = {
     "critical": 50,

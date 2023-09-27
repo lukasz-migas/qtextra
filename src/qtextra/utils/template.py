@@ -25,17 +25,17 @@ lighten_pattern = re.compile(r"{{\s?lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
 opacity_pattern = re.compile(r"{{\s?opacity\((\w+),?\s?([-\d]+)?\)\s?}}")
 
 
-def decrease(font_size: str, pt: int):
+def decrease(font_size: str, pt: int) -> str:
     """Decrease fontsize."""
     return f"{int(font_size[:-2]) - int(pt)}pt"
 
 
-def increase(font_size: str, pt: int):
+def increase(font_size: str, pt: int) -> str:
     """Increase fontsize."""
     return f"{int(font_size[:-2]) + int(pt)}pt"
 
 
-def darken(color: ty.Union[str, Color], percentage=10):
+def darken(color: ty.Union[str, Color], percentage=10) -> str:
     """Darken the color."""
     if isinstance(color, str):
         if color.startswith("#"):
@@ -52,7 +52,7 @@ def darken(color: ty.Union[str, Color], percentage=10):
     return f"rgb({red}, {green}, {blue})"
 
 
-def lighten(color: ty.Union[str, Color], percentage=10):
+def lighten(color: ty.Union[str, Color], percentage=10) -> str:
     """Lighten the color."""
     if isinstance(color, str):
         if color.startswith("#"):
@@ -69,7 +69,7 @@ def lighten(color: ty.Union[str, Color], percentage=10):
     return f"rgb({red}, {green}, {blue})"
 
 
-def opacity(color: ty.Union[str, Color], value=255):
+def opacity(color: ty.Union[str, Color], value=255) -> str:
     """Adjust opacity."""
     if isinstance(color, str):
         if color.startswith("#"):
@@ -82,7 +82,7 @@ def opacity(color: ty.Union[str, Color], value=255):
     return f"rgba({red}, {green}, {blue}, {max(min(int(value), 255), 0)})"
 
 
-def gradient(stops, horizontal=True):
+def gradient(stops, horizontal=True) -> str:
     """Make gradient."""
     if not use_gradients:
         return stops[-1]
@@ -94,7 +94,6 @@ def gradient(stops, horizontal=True):
 
     _stops = [f"stop: {n} {stop}" for n, stop in enumerate(stops)]
     grad += ", ".join(_stops) + ")"
-
     return grad
 
 

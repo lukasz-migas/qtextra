@@ -1,9 +1,12 @@
 """tqdm-based progress manager."""
 import typing as ty
 
-from napari.utils.events.event import EmitterGroup, Event
 from tqdm import tqdm
 
+try:
+    from napari.utils.events.event import EmitterGroup, Event
+except ImportError:
+    raise ImportError("please install napari using 'pip install napari'") from None
 
 class Progress(tqdm):
     """This class inherits from tqdm and provides an interface for

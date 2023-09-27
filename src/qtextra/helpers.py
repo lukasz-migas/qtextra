@@ -9,8 +9,6 @@ import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
-from napari.utils.colormaps.standardize_color import transform_color
-from napari.utils.events.custom_types import Array
 from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, QTimer
 from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
@@ -33,6 +31,11 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_scroll_label import QtScrollableLabel
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
     from qtextra.widgets.qt_tool_button import QtToolButton
+
+    try:
+        from napari.utils.events.custom_types import Array
+    except ImportError:
+        Array = None
 
 
 def make_form_layout(
@@ -373,6 +376,7 @@ def make_line_edit(
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     func_changed: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     default: str = "",
+    disabled: bool = False,
     **_kwargs,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
@@ -394,6 +398,7 @@ def make_line_edit(
         [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
     if func_changed:
         [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
+    widget.setDisabled(disabled)
     widget.setPlaceholderText(placeholder)
     return widget
 
@@ -572,8 +577,12 @@ def set_combobox_data(
                 widget.setCurrentIndex(index)
 
 
-def set_combobox_text_data(widget: Qw.QComboBox, data: ty.Dict[str, ty.Any], current_item: ty.Optional[str] = None):
+def set_combobox_text_data(
+    widget: Qw.QComboBox, data: ty.Union[ty.List[str], ty.Dict[str, ty.Any]], current_item: ty.Optional[str] = None
+):
     """Set data/value on combobox."""
+    if isinstance(data, ty.List):
+        data = {m: m for m in data}
     for index, (text, item) in enumerate(data.items()):
         widget.addItem(text, item)
         if current_item is not None:
@@ -1082,7 +1091,13 @@ def make_double_spin_box(
 
 
 def make_radio_btn(
-    parent, title: str, tooltip: ty.Optional[str] = None, expand: bool = True, **_kwargs
+    parent,
+    title: str,
+    tooltip: ty.Optional[str] = None,
+    expand: bool = True,
+    checked: bool = False,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    **_kwargs,
 ) -> Qw.QRadioButton:
     """Make radio button."""
     widget = Qw.QRadioButton(parent)
@@ -1091,6 +1106,10 @@ def make_radio_btn(
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if checked:
+        widget.setChecked(checked)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1697,7 +1716,9 @@ def make_spacer_widget() -> Qw.QWidget:
     return spacer
 
 
-def add_flash_animation(widget: Qw.QWidget, duration: int = 300, color: Array = (0.5, 0.5, 0.5, 0.5), n_loop: int = 1):
+def add_flash_animation(
+    widget: Qw.QWidget, duration: int = 300, color: "Array" = (0.5, 0.5, 0.5, 0.5), n_loop: int = 1
+):
     """Add flash animation to widget to highlight certain action (e.g. taking a screenshot).
 
     Parameters
@@ -1712,6 +1733,8 @@ def add_flash_animation(widget: Qw.QWidget, duration: int = 300, color: Array = 
         Number of times the animation should flash.
 
     """
+    from napari.utils.colormaps.standardize_color import transform_color
+
     color = transform_color(color)[0]
     color = (255 * color).astype("int")
 

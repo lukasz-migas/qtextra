@@ -243,14 +243,16 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.state = not self.state
         for row, __ in enumerate(self._table):
             self._table[row][0] = self.state
-            self.dataChanged.emit(self.createIndex(row, 0), 0)
+            index = self.createIndex(row, 0)
+            self.dataChanged.emit(index, index)
         self.evt_checked.emit(-1, self.state)
 
     def uncheck_all_rows(self):
         """Uncheck all rows."""
         for row, __ in enumerate(self._table):
             self._table[row][0] = False
-            self.dataChanged.emit(row, 0)
+            index = self.createIndex(row, 0)
+            self.dataChanged.emit(index, index)
         self.evt_checked.emit(-1, False)
 
     def get_all_checked(self) -> ty.List[int]:
@@ -411,7 +413,7 @@ class QtCheckableTableView(QTableView):
         """Return header."""
         return self.horizontalHeader()
 
-    def on_table_clicked(self, index: QModelIndex = None) -> None:
+    def on_table_clicked(self, index: ty.Optional[QModelIndex] = None) -> None:
         """Imitate row selection."""
         if index is None:
             index = QModelIndex()

@@ -1,8 +1,10 @@
 """Events emitter."""
 from qtpy.QtCore import QObject, Signal
 
-from qtextra.utils.notifications import Notification
-
+try:
+    from qtextra.utils.notifications import Notification
+except ImportError:
+    Notification = object
 
 class Events(QObject):
     """Events emitter."""
@@ -22,8 +24,8 @@ class Events(QObject):
 
     # notification events
     evt_notification_action = Signal(str, tuple)
-    evt_notification = Signal(Notification)
     evt_notification_dismiss = Signal()
+    evt_notification = Signal(Notification)
 
     # splash screen events
     evt_splash_msg = Signal(str)  # message to be displayed

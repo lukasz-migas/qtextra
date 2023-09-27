@@ -1,6 +1,4 @@
 """Various toolbars that are used throughout the app."""
-import typing as ty
-
 from qtpy.QtWidgets import QWidget
 
 import qtextra.helpers as hp

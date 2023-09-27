@@ -266,6 +266,7 @@ class Theme(EventedModel):
         "progress",
         "standout",
         pre=True,
+        allow_reuse=True,
     )
     def _validate_color(cls, value) -> Color:
         # print("VALIDATING", value)
@@ -275,7 +276,7 @@ class Theme(EventedModel):
             value = Color(value).as_hex()
         return Color(value)
 
-    @validator("syntax_style", pre=True)
+    @validator("syntax_style", pre=True, allow_reuse=True)
     def _ensure_syntax_style(value: str) -> str:
         from pygments.styles import STYLE_MAP
 
@@ -284,7 +285,7 @@ class Theme(EventedModel):
         )
         return value
 
-    @validator("font_size", "header_size", pre=True)
+    @validator("font_size", "header_size", pre=True, allow_reuse=True)
     def _ensure_font_size(value: ty.Union[int, str]) -> str:
         if isinstance(value, int):
             value = str(value)
@@ -598,6 +599,15 @@ class Themes(ConfigBase):
                     )
                 except Exception:
                     logger.warning("Could not load theme data.")
+
+    def lighten(self, color, percentage: float = 10, as_hex: bool = False) -> str:
+        """Lighted color."""
+        from qtextra.utils.template import lighten
+
+        color = lighten(color, percentage)
+        if as_hex:
+            color = Color(color).as_hex()
+        return color
 
 
 def get_previous_configs(base_dir: ty.Optional[str] = None, filename: str = "themes-config.json") -> ty.Dict[str, str]:
