@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f99564b5-4c19-46b6-af35-3341d7fc1f02" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/utils/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/utils/utilities.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qtextra/utils/qt.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/utils/qt.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +53,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1695831222826</updated>
-      <workItem from="1695831223990" duration="3145000" />
+      <workItem from="1695831223990" duration="3300000" />
     </task>
     <servers />
   </component>

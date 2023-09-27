@@ -1,3 +1,4 @@
+"""Qt utilities."""
 from __future__ import annotations
 
 import os
@@ -9,6 +10,7 @@ from contextlib import contextmanager
 
 import qtpy
 from qtpy.QtCore import QSocketNotifier
+from qtpy.QtWidgets import QApplication
 
 RICH_TEXT_PATTERN = re.compile("<[^\n]+>")
 
