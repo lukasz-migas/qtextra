@@ -6,16 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f99564b5-4c19-46b6-af35-3341d7fc1f02" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/_napari/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/_napari/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/_napari/mixins.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/_napari/mixins.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/config/events.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/config/events.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/config/theme.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/config/theme.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/helpers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/utils/notifications.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/utils/notifications.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/utils/progress.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/utils/progress.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/utils/template.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/utils/template.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/qtextra/widgets/qt_table_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/widgets/qt_table_view.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/qtextra/utils/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/qtextra/utils/utilities.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +54,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1695831222826</updated>
-      <workItem from="1695831223990" duration="554000" />
+      <workItem from="1695831223990" duration="3145000" />
     </task>
     <servers />
   </component>

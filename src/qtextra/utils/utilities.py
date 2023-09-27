@@ -1,9 +1,9 @@
 import sys
+import typing as ty
 from functools import lru_cache
 from pathlib import Path
 
 from koyo.utilities import running_as_pyinstaller_app
-import typing as ty
 from loguru import logger
 
 
