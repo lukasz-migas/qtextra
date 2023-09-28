@@ -64,12 +64,13 @@ class QFormatter(Formatter):
 class Codelighter(QtGui.QSyntaxHighlighter):
     """Python highlighter."""
 
-    def __init__(self, parent, theme, lang: str = "python") -> None:
+    def __init__(self, parent, theme: str, lang: str = "python") -> None:
         super().__init__(parent)
         self.formatter = QFormatter(style=theme)
         self.lexer = get_lexer_by_name(lang)
 
     def highlightBlock(self, text):
+        """Highlight block."""
         cb = self.currentBlock()
         p = cb.position()
         text = self.document().toPlainText() + "\n"

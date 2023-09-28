@@ -48,7 +48,8 @@ class QtImagePushButton(QPushButton):
         """Set QtAwesome icon."""
         name = get_icon(name)
         self._qta_data = (name, kwargs)
-        color = self._icon_color or THEMES.get_hex_color("icon")
+        color_ = kwargs.pop("color", None)
+        color = color_ or self._icon_color or THEMES.get_hex_color("icon")
         icon = qtawesome.icon(name, **self._qta_data[1], color=color)
         self.setIcon(icon)
 
