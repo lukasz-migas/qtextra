@@ -1483,7 +1483,9 @@ def open_filename(parent, title: str = "Select file...", base_dir: str = "", fil
     return filename
 
 
-def get_directory(parent, title: str = "Select directory...", base_dir: PathLike = "", native: bool = True) -> str:
+def get_directory(
+    parent, title: str = "Select directory...", base_dir: PathLike = "", native: bool = True
+) -> ty.Optional[str]:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
@@ -1491,8 +1493,7 @@ def get_directory(parent, title: str = "Select directory...", base_dir: PathLike
     if not native:
         options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks | QFileDialog.DontUseNativeDialog
 
-    directory = QFileDialog.getExistingDirectory(parent, title, str(base_dir), options=options)
-    return directory
+    return QFileDialog.getExistingDirectory(parent, title, str(base_dir), options=options)
 
 
 def get_filename(
