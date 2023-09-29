@@ -116,12 +116,22 @@ def set_from_schema(widget: Qw.QWidget, schema: ty.Dict[str, ty.Any], **kwargs):
             widget.setToolTip(schema["description"])
 
 
-def call_later(parent: Qw.QWidget, func: ty.Callable, delay: int):
+def call_later(parent: Qw.QWidget, func: ty.Callable, delay: int) -> None:
     """Call later."""
     QTimer(parent).singleShot(int(delay), func)
 
 
 run_delayed = call_later
+
+
+def make_periodic_timer(parent: Qw.QWidget, func: ty.Callable, delay: int, start: bool = True) -> QTimer:
+    """Create periodic timer."""
+    timer = QTimer(parent)
+    timer.timeout.connect(func)
+    timer.setInterval(delay)
+    if start:
+        timer.start()
+    return timer
 
 
 def combobox_setter(
