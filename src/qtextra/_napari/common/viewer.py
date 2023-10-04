@@ -12,7 +12,8 @@ class ViewerBase(ABC):
 
     IS_VISPY = True
     PLOT_ID = ""
-    viewer, widget = None, None
+    viewer: ty.Any
+    widget: ty.Any
     _callbacks = None
 
     @property

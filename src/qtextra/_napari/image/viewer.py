@@ -34,9 +34,9 @@ class NapariImageView(ViewerBase):
         self.PLOT_ID = get_short_hash()
 
         # create instance of viewer
-        self.viewer = Viewer(**kwargs)
+        self.viewer: Viewer = Viewer(**kwargs)
         # create instance of qt widget
-        self.widget = QtViewer(
+        self.widget: QtViewer = QtViewer(
             self,
             self.viewer,
             parent=parent,

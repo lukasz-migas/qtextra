@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (
     QFrame,
     QGraphicsOpacityEffect,
     QHBoxLayout,
+    QLabel,
     QLayout,
     QVBoxLayout,
     QWidget,
@@ -458,7 +459,8 @@ class QtFramelessPopup(QtDialog, CloseMixin):
     """Frameless dialog."""
 
     # attributes used to move windows around
-    _title_label, _old_window_pos, _move_handle = None, None, None
+    _title_label: QLabel
+    _old_window_pos, _move_handle = None, None
 
     def __init__(
         self,

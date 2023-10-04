@@ -13,7 +13,7 @@ class TableConfig(dict):
         self._no_sort_columns: ty.List[int] = []
         self._icon_columns: ty.List[int] = []
 
-    def __getitem__(self, tag: ty.Union[int, str]):
+    def __getitem__(self, tag: ty.Union[int, str]) -> ty.Any:
         """Get item id."""
         if isinstance(tag, int):
             val = self[tag]
@@ -23,17 +23,17 @@ class TableConfig(dict):
             raise KeyError("Could not retrieve value")
         return val
 
-    def __dir__(self):
+    def __dir__(self) -> ty.List[str]:
         # noinspection PyUnresolvedReferences
         base = super().__dir__()
         keys = sorted(set(base + list(self) + list(self.keys())))
         keys = [k for k in keys if is_valid_python_name(k)]
         return keys
 
-    def _ipython_key_completions_(self):
+    def _ipython_key_completions_(self) -> ty.List[str]:
         return sorted(self)
 
-    def __getattr__(self, item: ty.Union[int, str]):
+    def __getattr__(self, item: ty.Union[int, str]) -> ty.Any:
         # allow access to group members via dot notation
         try:
             return self.__getitem__(item)
@@ -82,7 +82,7 @@ class TableConfig(dict):
         is_color: bool = False,
         no_sort: bool = False,
         tooltip: str = "",
-    ):
+    ) -> "TableConfig":
         """Add an item to the configuration."""
         self.last_idx += 1
         self[self.last_idx] = {
@@ -103,7 +103,7 @@ class TableConfig(dict):
             self._icon_columns.append(self.last_idx)
         return self
 
-    def find_col_id(self, tag: str):
+    def find_col_id(self, tag: str) -> int:
         """Find column id by the tag."""
         for col_id, col_info in self.items():
             if col_info["tag"] == tag:

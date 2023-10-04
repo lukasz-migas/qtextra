@@ -76,7 +76,7 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         self.layers.remove_all()
         self.events.clear_canvas()
 
-    def reset_view(self, event=None):
+    def reset_view(self, event=None) -> None:
         """Reset the camera view."""
         extent = self._sliced_extent_world
         scene_size = extent[1] - extent[0]
