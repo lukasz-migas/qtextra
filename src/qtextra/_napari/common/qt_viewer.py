@@ -236,7 +236,7 @@ class QtViewerBase(QWidget):
         """Export figure."""
         from napari._qt.dialogs.screenshot_dialog import ScreenshotDialog
 
-        dialog = ScreenshotDialog(self.screenshot, self)
+        dialog = ScreenshotDialog(self.screenshot, self, history=[])
         if dialog.exec_():
             pass
 
