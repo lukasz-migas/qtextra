@@ -1512,13 +1512,27 @@ def get_filename(
     base_dir: ty.Optional[PathLike] = "",
     file_filter: str = "*",
     base_filename: ty.Optional[str] = None,
+    multiple: bool = False,
 ) -> str:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
     if base_filename:
         base_dir = os.path.join(base_dir, base_filename)
-    filename, _ = QFileDialog.getOpenFileName(parent, title, str(base_dir) or "", file_filter)
+    if multiple:
+        filename, _ = QFileDialog.getOpenFileNames(
+            parent,
+            title,
+            str(base_dir) or "",
+            file_filter,
+        )
+    else:
+        filename, _ = QFileDialog.getOpenFileName(
+            parent,
+            title,
+            str(base_dir) or "",
+            file_filter,
+        )
     return filename
 
 
@@ -1579,7 +1593,7 @@ def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True
     return new_color
 
 
-def confirm(parent, message: str, title: str = "Are you sure?") -> bool:
+def confirm(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
 

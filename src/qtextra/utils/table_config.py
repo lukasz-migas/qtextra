@@ -8,6 +8,7 @@ class TableConfig(dict):
     """Table configuration object."""
 
     def __init__(self):
+        super().__init__()
         self.last_idx = -1
         self.color_column = -1
         self._no_sort_columns: ty.List[int] = []
@@ -26,7 +27,7 @@ class TableConfig(dict):
     def __dir__(self) -> ty.List[str]:
         # noinspection PyUnresolvedReferences
         base = super().__dir__()
-        keys = sorted(set(base + list(self) + list(self.keys())))
+        keys = sorted(set(base + list(self) + list(self.keys())))  # type: ignore[operator]
         keys = [k for k in keys if is_valid_python_name(k)]
         return keys
 
@@ -65,7 +66,7 @@ class TableConfig(dict):
         """Returns list of."""
         return self._no_sort_columns
 
-    def update_attribute(self, name: str, attr: str, value):
+    def update_attribute(self, name: str, attr: str, value: ty.Any) -> None:
         """Update attribute value."""
         for _name, _meta in self.items():
             if _name == name:
@@ -107,5 +108,5 @@ class TableConfig(dict):
         """Find column id by the tag."""
         for col_id, col_info in self.items():
             if col_info["tag"] == tag:
-                return col_id
+                return col_id  # type: ignore
         return -1
