@@ -281,8 +281,12 @@ def make_qta_label(
     icon_name: str,
     alignment=None,
     tooltip: ty.Optional[str] = None,
-    small: bool = False,
     xsmall: bool = False,
+    small: bool = False,
+    normal: bool = False,
+    average: bool = False,
+    medium: bool = False,
+    large: bool = False,
     **kwargs,
 ) -> "QtQtaLabel":
     """Make QLabel element."""
@@ -290,10 +294,18 @@ def make_qta_label(
 
     widget = QtQtaLabel(parent=parent)
     widget.set_qta(icon_name, **kwargs)
-    if small:
-        widget.set_small()
     if xsmall:
         widget.set_xsmall()
+    if small:
+        widget.set_small()
+    elif normal:
+        widget.set_normal()
+    elif average:
+        widget.set_average()
+    elif medium:
+        widget.set_medium()
+    elif large:
+        widget.set_large()
     if alignment is not None:
         widget.setAlignment(alignment)
     if tooltip:
@@ -1615,7 +1627,7 @@ def confirm(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you
 
 
 def confirm_with_text(
-    parent,
+    parent: Qw.QWidget,
     message: str = "Please confirm action by typing <b>confirm</b> to continue.",
     request: str = "confirm",
     title: str = "Please confirm...",
@@ -1624,8 +1636,9 @@ def confirm_with_text(
     from qtextra.widgets.qt_confirm import ConfirmWithTextDialog
 
     if request not in message:
-        raise ValueError("Request string must be part of the message.")
-
+        if "<b>confirm</b>" not in message:
+            raise ValueError("Request string must be part of the message.")
+        message = message.replace("<b>confirm</b>", f"<b>{request}</b>")
     dlg = ConfirmWithTextDialog(parent, title, message, request)
     return bool(dlg.exec_())
 
