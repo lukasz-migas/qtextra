@@ -608,6 +608,15 @@ class Themes(ConfigBase):
         if as_hex:
             color = Color(color).as_hex()
         return color
+    
+    def darken(self, color, percentage: float = 10, as_hex: bool = False) -> str:
+        """Lighted color."""
+        from qtextra.utils.template import darken
+
+        color = darken(color, percentage)
+        if as_hex:
+            color = Color(color).as_hex()
+        return color
 
 
 def get_previous_configs(base_dir: ty.Optional[str] = None, filename: str = "themes-config.json") -> ty.Dict[str, str]:
