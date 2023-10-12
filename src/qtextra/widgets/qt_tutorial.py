@@ -3,6 +3,7 @@ import typing as ty
 
 from pydantic import BaseModel
 from qtpy.QtCore import QEasingCurve, QPoint, Qt, QVariantAnimation
+from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -50,6 +51,11 @@ class QtTutorial(QDialog):
         self._animation.valueChanged.connect(self._update_progress)
         self._animation.setEasingCurve(QEasingCurve.InOutCubic)
 
+        # self._move_animation = QVariantAnimation()
+        # self._move_animation.setDuration(1000)
+        # self._move_animation.valueChanged.connect(self._update_position)
+        # self._move_animation.setEasingCurve(QEasingCurve.InOutCubic)
+
         self.make_ui()
         if not self.ALLOW_CHEVRON:
             self.chevron_up.hide()
@@ -76,7 +82,7 @@ class QtTutorial(QDialog):
         )
 
         header_layout = QHBoxLayout(header_widget)
-        header_layout.setMargin(2)
+        header_layout.setContentsMargins(2, 2, 2, 2)
         header_layout.addWidget(self._step_indicator, stretch=True)
         header_layout.addWidget(self._close_btn)
 
@@ -90,7 +96,7 @@ class QtTutorial(QDialog):
         self._next_btn = hp.make_btn(footer_widget, "Next", func=self.on_next, tooltip="Show next step.")
 
         footer_layout = QHBoxLayout(footer_widget)
-        footer_layout.setMargin(2)
+        footer_widget.setContentsMargins(2, 2, 2, 2)
         footer_layout.addWidget(self._step_label, stretch=True)
         footer_layout.addStretch(1)
         footer_layout.addWidget(self._prev_btn)
@@ -168,6 +174,8 @@ class QtTutorial(QDialog):
         elif position == "bottom":
             x = rect.center().x() - (size.width() * 0.5)
             y = rect.bottom() + y_pad
+        else:
+            raise ValueError(f"Invalid position '{position}'.")
         pos = widget.mapToGlobal(QPoint(x, y))
         self.move(pos)
 
@@ -195,6 +203,18 @@ class QtTutorial(QDialog):
         if self._current == -1:
             self.on_next()
         super().show()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        """Key press event handler."""
+        key = event.key()
+        if key == Qt.Key_Left:
+            self.on_prev()
+            event.accept()
+        elif key == Qt.Key_Right:
+            self.on_next()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
 
 
 #
