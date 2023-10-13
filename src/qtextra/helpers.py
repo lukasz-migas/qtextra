@@ -1297,10 +1297,11 @@ def update_widget_style(widget: Qw.QWidget, object_name: str):
     widget.style().polish(widget)
 
 
-def polish_widget(widget: Qw.QWidget):
+def polish_widget(*widget: Qw.QWidget):
     """Update widget style."""
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
+    for widget_ in widget:
+        widget_.style().unpolish(widget_)
+        widget_.style().polish(widget_)
 
 
 def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options") -> "QtCheckCollapsible":
@@ -1346,7 +1347,7 @@ def set_expanding_sizer_policy(widget: Qw.QWidget, horz: bool = False, vert: boo
     widget.setSizePolicy(size_policy)
 
 
-def set_retain_hidden_size_policy(widget):
+def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
     """Set hidden policy."""
     policy = widget.sizePolicy()
     policy.setRetainSizeWhenHidden(True)
