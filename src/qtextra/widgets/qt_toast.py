@@ -79,7 +79,7 @@ class QtToast(SubWindowBase):
         """Show message that appears for longer but is also longer in time."""
         self.DISMISS_AFTER = duration
         self.POSITION = position
-        self.show_message(title, message, icon=icon)
+        self.show_message(title, message, icon=icon, position=position)
 
     def show(self):
         """Show the message with a fade and slight slide in from the bottom."""
