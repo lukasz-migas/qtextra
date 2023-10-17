@@ -17,3 +17,14 @@ git clone https://github.com/illumion-io/qtextra.git
 
 pip install -e .[dev]
 ```
+
+
+## Release information
+
+1. Test code and make sure it works.
+2. Reinstall all dependencies and build app and test that it works.
+3. Update git tag and push it.
+4. Reinstall and build app.
+5. Upload to Dropbox.
+6. Update the latest.json file in Dropbox.
+7. Create release with changelog on GitHub (autoims-docs).
