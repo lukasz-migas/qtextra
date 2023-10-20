@@ -586,7 +586,7 @@ class QtCheckableTableView(QTableView):
         """Get initial index."""
         return self.model().get_initial_indices(indices)
 
-    def get_row_id(self, col_id: int, value: str) -> int:
+    def get_row_id(self, col_id: int, value: ty.Union[str, int, float]) -> int:
         """Get the id of a value."""
         return self.model().get_row_id(col_id, value)
 
@@ -659,7 +659,7 @@ class QtCheckableTableView(QTableView):
             row = self.model().get_sort_index(row)
         self.model().update_values(row, column_value)
 
-    def sort_by_column(self, column: int, direction: ty.Union[Qt.SortOrder, str]) -> None:
+    def sort_by_column(self, column: int, direction: ty.Union[Qt.SortOrder, str] = "ascending") -> None:
         """Sort table by column."""
         if isinstance(direction, str):
             direction = Qt.AscendingOrder if direction == "ascending" else Qt.DescendingOrder
