@@ -572,7 +572,10 @@ def make_colormap_combobox_alone(
 
 
 def make_searchable_combobox(
-    parent, items: ty.Optional[ty.Iterable[str]] = None, tooltip: ty.Optional[str] = None
+    parent,
+    items: ty.Optional[ty.Iterable[str]] = None,
+    tooltip: ty.Optional[str] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
 ) -> "QtSearchableComboBox":
     """Make QComboBox."""
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
@@ -582,6 +585,8 @@ def make_searchable_combobox(
         widget.addItems(items)
     if tooltip:
         widget.setToolTip(tooltip)
+    if func:
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
