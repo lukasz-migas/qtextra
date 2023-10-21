@@ -589,13 +589,6 @@ def make_searchable_combobox(
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
 
     widget = QtSearchableComboBox(parent)
-    if enum is not None:
-        items = enum
-    if value is None:
-        value = default
-    if options is not None:
-        items = options
-    widget = Qw.QComboBox(parent)
     if items:
         widget.addItems(items)
     if object_name:
