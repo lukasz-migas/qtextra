@@ -576,15 +576,39 @@ def make_searchable_combobox(
     items: ty.Optional[ty.Iterable[str]] = None,
     tooltip: ty.Optional[str] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    enum: ty.Optional[ty.List[str]] = None,
+    options: ty.Optional[ty.List[str]] = None,
+    value: ty.Optional[str] = None,
+    default: ty.Optional[str] = None,
+    expand: bool = True,
+    object_name: ty.Optional[str] = None,
+    data=None,
+    **kwargs,
 ) -> "QtSearchableComboBox":
     """Make QComboBox."""
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
 
     widget = QtSearchableComboBox(parent)
+    if enum is not None:
+        items = enum
+    if value is None:
+        value = default
+    if options is not None:
+        items = options
+    widget = Qw.QComboBox(parent)
     if items:
         widget.addItems(items)
+    if object_name:
+        widget.setObjectName(object_name)
+    if value and not data:
+        widget.setCurrentText(value)
+    tooltip = kwargs.get("description", tooltip)
     if tooltip:
         widget.setToolTip(tooltip)
+    if expand:
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+    if data:
+        set_combobox_data(widget, data, value)
     if func:
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
