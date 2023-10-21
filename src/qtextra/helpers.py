@@ -445,6 +445,7 @@ def make_combobox(
     default: ty.Optional[str] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     expand: bool = True,
+    object_name: ty.Optional[str] = None,
     data=None,
     **kwargs,
 ) -> Qw.QComboBox:
@@ -458,6 +459,8 @@ def make_combobox(
     widget = Qw.QComboBox(parent)
     if items:
         widget.addItems(items)
+    if object_name:
+        widget.setObjectName(object_name)
     if value and not data:
         widget.setCurrentText(value)
     tooltip = kwargs.get("description", tooltip)
