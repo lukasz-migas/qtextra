@@ -47,7 +47,7 @@ class QtTutorial(QDialog):
         self.setMinimumHeight(self.MIN_HEIGHT)
 
         self._animation = QVariantAnimation()
-        self._animation.setDuration(1000)
+        self._animation.setDuration(500)
         self._animation.valueChanged.connect(self._update_progress)
         self._animation.setEasingCurve(QEasingCurve.InOutCubic)
 
@@ -196,7 +196,8 @@ class QtTutorial(QDialog):
 
     def on_prev(self):
         """Previous step."""
-        self.set_step(self._current - 1)
+        if self._current > 0:
+            self.set_step(self._current - 1)
 
     def show(self):
         """Show widget."""

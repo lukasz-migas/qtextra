@@ -62,7 +62,7 @@ class ChangelogDialog(QtFramelessTool):
             self.download_btn.hide()
         if self.path_to_out is not None and self.path_to_out.exists():
             self.progress_label.setText(
-                f"<a href='{self.path_to_out.as_uri()}' style='color: blue;'>Open {self.path_to_out} - it's been"
+                f"<a href='{self.path_to_out.as_uri()}'>Open {self.path_to_out} - it's been"
                 f" previously downloaded.</a>"
             )
             self.progress_label.show()

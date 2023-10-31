@@ -370,6 +370,7 @@ class QtCheckableTableView(QTableView):
             self.init_from_config()
 
         connect(THEMES.evt_theme_changed, self._update_color_theme, state=True)
+        self._update_color_theme()
 
     def closeEvent(self, event) -> None:
         """Close event."""
