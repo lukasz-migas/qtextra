@@ -441,8 +441,13 @@ class Themes(ConfigBase):
             return
         self._theme = value
         # synchronize our icon with napari icon color
-        for name in _themes:
-            _themes[name].icon = self.get_hex_color("icon")
+        try:
+            from napari.utils.theme import _themes
+
+            for name in _themes:
+                _themes[name].icon = self.get_hex_color("icon")
+        except ImportError:
+            pass
         self.evt_theme_changed.emit()
         self.evt_theme_icon_changed.emit()
         logger.debug(f"Changed theme to '{value}'")
@@ -608,7 +613,7 @@ class Themes(ConfigBase):
         if as_hex:
             color = Color(color).as_hex()
         return color
-    
+
     def darken(self, color, percentage: float = 10, as_hex: bool = False) -> str:
         """Lighted color."""
         from qtextra.utils.template import darken

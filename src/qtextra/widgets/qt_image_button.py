@@ -220,6 +220,33 @@ class QtLockButton(QtImagePushButton):
         self.set_qta("lock_closed" if state else "lock_open")
 
 
+class QtThemeButton(QtImagePushButton):
+    """Lock button with open/closed state to indicate current state."""
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self._dark = False
+        self.dark = False
+
+    def auto_connect(self) -> None:
+        """Automatically connect."""
+        self.evt_click.connect(self.toggle_theme)
+
+    def toggle_theme(self) -> None:
+        """Toggle lock."""
+        self.dark = not self.dark
+
+    @property
+    def dark(self) -> bool:
+        """Get playing state."""
+        return self._dark
+
+    @dark.setter
+    def dark(self, state: bool) -> None:
+        self._dark = state
+        self.set_qta("dark_theme" if state else "light_theme")
+
+
 class QtExpandButton(QtImagePushButton):
     """Button that has chevron point up or down."""
 

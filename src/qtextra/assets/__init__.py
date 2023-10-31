@@ -54,6 +54,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "check": "fa5s.check",
     "edit": "ri.edit-box-fill",
     "remove": "ri.indeterminate-circle-line",
+    "light_theme": "ri.sun-fill",
+    "dark_theme": "ri.moon-clear-fill",
 }
 
 
@@ -84,7 +86,7 @@ def get_icon(name: str):
     return name
 
 
-def get_stylesheet(theme: str = None, extra: ty.Optional[ty.List[str]] = None) -> str:
+def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[str]] = None) -> str:
     """Combine all qss files into single, possibly pre-themed, style string.
 
     Parameters

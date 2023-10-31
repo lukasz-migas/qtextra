@@ -588,6 +588,12 @@ def make_searchable_combobox(
     """Make QComboBox."""
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
 
+    if enum is not None:
+        items = enum
+    if options is not None:
+        items = options
+    if value is None:
+        value = default
     widget = QtSearchableComboBox(parent)
     if items:
         widget.addItems(items)
@@ -1532,7 +1538,7 @@ def open_filename(parent, title: str = "Select file...", base_dir: str = "", fil
 
 
 def get_directory(
-    parent, title: str = "Select directory...", base_dir: PathLike = "", native: bool = True
+    parent, title: str = "Select directory...", base_dir: ty.Optional[PathLike] = "", native: bool = True
 ) -> ty.Optional[str]:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
@@ -1540,6 +1546,8 @@ def get_directory(
     options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
     if not native:
         options = QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks | QFileDialog.DontUseNativeDialog
+    if base_dir is None:
+        base_dir = ""
 
     return QFileDialog.getExistingDirectory(parent, title, str(base_dir), options=options)
 

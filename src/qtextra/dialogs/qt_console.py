@@ -131,7 +131,7 @@ class QtConsole(RichJupyterWidget):
         # TODO: Try to get console from jupyter to run without a shift click
         # self.execute_on_complete_input = True
 
-    def _update_theme(self, event=None):
+    def _update_theme(self, event: ty.Any = None) -> None:
         """Update the napari GUI theme."""
         from qtextra.config.theme import THEMES
 

@@ -6,7 +6,7 @@ from ast import literal_eval
 
 from pydantic.color import Color
 
-from qtextra.utils.color import hex_to_qt_rgb
+from qtextra.utils.color import get_text_color, hex_to_qt_rgb, rgb_to_hex
 
 try:
     from qtpy import QT_VERSION
@@ -23,6 +23,7 @@ gradient_pattern = re.compile(r"([vh])gradient\((.+)\)")
 darken_pattern = re.compile(r"{{\s?darken\((\w+),?\s?([-\d]+)?\)\s?}}")
 lighten_pattern = re.compile(r"{{\s?lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
 opacity_pattern = re.compile(r"{{\s?opacity\((\w+),?\s?([-\d]+)?\)\s?}}")
+replace_pattern = re.compile(r"{{\s?replace\((\w+)\)\s?}}")
 
 
 def decrease(font_size: str, pt: int) -> str:
@@ -33,6 +34,18 @@ def decrease(font_size: str, pt: int) -> str:
 def increase(font_size: str, pt: int) -> str:
     """Increase fontsize."""
     return f"{int(font_size[:-2]) + int(pt)}pt"
+
+
+def color_for_background(color: ty.Union[str, Color]) -> str:
+    """Return color that will stand out against background color."""
+    if isinstance(color, str):
+        if color.startswith("#"):
+            color = hex_to_qt_rgb(color)
+        if color.startswith("rgb("):
+            color = literal_eval(color.lstrip("rgb(").rstrip(")"))
+    else:
+        color = color.as_rgb_tuple()
+    return get_text_color(rgb_to_hex(color, 1)).name()
 
 
 def darken(color: ty.Union[str, Color], percentage=10) -> str:
@@ -120,6 +133,10 @@ def template(css, **theme):
         color, percentage = matchobj.groups()
         return opacity(theme[color], percentage)
 
+    def _replace_match(matchobj):
+        color = matchobj.groups()[0]
+        return color_for_background(theme[color])
+
     def _gradient_match(matchobj):
         horizontal = matchobj.groups()[1] == "h"
         stops = [i.strip() for i in matchobj.groups()[1].split("-")]
@@ -134,6 +151,7 @@ def template(css, **theme):
         css = darken_pattern.sub(_darken_match, css)
         css = lighten_pattern.sub(_lighten_match, css)
         css = opacity_pattern.sub(_opacity_match, css)
+        css = replace_pattern.sub(_replace_match, css)
         if isinstance(v, Color):
             v = v.as_rgb()
         css = css.replace("{{ %s }}" % k, v)
