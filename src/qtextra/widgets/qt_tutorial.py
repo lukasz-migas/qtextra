@@ -58,18 +58,20 @@ class QtTutorial(QDialog):
 
         self.make_ui()
         if not self.ALLOW_CHEVRON:
-            self.chevron_up.hide()
-            self.chevron_down.hide()
-            self.chevron_left.hide()
-            self.chevron_right.hide()
+            self.chevron_up_mid.hide()
+            self.chevron_down_mid.hide()
+            self.chevron_left_mid.hide()
+            self.chevron_right_mid.hide()
 
     # noinspection PyAttributeOutsideInit
     def make_ui(self):
         """Setup UI."""
-        self.chevron_up = hp.make_qta_label(self, "chevron_up_circle", small=True)
-        self.chevron_down = hp.make_qta_label(self, "chevron_down_circle", small=True)
-        self.chevron_left = hp.make_qta_label(self, "chevron_left_circle", small=True)
-        self.chevron_right = hp.make_qta_label(self, "chevron_right_circle", small=True)
+        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", small=True)
+        # self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", small=True)
+        # self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", small=True)
+        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", small=True)
+        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", small=True)
+        self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True)
 
         header_widget = QWidget(self)
         header_widget.setObjectName("tutorial_header")
@@ -117,11 +119,11 @@ class QtTutorial(QDialog):
         main_layout.setSpacing(0)
         main_layout.setColumnStretch(1, True)
         main_layout.setRowStretch(1, True)
-        main_layout.addWidget(self.chevron_up, 0, 1, 1, -1, alignment=Qt.AlignHCenter)
+        main_layout.addWidget(self.chevron_up_mid, 0, 1, 1, -1, alignment=Qt.AlignHCenter)
         main_layout.addLayout(layout, 1, 1, 1, 1)
-        main_layout.addWidget(self.chevron_left, 1, 0, 1, 1, alignment=Qt.AlignVCenter)
-        main_layout.addWidget(self.chevron_right, 1, 2, 1, 1, alignment=Qt.AlignVCenter)
-        main_layout.addWidget(self.chevron_down, 2, 1, 1, -1, alignment=Qt.AlignHCenter)
+        main_layout.addWidget(self.chevron_left_mid, 1, 0, 1, 1, alignment=Qt.AlignVCenter)
+        main_layout.addWidget(self.chevron_right_mid, 1, 2, 1, 1, alignment=Qt.AlignVCenter)
+        main_layout.addWidget(self.chevron_down_mid, 2, 1, 1, -1, alignment=Qt.AlignHCenter)
 
     def _update_progress(self, value: float):
         """Update progress bar."""
@@ -182,10 +184,10 @@ class QtTutorial(QDialog):
     def set_chevron(self, position: str):
         """Show/hide chevron icons as required."""
         if self.ALLOW_CHEVRON:
-            self.chevron_up.setVisible(position == "bottom")
-            self.chevron_down.setVisible(position == "top")
-            self.chevron_left.setVisible(position == "right")
-            self.chevron_right.setVisible(position == "left")
+            self.chevron_up_mid.setVisible(position == "bottom")
+            self.chevron_down_mid.setVisible(position == "top")
+            self.chevron_left_mid.setVisible(position == "right")
+            self.chevron_right_mid.setVisible(position == "left")
 
     def on_next(self):
         """Next step."""
