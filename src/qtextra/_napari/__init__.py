@@ -7,7 +7,8 @@ except ImportError:
 try:
     import napari_plot
 except ImportError:
-    raise ImportError("please install napari using 'pip install napari-plot'") from None
+    pass
+    # raise ImportError("please install napari using 'pip install napari-plot'") from None
 
 
 # Monkey patch icons

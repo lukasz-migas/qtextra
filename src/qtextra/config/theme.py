@@ -308,6 +308,9 @@ class Theme(EventedModel):
                 data[key] = value
         return data
 
+    def __getattr__(self, item) -> ty.Any:
+        return getattr(self, item)
+
 
 class Themes(ConfigBase):
     """Themes."""

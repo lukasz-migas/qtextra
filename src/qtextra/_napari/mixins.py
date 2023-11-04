@@ -1,15 +1,19 @@
 """Various toolbars that are used throughout the app."""
+import typing as ty
+
 from qtpy.QtWidgets import QWidget
 
 import qtextra.helpers as hp
-from qtextra._napari.image.viewer import NapariImageView
-from qtextra._napari.line.viewer import NapariLineView
+
+if ty.TYPE_CHECKING:
+    from qtextra._napari.image.viewer import NapariImageView
+    from qtextra._napari.line.viewer import NapariLineView
 
 
 class ImageViewMixin:
     """Mixin class."""
 
-    view_image: NapariImageView
+    view_image: "NapariImageView"
     image_layer = None
 
     def on_plot_image_outline(self, value: bool):
@@ -22,9 +26,11 @@ class ImageViewMixin:
         add_toolbars=True,
         allow_extraction=True,
         **kwargs,
-    ) -> NapariImageView:
+    ) -> "NapariImageView":
         """Make image view."""
-        view_image = NapariImageView(
+        from qtextra._napari.image.viewer import NapariImageView
+
+        return NapariImageView(
             widget,
             main_parent=self,
             disable_controls=disable_controls,
@@ -32,7 +38,6 @@ class ImageViewMixin:
             allow_extraction=allow_extraction,
             **kwargs,
         )
-        return view_image
 
 
 class LineViewMixin:
@@ -49,9 +54,11 @@ class LineViewMixin:
         y_label: str = "",
         lock_to_bottom: bool = False,
         **kwargs,
-    ) -> NapariLineView:
+    ) -> "NapariLineView":
         """Make line view."""
-        view_line = NapariLineView(
+        from qtextra._napari.line.viewer import NapariLineView
+
+        return NapariLineView(
             widget,
             main_parent=self,
             disable_controls=disable_controls,
@@ -63,7 +70,6 @@ class LineViewMixin:
             lock_to_bottom=lock_to_bottom,
             **kwargs,
         )
-        return view_line
 
     def on_yaxis_zoom(self, viewer, event):
         """Zoom y-axis of the current tab."""

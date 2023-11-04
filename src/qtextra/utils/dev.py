@@ -4,7 +4,10 @@ import sys
 import typing as ty
 
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
-from qtpy.QtWidgets import QApplication, QMainWindow
+from qtpy.QtWidgets import QApplication, QMainWindow, QWidget
+
+if ty.TYPE_CHECKING:
+    from qtreload.qt_reload import QtReloadWidget
 
 
 def disable_warnings():
@@ -21,7 +24,7 @@ def disable_warnings():
     warnings.filterwarnings("ignore", category=ResourceWarning, module="sentry_sdk")
 
 
-def qdev(parent=None, modules: ty.List[str] = ("qtextra", "koyo")):
+def qdev(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> "QtReloadWidget":
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
 
@@ -93,7 +96,7 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
     return app, frame, ha
 
 
-def apply_style(widget):
+def apply_style(widget: QWidget) -> None:
     """Apply stylesheet(s) on the widget."""
     from qtextra.config.theme import THEMES
 

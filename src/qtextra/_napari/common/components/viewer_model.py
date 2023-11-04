@@ -10,10 +10,14 @@ from napari.layers import Layer
 from napari.utils.events import Event, EventedModel, disconnect_events
 from napari.utils.key_bindings import KeymapProvider
 from napari.utils.mouse_bindings import MousemapProvider
-from napari_plot.components.gridlines import GridLines
 from pydantic import Extra, Field
 
 from qtextra._napari.common.components.layerlist import LayerList
+
+try:
+    from napari_plot.components.gridlines import GridLines
+except ImportError:
+    GridLines = None
 
 
 class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
@@ -24,8 +28,9 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
     grid: GridCanvas = Field(default_factory=GridCanvas, allow_mutation=False)
     dims: Dims = Field(default_factory=Dims, allow_mutation=False)
     cursor: Cursor = Field(default_factory=Cursor, allow_mutation=False)
-    grid_lines: GridLines = Field(default_factory=GridLines, allow_mutation=False)
     layers: LayerList = Field(default_factory=LayerList, allow_mutation=False)
+    if GridLines:
+        grid_lines: GridLines = Field(default_factory=GridLines, allow_mutation=False)
 
     help: str = ""
     status: ty.Union[str, ty.Dict] = "Ready"
@@ -121,8 +126,7 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
             # than someone has passed more than two axis labels which are
             # being saved and so default values are used.
             return np.vstack([np.zeros(self.dims.ndim), np.repeat(512, self.dims.ndim)])
-        else:
-            return self.layers.extent.world[:, self.dims.displayed]
+        return self.layers.extent.world[:, self.dims.displayed]
 
     def _on_grid_change(self, event):
         """Arrange the current layers is a 2D grid."""

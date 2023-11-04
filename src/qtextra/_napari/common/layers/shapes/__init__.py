@@ -1,4 +1,4 @@
-from napari.layers.shapes.shapes import Shapes  # noqa
+from napari.layers.shapes.shapes import Shapes
 
 from qtextra._napari.common.layers.shapes import _shapes_key_bindings
 
@@ -6,3 +6,6 @@ from qtextra._napari.common.layers.shapes import _shapes_key_bindings
 # decorated with keybindings during that process, but it is not directly needed
 # by our users and so is deleted below
 del _shapes_key_bindings
+
+
+__all__ = ["Shapes"]

@@ -1,25 +1,25 @@
 """Constants."""
 from collections import OrderedDict
 
-from napari.components._viewer_constants import Position, TextOverlayPosition
+from napari.components._viewer_constants import CanvasPosition
 
 POSITION_TRANSLATIONS = OrderedDict(
     [
-        (Position.TOP_LEFT, "Top left"),
-        (Position.TOP_RIGHT, "Top right"),
-        (Position.BOTTOM_RIGHT, "Bottom right"),
-        (Position.BOTTOM_LEFT, "Bottom left"),
+        (CanvasPosition.TOP_LEFT, "Top left"),
+        (CanvasPosition.TOP_RIGHT, "Top right"),
+        (CanvasPosition.BOTTOM_RIGHT, "Bottom right"),
+        (CanvasPosition.BOTTOM_LEFT, "Bottom left"),
     ]
 )
 
 
 TEXT_POSITION_TRANSLATIONS = OrderedDict(
     [
-        (TextOverlayPosition.TOP_LEFT, "Top left"),
-        (TextOverlayPosition.TOP_CENTER, "Top center"),
-        (TextOverlayPosition.TOP_RIGHT, "Top right"),
-        (TextOverlayPosition.BOTTOM_RIGHT, "Bottom right"),
-        (TextOverlayPosition.BOTTOM_CENTER, "Bottom center"),
-        (TextOverlayPosition.BOTTOM_LEFT, "Bottom left"),
+        (CanvasPosition.TOP_LEFT, "Top left"),
+        (CanvasPosition.TOP_CENTER, "Top center"),
+        (CanvasPosition.TOP_RIGHT, "Top right"),
+        (CanvasPosition.BOTTOM_RIGHT, "Bottom right"),
+        (CanvasPosition.BOTTOM_CENTER, "Bottom center"),
+        (CanvasPosition.BOTTOM_LEFT, "Bottom left"),
     ]
 )

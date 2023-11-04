@@ -1,5 +1,5 @@
 import napari.layers.labels.labels
-from napari.layers.labels.labels import Labels  # noqa
+from napari.layers.labels.labels import Labels
 
 from qtextra._napari.image.layers.labels import _labels_key_bindings
 from qtextra._napari.image.layers.labels._labels_mouse_bindings import draw
@@ -12,3 +12,6 @@ del _labels_key_bindings
 
 # monkeypatch this function to enable left-click draw and right-click erase
 napari.layers.labels.labels.draw = draw
+
+
+__all__ = ["Labels"]
