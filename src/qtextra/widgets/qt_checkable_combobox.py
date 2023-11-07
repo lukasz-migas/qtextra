@@ -4,7 +4,7 @@ from functools import partial
 
 from qtpy.QtCore import QModelIndex, Qt, Signal
 from qtpy.QtGui import QStandardItemModel
-from qtpy.QtWidgets import QComboBox
+from qtpy.QtWidgets import QComboBox, QCompleter, QStyledItemDelegate
 
 from qtextra.helpers import call_later, qt_signals_blocked
 
@@ -19,13 +19,15 @@ class CheckableAbstractModel(QStandardItemModel):
         if role == Qt.CheckStateRole:
             # self.evt_checked.emit(index.row(), not value)
             call_later(self, partial(self.evt_checked.emit, index.row(), not value), delay=50)
+        elif role == Qt.DisplayRole:
+            print("???!!!")
         return super().setData(index, value, role)
 
 
 class QtCheckableComboBox(QComboBox):
     """Checkable combobox."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.setModel(CheckableAbstractModel(self))
         self.evt_checked = self.model().evt_checked
