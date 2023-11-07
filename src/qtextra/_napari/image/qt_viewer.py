@@ -1,16 +1,24 @@
 """Qt widget that embeds the canvas."""
 from napari._qt.containers.qt_layer_list import QtLayerList
 from napari._qt.widgets.qt_dims import QtDims
-from napari._vispy import VispyAxesOverlay, VispyCamera, VispyInteractionBox, VispyScaleBarOverlay, VispyTextOverlay
-from napari.components._interaction_box_mouse_bindings import InteractionBoxMouseBindings
-from napari_plot._vispy.overlays.grid_lines import VispyGridLinesVisual
+from napari._vispy import VispyCamera
+from napari._vispy.overlays.axes import VispyAxesOverlay
+from napari._vispy.overlays.interaction_box import VispyTransformBoxOverlay
+from napari._vispy.overlays.scale_bar import VispyScaleBarOverlay
+from napari._vispy.overlays.text import VispyTextOverlay
+from napari.components.overlays.interaction_box import TransformBoxOverlay
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
+
+try:
+    from napari_plot._vispy.overlays.grid_lines import VispyGridLinesVisual
+except ImportError:
+    VispyGridLinesVisual = None
 
 from qtextra._napari.common.layer_controls.qt_layer_controls_container import QtLayerControlsContainer
 from qtextra._napari.common.qt_viewer import QtViewerBase
 from qtextra._napari.image._vispy.utils import create_vispy_visual
-from qtextra._napari.image._vispy.vispy_color_bar_mpl import VispyColorBarVisual
-from qtextra._napari.image._vispy.vispy_crosshair_visual import VispyCrosshairVisual
+from qtextra._napari.common._vispy.overlays.color_bar_mpl import VispyColorbarOverlay
+from qtextra._napari.common._vispy.overlays.crosshair import VispyCrosshairVisual
 from qtextra._napari.image.component_controls.qt_layer_buttons import QtLayerButtons, QtViewerButtons
 from qtextra._napari.image.component_controls.qt_view_toolbar import QtViewToolbar
 
@@ -125,7 +133,7 @@ class QtViewer(QtViewerBase):
         self.canvas.events.resize.connect(self.scale_bar._on_position_change)
 
         # add colorbar
-        self.color_bar = VispyColorBarVisual(self.viewer, parent=self.view, order=1e6 + 3)
+        self.color_bar = VispyColorbarOverlay(self.viewer, parent=self.view, order=1e6 + 3)
         self.canvas.events.resize.connect(self.color_bar._on_position_change)
 
         # add axes
@@ -134,8 +142,8 @@ class QtViewer(QtViewerBase):
         # add label
         self.text_overlay = VispyTextOverlay(self.viewer, parent=self.view, order=1e6 + 5)
 
-        self.interaction_box_visual = VispyInteractionBox(self.viewer, parent=self.view.scene, order=1e6 + 4)
-        self.interaction_box_mousebindings = InteractionBoxMouseBindings(self.viewer, self.interaction_box_visual)
+        self.interaction_box_visual = VispyTransformBoxOverlay(self.viewer, parent=self.view.scene, order=1e6 + 4)
+        self.interaction_box_mousebindings = TransformBoxOverlay(self.viewer, self.interaction_box_visual)
 
     def _add_layer(self, layer):
         """When a layer is added, set its parent and order.

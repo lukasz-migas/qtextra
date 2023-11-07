@@ -6,11 +6,15 @@ import numpy as np
 from napari.components.cursor import Cursor
 from napari.components.dims import Dims
 from napari.components.grid import GridCanvas
+from napari.components.overlays import Overlay
+from napari.components.tooltip import Tooltip
+from napari.components.viewer_model import _current_theme
 from napari.layers import Layer
-from napari.utils.events import Event, EventedModel, disconnect_events
+from napari.utils.events import Event, EventedDict, EventedModel, disconnect_events
 from napari.utils.key_bindings import KeymapProvider
 from napari.utils.mouse_bindings import MousemapProvider
-from pydantic import Extra, Field
+from napari.utils.theme import available_themes, is_theme_available
+from pydantic import Extra, Field, PrivateAttr, validator
 
 from qtextra._napari.common.components.layerlist import LayerList
 
@@ -18,6 +22,11 @@ try:
     from napari_plot.components.gridlines import GridLines
 except ImportError:
     GridLines = None
+
+
+DEFAULT_OVERLAYS = {}
+if GridLines:
+    DEFAULT_OVERLAYS["grid_lines"] = GridLines
 
 
 class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
@@ -29,16 +38,21 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
     dims: Dims = Field(default_factory=Dims, allow_mutation=False)
     cursor: Cursor = Field(default_factory=Cursor, allow_mutation=False)
     layers: LayerList = Field(default_factory=LayerList, allow_mutation=False)
-    if GridLines:
-        grid_lines: GridLines = Field(default_factory=GridLines, allow_mutation=False)
+
+    # private track of overlays, only expose the old ones for backward compatibility
+    _overlays: EventedDict[str, Overlay] = PrivateAttr(default_factory=EventedDict)
 
     help: str = ""
     status: ty.Union[str, ty.Dict] = "Ready"
     title: str = "qtextra"
-    theme: str = "dark"
+    tooltip: Tooltip = Field(default_factory=Tooltip, allow_mutation=False)
+    theme: str = Field(default_factory=_current_theme)
 
     # 2-tuple indicating height and width
     _canvas_size: ty.Tuple[int, int] = (400, 400)
+    # To check if mouse is over canvas to avoid race conditions between
+    # different events systems
+    mouse_over_canvas: bool = False
 
     def __init__(self, title="qtextra", ndisplay=2, order=(), axis_labels=()):
         self.__config__.extra = Extra.allow
@@ -58,16 +72,27 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         # Connect events
         self.grid.events.connect(self.reset_view)
         self.grid.events.connect(self._on_grid_change)
+
         self.dims.events.ndisplay.connect(self._update_layers)
         self.dims.events.ndisplay.connect(self.reset_view)
         self.dims.events.order.connect(self._update_layers)
         self.dims.events.order.connect(self.reset_view)
         self.dims.events.current_step.connect(self._update_layers)
+
         self.cursor.events.position.connect(self._on_cursor_position_change)
+
         self.layers.events.inserted.connect(self._on_add_layer)
         self.layers.events.removed.connect(self._on_remove_layer)
+        self.layers.events.reordered.connect(self._on_grid_change)
         self.layers.events.reordered.connect(self._on_layers_change)
         self.layers.selection.events.active.connect(self._on_active_layer)
+
+    def _tooltip_visible_update(self, event):
+        self.tooltip.visible = event.value
+
+    @property
+    def grid_lines(self) -> "GridLines":
+        return self._overlays["grid_lines"]
 
     def __hash__(self):
         return id(self)
@@ -75,6 +100,23 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
     def __str__(self):
         """Simple string representation."""
         return f"qtextra.Viewer: {self.title}"
+
+    def _update_viewer_grid(self):
+        """Keep viewer grid settings up to date with settings values."""
+        # settings = get_settings()
+        #
+        # self.grid.stride = settings.application.grid_stride
+        # self.grid.shape = (
+        #     settings.application.grid_height,
+        #     settings.application.grid_width,
+        # )
+
+    @validator("theme", allow_reuse=True)
+    def _valid_theme(cls, v):
+        if not is_theme_available(v):
+            themes = ", ".join(available_themes())
+            raise ValueError(f"Theme '{v}' not found; options are {themes}.")
+        return v
 
     def clear_canvas(self):
         """Remove all layers from the canvas."""

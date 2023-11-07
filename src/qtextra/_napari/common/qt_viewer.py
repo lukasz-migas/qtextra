@@ -4,6 +4,7 @@ from typing import Tuple
 
 import numpy as np
 from napari._qt.utils import QImg2array, circle_pixmap, square_pixmap
+from napari.components.overlays import CanvasOverlay, Overlay, SceneOverlay
 from napari.utils._proxies import ReadOnlyWrapper
 from napari.utils.interactions import (
     mouse_move_callbacks,
@@ -18,6 +19,7 @@ from qtpy.QtWidgets import QWidget
 
 from qtextra._napari.common._utilities import crosshair_pixmap
 from qtextra._napari.common._vispy.vispy_canvas import VispyCanvas
+from qtextra._napari.common._vispy.visual import create_vispy_overlay
 
 
 class QtViewerBase(QWidget):
@@ -59,6 +61,7 @@ class QtViewerBase(QWidget):
 
         # This dictionary holds the corresponding vispy visual for each layer
         self.layer_to_visual = {}
+        self.overlay_to_visual = {}
 
         self._cursors = {
             "cross": Qt.CrossCursor,
@@ -99,6 +102,16 @@ class QtViewerBase(QWidget):
 
         # add extra initialisation
         self._post_init()
+
+    def _add_overlay(self, overlay: Overlay) -> None:
+        vispy_overlay = create_vispy_overlay(overlay, viewer=self.viewer)
+
+        if isinstance(overlay, CanvasOverlay):
+            vispy_overlay.node.parent = self.view
+        elif isinstance(overlay, SceneOverlay):
+            vispy_overlay.node.parent = self.view.scene
+
+        self.overlay_to_visual[overlay] = vispy_overlay
 
     def __getattr__(self, name):
         return object.__getattribute__(self, name)

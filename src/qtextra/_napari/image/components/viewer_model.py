@@ -4,22 +4,29 @@ import typing as ty
 import numpy as np
 from napari import Viewer as NapariViewer
 from napari.components._viewer_mouse_bindings import dims_scroll
-from napari.components.axes import Axes
 from napari.components.camera import Camera
-from napari.components.overlays import Overlays
-from napari.components.scale_bar import ScaleBar
-from napari.components.text_overlay import TextOverlay
+from napari.components.overlays import AxesOverlay, BrushCircleOverlay, ScaleBarOverlay
+from napari.components.overlays.text import TextOverlay
 from napari.layers import Layer
 from napari.types import PathOrPaths
 from napari.utils._register import create_func as create_add_method
 from napari.utils.events import Event
 from pydantic import Field
 
+from qtextra._napari.common.components.overlays.color_bar import ColorBarOverlay
+from qtextra._napari.common.components.overlays.crosshair import CrossHairOverlay
 from qtextra._napari.common.components.viewer_model import ViewerModelBase
 from qtextra._napari.image import layers
 from qtextra._napari.image.components._viewer_mouse_bindings import crosshair
-from qtextra._napari.image.components.colorbar import ColorBar
-from qtextra._napari.image.components.crosshair import CrossHair
+
+DEFAULT_OVERLAYS = {
+    "scale_bar": ScaleBarOverlay,
+    "text": TextOverlay,
+    "axes": AxesOverlay,
+    "brush_circle": BrushCircleOverlay,
+    "crosshair": CrossHairOverlay,
+    "colorbar": ColorBarOverlay,
+}
 
 
 class ViewerModel(ViewerModelBase):
@@ -42,13 +49,7 @@ class ViewerModel(ViewerModelBase):
 
     # Using allow_mutation=False means these attributes aren't settable and don't
     # have an event emitter associated with them
-    axes: Axes = Field(default_factory=Axes, allow_mutation=False)
     camera: Camera = Field(default_factory=Camera, allow_mutation=False)
-    scale_bar: ScaleBar = Field(default_factory=ScaleBar, allow_mutation=False)
-    color_bar: ColorBar = Field(default_factory=ColorBar, allow_mutation=False)
-    text_overlay: TextOverlay = Field(default_factory=TextOverlay, allow_mutation=False)
-    cross_hair: CrossHair = Field(default_factory=CrossHair, allow_mutation=False)
-    overlays: Overlays = Field(default_factory=Overlays, allow_mutation=False)
 
     def __init__(self, title="qtextra", ndisplay=2, order=(), axis_labels=(), **kwargs):
         # allow extra attributes during model initialization, useful for mixins
@@ -60,6 +61,25 @@ class ViewerModel(ViewerModelBase):
         self.mouse_wheel_callbacks.append(dims_scroll)
         if kwargs.get("allow_crosshair", True):
             self.mouse_drag_callbacks.append(crosshair)
+
+        self._overlays.update({k: v() for k, v in DEFAULT_OVERLAYS.items()})
+
+    # simple properties exposing overlays for backward compatibility
+    @property
+    def axes(self):
+        return self._overlays["axes"]
+
+    @property
+    def scale_bar(self):
+        return self._overlays["scale_bar"]
+
+    @property
+    def text_overlay(self):
+        return self._overlays["text"]
+
+    @property
+    def _brush_circle_overlay(self):
+        return self._overlays["brush_circle"]
 
     def _new_labels(self, name: str = None):
         """Create new labels layer filling full world coordinates space."""
@@ -197,6 +217,6 @@ class ViewerModel(ViewerModelBase):
         return NapariViewer._add_layer_from_data(self, data, meta=meta, layer_type=layer_type)
 
 
-for _layer in (layers.Labels, layers.Shapes, layers.Points):
-    func = create_add_method(_layer)
-    setattr(ViewerModel, func.__name__, func)
+# for _layer in (layers.Labels, layers.Shapes, layers.Points):
+#     func = create_add_method(_layer)
+#     setattr(ViewerModel, func.__name__, func)

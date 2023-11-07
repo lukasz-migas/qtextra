@@ -3,7 +3,7 @@ from napari._qt.dialogs.qt_modal import QtPopup
 from napari._qt.widgets.qt_dims_sorter import QtDimsSorter
 from napari._qt.widgets.qt_spinbox import QtSpinBox
 from napari._qt.widgets.qt_tooltip import QtToolTipLabel
-from napari._qt.widgets.qt_viewer_buttons import QtDeleteButton, QtViewerPushButton
+from napari._qt.widgets.qt_viewer_buttons import QtViewerPushButton
 from qtpy.QtCore import QPoint, Qt
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout
 
@@ -34,7 +34,9 @@ class QtLayerButtons(QFrame):
     def __init__(self, viewer):
         super().__init__()
         self.viewer = viewer
-        self.delete_btn = QtDeleteButton(self.viewer)
+        self.delete_btn = QtQtaViewerPushButton(
+            "delete", tooltip="Delete selected layers", slot=self.viewer.layers.remove_selected
+        )
         self.delete_btn.setParent(self)
 
         self.new_points_btn = QtViewerPushButton(

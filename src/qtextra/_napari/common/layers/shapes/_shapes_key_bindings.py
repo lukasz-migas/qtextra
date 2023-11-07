@@ -1,6 +1,6 @@
 import numpy as np
 from napari.layers.shapes._shapes_constants import Box, Mode
-from napari.layers.shapes._shapes_mouse_bindings import _move
+from napari.layers.shapes._shapes_mouse_bindings import _move_active_element_under_cursor
 from napari.layers.shapes.shapes import Shapes
 
 
@@ -22,7 +22,7 @@ def hold_to_pan_zoom(layer):
 
 
 @Shapes.bind_key("Shift", overwrite=True)
-def hold_to_lock_aspect_ratio(layer):
+def hold_to_lock_aspect_ratio(layer: Shapes):
     """Hold to lock aspect ratio when resizing a shape."""
     # on key press
     layer._fixed_aspect = True
@@ -36,14 +36,13 @@ def hold_to_lock_aspect_ratio(layer):
     else:
         layer._aspect_ratio = 1
     if layer._is_moving:
-        _move(layer, layer._moving_coordinates)
+        assert layer._moving_coordinates is not None, layer
+        _move_active_element_under_cursor(layer, layer._moving_coordinates)
 
     yield
 
     # on key release
     layer._fixed_aspect = False
-    if layer._is_moving:
-        _move(layer, layer._moving_coordinates)
 
 
 @Shapes.bind_key("R", overwrite=True)

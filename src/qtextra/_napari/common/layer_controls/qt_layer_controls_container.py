@@ -1,31 +1,50 @@
 """Container class."""
 from napari.layers import Image
-from napari_plot._qt.layer_controls.qt_infline_controls import QtInfLineControls
-from napari_plot._qt.layer_controls.qt_line_controls import QtLineControls
-from napari_plot._qt.layer_controls.qt_multiline_controls import QtMultiLineControls
-from napari_plot._qt.layer_controls.qt_region_controls import QtRegionControls
-from napari_plot._qt.layer_controls.qt_scatter_controls import QtScatterControls
-from napari_plot.layers import Centroids, InfLine, Line, MultiLine, Region, Scatter
+
+try:
+    from napari_plot._qt.layer_controls.qt_infline_controls import QtInfLineControls
+    from napari_plot._qt.layer_controls.qt_line_controls import QtLineControls
+    from napari_plot._qt.layer_controls.qt_multiline_controls import QtMultiLineControls
+    from napari_plot._qt.layer_controls.qt_region_controls import QtRegionControls
+    from napari_plot._qt.layer_controls.qt_scatter_controls import QtScatterControls
+    from napari_plot.layers import Centroids, InfLine, Line, MultiLine, Region, Scatter
+except ImportError:
+    Centroids, InfLine, Line, MultiLine, Region, Scatter = None, None, None, None, None, None
+    QtInfLineControls, QtLineControls, QtMultiLineControls, QtRegionControls, QtScatterControls = (
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+
+from napari.layers import Labels, Points, Shapes
 from qtpy.QtWidgets import QFrame, QStackedWidget
 
 from qtextra._napari.common.layer_controls.qt_points_controls import QtPointsControls
 from qtextra._napari.common.layer_controls.qt_shapes_controls import QtShapesControls
 from qtextra._napari.image.layer_controls.qt_image_controls import QtImageControls
 from qtextra._napari.image.layer_controls.qt_labels_controls import QtLabelsControls
-from qtextra._napari.image.layers import Labels, Points, Shapes
+
+# from qtextra._napari.image.layers import Labels, Points, Shapes
 
 layer_to_controls = {
     Labels: QtLabelsControls,
     Image: QtImageControls,  # must be after Labels layer
     Shapes: QtShapesControls,
     Points: QtPointsControls,
-    Line: QtLineControls,
-    Centroids: QtLineControls,
-    Scatter: QtScatterControls,
-    Region: QtRegionControls,
-    InfLine: QtInfLineControls,
-    MultiLine: QtMultiLineControls,
 }
+if Centroids is not None:
+    layer_to_controls.update(
+        {
+            Line: QtLineControls,
+            Centroids: QtLineControls,
+            Scatter: QtScatterControls,
+            Region: QtRegionControls,
+            InfLine: QtInfLineControls,
+            MultiLine: QtMultiLineControls,
+        }
+    )
 
 
 def create_qt_layer_controls(layer):

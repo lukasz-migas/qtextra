@@ -4,13 +4,14 @@ import typing as ty
 import numpy as np
 from koyo.image import clip_hotspots
 from koyo.secret import get_short_hash
-from napari.layers import Image
+from napari.layers import Image, Labels, Points
 from qtpy.QtCore import QMutex, QMutexLocker, Slot
 
+from qtextra._napari.common.components.overlays.color_bar import ColorBarItem
 from qtextra._napari.common.viewer import ViewerBase
-from qtextra._napari.image.components.colorbar import ColorBarItem
 from qtextra._napari.image.components.viewer_model import ViewerModel as Viewer
-from qtextra._napari.image.layers import Labels, Points
+
+# from qtextra._napari.image.layers import Labels, Points
 from qtextra._napari.image.qt_viewer import QtViewer
 
 MUTEX = QMutex()
