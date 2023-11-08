@@ -18,15 +18,14 @@ class QtTextOverlayControls(QtFramelessPopup):
 
         super().__init__(parent=parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setObjectName("text_overlay")
+        self.setMouseTracking(True)
 
         self.viewer.text_overlay.events.visible.connect(self._on_visible_change)
         self.viewer.text_overlay.events.color.connect(self._on_color_change)
         self.viewer.text_overlay.events.position.connect(self._on_position_change)
         self.viewer.text_overlay.events.font_size.connect(self._on_font_size_change)
         self.viewer.text_overlay.events.text.connect(self._on_text_change)
-
-        self.setObjectName("text_overlay")
-        self.setMouseTracking(True)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:

@@ -159,17 +159,23 @@ class QtViewToolbar(QWidget):
             lambda x: self.tools_scalebar_btn.setChecked(self.qt_viewer.viewer.scale_bar.visible)
         )
 
-        self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-        self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
-        self.qt_viewer.viewer.grid_lines.events.visible.connect(
-            lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-        )
+        try:
+            self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
+            self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
+            self.qt_viewer.viewer.grid_lines.events.visible.connect(
+                lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
+            )
+        except KeyError:
+            pass
 
-        self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
-        self.tools_colorbar_btn.clicked.connect(self._toggle_color_bar_visible)
-        self.qt_viewer.viewer.color_bar.events.visible.connect(
-            lambda x: self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
-        )
+        try:
+            self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
+            self.tools_colorbar_btn.clicked.connect(self._toggle_color_bar_visible)
+            self.qt_viewer.viewer.color_bar.events.visible.connect(
+                lambda x: self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
+            )
+        except KeyError:
+            pass
 
         self.tools_text_btn.setChecked(self.qt_viewer.viewer.text_overlay.visible)
         self.tools_text_btn.clicked.connect(self._toggle_text_visible)

@@ -9,6 +9,6 @@ BLENDING_TRANSLATIONS = OrderedDict(
         (Blending.TRANSLUCENT_NO_DEPTH, "Translucent (no depth)"),
         (Blending.ADDITIVE, "Additive"),
         (Blending.OPAQUE, "Opaque"),
-        # (Blending.MINIMUM, "Minimum"),
+        (Blending.MINIMUM, "Minimum"),
     ]
 )

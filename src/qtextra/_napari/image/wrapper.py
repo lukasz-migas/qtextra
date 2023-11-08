@@ -1,14 +1,17 @@
 """Add napari based viewer."""
+from __future__ import annotations
+
 import typing as ty
 
 import numpy as np
 from koyo.image import clip_hotspots
 from koyo.secret import get_short_hash
-from napari.layers import Image, Labels, Points
+from napari.layers import Image, Labels, Points, Shapes
 from qtpy.QtCore import QMutex, QMutexLocker, Slot
+from qtpy.QtWidgets import QWidget
 
 from qtextra._napari.common.components.overlays.color_bar import ColorBarItem
-from qtextra._napari.common.viewer import ViewerBase
+from qtextra._napari.common.wrapper import ViewerBase
 from qtextra._napari.image.components.viewer_model import ViewerModel as Viewer
 
 # from qtextra._napari.image.layers import Labels, Points
@@ -29,7 +32,7 @@ class NapariImageView(ViewerBase):
 
     PLOT_TYPE = "image"
 
-    def __init__(self, parent=None, **kwargs):
+    def __init__(self, parent: QWidget | None = None, **kwargs: ty.Any):
         self.parent = parent
         self.main_parent = kwargs.pop("main_parent", None)
         self.PLOT_ID = get_short_hash()
@@ -81,7 +84,7 @@ class NapariImageView(ViewerBase):
         self.image_layer, self.paint_layer, self.extract_layer, self.shape_layer = None, None, None, None
         self.mask_layer = None
 
-    @Slot(np.ndarray)
+    @Slot(np.ndarray)  # type: ignore[misc]
     def plot(
         self,
         array: np.ndarray,
@@ -96,7 +99,12 @@ class NapariImageView(ViewerBase):
             array = clip_hotspots(array)
 
         if self.image_layer is None:
-            self.image_layer: Image = self.viewer.add_image(array, name=name, colormap=colormap, **kwargs)
+            self.image_layer: Image = self.viewer.add_image(
+                array,
+                name=name,
+                colormap=colormap,
+                **kwargs,
+            )
             self.image_layer.interpolation2d = interpolation
             self.image_layer._keep_auto_contrast = True
         else:
@@ -117,7 +125,7 @@ class NapariImageView(ViewerBase):
         contrast_limits=None,
         interpolation: str = "nearest",
         **kwargs,
-    ):
+    ) -> Image:
         """Add image layer."""
         layer = self.try_reuse(name, Image)
         if layer:
@@ -142,7 +150,7 @@ class NapariImageView(ViewerBase):
             )
         return layer
 
-    def plot_rgb(self, array: np.ndarray, name: str = IMAGE_NAME, **kwargs):
+    def plot_rgb(self, array: np.ndarray, name: str = IMAGE_NAME, **kwargs) -> Image:
         """Full replot of the data."""
         # array = np.nan_to_num(array)
         if self.image_layer is not None:
@@ -151,7 +159,7 @@ class NapariImageView(ViewerBase):
                 self.viewer.layers.remove_selected()
         return self.plot(array, name=name, **kwargs)
 
-    def quick_update(self, array: np.ndarray):
+    def quick_update(self, array: np.ndarray) -> None:
         """Quickly update image data."""
         if self.image_layer is None:
             self.plot(array)
@@ -165,14 +173,14 @@ class NapariImageView(ViewerBase):
                 # self.image_layer.contrast_limits = self.image_layer._contrast_limits
                 self.image_layer.contrast_limits_range = self.image_layer._calc_data_range()
 
-    def set_colorbar_data(self, data: ty.Tuple[ColorBarItem, ...]):
+    def set_colorbar_data(self, data: ty.Tuple[ColorBarItem, ...]) -> None:
         """Set colorbar data."""
         self.viewer.color_bar.data = ()  # clear to avoid ValueError # FIXME: this is not desired
         self.viewer.color_bar.data = data
 
     def add_image_mask(
         self, array: np.ndarray, name: str = "Masks", colors=None, opacity: float = 0.75, editable: bool = False
-    ):
+    ) -> Labels:
         """Add image labels layer."""
         layer = self.try_reuse(name, Labels)
         if layer is None:
@@ -184,7 +192,7 @@ class NapariImageView(ViewerBase):
         layer.editable = editable
         return layer
 
-    def add_shapes_layer(self, data: ty.List[np.ndarray], shape_type: ty.List[str], name: str):
+    def add_shapes_layer(self, data: ty.List[np.ndarray], shape_type: ty.List[str], name: str) -> Shapes:
         """Add new shapes layer with specified shapes."""
         layer = self.viewer.add_shapes(
             data=data,
@@ -195,25 +203,25 @@ class NapariImageView(ViewerBase):
         )
         return layer
 
-    def remove_image_mask(self, name: str = "Masks"):
+    def remove_image_mask(self, name: str = "Masks") -> None:
         """Remove image labels layer."""
         self.remove_layer(name)
 
-    def activate_extract_layer(self):
+    def activate_extract_layer(self) -> None:
         """Activate extraction layer in case it was deactivated during plotting."""
         if self.shape_layer is not None:
             self.add_extract_shapes_layer()
         elif self.extract_layer is not None:
             self.add_extract_labels_layer()
 
-    def add_paint_mask(self):
+    def add_paint_mask(self) -> None:
         """Add new paint layer if one is not present yet."""
         if self.paint_layer is None:
             self.viewer.new_labels_for_image([self.image_layer], PAINT_NAME)
             self.paint_layer = self.viewer.layers[PAINT_NAME]
         self.viewer.layers.selection.add(self.paint_layer)
 
-    def add_extract_labels_layer(self):
+    def add_extract_labels_layer(self) -> Labels:
         """Add new (or reuse existing) layer to enable data extraction."""
         if self.extract_layer is None:
             self.viewer.new_labels_for_image([self.image_layer], LABELS_NAME)
@@ -321,7 +329,7 @@ class NapariImageView(ViewerBase):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main() -> None:
         import sys
 
         from skimage import data
@@ -332,20 +340,22 @@ if __name__ == "__main__":  # pragma: no cover
 
         def _on_btn():
             """Button action."""
-            layer.translate = np.random.randint(0, 100, (2,))
+            # layer.translate = np.random.randint(0, 100, (2,))
             # viewer.viewer.text_overlay.text = viewer.viewer.text_overlay.text + "T"
             # viewer.viewer.text_overlay.position = random.choice(list(Position))
             # viewer.viewer.text_overlay.font_size += 1
 
         def _accept(event):
-            viewer.viewer.cross_hair.position = event.position
+            wrapper.viewer.cross_hair.position = event.position
 
         app, frame, ha = qframe()
         frame.setMinimumSize(600, 600)
-        viewer = NapariImageView(frame)
+        wrapper = NapariImageView(frame)
+        wrapper.viewer.dims.ndisplay = 3
 
-        layer = viewer.plot(data.astronaut())
-        layer.mode = "transform"
+        layer = wrapper.plot(data.astronaut(), clip=False)
+        layer.depiction = "plane"
+        # layer.mode = "transform"
         #         layer.events.crosshair.connect(_accept)
         #         viewer.viewer.cross_hair.visible = True
 
@@ -362,13 +372,13 @@ if __name__ == "__main__":  # pragma: no cover
         #     properties={"label": ["TEST"]},
         # )
 
-        THEMES.set_theme_stylesheet(viewer.widget)
+        THEMES.set_theme_stylesheet(wrapper.widget)
 
         btn = make_btn(frame, "Click me")
         btn.clicked.connect(_on_btn)
 
         # ha.addLayout(va)
-        ha.addWidget(viewer.widget, stretch=True)
+        ha.addWidget(wrapper.widget, stretch=True)
         ha.addWidget(btn)
         frame.show()
         sys.exit(app.exec_())

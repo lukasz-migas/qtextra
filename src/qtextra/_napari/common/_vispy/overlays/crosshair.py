@@ -1,4 +1,6 @@
 """Cross-hair visual."""
+from __future__ import annotations
+
 import numpy as np
 from napari._vispy.overlays.base import ViewerOverlayMixin, VispySceneOverlay
 from vispy.scene.visuals import Line
@@ -8,7 +10,7 @@ from qtextra._napari.common.components.overlays.crosshair import Shape
 MAX = np.finfo(np.float16).max
 
 
-def position_to_cross(position, size: float = 3.0) -> np.ndarray:
+def position_to_cross(position: tuple[float, float], size: float = 3.0) -> np.ndarray:
     """Convert position specified by the user to crosshair."""
     size = size / 2
     y, x = np.round(position)
@@ -16,7 +18,7 @@ def position_to_cross(position, size: float = 3.0) -> np.ndarray:
     return np.asarray(data)
 
 
-def position_to_box(position, size: float = 1.0) -> np.ndarray:
+def position_to_box(position: tuple[float, float], size: float = 1.0) -> np.ndarray:
     """Convert position specified by the user to box."""
     size = size / 2
     y, x = np.round(position)

@@ -44,8 +44,8 @@ def make_form_layout(
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
     layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
-    layout.setLabelAlignment(Qt.AlignRight)
-    layout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)
+    layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+    layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
     layout.setRowWrapPolicy(Qw.QFormLayout.DontWrapRows)
     for widget_ in widgets:
         layout.addRow(*widget_)
@@ -780,6 +780,9 @@ def make_qta_btn(
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     object_name: str = "",
     retain_size: bool = False,
+    checked: bool = False,
+    func_menu: ty.Optional[ty.Callable] = None,
+    checked_icon_name: str = "",
     **kwargs,
 ) -> "QtImagePushButton":
     """Make button with qtawesome icon."""
@@ -805,10 +808,16 @@ def make_qta_btn(
         widget.setFlat(flat)
     if checkable:
         widget.setCheckable(checkable)
-        if object_name:
-            widget.setObjectName(object_name)
+        widget.setChecked(checked)
+    if checked_icon_name:
+        widget.set_toggle_qta(icon_name, checked_icon_name, **kwargs)
+    if object_name:
+        widget.setObjectName(object_name)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
+    if func_menu:
+        widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        widget.customContextMenuRequested.connect(func_menu)
     if retain_size:
         set_retain_hidden_size_policy(widget)
     return widget
@@ -1038,6 +1047,56 @@ def make_slider(
     return widget
 
 
+def make_slider_with_text(
+    parent: ty.Optional[Qw.QWidget],
+    min_value: int = 0,
+    max_value: int = 100,
+    step_size: int = 1,
+    value: int = 1,
+    orientation="horizontal",
+    tooltip: str = None,
+    focus_policy: Qt.FocusPolicy = Qt.TabFocus,
+) -> Qw.QSlider:
+    """Make QSlider."""
+    from superqt import QLabeledSlider
+
+    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical
+    widget = QLabeledSlider(orientation, parent)
+    widget.setRange(min_value, max_value)
+    widget.setValue(value)
+    widget.setPageStep(step_size)
+    widget.setFocusPolicy(focus_policy)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    return widget
+
+
+def make_double_slider_with_text(
+    parent: ty.Optional[Qw.QWidget],
+    min_value: float = 0,
+    max_value: float = 100,
+    step_size: float = 1,
+    value: float = 1,
+    n_decimals: int = 1,
+    orientation="horizontal",
+    tooltip: str = None,
+    focus_policy: Qt.FocusPolicy = Qt.TabFocus,
+) -> Qw.QSlider:
+    """Make QSlider."""
+    from superqt import QLabeledDoubleSlider
+
+    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical
+    widget = QLabeledDoubleSlider(orientation, parent)
+    widget.setRange(min_value, max_value)
+    widget.setDecimals(n_decimals)
+    widget.setValue(value)
+    widget.setPageStep(step_size)
+    widget.setFocusPolicy(focus_policy)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    return widget
+
+
 def make_labelled_slider(
     parent,
     minimum: float = 0,
@@ -1079,6 +1138,7 @@ def make_int_spin_box(
     suffix: ty.Optional[str] = None,
     expand: bool = True,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    keyboard_tracking: bool = None,
     **kwargs,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""
@@ -1090,7 +1150,9 @@ def make_int_spin_box(
     widget.setMaximum(maximum)
     widget.setValue(value)
     widget.setSingleStep(step_size)
-    widget.setAlignment(Qt.AlignCenter)
+    widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    if keyboard_tracking is not None:
+        widget.setKeyboardTracking(keyboard_tracking)
     if tooltip:
         widget.setToolTip(tooltip)
     if prefix:
@@ -1129,7 +1191,7 @@ def make_double_spin_box(
     widget.setMaximum(maximum)
     widget.setValue(value)
     widget.setSingleStep(step_size)
-    widget.setAlignment(Qt.AlignCenter)
+    widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
     if prefix:
         widget.setPrefix(prefix)
     if suffix:
@@ -1396,8 +1458,8 @@ def make_group_box(parent, title: str, is_flat: bool = True) -> Qw.QGroupBox:
 def make_labelled_h_line(parent, title: str) -> Qw.QHBoxLayout:
     """Make labelled line - similar to flat version of the group box."""
     layout = Qw.QHBoxLayout()
-    layout.addWidget(make_label(parent, title), alignment=Qt.AlignVCenter)
-    layout.addWidget(make_h_line(parent), stretch=1, alignment=Qt.AlignVCenter)
+    layout.addWidget(make_label(parent, title), alignment=Qt.AlignmentFlag.AlignVCenter)
+    layout.addWidget(make_h_line(parent), stretch=1, alignment=Qt.AlignmentFlag.AlignVCenter)
     return layout
 
 
@@ -1735,6 +1797,13 @@ def event_hook_removed():
             QtCore.pyqtRestoreInputHook()
 
 
+def enable_with_opacity(
+    obj, widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]], enabled: bool, min_opacity: float = 0.5
+):
+    """Enable widgets."""
+    disable_with_opacity(obj, widget_list, not enabled, min_opacity)
+
+
 def disable_with_opacity(
     obj: Qw.QWidget,
     widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]],
@@ -1953,12 +2022,12 @@ def make_progress_widget(
 
     if with_layout:
         progress_layout = Qw.QHBoxLayout(progress_widget)
-        progress_layout.addWidget(progress_bar, stretch=True, alignment=Qt.AlignVCenter)
+        progress_layout.addWidget(progress_bar, stretch=True, alignment=Qt.AlignmentFlag.AlignVCenter)
     else:
         progress_layout = None
     if with_cancel:
         cancel_btn = make_qta_btn(progress_widget, "cross_full", tooltip=tooltip)
-        progress_layout.addWidget(cancel_btn, alignment=Qt.AlignVCenter)
+        progress_layout.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
     else:
         cancel_btn = None
     return progress_layout, progress_widget, progress_bar, cancel_btn

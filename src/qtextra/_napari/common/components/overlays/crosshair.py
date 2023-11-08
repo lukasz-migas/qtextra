@@ -2,7 +2,7 @@
 from enum import Enum
 from typing import Tuple
 
-from napari.components.overlays import CanvasOverlay
+from napari.components.overlays import SceneOverlay
 from napari.utils.colormaps.standardize_color import transform_color
 from napari.utils.events.custom_types import Array
 from pydantic import validator
@@ -15,12 +15,12 @@ class Shape(str, Enum):
     BOX = "box"
 
 
-class CrossHairOverlay(CanvasOverlay):
+class CrossHairOverlay(SceneOverlay):
     """Crosshair object."""
 
     width: int = 1
     color: Array[float, (4,)] = (1.0, 0.0, 0.0, 1.0)
-    pixel_position: Tuple[float, float] = (0, 0)
+    position: Tuple[float, float] = (0, 0)
     window: int = 1
     shape: Shape = Shape.BOX
     auto_hide: bool = True

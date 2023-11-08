@@ -1,7 +1,7 @@
 """Vispy canvas."""
 from napari._vispy.utils.gl import get_max_texture_sizes
 from qtpy.QtCore import QSize
-from vispy.scene import SceneCanvas
+from vispy.scene import SceneCanvas, Widget
 from vispy.util.event import Event
 
 
@@ -40,6 +40,10 @@ class VispyCanvas(SceneCanvas):
 
         self.events.add(reset_view=Event)
 
+    @property
+    def destroyed(self):
+        return self._backend.destroyed
+
     def _on_mouse_double_click(self, event):
         """Process mouse double click event."""
         if event.button == 1 and "Control" not in event.modifiers:
@@ -74,11 +78,26 @@ class VispyCanvas(SceneCanvas):
         _value = self._background_color_override or value
         SceneCanvas.bgcolor.fset(self, _value)
 
+    @property
+    def central_widget(self):
+        """Overrides SceneCanvas.central_widget to make border_width=0"""
+        if self._central_widget is None:
+            self._central_widget = Widget(size=self.size, parent=self.scene, border_width=0)
+        return self._central_widget
+
+    def _process_mouse_event(self, event):
+        """Ignore mouse wheel events which have modifiers."""
+        if event.type == "mouse_wheel" and len(event.modifiers) > 0:
+            return
+        if event.handled:
+            return
+        super()._process_mouse_event(event)
+
 
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtpy.QtCore import QTimer  # noqa
+    from qtpy.QtCore import QTimer
     from qtpy.QtWidgets import QDialog, QVBoxLayout
 
     from qtextra.utils.dev import qapplication

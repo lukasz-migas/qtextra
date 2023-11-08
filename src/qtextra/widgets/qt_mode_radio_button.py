@@ -1,3 +1,8 @@
+"""Radio button."""
+import typing as ty
+from enum import Enum
+
+from napari.layers import Layer
 from qtpy.QtWidgets import QPushButton, QRadioButton
 
 
@@ -26,7 +31,7 @@ class QtModeRadioButton(QRadioButton):
         The layer instance that this button controls.
     """
 
-    def __init__(self, layer, button_name, mode, *, tooltip=None, checked=False):
+    def __init__(self, layer: Layer, button_name: str, mode: Enum, *, tooltip: str = None, checked: bool = False):
         super().__init__()
 
         self.layer = layer
@@ -72,7 +77,7 @@ class QtModePushButton(QPushButton):
         The layer instance that this button controls.
     """
 
-    def __init__(self, layer, button_name, *, slot=None, tooltip=None):
+    def __init__(self, layer: Layer, button_name: str, *, slot: ty.Callable = None, tooltip: str = None):
         super().__init__()
 
         self.layer = layer

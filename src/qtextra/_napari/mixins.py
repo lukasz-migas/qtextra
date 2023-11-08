@@ -6,8 +6,8 @@ from qtpy.QtWidgets import QWidget
 import qtextra.helpers as hp
 
 if ty.TYPE_CHECKING:
-    from qtextra._napari.image.viewer import NapariImageView
-    from qtextra._napari.line.viewer import NapariLineView
+    from qtextra._napari.image.wrapper import NapariImageView
+    from qtextra._napari.line.wrapper import NapariLineView
 
 
 class ImageViewMixin:
@@ -28,7 +28,7 @@ class ImageViewMixin:
         **kwargs,
     ) -> "NapariImageView":
         """Make image view."""
-        from qtextra._napari.image.viewer import NapariImageView
+        from qtextra._napari.image.wrapper import NapariImageView
 
         return NapariImageView(
             widget,
@@ -56,7 +56,7 @@ class LineViewMixin:
         **kwargs,
     ) -> "NapariLineView":
         """Make line view."""
-        from qtextra._napari.line.viewer import NapariLineView
+        from qtextra._napari.line.wrapper import NapariLineView
 
         return NapariLineView(
             widget,

@@ -1,9 +1,13 @@
-import sys
 from collections import OrderedDict
 
-from napari.layers.labels._labels_constants import LabelColorMode
+from napari.layers.labels._labels_constants import LabelColorMode, LabelsRendering
 
-BACKSPACE = "delete" if sys.platform == "darwin" else "backspace"
+RENDER_MODE_TRANSLATIONS = OrderedDict(
+    [
+        (LabelsRendering.TRANSLUCENT, "Translucent"),
+        (LabelsRendering.ISO_CATEGORICAL, "Iso-categorical"),
+    ]
+)
 
 LABEL_COLOR_MODE_TRANSLATIONS = OrderedDict(
     [

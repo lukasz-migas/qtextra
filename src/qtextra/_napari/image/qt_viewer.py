@@ -1,24 +1,15 @@
 """Qt widget that embeds the canvas."""
 from napari._qt.containers.qt_layer_list import QtLayerList
+from napari._qt.qt_main_window import _QtMainWindow
 from napari._qt.widgets.qt_dims import QtDims
 from napari._vispy import VispyCamera
-from napari._vispy.overlays.axes import VispyAxesOverlay
-from napari._vispy.overlays.interaction_box import VispyTransformBoxOverlay
-from napari._vispy.overlays.scale_bar import VispyScaleBarOverlay
-from napari._vispy.overlays.text import VispyTextOverlay
-from napari.components.overlays.interaction_box import TransformBoxOverlay
+from napari._vispy.utils.visual import create_vispy_layer
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
-
-try:
-    from napari_plot._vispy.overlays.grid_lines import VispyGridLinesVisual
-except ImportError:
-    VispyGridLinesVisual = None
 
 from qtextra._napari.common.layer_controls.qt_layer_controls_container import QtLayerControlsContainer
 from qtextra._napari.common.qt_viewer import QtViewerBase
-from qtextra._napari.image._vispy.utils import create_vispy_visual
-from qtextra._napari.common._vispy.overlays.color_bar_mpl import VispyColorbarOverlay
-from qtextra._napari.common._vispy.overlays.crosshair import VispyCrosshairVisual
+
+# from qtextra._napari.image._vispy.utils import create_vispy_visual
 from qtextra._napari.image.component_controls.qt_layer_buttons import QtLayerButtons, QtViewerButtons
 from qtextra._napari.image.component_controls.qt_view_toolbar import QtViewToolbar
 
@@ -47,6 +38,11 @@ class QtViewer(QtViewerBase):
             allow_extraction=allow_extraction,
             **kwargs,
         )
+        _QtMainWindow._instances.append(self)
+
+    @property
+    def _qt_viewer(self):
+        return self
 
     def _create_canvas(self):
         """Create canvas."""
@@ -73,9 +69,10 @@ class QtViewer(QtViewerBase):
         # set in main canvas
         image_layout = QVBoxLayout()
         image_layout.addWidget(self.canvas.native, stretch=True)
+        image_layout.setContentsMargins(0, 2, 0, 2)
         if add_dims:
             image_layout.addWidget(self.dims)
-            image_layout.setSpacing(10)
+            image_layout.setSpacing(0)
         else:
             image_layout.setSpacing(0)
             image_layout.setContentsMargins(0, 0, 0, 0)
@@ -101,10 +98,10 @@ class QtViewer(QtViewerBase):
         self.viewer.camera.events.interactive.connect(self._on_interactive)
         self.viewer.cursor.events.style.connect(self._on_cursor)
         self.viewer.cursor.events.size.connect(self._on_cursor)
+        self.viewer.camera.events.zoom.connect(self._on_cursor)
         self.viewer.layers.events.reordered.connect(self._reorder_layers)
         self.viewer.layers.events.inserted.connect(self._on_add_layer_change)
         self.viewer.layers.events.removed.connect(self._remove_layer)
-
         # stop any animations whenever the layers change
         self.viewer.events.layers_change.connect(lambda x: self.dims.stop())
 
@@ -120,30 +117,39 @@ class QtViewer(QtViewerBase):
         """Complete initialization with post-init events."""
         self.viewerToolbar.connect_toolbar()
 
+    @property
+    def color_bar(self):
+        """Grid lines."""
+        return self.overlay_to_visual["color_bar"]
+
+    @property
+    def scale_bar(self):
+        """Grid lines."""
+        return self.overlay_to_visual["scale_bar"]
+
+    @property
+    def axes(self):
+        """Grid lines."""
+        return self.overlay_to_visual["axes"]
+
     def _add_visuals(self) -> None:
         """Add visuals for axes, scale bar."""
-        # add gridlines
-        self.grid_lines = VispyGridLinesVisual(self.viewer, parent=self.view, order=1e6)
-
-        # add axes
-        self.axes = VispyAxesOverlay(self.viewer, parent=self.view.scene, order=1e6 + 1)
-
+        for layer in self.viewer.layers:
+            self._add_layer(layer)
+        for overlay in self.viewer._overlays.values():
+            self._add_overlay(overlay)
         # add scalebar
-        self.scale_bar = VispyScaleBarOverlay(self.viewer, parent=self.view, order=1e6 + 2)
-        self.canvas.events.resize.connect(self.scale_bar._on_position_change)
+        # self.canvas.events.resize.connect(self.scale_bar._on_position_change)
 
         # add colorbar
-        self.color_bar = VispyColorbarOverlay(self.viewer, parent=self.view, order=1e6 + 3)
-        self.canvas.events.resize.connect(self.color_bar._on_position_change)
-
-        # add axes
-        self.cross_hair = VispyCrosshairVisual(self.viewer, parent=self.view.scene, order=1e6 + 4)
+        # self.color_bar = VispyColorbarOverlay(self.viewer, parent=self.view, order=1e6 + 3)
+        # self.canvas.events.resize.connect(self.color_bar._on_position_change)
 
         # add label
-        self.text_overlay = VispyTextOverlay(self.viewer, parent=self.view, order=1e6 + 5)
+        # self.text_overlay = VispyTextOverlay(self.viewer, parent=self.view, order=1e6 + 5)
 
-        self.interaction_box_visual = VispyTransformBoxOverlay(self.viewer, parent=self.view.scene, order=1e6 + 4)
-        self.interaction_box_mousebindings = TransformBoxOverlay(self.viewer, self.interaction_box_visual)
+        # self.interaction_box_visual = VispyTransformBoxOverlay(self.viewer, parent=self.view.scene, order=1e6 + 4)
+        # self.interaction_box_mousebindings = TransformBoxOverlay(self.viewer, self.interaction_box_visual)
 
     def _add_layer(self, layer):
         """When a layer is added, set its parent and order.
@@ -153,10 +159,12 @@ class QtViewer(QtViewerBase):
         layer : napari.layers.Layer
             Layer to be added.
         """
-        vispy_layer = create_vispy_visual(layer)
+        vispy_layer = create_vispy_layer(layer)
         vispy_layer.node.parent = self.view.scene
-        vispy_layer.order = len(self.viewer.layers) - 1
+        # ensure correct canvas blending
+        layer.events.visible.connect(self._reorder_layers)
         self.layer_to_visual[layer] = vispy_layer
+        self._reorder_layers()
 
     def on_open_controls_dialog(self, event=None):
         """Open dialog responsible for layer settings."""

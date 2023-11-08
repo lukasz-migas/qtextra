@@ -2,6 +2,8 @@
 import typing as ty
 from pathlib import Path
 
+from loguru import logger
+
 from qtextra.utils.utilities import get_module_path
 
 HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent.resolve()
@@ -41,7 +43,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "layers": "fa5s.layer-group",
     "rectangle": "ph.rectangle-bold",
     "ellipse": "mdi6.ellipse-outline",
-    "polygon": "ph.triangle-bold",
+    "polygon": "mdi.pentagon-outline",
     "none": "mdi6.cancel",
     "move": "ei.move",
     "move_handle": "ei.move",
@@ -56,6 +58,32 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "remove": "ri.indeterminate-circle-line",
     "light_theme": "ri.sun-fill",
     "dark_theme": "ri.moon-clear-fill",
+    "delete": "fa5s.trash-alt",
+    "new_points": "mdi.scatter-plot",
+    "new_shapes": "fa5s.shapes",
+    "ndisplay_off": "ph.square",
+    "ndisplay_on": "ph.cube",
+    "roll": "mdi6.rotate-right-variant",
+    "transpose": "mdi6.arrow-collapse-horizontal",
+    "grid_off": "mdi6.grid-off",
+    "grid_on": "mdi6.grid",
+    "home": "fa5s.home",
+    "pan_zoom": "ei.move",
+    "select": "fa5s.location-arrow",
+    "add_points": "fa5s.plus",
+    "select_points": "fa5s.location-arrow",
+    "delete_shape": "fa5s.times",
+    "move_back": "mdi6.arrange-send-backward",
+    "move_front": "mdi6.arrange-bring-to-front",
+    "line": "mdi6.line",
+    "path": "mdi.chart-line-variant",
+    "vertex_insert": "mdi.map-marker-plus",
+    "vertex_remove": "mdi.map-marker-minus",
+    "vertex_select": "mdi.map-marker-check",
+    "shuffle": "ph.shuffle-bold",
+    "picker": "mdi6.eyedropper",
+    "paint": "fa5s.paint-brush",
+    "fill": "fa5s.fill-drip",
 }
 
 
@@ -79,9 +107,13 @@ def update_icons(mapping: ty.Dict[str, str]):
 
 def get_icon(name: str):
     """Return icon."""
+    original_name = name
+    if name == "":
+        return name
     if "." not in name:
         name = QTA_MAPPING.get(name)
         if name is None:
+            logger.warning(f"Failed to retrieve icon: '{original_name}'")
             name = QTA_MAPPING["MISSING"]
     return name
 
@@ -105,6 +137,7 @@ def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[st
         The combined stylesheet.
     """
     stylesheet = ""
+    print(f"loading {len(STYLES)} stylesheets")
     for key in sorted(STYLES):
         file = STYLES[key]
         with open(file) as f:

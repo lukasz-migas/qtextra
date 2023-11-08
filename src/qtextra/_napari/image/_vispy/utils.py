@@ -1,6 +1,7 @@
 """Layer utilities."""
 from napari._vispy.layers.base import VispyBaseLayer
 from napari._vispy.layers.image import VispyImageLayer
+from napari._vispy.layers.labels import VispyLabelsLayer
 from napari._vispy.layers.points import VispyPointsLayer
 from napari._vispy.layers.shapes import VispyShapesLayer
 from napari.layers import Image, Labels, Layer, Points, Shapes
@@ -9,7 +10,7 @@ from napari.layers import Image, Labels, Layer, Points, Shapes
 
 layer_to_visual = {
     Image: VispyImageLayer,
-    Labels: VispyImageLayer,
+    Labels: VispyLabelsLayer,
     Shapes: VispyShapesLayer,
     Points: VispyPointsLayer,
 }

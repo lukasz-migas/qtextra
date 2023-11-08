@@ -7,7 +7,7 @@ from napari_plot.layers import Centroids, InfLine, Line, Region, Scatter, Shapes
 from napari_plot.viewer import ViewerModel as Viewer
 from qtpy.QtCore import QMutex
 
-from qtextra._napari.common.viewer import ViewerBase
+from qtextra._napari.common.wrapper import ViewerBase
 from qtextra._napari.line._vispy.overrides.axis import tick_formatter
 from qtextra._napari.line.qt_viewer import QtViewer
 from qtextra.config.theme import CANVAS

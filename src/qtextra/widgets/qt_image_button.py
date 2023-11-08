@@ -21,6 +21,7 @@ class QtImagePushButton(QPushButton):
     has_right_click: bool = False
 
     _qta_data = None
+    _checked_qta_data = None
 
     def __init__(self, *args, **kwargs):
         self._icon_color = kwargs.pop("icon_color_override", None)
@@ -52,6 +53,35 @@ class QtImagePushButton(QPushButton):
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
         icon = qtawesome.icon(name, **self._qta_data[1], color=color)
         self.setIcon(icon)
+
+    def _set_qta_icon(self, name: str, **kwargs) -> None:
+        """Update icon without setting any attributes."""
+        color = self._icon_color or THEMES.get_hex_color("icon")
+        icon = qtawesome.icon(name, **kwargs, color=color)
+        self.setIcon(icon)
+
+    def set_toggle_qta(self, name: str, checked_name: str, connect: bool = True, **kwargs: ty.Any) -> None:
+        """Set changeable icon."""
+        name = get_icon(name)
+        checked_name = get_icon(checked_name)
+        self._qta_data = (name, kwargs)
+        self._checked_qta_data = (checked_name, kwargs)
+        color_ = kwargs.pop("color", None)
+        color = color_ or self._icon_color or THEMES.get_hex_color("icon")
+        icon = qtawesome.icon(
+            checked_name if self.isChecked() else name,
+            **self._checked_qta_data[1] if self.isChecked() else self._qta_data[1],
+            color=color,
+        )
+        self.setIcon(icon)
+        if connect:
+            self.toggled.connect(self._on_toggle)
+
+    def _on_toggle(self):
+        """Update icons."""
+        assert self._qta_data and self._checked_qta_data, "No qta data set."
+        name = self._checked_qta_data[0] if self.isChecked() else self._qta_data[0]
+        self._set_qta_icon(name, **self._checked_qta_data[1] if self.isChecked() else self._qta_data[1])
 
     def set_size(self, size: ty.Tuple[int, int]) -> None:
         """Set maximum size of the icon."""

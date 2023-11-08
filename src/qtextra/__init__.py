@@ -1,5 +1,6 @@
 """Extra widgets for Qt."""
 from importlib.metadata import PackageNotFoundError, version
+
 from loguru import logger
 
 try:
