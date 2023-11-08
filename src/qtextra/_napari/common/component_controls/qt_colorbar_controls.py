@@ -1,4 +1,5 @@
 """ColorBar model controls."""
+from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFormLayout
 
@@ -15,7 +16,9 @@ class QtColorBarControls(QtFramelessPopup):
         self.viewer = viewer
 
         super().__init__(parent=parent)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setObjectName("colorbar")
+        self.setMouseTracking(True)
 
         self.viewer.color_bar.events.visible.connect(self._on_visible_change)
         self.viewer.color_bar.events.border_width.connect(self._on_border_width_change)
@@ -23,38 +26,32 @@ class QtColorBarControls(QtFramelessPopup):
         self.viewer.color_bar.events.position.connect(self._on_position_change)
         self.viewer.color_bar.events.label_size.connect(self._on_tick_font_size_change)
         self.viewer.color_bar.events.label_color.connect(self._on_tick_color_change)
-
-        self.setObjectName("colorbar")
-        self.setMouseTracking(True)
+        self._on_visible_change()
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
         """Make panel."""
-        self.visible_checkbox = hp.make_checkbox(self, "", "Show/hide colorbar")
-        self.visible_checkbox.setChecked(self.viewer.color_bar.visible)
-        self.visible_checkbox.stateChanged.connect(self.on_change_visible)
+        self.visible_checkbox = hp.make_checkbox(
+            self, "", "Show/hide colorbar", value=self.viewer.color_bar.visible, func=self.on_change_visible
+        )
 
         self.position_combobox = hp.make_combobox(self)
         hp.set_combobox_data(self.position_combobox, POSITION_TRANSLATIONS, self.viewer.color_bar.position)
         self.position_combobox.currentTextChanged.connect(self.on_change_position)
 
-        self.border_color_swatch = hp.make_swatch(
-            self, self.viewer.color_bar.border_color, value=self.viewer.color_bar.border_color
+        self.border_color_swatch = QColorSwatchEdit(self, initial_color=self.viewer.color_bar.border_color)
+        self.border_color_swatch.color_changed.connect(self.on_change_border_color)
+
+        self.border_width_spinbox = hp.make_slider_with_text(
+            self, 0, 10, step_size=1, value=self.viewer.color_bar.border_width, func=self.on_change_border_width
         )
-        self.border_color_swatch.evt_color_changed.connect(self.on_change_border_color)
 
-        self.border_width_spinbox = hp.make_labelled_slider(self, minimum=0, maximum=10, step_size=1)
-        self.border_width_spinbox.setValue(self.viewer.color_bar.border_width)
-        self.border_width_spinbox.valueChanged.connect(self.on_change_border_width)
+        self.label_color_swatch = QColorSwatchEdit(self, initial_color=self.viewer.color_bar.label_color)
+        self.label_color_swatch.color_changed.connect(self.on_change_tick_color)
 
-        self.label_color_swatch = hp.make_swatch(
-            self, self.viewer.color_bar.label_color, value=self.viewer.color_bar.label_color
+        self.label_size_spinbox = hp.make_slider_with_text(
+            self, 4, 24, step_size=1, value=self.viewer.color_bar.label_size, func=self.on_change_tick_font_size
         )
-        self.label_color_swatch.evt_color_changed.connect(self.on_change_tick_color)
-
-        self.label_size_spinbox = hp.make_labelled_slider(self, minimum=6, maximum=18, step_size=1)
-        self.label_size_spinbox.setValue(self.viewer.color_bar.label_size)
-        self.label_size_spinbox.valueChanged.connect(self.on_change_tick_font_size)
 
         layout = hp.make_form_layout(self)
         layout.addRow(self._make_move_handle())
@@ -75,6 +72,17 @@ class QtColorBarControls(QtFramelessPopup):
         """Update visibility checkbox."""
         with self.viewer.color_bar.events.visible.blocker():
             self.visible_checkbox.setChecked(self.viewer.color_bar.visible)
+        hp.enable_with_opacity(
+            self,
+            [
+                self.position_combobox,
+                self.border_color_swatch,
+                self.border_width_spinbox,
+                self.label_color_swatch,
+                self.label_size_spinbox,
+            ],
+            self.viewer.color_bar.visible,
+        )
 
     def on_change_position(self):
         """Update visibility checkbox."""
@@ -102,7 +110,7 @@ class QtColorBarControls(QtFramelessPopup):
     def _on_border_color_change(self, _event=None):
         """Update visibility checkbox."""
         with hp.qt_signals_blocked(self.border_color_swatch):
-            self.border_color_swatch.set_color(self.viewer.color_bar.border_color)
+            self.border_color_swatch.setColor(self.viewer.color_bar.border_color)
 
     def on_change_tick_font_size(self):
         """Update visibility checkbox."""
@@ -121,4 +129,4 @@ class QtColorBarControls(QtFramelessPopup):
     def _on_tick_color_change(self, _event=None):
         """Update visibility checkbox."""
         with hp.qt_signals_blocked(self.label_color_swatch):
-            self.label_color_swatch.set_color(self.viewer.color_bar.label_color)
+            self.label_color_swatch.setColor(self.viewer.color_bar.label_color)

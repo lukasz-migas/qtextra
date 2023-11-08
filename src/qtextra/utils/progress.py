@@ -8,6 +8,7 @@ try:
 except ImportError:
     raise ImportError("please install napari using 'pip install napari'") from None
 
+
 class Progress(tqdm):
     """This class inherits from tqdm and provides an interface for
     progress bars in the napari viewer. Progress bars can be created

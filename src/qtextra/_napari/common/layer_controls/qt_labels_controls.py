@@ -11,11 +11,11 @@ from qtpy.QtWidgets import QButtonGroup, QHBoxLayout, QSpinBox, QWidget
 
 import qtextra.helpers as hp
 from qtextra._napari.common.layer_controls.qt_layer_controls_base import QtLayerControls
-from qtextra._napari.common.widgets.qt_mode_button import QtModePushButton, QtModeRadioButton
-from qtextra._napari.image.layers.labels._labels_constants import (
+from qtextra._napari.common.layers._labels_constants import (
     LABEL_COLOR_MODE_TRANSLATIONS,
     RENDER_MODE_TRANSLATIONS,
 )
+from qtextra._napari.common.widgets.qt_mode_button import QtModePushButton, QtModeRadioButton
 
 
 # noinspection PyMissingOrEmptyDocstring
@@ -269,7 +269,7 @@ class QtLabelsControls(QtLayerControls):
         with self.layer.events.rendering.blocker():
             hp.set_combobox_current_index(self.renderCombobox, self.layer.rendering)
 
-    def _on_ndisplay_changed(self):
+    def _on_ndisplay_changed(self) -> None:
         render_visible = self.ndisplay == 3
         self.renderCombobox.setVisible(render_visible)
         self.renderLabel.setVisible(render_visible)

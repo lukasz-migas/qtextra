@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QButtonGroup, QHBoxLayout
 
 import qtextra.helpers as hp
 from qtextra._napari.common.layer_controls.qt_layer_controls_base import QtLayerControls
-from qtextra._napari.common.layers.points._points_constants import SYMBOL_TRANSLATION
+from qtextra._napari.common.layers._points_constants import SYMBOL_TRANSLATION
 from qtextra._napari.common.widgets.qt_mode_button import QtModePushButton, QtModeRadioButton
 from qtextra.widgets.qt_color_button import QtColorSwatch
 
@@ -184,7 +184,19 @@ class QtPointsControls(QtLayerControls):
         """Receive layer model editable change event & enable/disable buttons."""
         hp.enable_with_opacity(
             self,
-            [self.select_button, self.addition_button, self.delete_button],
+            [
+                self.select_button,
+                self.addition_button,
+                self.delete_button,
+                self.symbolComboBox,
+                self.sizeSlider,
+                self.faceColorEdit,
+                self.edgeColorEdit,
+                self.blendComboBox,
+                self.opacitySlider,
+                self.outOfSliceCheckBox,
+                self.text_display_checkbox,
+            ],
             self.layer.editable and self.layer.visible,
         )
         super()._on_editable_or_visible_change(event)

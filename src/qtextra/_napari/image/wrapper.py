@@ -7,14 +7,12 @@ import numpy as np
 from koyo.image import clip_hotspots
 from koyo.secret import get_short_hash
 from napari.layers import Image, Labels, Points, Shapes
-from qtpy.QtCore import QMutex, QMutexLocker, Slot
+from qtpy.QtCore import QMutex, QMutexLocker, Slot  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QWidget
 
 from qtextra._napari.common.components.overlays.color_bar import ColorBarItem
 from qtextra._napari.common.wrapper import ViewerBase
 from qtextra._napari.image.components.viewer_model import ViewerModel as Viewer
-
-# from qtextra._napari.image.layers import Labels, Points
 from qtextra._napari.image.qt_viewer import QtViewer
 
 MUTEX = QMutex()
@@ -89,24 +87,24 @@ class NapariImageView(ViewerBase):
         self,
         array: np.ndarray,
         name: str = IMAGE_NAME,
-        colormap=None,
+        colormap: str | None = None,
         interpolation: str = "nearest",
         clip: bool = True,
-        **kwargs,
-    ):
+        **kwargs: ty.Any,
+    ) -> Image:
         """Update data."""
         if clip:
             array = clip_hotspots(array)
 
         if self.image_layer is None:
-            self.image_layer: Image = self.viewer.add_image(
+            self.image_layer: Image = self.viewer.add_image(  # type: ignore[no-untyped-call]
                 array,
                 name=name,
                 colormap=colormap,
                 **kwargs,
             )
-            self.image_layer.interpolation2d = interpolation
-            self.image_layer._keep_auto_contrast = True
+            self.image_layer.interpolation2d = interpolation  # type: ignore[attr-defined]
+            self.image_layer._keep_auto_contrast = True  # type: ignore[attr-defined]
         else:
             # update image data
             self.image_layer.data = array
@@ -120,11 +118,11 @@ class NapariImageView(ViewerBase):
         self,
         array: np.ndarray,
         name: str = IMAGE_NAME,
-        colormap=None,
-        blending="additive",
-        contrast_limits=None,
+        colormap: str | None = None,
+        blending: str = "additive",
+        contrast_limits: tuple[float, float] | None = None,
         interpolation: str = "nearest",
-        **kwargs,
+        **kwargs: ty.Any,
     ) -> Image:
         """Add image layer."""
         layer = self.try_reuse(name, Image)
@@ -145,12 +143,12 @@ class NapariImageView(ViewerBase):
             layer.translate = kwargs.pop("translate", (0.0, 0.0))
             layer.metadata = kwargs.pop("metadata", layer.metadata)
         else:
-            layer = self.viewer.add_image(
+            layer = self.viewer.add_image(  # type: ignore[no-untyped-call]
                 data=array, name=name, blending=blending, colormap=colormap, interpolation2d=interpolation, **kwargs
             )
         return layer
 
-    def plot_rgb(self, array: np.ndarray, name: str = IMAGE_NAME, **kwargs) -> Image:
+    def plot_rgb(self, array: np.ndarray, name: str = IMAGE_NAME, **kwargs: ty.Any) -> Image:
         """Full replot of the data."""
         # array = np.nan_to_num(array)
         if self.image_layer is not None:
@@ -179,12 +177,22 @@ class NapariImageView(ViewerBase):
         self.viewer.color_bar.data = data
 
     def add_image_mask(
-        self, array: np.ndarray, name: str = "Masks", colors=None, opacity: float = 0.75, editable: bool = False
+        self,
+        array: np.ndarray,
+        name: str = "Masks",
+        colors: np.ndarray | None = None,
+        opacity: float = 0.75,
+        editable: bool = False,
     ) -> Labels:
         """Add image labels layer."""
         layer = self.try_reuse(name, Labels)
         if layer is None:
-            layer = self.viewer.add_labels(array, name=name, color=colors, opacity=opacity)
+            layer = self.viewer.add_labels(
+                array,
+                name=name,
+                color=colors,
+                opacity=opacity,
+            )
         else:
             layer.data = array
             layer.color = colors
@@ -351,10 +359,8 @@ if __name__ == "__main__":  # pragma: no cover
         app, frame, ha = qframe()
         frame.setMinimumSize(600, 600)
         wrapper = NapariImageView(frame)
-        wrapper.viewer.dims.ndisplay = 3
 
         layer = wrapper.plot(data.astronaut(), clip=False)
-        layer.depiction = "plane"
         # layer.mode = "transform"
         #         layer.events.crosshair.connect(_accept)
         #         viewer.viewer.cross_hair.visible = True

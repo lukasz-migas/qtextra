@@ -6,6 +6,7 @@ try:
 except ImportError:
     Notification = object
 
+
 class Events(QObject):
     """Events emitter."""
 

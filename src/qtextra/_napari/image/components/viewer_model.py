@@ -55,7 +55,14 @@ class ViewerModel(ViewerModelBase):
     # have an event emitter associated with them
     camera: Camera = Field(default_factory=Camera, allow_mutation=False)
 
-    def __init__(self, title="qtextra", ndisplay=2, order=(), axis_labels=(), **kwargs):
+    def __init__(
+        self,
+        title: str = "qtextra",
+        ndisplay: int = 2,
+        order: ty.Tuple[int, ...] = (),
+        axis_labels: ty.Tuple[str, ...] = (),
+        **kwargs: ty.Any,
+    ):
         # allow extra attributes during model initialization, useful for mixins
         super().__init__(title=title, ndisplay=ndisplay, order=order, axis_labels=axis_labels)
 
@@ -114,7 +121,7 @@ class ViewerModel(ViewerModelBase):
         empty_labels = np.zeros(shape, dtype=int)
         return self.add_labels(empty_labels, name=name, translate=np.array(corner), scale=scale)
 
-    def add_image(self, *args, **kwargs):
+    def add_image(self, *args, **kwargs) -> n_layers.Image:
         """Add image."""
         return NapariViewer.add_image(self, *args, **kwargs)
 
@@ -125,7 +132,7 @@ class ViewerModel(ViewerModelBase):
         stack: bool = False,
         plugin: ty.Optional[str] = None,
         layer_type: ty.Optional[str] = None,
-        **kwargs,
+        **kwargs: ty.Any,
     ) -> ty.List[n_layers.Layer]:
         """Open a path or list of paths with plugins, and add layers to viewer.
 

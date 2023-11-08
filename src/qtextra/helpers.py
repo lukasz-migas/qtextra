@@ -1028,13 +1028,14 @@ def make_slider(
     default: float = 1,
     value: ty.Optional[float] = None,
     expand: bool = True,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     **kwargs,
 ) -> Qw.QSlider:
     """Make slider."""
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
     widget = Qw.QSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1055,12 +1056,13 @@ def make_slider_with_text(
     value: int = 1,
     orientation="horizontal",
     tooltip: str = None,
-    focus_policy: Qt.FocusPolicy = Qt.TabFocus,
+    focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
 ) -> Qw.QSlider:
     """Make QSlider."""
     from superqt import QLabeledSlider
 
-    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
     widget = QLabeledSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setValue(value)
@@ -1068,6 +1070,8 @@ def make_slider_with_text(
     widget.setFocusPolicy(focus_policy)
     if tooltip:
         widget.setToolTip(tooltip)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1080,12 +1084,13 @@ def make_double_slider_with_text(
     n_decimals: int = 1,
     orientation="horizontal",
     tooltip: str = None,
-    focus_policy: Qt.FocusPolicy = Qt.TabFocus,
+    focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
 ) -> Qw.QSlider:
     """Make QSlider."""
     from superqt import QLabeledDoubleSlider
 
-    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
     widget = QLabeledDoubleSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setDecimals(n_decimals)
@@ -1094,6 +1099,8 @@ def make_double_slider_with_text(
     widget.setFocusPolicy(focus_policy)
     if tooltip:
         widget.setToolTip(tooltip)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1113,7 +1120,7 @@ def make_labelled_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
     widget = QLabeledSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1691,7 +1698,7 @@ def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True
     dlg = Qw.QColorDialog(color, parent=parent)
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
-    new_color: ty.Optional[QColor, str, np.ndarray] = None
+    new_color: ty.Optional[ty.Union, str, np.ndarray] = None
     if dlg.exec_():
         new_color = dlg.currentColor()
         if as_hex:

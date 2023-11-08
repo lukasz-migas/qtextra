@@ -238,7 +238,7 @@ class QtViewerBase(QWidget):
         del self.layer_to_visual[layer]
         self._reorder_layers()
 
-    def _reorder_layers(self):
+    def _reorder_layers(self) -> None:
         """When the list is reordered, propagate changes to draw order."""
         first_visible_found = False
         for i, layer in enumerate(self.viewer.layers):

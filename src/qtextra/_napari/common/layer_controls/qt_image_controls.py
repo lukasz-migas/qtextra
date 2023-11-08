@@ -27,6 +27,8 @@ class QtImageControls(QtBaseImageControls):
         self.layer.events.attenuation.connect(self._on_attenuation_change)
         self.layer.events.depiction.connect(self._on_depiction_change)
         self.layer.plane.events.thickness.connect(self._on_plane_thickness_change)
+        self.layer.events.editable.connect(self._on_editable_or_visible_change)
+        self.layer.events.visible.connect(self._on_editable_or_visible_change)
 
         self.interpolation_combobox = hp.make_combobox(self)
         hp.set_combobox_data(self.interpolation_combobox, Interpolation, self.layer.interpolation2d)
@@ -98,6 +100,29 @@ class QtImageControls(QtBaseImageControls):
         self.layout().addRow(hp.make_label(self, "Editable"), self.editable_checkbox)
         self._on_ndisplay_changed()
         self._on_editable_or_visible_change()
+
+    def _on_editable_or_visible_change(self, event=None):
+        """Receive layer model editable change event & enable/disable buttons."""
+        hp.enable_with_opacity(
+            self,
+            [
+                self.opacitySlider,
+                self.contrast_limits_slider,
+                self.autoScaleBar,
+                self.gamma_slider,
+                self.blendComboBox,
+                self.depiction_combobox,
+                self.render_combobox,
+                self.iso_threshold_slider,
+                self.attenuation_slider,
+                self.interpolation_combobox,
+                self.planeNormalButtons,
+                self.planeThicknessSlider,
+                self.colormap_combobox,
+            ],
+            self.layer.editable and self.layer.visible,
+        )
+        super()._on_editable_or_visible_change(event)
 
     def on_change_interpolation(self, text):
         """Change interpolation mode for image display."""

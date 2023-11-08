@@ -137,7 +137,6 @@ def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[st
         The combined stylesheet.
     """
     stylesheet = ""
-    print(f"loading {len(STYLES)} stylesheets")
     for key in sorted(STYLES):
         file = STYLES[key]
         with open(file) as f:

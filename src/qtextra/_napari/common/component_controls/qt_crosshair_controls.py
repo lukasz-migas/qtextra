@@ -1,4 +1,5 @@
 """Crosshair model controls."""
+from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.utils.events import disconnect_events
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFormLayout
@@ -15,46 +16,46 @@ class QtCrosshairControls(QtFramelessPopup):
         self.viewer = viewer
 
         super().__init__(parent=parent)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setObjectName("crosshair")
+        self.setMouseTracking(True)
 
         self.viewer.cross_hair.events.visible.connect(self._on_visible_change)
         self.viewer.cross_hair.events.width.connect(self._on_width_change)
         self.viewer.cross_hair.events.color.connect(self._on_color_change)
         self.viewer.cross_hair.events.window.connect(self._on_window_change)
         self.viewer.cross_hair.events.position.connect(self._on_position_change)
-
-        self.setObjectName("crosshair")
-        self.setMouseTracking(True)
+        self._on_visible_change()
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
         """Make panel."""
-        self.visible_checkbox = hp.make_checkbox(self, "", "Show/hide crosshair")
-        self.visible_checkbox.setChecked(self.viewer.cross_hair.visible)
-        self.visible_checkbox.stateChanged.connect(self.on_change_visible)
+        self.visible_checkbox = hp.make_checkbox(
+            self, "", "Show/hide crosshair", value=self.viewer.cross_hair.visible, func=self.on_change_visible
+        )
 
-        self.autohide_checkbox = hp.make_checkbox(self, "", "Auto-hide crosshair")
-        self.autohide_checkbox.setChecked(self.viewer.cross_hair.auto_hide)
-        self.autohide_checkbox.stateChanged.connect(self.on_change_auto_hide)
+        self.autohide_checkbox = hp.make_checkbox(
+            self, "", "Auto-hide crosshair", value=self.viewer.cross_hair.auto_hide, func=self.on_change_auto_hide
+        )
 
-        self.position_x_spin = hp.make_int_spin_box(self, 0, 10000)
-        self.position_x_spin.setValue(self.viewer.cross_hair.position[1])
-        self.position_x_spin.valueChanged.connect(self.on_change_position)
+        self.position_x_spin = hp.make_int_spin_box(
+            self, 0, 100_000, value=self.viewer.cross_hair.position[1], func=self.on_change_position
+        )
 
-        self.position_y_spin = hp.make_int_spin_box(self, 0, 10000)
-        self.position_y_spin.setValue(self.viewer.cross_hair.position[0])
-        self.position_y_spin.valueChanged.connect(self.on_change_position)
+        self.position_y_spin = hp.make_int_spin_box(
+            self, 0, 100_000, value=self.viewer.cross_hair.position[0], func=self.on_change_position
+        )
 
-        self.width_spinbox = hp.make_labelled_slider(self, minimum=1, maximum=10, step_size=1)
-        self.width_spinbox.setValue(self.viewer.cross_hair.width)
-        self.width_spinbox.valueChanged.connect(self.on_change_width)
+        self.width_spinbox = hp.make_slider_with_text(
+            self, 1, 10, step_size=1, value=self.viewer.cross_hair.width, func=self.on_change_width
+        )
 
-        self.window_spinbox = hp.make_labelled_slider(self, minimum=1, maximum=10, step_size=1)
-        self.window_spinbox.setValue(self.viewer.cross_hair.window)
-        self.window_spinbox.valueChanged.connect(self.on_change_window)
+        self.window_spinbox = hp.make_slider_with_text(
+            self, 1, 10, step_size=1, value=self.viewer.cross_hair.window, func=self.on_change_window
+        )
 
-        self.color_swatch = hp.make_swatch(self, self.viewer.cross_hair.color, value=self.viewer.cross_hair.color)
-        self.color_swatch.evt_color_changed.connect(self.on_change_color)
+        self.color_swatch = QColorSwatchEdit(self, initial_color=self.viewer.cross_hair.color)
+        self.color_swatch.color_changed.connect(self.on_change_color)
 
         layout = hp.make_form_layout(self)
         layout.addRow(self._make_move_handle())
@@ -70,7 +71,7 @@ class QtCrosshairControls(QtFramelessPopup):
 
     def on_change_visible(self):
         """Update visibility checkbox."""
-        self.viewer.cross_hair.visible = self.autohide_checkbox.isChecked()
+        self.viewer.cross_hair.visible = self.visible_checkbox.isChecked()
 
     def on_change_auto_hide(self):
         """Update visibility checkbox."""
@@ -80,6 +81,18 @@ class QtCrosshairControls(QtFramelessPopup):
         """Update visibility checkbox."""
         with self.viewer.cross_hair.events.visible.blocker():
             self.visible_checkbox.setChecked(self.viewer.cross_hair.visible)
+        hp.enable_with_opacity(
+            self,
+            [
+                self.color_swatch,
+                self.autohide_checkbox,
+                self.position_x_spin,
+                self.position_y_spin,
+                self.width_spinbox,
+                self.window_spinbox,
+            ],
+            self.viewer.cross_hair.visible,
+        )
 
     def on_change_position(self):
         """Update visibility checkbox."""
@@ -88,8 +101,8 @@ class QtCrosshairControls(QtFramelessPopup):
     def _on_position_change(self, _event=None):
         """Update visibility checkbox."""
         with self.viewer.cross_hair.events.position.blocker():
-            self.position_x_spin.setValue(self.viewer.cross_hair.position[1])
             self.position_y_spin.setValue(self.viewer.cross_hair.position[0])
+            self.position_x_spin.setValue(self.viewer.cross_hair.position[1])
 
     def on_change_width(self):
         """Update visibility checkbox."""
@@ -116,7 +129,7 @@ class QtCrosshairControls(QtFramelessPopup):
     def _on_color_change(self, _event=None):
         """Update visibility checkbox."""
         with hp.qt_signals_blocked(self.color_swatch):
-            self.color_swatch.set_color(self.viewer.cross_hair.color)
+            self.color_swatch.setColor(self.viewer.cross_hair.color)
 
     def close(self):
         """Disconnect events when widget is closing."""
