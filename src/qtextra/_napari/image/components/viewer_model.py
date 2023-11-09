@@ -125,6 +125,14 @@ class ViewerModel(ViewerModelBase):
         """Add image."""
         return NapariViewer.add_image(self, *args, **kwargs)
 
+    def add_shapes(self, *args, **kwargs) -> n_layers.Shapes:
+        """Add image."""
+        return NapariViewer.add_shapes(self, *args, **kwargs)
+
+    def add_labels(self, *args, **kwargs) -> n_layers.Shapes:
+        """Add image."""
+        return NapariViewer.add_labels(self, *args, **kwargs)
+
     def open(
         self,
         path: PathOrPaths,

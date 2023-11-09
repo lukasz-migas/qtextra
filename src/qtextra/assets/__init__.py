@@ -64,7 +64,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "ndisplay_off": "ph.square",
     "ndisplay_on": "ph.cube",
     "roll": "mdi6.rotate-right-variant",
-    "transpose": "mdi6.arrow-collapse-horizontal",
+    "transpose": "ri.t-box-line",
     "grid_off": "mdi6.grid-off",
     "grid_on": "mdi6.grid",
     "home": "fa5s.home",

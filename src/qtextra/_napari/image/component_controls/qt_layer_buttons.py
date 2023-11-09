@@ -12,9 +12,18 @@ from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout
 
 import qtextra.helpers as hp
 from qtextra._napari.image.components._viewer_key_bindings import toggle_grid, toggle_ndisplay
+from qtextra.widgets.qt_image_button import QtImagePushButton
 
 if ty.TYPE_CHECKING:
     from qtextra._napari.image.components.viewer_model import ViewerModel
+
+
+def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
+    """Make a button with an icon from QtAwesome."""
+    btn = hp.make_qta_btn(*args, **kwargs)
+    btn.set_medium()
+    btn.setProperty("layer_button", True)
+    return btn
 
 
 class QtLayerButtons(QFrame):
@@ -23,12 +32,12 @@ class QtLayerButtons(QFrame):
     def __init__(self, viewer: ViewerModel):
         super().__init__()
         self.viewer = viewer
-        self.delete_btn = hp.make_qta_btn(
+        self.delete_btn = make_qta_btn(
             self, "delete", tooltip="Delete selected layers", func=self.viewer.layers.remove_selected
         )
         self.delete_btn.setParent(self)
 
-        self.new_points_btn = hp.make_qta_btn(
+        self.new_points_btn = make_qta_btn(
             self,
             "new_points",
             "Add new points layer",
@@ -38,7 +47,7 @@ class QtLayerButtons(QFrame):
             ),
         )
 
-        self.new_shapes_btn = hp.make_qta_btn(
+        self.new_shapes_btn = make_qta_btn(
             self,
             "new_shapes",
             "Add new shapes layer",
@@ -48,7 +57,7 @@ class QtLayerButtons(QFrame):
             ),
         )
 
-        self.new_labels_btn = hp.make_qta_btn(
+        self.new_labels_btn = make_qta_btn(
             self,
             "new_labels",
             "Add new free-hand draw shapes layer",
@@ -58,6 +67,7 @@ class QtLayerButtons(QFrame):
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
         layout.addWidget(self.new_points_btn)
         layout.addWidget(self.new_shapes_btn)
         layout.addWidget(self.new_labels_btn)
@@ -73,7 +83,7 @@ class QtViewerButtons(QFrame):
         super().__init__()
         self.viewer = viewer
 
-        self.ndisplayButton = hp.make_qta_btn(
+        self.ndisplayButton = make_qta_btn(
             self,
             "ndisplay_off",
             "Toggle number of displayed dimensions",
@@ -84,7 +94,7 @@ class QtViewerButtons(QFrame):
             func_menu=self.open_perspective_popup,
         )
 
-        self.rollDimsButton = hp.make_qta_btn(
+        self.rollDimsButton = make_qta_btn(
             self,
             "roll",
             "Roll dimensions order for display. Right-click on the button to manually order dimensions.",
@@ -92,14 +102,14 @@ class QtViewerButtons(QFrame):
             func_menu=self.open_roll_popup,
         )
 
-        self.transposeDimsButton = hp.make_qta_btn(
+        self.transposeDimsButton = make_qta_btn(
             self,
             "transpose",
             "Transpose displayed dimensions.",
             func=lambda: viewer.dims.transpose(),
         )
 
-        self.gridViewButton = hp.make_qta_btn(
+        self.gridViewButton = make_qta_btn(
             self,
             "grid_off",
             "Toggle grid view. Right-click on the button to change grid settings.",
@@ -114,7 +124,7 @@ class QtViewerButtons(QFrame):
         def _set_grid_mode_checkstate(event):
             self.gridViewButton.setChecked(event.value)
 
-        self.resetViewButton = hp.make_qta_btn(
+        self.resetViewButton = make_qta_btn(
             self,
             "home",
             "Reset view",
@@ -123,6 +133,7 @@ class QtViewerButtons(QFrame):
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
         layout.addWidget(self.ndisplayButton)
         layout.addWidget(self.rollDimsButton)
         layout.addWidget(self.transposeDimsButton)
