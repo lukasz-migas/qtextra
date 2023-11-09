@@ -1,4 +1,6 @@
 """Various toolbars that are used throughout the app."""
+from __future__ import annotations
+
 import typing as ty
 
 from qtpy.QtWidgets import QWidget
@@ -6,6 +8,8 @@ from qtpy.QtWidgets import QWidget
 import qtextra.helpers as hp
 
 if ty.TYPE_CHECKING:
+    from napari.layers import Image
+
     from qtextra._napari.image.wrapper import NapariImageView
     from qtextra._napari.line.wrapper import NapariLineView
 
@@ -13,8 +17,8 @@ if ty.TYPE_CHECKING:
 class ImageViewMixin:
     """Mixin class."""
 
-    view_image: "NapariImageView"
-    image_layer = None
+    view_image: NapariImageView
+    image_layer: Image | None = None
 
     def on_plot_image_outline(self, value: bool):
         """Plot outline."""
@@ -26,7 +30,7 @@ class ImageViewMixin:
         add_toolbars=True,
         allow_extraction=True,
         **kwargs,
-    ) -> "NapariImageView":
+    ) -> NapariImageView:
         """Make image view."""
         from qtextra._napari.image.wrapper import NapariImageView
 
@@ -54,7 +58,7 @@ class LineViewMixin:
         y_label: str = "",
         lock_to_bottom: bool = False,
         **kwargs,
-    ) -> "NapariLineView":
+    ) -> NapariLineView:
         """Make line view."""
         from qtextra._napari.line.wrapper import NapariLineView
 
