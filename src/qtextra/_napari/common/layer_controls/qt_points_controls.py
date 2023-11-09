@@ -1,5 +1,6 @@
 """Points controls."""
 import numpy as np
+from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.layers import Points
 from napari.layers.points._points_constants import Mode
 from napari.utils.events import disconnect_events
@@ -10,7 +11,6 @@ import qtextra.helpers as hp
 from qtextra._napari.common.layer_controls.qt_layer_controls_base import QtLayerControls
 from qtextra._napari.common.layers._points_constants import SYMBOL_TRANSLATION
 from qtextra._napari.common.widgets.qt_mode_button import QtModePushButton, QtModeRadioButton
-from qtextra.widgets.qt_color_button import QtColorSwatch
 
 
 class QtPointsControls(QtLayerControls):
@@ -39,15 +39,15 @@ class QtPointsControls(QtLayerControls):
         self.sizeSlider.setValue(int(self.layer.current_size))
         self.sizeSlider.valueChanged.connect(self.on_change_size)
 
-        self.faceColorEdit = QtColorSwatch(
+        self.faceColorEdit = QColorSwatchEdit(
             initial_color=self.layer.current_face_color, tooltip="Click to set current face color"
         )
-        self.faceColorEdit.evt_color_changed.connect(self.on_change_face_color)
+        self.faceColorEdit.color_changed.connect(self.on_change_face_color)
 
-        self.edgeColorEdit = QtColorSwatch(
+        self.edgeColorEdit = QColorSwatchEdit(
             initial_color=self.layer.current_edge_color, tooltip="Click to set current edge color"
         )
-        self.edgeColorEdit.evt_color_changed.connect(self.on_change_edge_color)
+        self.edgeColorEdit.color_changed.connect(self.on_change_edge_color)
 
         self.symbolComboBox = hp.make_combobox(self, tooltip="Next marker symbol")
         hp.set_combobox_data(self.symbolComboBox, SYMBOL_TRANSLATION, self.layer.symbol)
@@ -168,7 +168,7 @@ class QtPointsControls(QtLayerControls):
     def _on_current_face_color_change(self, _event=None) -> None:
         """Receive layer.current_face_color() change event and update view."""
         with hp.qt_signals_blocked(self.faceColorEdit):
-            self.faceColorEdit.set_color(self.layer.current_face_color)
+            self.faceColorEdit.setColor(self.layer.current_face_color)
 
     def on_change_edge_color(self, color: np.ndarray) -> None:
         """Update edge color of layer model from color picker user input."""
@@ -178,7 +178,7 @@ class QtPointsControls(QtLayerControls):
     def _on_current_edge_color_change(self, _event=None):
         """Receive layer.current_edge_color() change event and update view."""
         with hp.qt_signals_blocked(self.edgeColorEdit):
-            self.edgeColorEdit.set_color(self.layer.current_edge_color)
+            self.edgeColorEdit.setColor(self.layer.current_edge_color)
 
     def _on_editable_or_visible_change(self, event=None) -> None:
         """Receive layer model editable change event & enable/disable buttons."""

@@ -3,6 +3,7 @@ import typing as ty
 from collections.abc import Iterable
 
 import numpy as np
+from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.layers.shapes._shapes_constants import Mode
 from napari.utils.events import disconnect_events
 from qtpy.QtCore import Qt
@@ -11,7 +12,6 @@ from qtpy.QtWidgets import QButtonGroup, QCheckBox, QGridLayout
 import qtextra.helpers as hp
 from qtextra._napari.common.layer_controls.qt_layer_controls_base import QtLayerControls
 from qtextra._napari.common.widgets.qt_mode_button import QtModePushButton, QtModeRadioButton
-from qtextra.widgets.qt_color_button import QtColorSwatch
 
 if ty.TYPE_CHECKING:
     from napari.layers import Shapes
@@ -142,19 +142,19 @@ class QtShapesControls(QtLayerControls):
         button_grid.setColumnStretch(0, 1)
         button_grid.setSpacing(4)
 
-        self.face_color_swatch = QtColorSwatch(
+        self.face_color_swatch = QColorSwatchEdit(
             initial_color=self.layer.current_face_color,
             tooltip="click to set current face color",
         )
         self._on_current_face_color_change()
-        self.face_color_swatch.evt_color_changed.connect(self.on_change_face_color)
+        self.face_color_swatch.color_changed.connect(self.on_change_face_color)
 
-        self.edge_color_swatch = QtColorSwatch(
+        self.edge_color_swatch = QColorSwatchEdit(
             initial_color=self.layer.current_edge_color,
             tooltip="click to set current edge color",
         )
         self._on_current_edge_color_change()
-        self.edge_color_swatch.evt_color_changed.connect(self.on_change_edge_color)
+        self.edge_color_swatch.color_changed.connect(self.on_change_edge_color)
 
         text_disp_cb = QCheckBox()
         text_disp_cb.setToolTip("Toggle text visibility")
@@ -225,12 +225,12 @@ class QtShapesControls(QtLayerControls):
     def _on_current_edge_color_change(self, _event=None) -> None:
         """Receive layer model edge color change event and update color swatch."""
         with hp.qt_signals_blocked(self.edge_color_swatch):
-            self.edge_color_swatch.set_color(self.layer.current_edge_color)
+            self.edge_color_swatch.setColor(self.layer.current_edge_color)
 
     def _on_current_face_color_change(self, _event=None) -> None:
         """Receive layer model face color change event and update color swatch."""
         with hp.qt_signals_blocked(self.face_color_swatch):
-            self.face_color_swatch.set_color(self.layer.current_face_color)
+            self.face_color_swatch.setColor(self.layer.current_face_color)
 
     def _on_ndisplay_changed(self):
         self.layer.editable = self.ndisplay == 2

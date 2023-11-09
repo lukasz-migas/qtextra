@@ -70,7 +70,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "home": "fa5s.home",
     "pan_zoom": "ei.move",
     "select": "fa5s.location-arrow",
-    "add_points": "fa5s.plus",
+    "add_points": "ri.add-circle-fill",
     "select_points": "fa5s.location-arrow",
     "delete_shape": "fa5s.times",
     "move_back": "mdi6.arrange-send-backward",
