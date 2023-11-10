@@ -739,7 +739,7 @@ class SubWindowBase(QDialog):
         # geometry effect
         self.geom_anim = QPropertyAnimation(self, b"geometry", self)
 
-    def move_to(self, location):
+    def move_to(self, location: str) -> None:
         """Move to location."""
         if location == "top_right":
             self.move_to_top_right()

@@ -790,16 +790,7 @@ def make_qta_btn(
 
     widget = QtImagePushButton(parent=parent)
     widget.set_qta(icon_name, **kwargs)
-    if small:
-        widget.set_small()
-    elif normal:
-        widget.set_normal()
-    elif average:
-        widget.set_average()
-    elif medium:
-        widget.set_medium()
-    elif large:
-        widget.set_large()
+    widget.set_default_size(small=small, normal=normal, average=average, medium=medium, large=large)
     if size and len(size) == 2:
         widget.set_size(size)
     if tooltip:
@@ -1394,6 +1385,13 @@ def set_bold(widget: Qw.QWidget, bold: bool = True) -> Qw.QWidget:
 def update_widget_style(widget: Qw.QWidget, object_name: str):
     """Update widget style by forcing its re-polish."""
     widget.setObjectName(object_name)
+    widget.style().polish(widget)
+
+
+def update_property(widget: Qw.QWidget, prop: str, value: ty.Any) -> None:
+    """Update properties of widget to update style."""
+    widget.setProperty(prop, value)
+    widget.style().unpolish(widget)
     widget.style().polish(widget)
 
 

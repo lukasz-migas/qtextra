@@ -1,5 +1,8 @@
-/* ------------- QtVertLine / QtHorzLine --------- */
+QWidget#transparent {
+    background-color: transparent;
+}
 
+/* ------------- QtVertLine / QtHorzLine --------- */
 QtVertLine, QtHorzLine{
     border: 1px solid {{ secondary }};
     background-color: {{ secondary }};
@@ -97,9 +100,9 @@ QtToast > QWidget#toast_header {
     border: 2px solid {{ darken(foreground, 10) }};
 }
 
-QtToast > QWidget#toast_header, QWidget#toast_header > QLabel {
-    background-color: {{ foreground }};
-}
+    QtToast > QWidget#toast_header, QWidget#toast_header > QLabel {
+        background-color: {{ foreground }};
+    }
 
 /* ------------ QtTutorial ------------ */
 QtTutorial{

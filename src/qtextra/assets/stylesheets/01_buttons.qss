@@ -8,23 +8,9 @@ QtImagePushButton{
     border: 1px;
     margin: 1px;
 }
-QtImagePushButton#small_icon{
-    min-width : 16px;
-    max-width : 16px;
-    min-height : 16px;
-    max-height : 16px;
-}
-QtImagePushButton#medium_icon{
-    min-width : 28px;
-    max-width : 28px;
-    min-height : 28px;
-    max-height : 28px;
-}
-QtImagePushButton#large_icon{
-    min-width : 40px;
-    max-width : 40px;
-    min-height : 40px;
-    max-height : 40px;
+
+QtImagePushButton {
+    background-color: none;
 }
 
 QtImagePushButton::checked{

@@ -28,17 +28,18 @@ class QtToast(SubWindowBase):
             parent.evt_resized.connect(lambda: self.move_to(self.POSITION))
 
     # noinspection PyAttributeOutsideInit
-    def make_ui(self):
+    def make_ui(self) -> None:
         """Setup UI."""
         title_widget = QWidget()
         # title_widget.setMaximumHeight(30)
         title_widget.setObjectName("toast_header")
         self._icon_label = QtSeverityLabel(title_widget)
-        self._icon_label.setMaximumWidth(20)
-        self._icon_label.setMinimumHeight(20)
-        self._title_label = hp.make_label(title_widget, "", bold=True)
-        self._date_label = hp.make_label(title_widget, "")
-        self._close_btn = hp.make_qta_btn(title_widget, "cross", small=True, medium=False, func=self.close)
+        self._icon_label.set_xsmall()
+        self._title_label = hp.make_label(title_widget, "", bold=True, object_name="transparent")
+        hp.set_expanding_sizer_policy(self._title_label, True, True)
+        self._date_label = hp.make_label(title_widget, "", object_name="transparent")
+        self._close_btn = hp.make_qta_btn(title_widget, "cross", func=self.close)
+        self._close_btn.set_xsmall()
 
         self._message_label = hp.make_label(self, "", wrap=True, enable_url=True)
 
@@ -48,11 +49,11 @@ class QtToast(SubWindowBase):
 
         title_layout = QHBoxLayout(title_widget)
         hp.set_layout_margin(title_layout, 2)
-        title_layout.addWidget(self._icon_label, alignment=Qt.AlignVCenter)
-        title_layout.addWidget(self._title_label, stretch=True, alignment=Qt.AlignVCenter)
-        title_layout.addWidget(self._date_label, alignment=Qt.AlignVCenter)
+        title_layout.addWidget(self._icon_label, alignment=Qt.AlignmentFlag.AlignVCenter)
+        title_layout.addWidget(self._title_label, stretch=True, alignment=Qt.AlignmentFlag.AlignTop)
+        title_layout.addWidget(self._date_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         title_layout.addStretch(1)
-        title_layout.addWidget(self._close_btn, alignment=Qt.AlignVCenter)
+        title_layout.addWidget(self._close_btn, alignment=Qt.AlignmentFlag.AlignTop)
 
         # layout
         layout = QVBoxLayout(self)
@@ -63,11 +64,13 @@ class QtToast(SubWindowBase):
         layout.addStretch(1)
         layout.addWidget(self._timer_indicator)
 
-    def show_message(self, title: str, message: str, icon: str = "info", position: str = "top_right"):
+    def show_message(self, title: str, message: str, icon: str = "info", position: str = "top_right") -> None:
         """Show message."""
         self.POSITION = position
         self._title_label.setText(title)
+        self._title_label.adjustSize()
         self._message_label.setText(message)
+        self._message_label.adjustSize()
         self._icon_label.severity = str(icon)
         self.adjustSize()
         self.move_to(self.POSITION)
@@ -75,13 +78,13 @@ class QtToast(SubWindowBase):
 
     def show_long_message(
         self, title: str, message: str, duration: int = 5000, position: str = "top_right", icon: str = "info"
-    ):
+    ) -> None:
         """Show message that appears for longer but is also longer in time."""
         self.DISMISS_AFTER = duration
         self.POSITION = position
         self.show_message(title, message, icon=icon, position=position)
 
-    def show(self):
+    def show(self) -> None:
         """Show the message with a fade and slight slide in from the bottom."""
 
         def _update_timer_indicator():
