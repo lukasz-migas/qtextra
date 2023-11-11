@@ -64,6 +64,8 @@ class QtBaseImageControls(QtLayerControls):
         self.contrast_limits_slider.setValue(self.layer.contrast_limits)
         self.contrast_limits_slider.setToolTip("Right click for detailed slider popup.")
         self.clim_popup = None
+        connect_setattr(self.contrast_limits_slider.valueChanged, self.layer, "contrast_limits")
+        connect_setattr(self.contrast_limits_slider.rangeChanged, self.layer, "contrast_limits_range")
 
         self.autoScaleBar = AutoScaleButtons(layer, self)
 

@@ -122,19 +122,21 @@ class NapariImageView(ViewerBase):
         blending: str = "additive",
         contrast_limits: tuple[float, float] | None = None,
         interpolation: str = "nearest",
+        keep_auto_contrast: bool = False,
         **kwargs: ty.Any,
     ) -> Image:
         """Add image layer."""
-        layer = self.try_reuse(name, Image)
+        layer: ty.Optional[Image] = self.try_reuse(name, Image)
         if layer:
             layer.data = array
             if contrast_limits is not None:
+                layer.contrast_limits_range = contrast_limits
                 layer.contrast_limits = contrast_limits
             else:
                 layer.contrast_limits_range = layer._calc_data_range()
                 layer._contrast_limits = tuple(layer.contrast_limits_range)
                 layer.contrast_limits = layer._contrast_limits
-            layer._keep_auto_contrast = True
+            layer._keep_auto_contrast = keep_auto_contrast
             layer.blending = blending
             if colormap is not None:
                 layer.colormap = colormap
@@ -144,8 +146,15 @@ class NapariImageView(ViewerBase):
             layer.metadata = kwargs.pop("metadata", layer.metadata)
         else:
             layer = self.viewer.add_image(  # type: ignore[no-untyped-call]
-                data=array, name=name, blending=blending, colormap=colormap, interpolation2d=interpolation, **kwargs
+                data=array,
+                name=name,
+                blending=blending,
+                colormap=colormap,
+                interpolation2d=interpolation,
+                contrast_limits=contrast_limits,
+                **kwargs,
             )
+            layer._keep_auto_contrast = keep_auto_contrast
         return layer
 
     def plot_rgb(self, array: np.ndarray, name: str = IMAGE_NAME, **kwargs: ty.Any) -> Image:
@@ -360,7 +369,7 @@ if __name__ == "__main__":  # pragma: no cover
         frame.setMinimumSize(600, 600)
         wrapper = NapariImageView(frame)
 
-        layer = wrapper.plot(data.astronaut(), clip=False)
+        wrapper.plot(data.astronaut(), clip=False)
         # layer.mode = "transform"
         #         layer.events.crosshair.connect(_accept)
         #         viewer.viewer.cross_hair.visible = True
