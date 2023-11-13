@@ -38,9 +38,30 @@ QtImagePushButton:disabled {
     color: {{ opacity(text, 90) }};
 }
 
-
 QtImagePushButton[transparent="true"]{
     background-color: none;
+}
+
+QtImagePushButton[standout="true"]{
+    background-color: {{ foreground }};
+}
+
+QtImagePushButton[standout="true"]:hover {
+  background-color: {{ primary }};
+}
+
+QtImagePushButton[with_text="true"]{
+    max-width : 500px;
+    max-height : 500px;
+}
+
+QtImagePushButton[layer_button="true"]{
+    background-color: {{ foreground }};
+}
+
+QtImagePushButton[layer_button="true"]::hover{
+    border-radius: 2px;
+    background-color: {{ darken(foreground, 10) }};
 }
 
 /* ----------------- QtCopyToClipboardButton ----------------- */

@@ -467,18 +467,20 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         parent: ty.Optional[QWidget],
         title: str = "",
         position: ty.Any = None,
-        flags: ty.Any = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup,
+        flags: ty.Any = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowType.Popup,
     ):
         super().__init__(parent, title)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setWindowFlags(flags)
         if position is not None:
             self.move(position)
 
     def _make_title_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
-        self._title_label = hp.make_label(self, title, bold=True, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+        self._title_label = hp.make_label(
+            self, title, bold=True, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
 
         layout = hp.make_hbox_layout(spacing=0)
         layout.addWidget(self._title_label)
@@ -488,9 +490,11 @@ class QtFramelessPopup(QtDialog, CloseMixin):
 
     def _make_move_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
-        self._title_label = hp.make_label(self, title, bold=True, alignment=Qt.AlignLeft | Qt.AlignVCenter)
+        self._title_label = hp.make_label(
+            self, title, bold=True, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self._move_handle = hp.make_qta_label(
-            self, "move_handle", tooltip="Click here and drag the mouse around to move the window."
+            self, "move_handle", tooltip="Click here and drag the mouse around to move the window.", normal=True
         )
         self._move_handle.setCursor(Qt.PointingHandCursor)
 
