@@ -287,6 +287,7 @@ def make_qta_label(
     average: bool = False,
     medium: bool = False,
     large: bool = False,
+    retain_size: bool = False,
     **kwargs,
 ) -> "QtQtaLabel":
     """Make QLabel element."""
@@ -310,6 +311,8 @@ def make_qta_label(
         widget.setAlignment(alignment)
     if tooltip:
         widget.setToolTip(tooltip)
+    if retain_size:
+        set_retain_hidden_size_policy(widget)
     return widget
 
 
@@ -1432,28 +1435,37 @@ def get_font(font_size: int, font_weight: int = QFont.Normal) -> QFont:
 
 def set_sizer_policy(
     widget: Qw.QWidget,
-    min_size: ty.Union[QSize, ty.Tuple[int]],
-    max_size: ty.Union[QSize, ty.Tuple[int]],
+    min_size: ty.Union[QSize, ty.Tuple[int]] = None,
+    max_size: ty.Union[QSize, ty.Tuple[int]] = None,
     h_stretch: bool = False,
     v_stretch: bool = False,
 ):
     """Set sizer policy."""
-    size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Minimum, Qw.QSizePolicy.Preferred)
+    size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Policy.Minimum, Qw.QSizePolicy.Policy.Preferred)
     size_policy.setHorizontalStretch(h_stretch)
     size_policy.setVerticalStretch(v_stretch)
     size_policy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
     widget.setSizePolicy(size_policy)
-    widget.setMinimumSize(QSize(min_size))
-    widget.setMaximumSize(QSize(max_size))
+    if min_size:
+        widget.setMinimumSize(QSize(min_size))
+    if max_size:
+        widget.setMaximumSize(QSize(max_size))
 
 
-def set_expanding_sizer_policy(widget: Qw.QWidget, horz: bool = False, vert: bool = False):
+def set_expanding_sizer_policy(
+    widget: Qw.QWidget,
+    horz: bool = False,
+    vert: bool = False,
+    expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.MinimumExpanding,
+    not_expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Preferred,
+    h_stretch: bool = False,
+    v_stretch: bool = False,
+):
     """Set expanding policy."""
-    size_policy = Qw.QSizePolicy(
-        Qw.QSizePolicy.Preferred if not horz else Qw.QSizePolicy.MinimumExpanding,
-        Qw.QSizePolicy.Preferred if not vert else Qw.QSizePolicy.MinimumExpanding,
-    )
+    size_policy = Qw.QSizePolicy(not_expanding if not horz else expanding, not_expanding if not vert else expanding)
     widget.setSizePolicy(size_policy)
+    size_policy.setHorizontalStretch(h_stretch)
+    size_policy.setVerticalStretch(v_stretch)
 
 
 def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
@@ -1865,11 +1877,14 @@ def set_opacity(widget, disabled: bool, min_opacity: float = 0.5):
     widget.setGraphicsEffect(op)
 
 
-def make_spacer_widget() -> Qw.QWidget:
+def make_spacer_widget(
+    horz: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Preferred,
+    vert: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Expanding,
+) -> Qw.QWidget:
     """Make widget that fills space."""
     spacer = Qw.QWidget()
     spacer.setObjectName("toolbarSpacer")
-    spacer.setSizePolicy(Qw.QSizePolicy.Preferred, Qw.QSizePolicy.Expanding)
+    spacer.setSizePolicy(horz, vert)
     return spacer
 
 
