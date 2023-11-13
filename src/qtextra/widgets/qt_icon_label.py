@@ -1,10 +1,13 @@
 """QtIcon."""
+import typing as ty
+
 import qtawesome
 from qtpy.QtCore import QSize, Qt, Signal
 from qtpy.QtWidgets import QLabel
 
 from qtextra.assets import get_icon
 from qtextra.config import THEMES
+from qtextra.widgets._qta_mixin import QtaMixin
 
 
 class QtIconLabel(QLabel):
@@ -24,103 +27,22 @@ class QtIconLabel(QLabel):
         super().mousePressEvent(ev)
 
 
-class QtQtaLabel(QtIconLabel):
+class QtQtaLabel(QtIconLabel, QtaMixin):
     """Label."""
 
     _icon = None
-    _qta_data = None
 
     def __init__(
         self, *args, small: bool = False, large: bool = False, xlarge: bool = False, xxlarge: bool = False, **kwargs
     ):
         super().__init__("", *args, **kwargs)
         self._size = QSize(28, 28)
-        self.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
-        self.set_size(small, large, xlarge, xxlarge)
+        self.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
+        self.set_default_size(small, large, xlarge, xxlarge)
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
-    def set_qta(self, name: str, **kwargs):
-        """Set QtAwesome icon."""
-        name = get_icon(name)
-        self._qta_data = (name, kwargs)
-        icon = qtawesome.icon(name, **self._qta_data[1], color=THEMES.get_hex_color("icon"))
-        self.setIcon(icon)
-
-    def set_size(
-        self,
-        xsmall: bool = False,
-        small: bool = False,
-        large: bool = False,
-        xlarge: bool = False,
-        xxlarge: bool = False,
-    ):
-        """Set size of the icon."""
-        if xsmall:
-            self.set_xsmall()
-        elif small:
-            self.set_small()
-        elif large:
-            self.set_large()
-        elif xlarge:
-            self.set_xlarge()
-        elif xxlarge:
-            self.set_xxlarge()
-
-    def set_xsmall(self):
-        """Set large."""
-        self.setObjectName("xsmall_icon")
-        self.setIconSize(QSize(10, 10))
-
-    def set_small(self):
-        """Set large."""
-        self.setObjectName("small_icon")
-        self.setIconSize(QSize(20, 20))
-
-    def set_average(self) -> None:
-        """Set medium font."""
-        self.setObjectName("average_icon")
-        self.setIconSize(QSize(24, 24))
-
-    def set_medium(self) -> None:
-        """Set medium font."""
-        self.setObjectName("medium_icon")
-        self.setIconSize(QSize(28, 28))
-
-    def set_large(self):
-        """Set large."""
-        self.setObjectName("large_icon")
-        self.setIconSize(QSize(40, 40))
-
-    def set_xlarge(self):
-        """Set large."""
-        self.setObjectName("xlarge_icon")
-        self.setIconSize(QSize(60, 60))
-
-    def set_xxlarge(self):
-        """Set large."""
-        self.setObjectName("xxlarge_icon")
-        self.setIconSize(QSize(80, 80))
-
-    def set_xxxlarge(self):
-        """Set large."""
-        self.setObjectName("xxxlarge_icon")
-        self.setIconSize(QSize(120, 120))
-
-    def _update_qta(self):
-        """Update qta icon."""
-        if self._qta_data:
-            name, kwargs = self._qta_data
-            self.set_qta(name, **kwargs)
-
-    def setIcon(self, _icon):
-        """
-        set a new icon().
-
-        Parameters
-        ----------
-        _icon: qtawesome.icon
-            icon to set
-        """
+    def setIcon(self, _icon) -> None:
+        """Update icon."""
         self._icon = _icon
         self.setPixmap(_icon.pixmap(self._size))
 
@@ -148,11 +70,11 @@ class QtSeverityLabel(QtQtaLabel):
 
     STATES = ("debug", "info", "success", "warning", "error", "critical")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._severity: str = "info"
         self.severity = "info"
-        self.set_small()
+        self.set_xsmall()
 
     @property
     def severity(self) -> str:

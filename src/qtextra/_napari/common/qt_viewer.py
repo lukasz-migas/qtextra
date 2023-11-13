@@ -1,11 +1,13 @@
 """Qt widget that embeds the canvas."""
-# Third-party imports
 from typing import Tuple
+from weakref import WeakSet
 
 import numpy as np
 from napari._qt.utils import QImg2array, circle_pixmap, square_pixmap
+from napari.components.overlays import CanvasOverlay, Overlay, SceneOverlay
 from napari.utils._proxies import ReadOnlyWrapper
 from napari.utils.interactions import (
+    mouse_double_click_callbacks,
     mouse_move_callbacks,
     mouse_press_callbacks,
     mouse_release_callbacks,
@@ -18,6 +20,7 @@ from qtpy.QtWidgets import QWidget
 
 from qtextra._napari.common._utilities import crosshair_pixmap
 from qtextra._napari.common._vispy.vispy_canvas import VispyCanvas
+from qtextra._napari.common._vispy.visual import create_vispy_overlay
 
 
 class QtViewerBase(QWidget):
@@ -40,9 +43,12 @@ class QtViewerBase(QWidget):
         Napari viewer containing the rendered scene, layers, and controls.
     """
 
+    _instances = WeakSet()
+
     def __init__(self, view, viewer, parent=None, disable_controls: bool = False, **kwargs):
         super().__init__(parent=parent)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        self._instances.add(self)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setAcceptDrops(False)
         QCoreApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
 
@@ -59,6 +65,7 @@ class QtViewerBase(QWidget):
 
         # This dictionary holds the corresponding vispy visual for each layer
         self.layer_to_visual = {}
+        self.overlay_to_visual = {}
 
         self._cursors = {
             "cross": Qt.CrossCursor,
@@ -100,6 +107,26 @@ class QtViewerBase(QWidget):
         # add extra initialisation
         self._post_init()
 
+    @property
+    def grid_lines(self):
+        """Grid lines."""
+        return self.overlay_to_visual["grid_lines"]
+
+    @property
+    def text_overlay(self):
+        """Grid lines."""
+        return self.overlay_to_visual["text_overlay"]
+
+    def _add_overlay(self, overlay: Overlay) -> None:
+        vispy_overlay = create_vispy_overlay(overlay, viewer=self.viewer)
+
+        if isinstance(overlay, CanvasOverlay):
+            vispy_overlay.node.parent = self.view
+        elif isinstance(overlay, SceneOverlay):
+            vispy_overlay.node.parent = self.view.scene
+
+        self.overlay_to_visual[overlay] = vispy_overlay
+
     def __getattr__(self, name):
         return object.__getattribute__(self, name)
 
@@ -115,8 +142,10 @@ class QtViewerBase(QWidget):
             vsync=True,
             parent=self,
             size=self.viewer._canvas_size[::-1],
+            autoswap=True,
         )
         self.canvas.events.reset_view.connect(self.viewer.reset_view)
+        self.canvas.events.mouse_double_click.connect(self.on_mouse_double_click)
         self.canvas.connect(self.on_mouse_move)
         self.canvas.connect(self.on_mouse_press)
         self.canvas.connect(self.on_mouse_release)
@@ -146,7 +175,7 @@ class QtViewerBase(QWidget):
 
     def _set_view(self):
         """Set view."""
-        self.view = self.canvas.central_widget.add_view()
+        self.view = self.canvas.central_widget.add_view(border_width=0)
 
     def _post_init(self):
         """Complete initialization with post-init events."""
@@ -164,24 +193,13 @@ class QtViewerBase(QWidget):
         else:
             self.controls.setMaximumWidth(220)
 
-    def _on_active_change(self, _event=None):
-        """When active layer changes change keymap handler.
-
-        Parameters
-        ----------
-        _event : napari.utils.event.Event
-            The napari event that triggered this method.
-        """
-        active_layer = self.viewer.layers.selection.active
-        if active_layer in self._key_map_handler.keymap_providers:
-            self._key_map_handler.keymap_providers.remove(active_layer)
-
-        if active_layer is not None:
-            self._key_map_handler.keymap_providers.insert(0, active_layer)
-
-        # If a QtAboutKeyBindings exists, update its text.
-        if self._key_bindings_dialog is not None:
-            self._key_bindings_dialog.update_active_layer()
+    def _on_active_change(self):
+        """When active layer changes change keymap handler."""
+        self._key_map_handler.keymap_providers = (
+            [self.viewer]
+            if self.viewer.layers.selection.active is None
+            else [self.viewer.layers.selection.active, self.viewer]
+        )
 
     def _on_add_layer_change(self, event):
         """When a layer is added, set its parent and order.
@@ -213,22 +231,28 @@ class QtViewerBase(QWidget):
             The napari event that triggered this method.
         """
         layer = event.value
+        layer.events.visible.disconnect(self._reorder_layers)
         vispy_layer = self.layer_to_visual[layer]
         vispy_layer.close()
         del vispy_layer
-        self._reorder_layers(None)
+        del self.layer_to_visual[layer]
+        self._reorder_layers()
 
-    def _reorder_layers(self, _event):
-        """When the list is reordered, propagate changes to draw order.
-
-        Parameters
-        ----------
-        _event : napari.utils.event.Event
-            The napari event that triggered this method.
-        """
+    def _reorder_layers(self) -> None:
+        """When the list is reordered, propagate changes to draw order."""
+        first_visible_found = False
         for i, layer in enumerate(self.viewer.layers):
             vispy_layer = self.layer_to_visual[layer]
             vispy_layer.order = i
+
+            # the bottommost visible layer needs special treatment for blending
+            if layer.visible and not first_visible_found:
+                vispy_layer.first_visible = True
+                first_visible_found = True
+            else:
+                vispy_layer.first_visible = False
+            vispy_layer._on_blending_change()
+
         self.canvas._draw_order.clear()
         self.canvas.update()
 
@@ -261,6 +285,16 @@ class QtViewerBase(QWidget):
             imsave(path, img)  # scikit-image imsave method
         return img
 
+    def clipboard(self):
+        """Take a screenshot of the currently displayed viewer and copy the image to the clipboard."""
+        from qtextra.helpers import add_flash_animation
+
+        img = self.canvas.native.grabFramebuffer()
+
+        cb = QGuiApplication.clipboard()
+        cb.setImage(img)
+        add_flash_animation(self)
+
     def _on_interactive(self, _event):
         """Link interactive attributes of view and viewer.
 
@@ -274,20 +308,20 @@ class QtViewerBase(QWidget):
     def _on_cursor(self, _event=None):
         """Set the appearance of the mouse cursor."""
         cursor = self.viewer.cursor.style
-        # Scale size by zoom if needed
-        if self.viewer.cursor.scaled:
-            size = self.viewer.cursor.size * self.viewer.camera.zoom
-        else:
+        if cursor in {"square", "circle"}:
+            # Scale size by zoom if needed
             size = self.viewer.cursor.size
+            if self.viewer.cursor.scaled:
+                size *= self.viewer.camera.zoom
 
-        if cursor == "square":
+            size = int(size)
             # make sure the square fits within the current canvas
-            if size < 8 or size > (min(*self.viewer.window._qt_viewer.canvas.size) - 4):
+            if size < 8 or size > (min(*self.canvas.size) - 4):
                 q_cursor = self._cursors["cross"]
+            elif cursor == "circle":
+                q_cursor = QCursor(circle_pixmap(size))
             else:
                 q_cursor = QCursor(square_pixmap(size))
-        elif cursor == "circle":
-            q_cursor = QCursor(circle_pixmap(size))
         elif cursor == "crosshair":
             q_cursor = QCursor(crosshair_pixmap())
         else:
@@ -378,7 +412,7 @@ class QtViewerBase(QWidget):
         event.dims_point = list(self.viewer.dims.point)
 
         # Put a read only wrapper on the event
-        event = ReadOnlyWrapper(event)
+        event = ReadOnlyWrapper(event, exceptions=("handled",))
         mouse_callbacks(self.viewer, event)
 
         layer = self.viewer.layers.selection.active
@@ -410,30 +444,6 @@ class QtViewerBase(QWidget):
             position_world[d] = position_world_slice[i]
         return tuple(position_world)
 
-    def on_draw(self, _event):
-        """Called whenever the canvas is drawn.
-
-        This is triggered from vispy whenever new data is sent to the canvas or
-        the camera is moved and is connected in the `QtViewer`.
-        """
-        for layer in self.viewer.layers:
-            if layer.ndim <= self.viewer.dims.ndim:
-                layer._update_draw(
-                    scale_factor=1 / self.viewer.camera.zoom,
-                    corner_pixels_displayed=self._canvas_corners_in_world[:, layer._displayed_axes],
-                    shape_threshold=self.canvas.size,
-                )
-
-    def clipboard(self):
-        """Take a screenshot of the currently displayed viewer and copy the image to the clipboard."""
-        from qtextra.helpers import add_flash_animation
-
-        img = self.canvas.native.grabFramebuffer()
-
-        cb = QGuiApplication.clipboard()
-        cb.setImage(img)
-        add_flash_animation(self)
-
     def on_mouse_wheel(self, event):
         """Called whenever mouse wheel activated in canvas.
 
@@ -443,6 +453,26 @@ class QtViewerBase(QWidget):
             The vispy event that triggered this method.
         """
         self._process_mouse_event(mouse_wheel_callbacks, event)
+
+    def on_mouse_double_click(self, event):
+        """Called whenever a mouse double-click happen on the canvas
+
+        Parameters
+        ----------
+        event : vispy.event.Event
+            The vispy event that triggered this method. The `event.type` will always be `mouse_double_click`
+
+        Notes
+        -----
+        Note that this triggers in addition to the usual mouse press and mouse release.
+        Therefore a double click from the user will likely triggers the following event in sequence:
+
+             - mouse_press
+             - mouse_release
+             - mouse_double_click
+             - mouse_release
+        """
+        self._process_mouse_event(mouse_double_click_callbacks, event)
 
     def on_mouse_press(self, event):
         """Called whenever mouse pressed in canvas.
@@ -473,6 +503,31 @@ class QtViewerBase(QWidget):
             The vispy event that triggered this method.
         """
         self._process_mouse_event(mouse_release_callbacks, event)
+
+    def on_draw(self, event):
+        """Called whenever the canvas is drawn.
+
+        This is triggered from vispy whenever new data is sent to the canvas or
+        the camera is moved and is connected in the `QtViewer`.
+        """
+        # The canvas corners in full world coordinates (i.e. across all layers).
+        canvas_corners_world = self._canvas_corners_in_world
+        for layer in self.viewer.layers:
+            # The following condition should mostly be False. One case when it can
+            # be True is when a callback connected to self.viewer.dims.events.ndisplay
+            # is executed before layer._slice_input has been updated by another callback
+            # (e.g. when changing self.viewer.dims.ndisplay from 3 to 2).
+            displayed_sorted = sorted(layer._slice_input.displayed)
+            nd = len(displayed_sorted)
+            if nd > self.viewer.dims.ndisplay:
+                displayed_axes = displayed_sorted
+            else:
+                displayed_axes = self.viewer.dims.displayed[-nd:]
+            layer._update_draw(
+                scale_factor=1 / self.viewer.camera.zoom,
+                corner_pixels_displayed=canvas_corners_world[:, displayed_axes],
+                shape_threshold=self.canvas.size,
+            )
 
     def keyPressEvent(self, event):
         """Called whenever a key is pressed.

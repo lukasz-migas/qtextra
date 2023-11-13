@@ -1,4 +1,5 @@
 """Tool dialog to display layer controls."""
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QVBoxLayout
 
 from qtextra.widgets.qt_dialog import QtFramelessTool
@@ -10,6 +11,7 @@ class DialogNapariControls(QtFramelessTool):
     def __init__(self, qt_viewer):
         self.qt_viewer = qt_viewer
         super().__init__(parent=qt_viewer)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore
 
         self.setMinimumHeight(600)
 

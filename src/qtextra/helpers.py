@@ -46,10 +46,10 @@ def make_form_layout(
 ) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
-    layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)  # type: ignore[attr-defined]
-    layout.setLabelAlignment(Qt.AlignRight)  # type: ignore[attr-defined]
-    layout.setFormAlignment(Qt.AlignLeft | Qt.AlignTop)  # type: ignore[attr-defined]
-    layout.setRowWrapPolicy(Qw.QFormLayout.DontWrapRows)  # type: ignore[attr-defined]
+    layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
+    layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+    layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+    layout.setRowWrapPolicy(Qw.QFormLayout.DontWrapRows)
     for widget_ in widgets:
         layout.addRow(*widget_)
     if stretch_after:
@@ -290,6 +290,7 @@ def make_qta_label(
     average: bool = False,
     medium: bool = False,
     large: bool = False,
+    retain_size: bool = False,
     **kwargs,
 ) -> QtQtaLabel:
     """Make QLabel element."""
@@ -313,6 +314,8 @@ def make_qta_label(
         widget.setAlignment(alignment)
     if tooltip:
         widget.setToolTip(tooltip)
+    if retain_size:
+        set_retain_hidden_size_policy(widget)
     return widget
 
 
@@ -814,6 +817,12 @@ def make_qta_btn(
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     object_name: str = "",
     retain_size: bool = False,
+    checked: bool = False,
+    func_menu: ty.Optional[ty.Callable] = None,
+    checked_icon_name: str = "",
+    properties: dict[str, ty.Any] = None,
+    label: str = "",
+    standout: bool = False,
     **kwargs,
 ) -> QtImagePushButton:
     """Make button with qtawesome icon."""
@@ -821,16 +830,7 @@ def make_qta_btn(
 
     widget = QtImagePushButton(parent=parent)
     widget.set_qta(icon_name, **kwargs)
-    if small:
-        widget.set_small()
-    elif normal:
-        widget.set_normal()
-    elif average:
-        widget.set_average()
-    elif medium:
-        widget.set_medium()
-    elif large:
-        widget.set_large()
+    widget.set_default_size(small=small, normal=normal, average=average, medium=medium, large=large)
     if size and len(size) == 2:
         widget.set_size(size)
     if tooltip:
@@ -839,12 +839,26 @@ def make_qta_btn(
         widget.setFlat(flat)
     if checkable:
         widget.setCheckable(checkable)
-        if object_name:
-            widget.setObjectName(object_name)
+        widget.setChecked(checked)
+    if checked_icon_name:
+        widget.set_toggle_qta(icon_name, checked_icon_name, **kwargs)
+    if object_name:
+        widget.setObjectName(object_name)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
+    if func_menu:
+        widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        widget.customContextMenuRequested.connect(func_menu)
     if retain_size:
         set_retain_hidden_size_policy(widget)
+    if properties:
+        for key, value in properties.items():
+            widget.setProperty(key, value)
+        polish_widget(widget)
+    if label:
+        widget.setText(label)
+    if standout:
+        widget.setProperty("standout", True)
     return widget
 
 
@@ -1053,13 +1067,14 @@ def make_slider(
     default: float = 1,
     value: ty.Optional[float] = None,
     expand: bool = True,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     **kwargs,
 ) -> Qw.QSlider:
     """Make slider."""
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical  # type: ignore[attr-defined]
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
     widget = Qw.QSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1069,6 +1084,62 @@ def make_slider(
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+    return widget
+
+
+def make_slider_with_text(
+    parent: ty.Optional[Qw.QWidget],
+    min_value: int = 0,
+    max_value: int = 100,
+    step_size: int = 1,
+    value: int = 1,
+    orientation="horizontal",
+    tooltip: str = None,
+    focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+) -> Qw.QSlider:
+    """Make QSlider."""
+    from superqt import QLabeledSlider
+
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
+    widget = QLabeledSlider(orientation, parent)
+    widget.setRange(min_value, max_value)
+    widget.setValue(value)
+    widget.setPageStep(step_size)
+    widget.setFocusPolicy(focus_policy)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
+    return widget
+
+
+def make_double_slider_with_text(
+    parent: ty.Optional[Qw.QWidget],
+    min_value: float = 0,
+    max_value: float = 100,
+    step_size: float = 1,
+    value: float = 1,
+    n_decimals: int = 1,
+    orientation="horizontal",
+    tooltip: str = None,
+    focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+) -> Qw.QSlider:
+    """Make QSlider."""
+    from superqt import QLabeledDoubleSlider
+
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
+    widget = QLabeledDoubleSlider(orientation, parent)
+    widget.setRange(min_value, max_value)
+    widget.setDecimals(n_decimals)
+    widget.setValue(value)
+    widget.setPageStep(step_size)
+    widget.setFocusPolicy(focus_policy)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1088,7 +1159,7 @@ def make_labelled_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = Qt.Horizontal if orientation.lower() else Qt.Vertical  # type: ignore[attr-defined]
+    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
     widget = QLabeledSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1113,6 +1184,7 @@ def make_int_spin_box(
     suffix: ty.Optional[str] = None,
     expand: bool = True,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    keyboard_tracking: bool = None,
     **kwargs,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""
@@ -1124,7 +1196,9 @@ def make_int_spin_box(
     widget.setMaximum(maximum)
     widget.setValue(value)
     widget.setSingleStep(step_size)
-    widget.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+    widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    if keyboard_tracking is not None:
+        widget.setKeyboardTracking(keyboard_tracking)
     if tooltip:
         widget.setToolTip(tooltip)
     if prefix:
@@ -1163,7 +1237,7 @@ def make_double_spin_box(
     widget.setMaximum(maximum)
     widget.setValue(value)
     widget.setSingleStep(step_size)
-    widget.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+    widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
     if prefix:
         widget.setPrefix(prefix)
     if suffix:
@@ -1362,6 +1436,13 @@ def update_widget_style(widget: Qw.QWidget, object_name: str):
     widget.style().polish(widget)
 
 
+def update_property(widget: Qw.QWidget, prop: str, value: ty.Any) -> None:
+    """Update properties of widget to update style."""
+    widget.setProperty(prop, value)
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
+
+
 def polish_widget(*widget: Qw.QWidget):
     """Update widget style."""
     for widget_ in widget:
@@ -1388,28 +1469,38 @@ def get_font(font_size: int, font_weight: int = QFont.Normal) -> QFont:
 
 def set_sizer_policy(
     widget: Qw.QWidget,
-    min_size: ty.Union[QSize, ty.Tuple[int]],
-    max_size: ty.Union[QSize, ty.Tuple[int]],
+    min_size: ty.Union[QSize, ty.Tuple[int]] = None,
+    max_size: ty.Union[QSize, ty.Tuple[int]] = None,
     h_stretch: bool = False,
     v_stretch: bool = False,
 ):
     """Set sizer policy."""
-    size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Minimum, Qw.QSizePolicy.Preferred)  # type: ignore[attr-defined]
+    size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Policy.Minimum, Qw.QSizePolicy.Policy.Preferred)
     size_policy.setHorizontalStretch(h_stretch)
     size_policy.setVerticalStretch(v_stretch)
     size_policy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
     widget.setSizePolicy(size_policy)
-    widget.setMinimumSize(QSize(min_size))
-    widget.setMaximumSize(QSize(max_size))
+    if min_size:
+        widget.setMinimumSize(QSize(min_size))
+    if max_size:
+        widget.setMaximumSize(QSize(max_size))
 
 
-def set_expanding_sizer_policy(widget: Qw.QWidget, horz: bool = False, vert: bool = False):
+def set_expanding_sizer_policy(
+    widget: Qw.QWidget,
+    horz: bool = False,
+    vert: bool = False,
+    expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.MinimumExpanding,
+    not_expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Preferred,
+    h_stretch: bool = False,
+    v_stretch: bool = False,
+):
     """Set expanding policy."""
-    size_policy = Qw.QSizePolicy(
-        Qw.QSizePolicy.Preferred if not horz else Qw.QSizePolicy.MinimumExpanding,  # type: ignore[attr-defined]
-        Qw.QSizePolicy.Preferred if not vert else Qw.QSizePolicy.MinimumExpanding,  # type: ignore[attr-defined]
-    )
+
+    size_policy = Qw.QSizePolicy(not_expanding if not horz else expanding, not_expanding if not vert else expanding)
     widget.setSizePolicy(size_policy)
+    size_policy.setHorizontalStretch(h_stretch)
+    size_policy.setVerticalStretch(v_stretch)
 
 
 def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
@@ -1430,8 +1521,8 @@ def make_group_box(parent, title: str, is_flat: bool = True) -> Qw.QGroupBox:
 def make_labelled_h_line(parent, title: str) -> Qw.QHBoxLayout:
     """Make labelled line - similar to flat version of the group box."""
     layout = Qw.QHBoxLayout()
-    layout.addWidget(make_label(parent, title), alignment=Qt.AlignVCenter)
-    layout.addWidget(make_h_line(parent), stretch=1, alignment=Qt.AlignVCenter)
+    layout.addWidget(make_label(parent, title), alignment=Qt.AlignmentFlag.AlignVCenter)
+    layout.addWidget(make_h_line(parent), stretch=1, alignment=Qt.AlignmentFlag.AlignVCenter)
     return layout
 
 
@@ -1663,7 +1754,7 @@ def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True
     dlg = Qw.QColorDialog(color, parent=parent)
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
-    new_color: ty.Optional[tuple[QColor, str, np.ndarray]] = None
+    new_color: ty.Optional[ty.Union[str, np.ndarray]] = None
     if dlg.exec_():
         new_color = dlg.currentColor()
         if as_hex:
@@ -1769,6 +1860,13 @@ def event_hook_removed() -> None:
             QtCore.pyqtRestoreInputHook()
 
 
+def enable_with_opacity(
+    obj, widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]], enabled: bool, min_opacity: float = 0.5
+):
+    """Enable widgets."""
+    disable_with_opacity(obj, widget_list, not enabled, min_opacity)
+
+
 def disable_with_opacity(
     obj: Qw.QWidget,
     widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]],
@@ -1814,11 +1912,14 @@ def set_opacity(widget, disabled: bool, min_opacity: float = 0.5) -> None:
     widget.setGraphicsEffect(op)
 
 
-def make_spacer_widget() -> Qw.QWidget:
+def make_spacer_widget(
+    horz: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Preferred,
+    vert: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Expanding,
+) -> Qw.QWidget:
     """Make widget that fills space."""
     spacer = Qw.QWidget()
     spacer.setObjectName("toolbarSpacer")
-    spacer.setSizePolicy(Qw.QSizePolicy.Preferred, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
+    spacer.setSizePolicy(horz, vert)
     return spacer
 
 
@@ -1987,12 +2088,12 @@ def make_progress_widget(
 
     if with_layout:
         progress_layout = Qw.QHBoxLayout(progress_widget)
-        progress_layout.addWidget(progress_bar, stretch=True, alignment=Qt.AlignVCenter)
+        progress_layout.addWidget(progress_bar, stretch=True, alignment=Qt.AlignmentFlag.AlignVCenter)
     else:
         progress_layout = None
     if with_cancel:
         cancel_btn = make_qta_btn(progress_widget, "cross_full", tooltip=tooltip)
-        progress_layout.addWidget(cancel_btn, alignment=Qt.AlignVCenter)
+        progress_layout.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
     else:
         cancel_btn = None
     return progress_layout, progress_widget, progress_bar, cancel_btn

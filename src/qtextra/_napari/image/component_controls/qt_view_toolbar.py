@@ -159,17 +159,23 @@ class QtViewToolbar(QWidget):
             lambda x: self.tools_scalebar_btn.setChecked(self.qt_viewer.viewer.scale_bar.visible)
         )
 
-        self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-        self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
-        self.qt_viewer.viewer.grid_lines.events.visible.connect(
-            lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-        )
+        try:
+            self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
+            self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
+            self.qt_viewer.viewer.grid_lines.events.visible.connect(
+                lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
+            )
+        except KeyError:
+            pass
 
-        self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
-        self.tools_colorbar_btn.clicked.connect(self._toggle_color_bar_visible)
-        self.qt_viewer.viewer.color_bar.events.visible.connect(
-            lambda x: self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
-        )
+        try:
+            self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
+            self.tools_colorbar_btn.clicked.connect(self._toggle_color_bar_visible)
+            self.qt_viewer.viewer.color_bar.events.visible.connect(
+                lambda x: self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)
+            )
+        except KeyError:
+            pass
 
         self.tools_text_btn.setChecked(self.qt_viewer.viewer.text_overlay.visible)
         self.tools_text_btn.clicked.connect(self._toggle_text_visible)
@@ -201,7 +207,7 @@ class QtViewToolbar(QWidget):
 
     def on_open_crosshair_config(self):
         """Open text config."""
-        from qtextra._napari.image.component_controls.qt_crosshair_controls import QtCrosshairControls
+        from qtextra._napari.common.component_controls.qt_crosshair_controls import QtCrosshairControls
 
         dlg = QtCrosshairControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
@@ -215,14 +221,14 @@ class QtViewToolbar(QWidget):
 
     def on_open_scalebar_config(self):
         """Open scalebar config."""
-        from qtextra._napari.image.component_controls.qt_scalebar_controls import QtScaleBarControls
+        from qtextra._napari.common.component_controls.qt_scalebar_controls import QtScaleBarControls
 
         dlg = QtScaleBarControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
 
     def on_open_colorbar_config(self):
         """Open colorbar config."""
-        from qtextra._napari.image.component_controls.qt_colorbar_controls import QtColorBarControls
+        from qtextra._napari.common.component_controls.qt_colorbar_controls import QtColorBarControls
 
         dlg = QtColorBarControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()

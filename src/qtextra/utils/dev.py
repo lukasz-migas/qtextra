@@ -3,6 +3,7 @@ import os
 import sys
 import typing as ty
 
+from loguru import logger
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
 from qtpy.QtWidgets import QApplication, QMainWindow, QWidget
 
@@ -44,6 +45,7 @@ def qapplication(test_time: int = 3):
     import faulthandler
 
     disable_warnings()
+    logger.enable("qtextra")
 
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
     if hasattr(Qt, "AA_EnableHighDpiScaling"):

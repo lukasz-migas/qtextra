@@ -27,13 +27,13 @@ class LayerList(_LayerList):
             step=self._get_step_size(extent_list),
         )
 
-    def toggle_selected_editable(self):
+    def toggle_selected_editable(self) -> None:
         """Toggle editable of selected layers."""
         for layer in self:
             if layer in self.selection:
                 layer.editable = not layer.editable
 
-    def remove_all(self):
+    def remove_all(self) -> None:
         """Remove all layers."""
         self.select_all()
         self.remove_selected()

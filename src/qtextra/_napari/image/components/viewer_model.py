@@ -1,27 +1,38 @@
 """Viewer model."""
+from __future__ import annotations
+
 import typing as ty
 
+import napari.layers as n_layers
 import numpy as np
 from napari import Viewer as NapariViewer
 from napari.components._viewer_mouse_bindings import dims_scroll
-from napari.components.axes import Axes
 from napari.components.camera import Camera
-from napari.components.overlays import Overlays
-from napari.components.scale_bar import ScaleBar
-from napari.components.text_overlay import TextOverlay
-from napari.layers import Layer
+from napari.components.overlays import AxesOverlay, BrushCircleOverlay, ScaleBarOverlay
+from napari.components.overlays.text import TextOverlay
 from napari.types import PathOrPaths
 from napari.utils._register import create_func as create_add_method
 from napari.utils.events import Event
 from pydantic import Field
 
+from qtextra._napari.common.components.overlays.color_bar import ColorBarOverlay
+from qtextra._napari.common.components.overlays.crosshair import CrossHairOverlay
 from qtextra._napari.common.components.viewer_model import ViewerModelBase
-from qtextra._napari.image import layers
+
+# from qtextra._napari.image import layers
 from qtextra._napari.image.components._viewer_mouse_bindings import crosshair
-from qtextra._napari.image.components.colorbar import ColorBar
-from qtextra._napari.image.components.crosshair import CrossHair
+
+DEFAULT_OVERLAYS = {
+    "scale_bar": ScaleBarOverlay,
+    "text": TextOverlay,
+    "axes": AxesOverlay,
+    "brush_circle": BrushCircleOverlay,
+    "cross_hair": CrossHairOverlay,
+    "color_bar": ColorBarOverlay,
+}
 
 
+# noinspection PyMissingOrEmptyDocstring
 class ViewerModel(ViewerModelBase):
     """Viewer containing the rendered scene, layers, and controlling elements
     including dimension sliders, and control bars for color limits.
@@ -42,15 +53,16 @@ class ViewerModel(ViewerModelBase):
 
     # Using allow_mutation=False means these attributes aren't settable and don't
     # have an event emitter associated with them
-    axes: Axes = Field(default_factory=Axes, allow_mutation=False)
     camera: Camera = Field(default_factory=Camera, allow_mutation=False)
-    scale_bar: ScaleBar = Field(default_factory=ScaleBar, allow_mutation=False)
-    color_bar: ColorBar = Field(default_factory=ColorBar, allow_mutation=False)
-    text_overlay: TextOverlay = Field(default_factory=TextOverlay, allow_mutation=False)
-    cross_hair: CrossHair = Field(default_factory=CrossHair, allow_mutation=False)
-    overlays: Overlays = Field(default_factory=Overlays, allow_mutation=False)
 
-    def __init__(self, title="qtextra", ndisplay=2, order=(), axis_labels=(), **kwargs):
+    def __init__(
+        self,
+        title: str = "qtextra",
+        ndisplay: int = 2,
+        order: ty.Tuple[int, ...] = (),
+        axis_labels: ty.Tuple[str, ...] = (),
+        **kwargs: ty.Any,
+    ):
         # allow extra attributes during model initialization, useful for mixins
         super().__init__(title=title, ndisplay=ndisplay, order=order, axis_labels=axis_labels)
 
@@ -61,7 +73,35 @@ class ViewerModel(ViewerModelBase):
         if kwargs.get("allow_crosshair", True):
             self.mouse_drag_callbacks.append(crosshair)
 
-    def _new_labels(self, name: str = None):
+        self._overlays.update({k: v() for k, v in DEFAULT_OVERLAYS.items()})
+        NapariViewer._instances.add(self)
+
+    # simple properties exposing overlays for backward compatibility
+    @property
+    def axes(self) -> AxesOverlay:
+        return self._overlays["axes"]
+
+    @property
+    def scale_bar(self) -> ScaleBarOverlay:
+        return self._overlays["scale_bar"]
+
+    @property
+    def text_overlay(self) -> TextOverlay:
+        return self._overlays["text"]
+
+    @property
+    def cross_hair(self) -> CrossHairOverlay:
+        return self._overlays["cross_hair"]
+
+    @property
+    def color_bar(self) -> ColorBarOverlay:
+        return self._overlays["color_bar"]
+
+    @property
+    def _brush_circle_overlay(self) -> BrushCircleOverlay:
+        return self._overlays["brush_circle"]
+
+    def _new_labels(self, name: str | None = None) -> n_layers.Labels:
         """Create new labels layer filling full world coordinates space."""
         extent = self.layers.extent.world
         scale = self.layers.extent.step
@@ -69,9 +109,9 @@ class ViewerModel(ViewerModelBase):
         corner = extent[0] + 0.5 * scale
         shape = [np.round(s / sc).astype("int") + 1 if s > 0 else 1 for s, sc in zip(scene_size, scale)]
         empty_labels = np.zeros(shape, dtype=int)
-        self.add_labels(empty_labels, name=name, translate=np.array(corner), scale=scale)
+        return self.add_labels(empty_labels, name=name, translate=np.array(corner), scale=scale)
 
-    def new_labels_for_image(self, layers, name: str = None):
+    def new_labels_for_image(self, layers, name: str | None = None) -> n_layers.Labels:
         """Create new labels layer filling full world coordinates space."""
         extent = self.layers.extent.world
         scale = self.layers.extent.step
@@ -79,11 +119,19 @@ class ViewerModel(ViewerModelBase):
         corner = extent[0] + 0.5 * self.layers.extent.step
         shape = [np.round(s / sc).astype("int") if s > 0 else 1 for s, sc in zip(scene_size, scale)]
         empty_labels = np.zeros(shape, dtype=int)
-        self.add_labels(empty_labels, name=name, translate=np.array(corner), scale=scale)
+        return self.add_labels(empty_labels, name=name, translate=np.array(corner), scale=scale)
 
-    def add_image(self, *args, **kwargs):
+    def add_image(self, *args, **kwargs) -> n_layers.Image:
         """Add image."""
         return NapariViewer.add_image(self, *args, **kwargs)
+
+    def add_shapes(self, *args, **kwargs) -> n_layers.Shapes:
+        """Add image."""
+        return NapariViewer.add_shapes(self, *args, **kwargs)
+
+    def add_labels(self, *args, **kwargs) -> n_layers.Shapes:
+        """Add image."""
+        return NapariViewer.add_labels(self, *args, **kwargs)
 
     def open(
         self,
@@ -92,8 +140,8 @@ class ViewerModel(ViewerModelBase):
         stack: bool = False,
         plugin: ty.Optional[str] = None,
         layer_type: ty.Optional[str] = None,
-        **kwargs,
-    ) -> ty.List[Layer]:
+        **kwargs: ty.Any,
+    ) -> ty.List[n_layers.Layer]:
         """Open a path or list of paths with plugins, and add layers to viewer.
 
         A list of paths will be handed one-by-one to the napari_get_reader hook
@@ -139,7 +187,7 @@ class ViewerModel(ViewerModelBase):
         kwargs: ty.Optional[dict] = None,
         plugin: ty.Optional[str] = None,
         layer_type: ty.Optional[str] = None,
-    ) -> ty.List[Layer]:
+    ) -> ty.List[n_layers.Layer]:
         """Load a path or a list of paths into the viewer using plugins.
 
         This function is mostly called from self.open_path, where the ``stack``
@@ -160,7 +208,7 @@ class ViewerModel(ViewerModelBase):
         data,
         meta: ty.Dict[str, ty.Any] = None,
         layer_type: ty.Optional[str] = None,
-    ) -> ty.List[Layer]:
+    ) -> ty.List[n_layers.Layer]:
         """Add arbitrary layer data to the viewer.
 
         Primarily intended for usage by reader plugin hooks.
@@ -197,6 +245,6 @@ class ViewerModel(ViewerModelBase):
         return NapariViewer._add_layer_from_data(self, data, meta=meta, layer_type=layer_type)
 
 
-for _layer in (layers.Labels, layers.Shapes, layers.Points):
+for _layer in (n_layers.Vectors, n_layers.Shapes, n_layers.Points, n_layers.Surface):
     func = create_add_method(_layer)
     setattr(ViewerModel, func.__name__, func)

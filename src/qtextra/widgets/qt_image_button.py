@@ -3,31 +3,36 @@ import typing as ty
 
 import qtawesome
 from qtpy.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QSize, Qt, Signal, Slot
-from qtpy.QtGui import QBrush, QColor, QPainter
+from qtpy.QtGui import QBrush, QColor, QFontMetrics, QPainter
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QHBoxLayout, QPushButton, QToolTip, QVBoxLayout
+from superqt._eliding_label import QElidingLabel
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
 from qtextra.config import THEMES
+from qtextra.widgets._qta_mixin import QtaMixin
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
 
 
-class QtImagePushButton(QPushButton):
+class QtImagePushButton(QPushButton, QtaMixin):
     """Image button."""
 
     evt_click = Signal(QPushButton)
     evt_right_click = Signal(QPushButton)
     has_right_click: bool = False
 
-    _qta_data = None
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
         super().__init__(*args, **kwargs)
         self.setProperty("transparent", False)
         self.transparent = False
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
+
+    def setText(self, text: str) -> None:
+        """Override text."""
+        self.setProperty("with_text", True)
+        super().setText(text)
 
     def set_transparent(self, transparent: bool) -> None:
         """Set transparency."""
@@ -44,67 +49,28 @@ class QtImagePushButton(QPushButton):
             self.on_click()
         super().mousePressEvent(evt)
 
-    def set_qta(self, name: str, **kwargs) -> None:
-        """Set QtAwesome icon."""
+    def set_toggle_qta(self, name: str, checked_name: str, connect: bool = True, **kwargs: ty.Any) -> None:
+        """Set changeable icon."""
         name = get_icon(name)
+        checked_name = get_icon(checked_name)
         self._qta_data = (name, kwargs)
+        self._checked_qta_data = (checked_name, kwargs)
         color_ = kwargs.pop("color", None)
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
-        icon = qtawesome.icon(name, **self._qta_data[1], color=color)
+        icon = qtawesome.icon(
+            checked_name if self.isChecked() else name,
+            **self._checked_qta_data[1] if self.isChecked() else self._qta_data[1],
+            color=color,
+        )
         self.setIcon(icon)
+        if connect:
+            self.toggled.connect(self._on_toggle)
 
-    def set_size(self, size: ty.Tuple[int, int]) -> None:
-        """Set maximum size of the icon."""
-        size = QSize(*size)
-        self.setMinimumSize(size)
-        self.setMaximumSize(size)
-        self.setIconSize(size)
-
-    def set_small(self) -> None:
-        """Set large font."""
-        self.setObjectName("small_icon")
-        self.setIconSize(QSize(16, 16))
-
-    def set_normal(self) -> None:
-        """Set medium font."""
-        self.setObjectName("normal_icon")
-        self.setIconSize(QSize(20, 20))
-
-    def set_average(self) -> None:
-        """Set medium font."""
-        self.setObjectName("average_icon")
-        self.setIconSize(QSize(24, 24))
-
-    def set_medium(self) -> None:
-        """Set medium font."""
-        self.setObjectName("medium_icon")
-        self.setIconSize(QSize(28, 28))
-
-    def set_large(self) -> None:
-        """Set large font."""
-        self.setObjectName("large_icon")
-        self.setIconSize(QSize(32, 32))
-
-    def set_xlarge(self) -> None:
-        """Set large."""
-        self.setObjectName("xlarge_icon")
-        self.setIconSize(QSize(60, 60))
-
-    def set_xxlarge(self) -> None:
-        """Set large."""
-        self.setObjectName("xxlarge_icon")
-        self.setIconSize(QSize(80, 80))
-
-    def set_xxxlarge(self) -> None:
-        """Set large."""
-        self.setObjectName("xxxlarge_icon")
-        self.setIconSize(QSize(120, 120))
-
-    def _update_qta(self) -> None:
-        """Update qta icon."""
-        if self._qta_data:
-            name, kwargs = self._qta_data
-            self.set_qta(name, **kwargs)
+    def _on_toggle(self):
+        """Update icons."""
+        assert self._qta_data and self._checked_qta_data, "No qta data set."
+        name = self._checked_qta_data[0] if self.isChecked() else self._qta_data[0]
+        self._set_qta_icon(name, **self._checked_qta_data[1] if self.isChecked() else self._qta_data[1])
 
     def on_click(self) -> None:
         """Click event."""
@@ -126,7 +92,6 @@ class QtImagePushButton(QPushButton):
 
     def paintEvent(self, *args) -> None:
         """Paint event."""
-        # default paint
         super().paintEvent(*args)
 
         if self.has_right_click:

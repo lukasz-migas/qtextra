@@ -1,0 +1,358 @@
+QLabel#h1 {
+  font-size: 28px;
+}
+
+QLabel#h2 {
+  font-size: 22px;
+  color: {{ secondary }};
+}
+
+QLabel#h3 {
+  font-size: 18px;
+  color: {{ secondary }};
+}
+
+QtViewer {
+   padding-top: 0px;
+}
+
+QtLayerButtons, QtViewerButtons, QtLayerList {
+  min-width: 242px;
+}
+
+/* ------------- QMainWindow --------- */
+/* QDockWidgets will use the MainWindow styles
+as long as they are docked (though they use the
+style of QDockWidget when undocked) */
+
+QStatusBar {
+  background: {{ background }};
+  color: {{ text }};
+}
+
+/* ------------- Window separator --------- */
+
+QMainWindow::separator {
+  width: 4px;
+  height: 4px;
+  border: none;
+  background-color: {{ background }};
+}
+
+QMainWindow::separator:hover {
+  background: {{ foreground }};
+}
+
+QMainWindow::separator:horizontal {
+  image: url("theme_{{ id }}:/horizontal_separator.svg");
+}
+
+QMainWindow::separator:vertical {
+  image: url("theme_{{ id }}:/vertical_separator.svg");
+}
+
+/* ------------- DockWidgets --------- */
+
+#QtCustomTitleBar {
+  padding-top:3px;
+  background-color: {{ background }};
+}
+
+#QtCustomTitleBar:hover {
+  background-color: {{ darken(background, 10) }};
+}
+
+#QtCustomTitleBarLine {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QPushButton {
+  background-color: none;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+#QtCustomTitleBar > QPushButton:hover {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QLabel {
+  color: {{ primary }};
+  font-size: 11pt;
+}
+
+#QTitleBarCloseButton{
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    image: url("theme_{{ id }}:/delete_shape.svg");
+}
+
+
+#QTitleBarFloatButton{
+    image: url("theme_{{ id }}:/pop_out.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}
+
+#QTitleBarHideButton{
+    image: url("theme_{{ id }}:/visibility_off.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}
+
+/* ----------------- Console ------------------ */
+
+QtConsole {
+  min-height: 100px;
+}
+
+QtConsole > QTextEdit {
+  background-color: {{ console }};
+  background-clip: padding;
+  color: {{ text }};
+  selection-background-color: {{ highlight }};
+  margin: 10px;
+}
+.inverted {
+  background-color: {{ background }};
+  color: {{ foreground }};
+}
+.error { color: #b72121; }
+.in-prompt-number { font-weight: bold; }
+.out-prompt-number { font-weight: bold; }
+.in-prompt { color: #6ab825; }
+.out-prompt { color: #b72121; }
+
+
+/* controls the area around the canvas */
+QSplitter {
+  spacing: 0px;
+  padding: 0px;
+  margin: 0px;
+}
+
+QtDivider {
+  spacing: 0px;
+  padding: 0px;
+  border: 0px;
+  margin: 0px 3px 0px 3px;
+  min-width: 214px;
+  min-height: 1px;
+  max-height: 1px;
+}
+
+QtDivider[selected=true] {
+  background-color: {{ text }};
+}
+
+QtDivider[selected=false] {
+  background-color: {{ background }};
+}
+
+/* --------------- QtLayerWidget -------------------- */
+
+QtLayerWidget {
+  padding: 0px;
+  background-color: {{ foreground }};
+  border-radius: 2px;
+  min-height: 32px;
+  max-height: 32px;
+  min-width: 228px;
+}
+
+QtLayerWidget[selected="true"] {
+  background-color: {{ current }};
+}
+
+
+QtLayerWidget > QLabel {
+  background-color: transparent;
+  padding: 0px;
+  qproperty-alignment: AlignCenter;
+}
+
+
+/* The name of the layer*/
+QtLayerWidget > QLineEdit {
+  background-color: transparent;
+  border: none;
+  border-radius: 2px;
+  padding: 2px;
+  font-size: 14px;
+  qproperty-alignment: right;
+}
+
+QtLayerWidget > QLineEdit:disabled {
+  background-color: transparent;
+  border-color: transparent;
+  border-radius: 3px;
+}
+
+QtLayerWidget > QLineEdit:focus {
+  background-color: {{ darken(current, 20) }};
+  selection-background-color: {{ lighten(current, 20) }};
+}
+
+QtLayerWidget QCheckBox::indicator {
+  background-color: transparent;
+}
+
+QtLayerWidget QCheckBox::indicator:hover {
+  background-color:  transparent;
+}
+
+QtLayerWidget > QCheckBox#visibility {
+  spacing: 0px;
+  margin: 0px 0px 0px 4px;
+}
+
+QtLayerWidget > QCheckBox#visibility::indicator{
+  width: 18px;
+  height: 18px;
+}
+
+QtLayerWidget > QCheckBox#visibility::indicator:unchecked {
+  image: url("theme_{{ id }}:/visibility_off_50.svg");
+}
+
+QtLayerWidget > QCheckBox#visibility::indicator:checked {
+  image: url("theme_{{ id }}:/visibility.svg");
+}
+
+
+QLabel[layer_type_label="true"] {
+  max-width: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  margin-right: 4px;
+}
+
+QLabel#Shapes {
+  image: url("theme_{{ id }}:/new_shapes.svg");
+}
+
+QLabel#Points {
+  image: url("theme_{{ id }}:/new_points.svg");
+}
+
+QLabel#Labels {
+  image: url("theme_{{ id }}:/new_labels.svg");
+}
+
+QLabel#Image {
+  image: url("theme_{{ id }}:/new_image.svg");
+}
+
+QLabel#Multiscale {
+  image: url("theme_{{ id }}:/new_image.svg");
+}
+
+QLabel#Surface {
+  image: url("theme_{{ id }}:/new_surface.svg");
+}
+
+QLabel#Vectors {
+  image: url("theme_{{ id }}:/new_vectors.svg");
+}
+
+QLabel#logo_silhouette {
+  image: url("theme_{{ id }}:/logo_silhouette.svg");
+}
+
+/* ------------------------------------------------------ */
+
+QFrame#empty_controls_widget {
+    min-height: 225px;
+    min-width: 240px;
+}
+
+QtLayerControlsContainer {
+    border-radius: 2px;
+    padding: 0px;
+    margin: 10px;
+    margin-left: 10px;
+    margin-right: 8px;
+    margin-bottom: 4px;
+}
+
+QtLayerControlsContainer > QFrame {
+  padding: 5px;
+  padding-right: 8px;
+  border-radius: 2px;
+}
+
+/* the box that shows the current Label color */
+QtColorBox {
+  padding: 0px;
+  border: 0px;
+  margin: -1px 0 0 -1px;
+  border-radius: 2px;
+  min-height: 20px;
+  max-height: 20px;
+  min-width: 20px;
+  max-width: 20px;
+}
+
+/* ----------------- QtLayerControls -------------------- */
+
+QtLayerControls > QLabel, QtLayerControls, QtPlaneControls > QLabeledSlider > QAbstractSpinBox {
+  font-size: 11pt;
+  color: {{ text }};
+}
+
+QLabeledRangeSlider > QAbstractSpinBox {
+  font-size: 12pt;
+  color: {{ secondary }};
+}
+
+QWidget[emphasized="true"] QDoubleSlider::sub-page:horizontal:disabled {
+    background: {{ primary }};
+}
+
+QWidget[emphasized="true"] QDoubleSlider::handle:disabled {
+    background: {{ primary }};
+}
+
+QWidget[emphasized="true"] SliderLabel:disabled {
+    color: {{ opacity(text, 50) }};
+}
+
+QWidget[emphasized="true"] QLabel:disabled {
+    color: {{ opacity(text, 50) }};
+}
+
+AutoScaleButtons QPushButton {
+  font-size: 9pt;
+  padding: 4;
+}
+
+PlaneNormalButtons QPushButton {
+    font-size: 9pt;
+    padding: 4;
+}
+
+/* ------------- DimsSliders --------- */
+
+QtDimSliderWidget > QScrollBar::handle[last_used=false]:horizontal {
+    background: {{ highlight }};
+}
+
+QtDimSliderWidget > QScrollBar::handle[last_used=true]:horizontal {
+    background: {{ secondary }};
+}
+
+QtDimSliderWidget > QScrollBar:left-arrow:horizontal {
+    image: url("theme_{{ id }}:/step_left.svg");
+}
+
+QtDimSliderWidget > QScrollBar::right-arrow:horizontal {
+    image: url("theme_{{ id }}:/step_right.svg");
+}
+
+QtDimSliderWidget > QLineEdit {
+  background-color: {{ background }};
+}

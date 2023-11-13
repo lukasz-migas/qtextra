@@ -64,11 +64,11 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def flags(self, index):
         """Return flags."""
-        fl = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        fl = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
         if index.column() == 0:
-            fl |= Qt.ItemIsUserCheckable
+            fl |= Qt.ItemFlag.ItemIsUserCheckable
         else:
-            fl |= Qt.ItemIsEditable
+            fl |= Qt.ItemFlag.ItemIsEditable
         return fl
 
     @property
@@ -81,11 +81,11 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Return count of unchecked elements."""
         return [row[0] for row in self._table].count(False)
 
-    def rowCount(self, parent=None, **kwargs):
+    def rowCount(self, parent=None, **kwargs) -> int:
         """Return number of rows."""
         return len(self._table) if self._table else 0
 
-    def columnCount(self, parent=None, **kwargs):
+    def columnCount(self, parent=None, **kwargs) -> int:
         """Return number of columns."""
         return len(self._table[0]) if self._table else 0
 
@@ -108,7 +108,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         column = index.column()
 
         # check background color role
-        if role == Qt.BackgroundRole:
+        if role == Qt.ItemDataRole.BackgroundRole:
             if column in self.color_column:
                 color = self._table[row][column]
                 if isinstance(color, str) and "#" in color:
@@ -119,7 +119,7 @@ class QtCheckableItemModel(QAbstractTableModel):
                     return QBrush(color)
             return QBrush()
         # check text color
-        elif role == Qt.ForegroundRole:
+        elif role == Qt.ItemDataRole.ForegroundRole:
             if column == self.color_column:
                 bg_color = self._table[row][column]
                 if isinstance(bg_color, str) and "#" in bg_color:
@@ -129,29 +129,29 @@ class QtCheckableItemModel(QAbstractTableModel):
                 return QBrush(QColor(LINK_COLOR))
             return QBrush(QColor(TEXT_COLOR))
         # check value
-        elif role == Qt.DisplayRole:
+        elif role == Qt.ItemDataRole.DisplayRole:
             if column not in self.icon_column:
                 value = self._table[row][column]
                 return value
         # check alignment role
-        elif role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
+        elif role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
         # check state
-        elif role == Qt.CheckStateRole and column == 0:
-            return Qt.Checked if self._table[row][column] else Qt.Unchecked
+        elif role == Qt.ItemDataRole.CheckStateRole and column == 0:
+            return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
         # icon state
-        elif role == Qt.DecorationRole:
+        elif role == Qt.ItemDataRole.DecorationRole:
             if column in self.icon_column:
                 value = self._table[row][column]
                 return make_qta_icon(value)
 
     def headerData(self, col, orientation, role=None):
         """Get header data."""
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.header[col]
         return None
 
-    def sort(self, column: int, order=None):
+    def sort(self, column: int, order=None) -> None:
         """Sort table."""
         if self._no_sort_col and column in self._no_sort_col:
             return
@@ -166,22 +166,24 @@ class QtCheckableItemModel(QAbstractTableModel):
         self._table = order_by_index(self._table, new_index)
         self.original_index = order_by_index(self.original_index, new_index)
 
-        if order == Qt.DescendingOrder:
+        if order == Qt.SortOrder.DescendingOrder:
             self._table.reverse()
             self.original_index.reverse()
 
         # indicate that change to data has been made
         self.layoutChanged.emit()
 
-    def setData(self, index, value, role=Qt.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole) -> bool:
         """Set data in the model."""
         row = index.row()
         column = index.column()
 
-        if role == Qt.CheckStateRole:
+        if role == Qt.ItemDataRole.CheckStateRole:
             old_value = index.data()
-            value = not old_value
-            change = True
+            # value = not old_value
+            # change = True
+            value = bool(value)
+            change = old_value != value
         else:
             old_value = index.data()
             if isinstance(old_value, np.ndarray):
@@ -189,31 +191,31 @@ class QtCheckableItemModel(QAbstractTableModel):
             else:
                 change = old_value != value
 
+        self._table[row][column] = value
         if change:
-            self._table[row][column] = value
             self.dataChanged.emit(index, index)
             if column == 0:
                 self.evt_checked.emit(row, value)
             return True
         return False
 
-    def update_value(self, row, column, value, role=Qt.EditRole):
+    def update_value(self, row, column, value, role=Qt.ItemDataRole.EditRole) -> None:
         """Update value."""
         index = self.createIndex(row, column)
 
         # setup role
         if column == 0:
-            role = Qt.CheckStateRole
+            role = Qt.ItemDataRole.CheckStateRole
 
         if index.isValid():
             self.setData(index, value, role=role)
 
-    def update_values(self, row, column_value):
+    def update_values(self, row, column_value) -> None:
         """Update values."""
         for column, value in column_value.items():
             self.update_value(row, column, value)
 
-    def update_row(self, row, value):
+    def update_row(self, row, value) -> None:
         """Update row."""
         if len(value) != len(self.header):
             raise ValueError("Cannot update row as length of the values does not match header length")
@@ -223,7 +225,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             if index.isValid():
                 self.setData(index, value[column])
 
-    def update_column(self, col, values, match_to_sort: bool = True):
+    def update_column(self, col, values, match_to_sort: bool = True) -> None:
         """Update column."""
         if col > self.columnCount():
             raise ValueError("Cannot update column as its outside of the boundaries")
@@ -238,7 +240,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             if index.isValid():
                 self.setData(index, value)
 
-    def check_all_rows(self):
+    def check_all_rows(self) -> None:
         """Check all rows in the table."""
         self.state = not self.state
         for row, __ in enumerate(self._table):
@@ -247,7 +249,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             self.dataChanged.emit(index, index)
         self.evt_checked.emit(-1, self.state)
 
-    def uncheck_all_rows(self):
+    def uncheck_all_rows(self) -> None:
         """Uncheck all rows."""
         for row, __ in enumerate(self._table):
             self._table[row][0] = False
@@ -274,7 +276,7 @@ class QtCheckableItemModel(QAbstractTableModel):
     def roleNames(self):
         """Return role names."""
         roles = QAbstractTableModel.roleNames(self)
-        roles["Checked"] = Qt.CheckStateRole
+        roles["Checked"] = Qt.ItemDataRole.CheckStateRole
         return roles
 
     def reset(self):
@@ -286,19 +288,19 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Get the index of the initial array, regardless of whether it was sorted."""
         return self.original_index[row]
 
-    def get_initial_indices(self, index: list):
+    def get_initial_indices(self, index: list) -> list:
         """Get list of all initial indices."""
         return [self.get_initial_index(row) for row in index]
 
-    def get_sort_index(self, row: int):
+    def get_sort_index(self, row: int) -> int:
         """Get the index inside the sorted array as matched from the not-sorted array."""
         return self.original_index.index(row)
 
-    def get_sort_indices(self, index: list):
+    def get_sort_indices(self, index: list) -> list:
         """Get list of all sort indices."""
         return [self.get_sort_index(row) for row in index]
 
-    def get_data(self):
+    def get_data(self) -> ty.List[ty.List]:
         """Get data from model."""
         return self._table
 
@@ -309,26 +311,38 @@ class QtCheckableItemModel(QAbstractTableModel):
                 return row_id
         return -1
 
-    def add_data(self, data: ty.List):
+    def get_row_id_for_values(self, *column_and_values: ty.Tuple[int, ty.Union[str, int, float]]) -> int:
+        """Find value index."""
+        for row_id, row in enumerate(self._table):
+            for col_id, value in column_and_values:
+                if row[col_id] != value:
+                    break
+                if all(row[col_id] == value for col_id, value in column_and_values):
+                    return row_id
+        return -1
+
+    def add_data(self, data: ty.List) -> None:
         """Add data."""
         self._table.extend(data)
         self.original_index = list(range(len(self._table)))
         # indicate that change to data has been made
         self.layoutChanged.emit()
 
-    def reset_data(self):
+    def reset_data(self) -> None:
         """Reset data."""
         self._table.clear()
         self.original_index.clear()
         self.layoutChanged.emit()
 
-    def data_changed(self):
+    def data_changed(self) -> None:
         """Emit an event when there has been change to the model."""
         self.layoutChanged.emit()
 
 
 class QtCheckableTableView(QTableView):
     """Checkbox table."""
+
+    model: ty.Callable[[], QtCheckableItemModel]
 
     # events
     # triggered whenever item is checked/unchecked. It returns the index and check state when its triggered.
@@ -341,12 +355,12 @@ class QtCheckableTableView(QTableView):
 
     def __init__(
         self,
-        *args,
+        *args: ty.Any,
         config: TableConfig = None,
         enable_all_check: bool = True,
         double_click_to_check: bool = False,
         sortable: bool = True,
-        **kwargs,
+        **kwargs: ty.Any,
     ):
         super().__init__(*args, **kwargs)
 
@@ -401,11 +415,11 @@ class QtCheckableTableView(QTableView):
         """Return the number of columns in the table."""
         return self.column_count()
 
-    def column_count(self):
+    def column_count(self) -> int:
         """Return the number columns."""
         return self.model().columnCount(self) if self.model() else 0
 
-    def row_count(self):
+    def row_count(self) -> int:
         """Return the number of rows."""
         return self.model().rowCount(self) if self.model() else 0
 
@@ -459,12 +473,11 @@ class QtCheckableTableView(QTableView):
         if self._is_init:
             self.header.setSectionResizeMode(index, mode)
 
-    @Slot(int, bool)
-    def on_check(self, row: int, value: bool):
+    def on_check(self, row: int, value: bool) -> None:
         """Check."""
         self.evt_checked.emit(row, value)
 
-    def init_from_config(self):
+    def init_from_config(self) -> None:
         """Initialize based on config."""
         self._color_column = [self._config.color_column]
         self.set_data(
@@ -475,7 +488,7 @@ class QtCheckableTableView(QTableView):
             icon_col=self._config.icon_columns,
         )
 
-    def set_model(self, model):
+    def set_model(self, model: QtCheckableItemModel) -> None:
         """Set model."""
         self.setModel(model)
 
@@ -486,7 +499,7 @@ class QtCheckableTableView(QTableView):
         hidden_col: ty.Optional[ty.List[int]] = None,
         html_col: ty.Optional[ty.List[int]] = None,
         icon_col: ty.Optional[ty.List[int]] = None,
-    ):
+    ) -> None:
         """Setup model in the table."""
         if hidden_col is None:
             hidden_col = []
@@ -528,11 +541,11 @@ class QtCheckableTableView(QTableView):
         self.set_model(model)
         self.init()
 
-    def add_row(self, data: ty.List):
+    def add_row(self, data: ty.List) -> None:
         """ADd row to the data."""
         self.add_data([data])
 
-    def add_data(self, data: ty.List[ty.List]):
+    def add_data(self, data: ty.List[ty.List]) -> None:
         """Add data."""
         n_items = self.n_rows
         self._validate_data(data)
@@ -540,7 +553,7 @@ class QtCheckableTableView(QTableView):
         if n_items == 0:
             self.init()
 
-    def _validate_data(self, data: ty.List, n_cols=None):
+    def _validate_data(self, data: ty.List, n_cols=None) -> None:
         """Validate data."""
         if n_cols is None:
             if self._header_columns is not None:
@@ -560,13 +573,7 @@ class QtCheckableTableView(QTableView):
         return data
 
     def get_all_checked(self) -> ty.List[int]:
-        """Get all checked.
-
-        Returns
-        -------
-        list of ints
-            List of all rows that are currently checked.
-        """
+        """Get all checked."""
         return self.model().get_all_checked()
 
     def get_all_unchecked(self) -> ty.List[int]:
@@ -590,6 +597,10 @@ class QtCheckableTableView(QTableView):
     def get_row_id(self, col_id: int, value: ty.Union[str, int, float]) -> int:
         """Get the id of a value."""
         return self.model().get_row_id(col_id, value)
+
+    def get_row_id_for_values(self, *column_and_values: ty.Tuple[int, ty.Union[str, int, float]]) -> int:
+        """Get the id of a value."""
+        return self.model().get_row_id_for_values(*column_and_values)
 
     def get_col_data(self, col_id: int) -> ty.List[ty.List]:
         """Get data from model."""
@@ -663,7 +674,7 @@ class QtCheckableTableView(QTableView):
     def sort_by_column(self, column: int, direction: ty.Union[Qt.SortOrder, str] = "ascending") -> None:
         """Sort table by column."""
         if isinstance(direction, str):
-            direction = Qt.AscendingOrder if direction == "ascending" else Qt.DescendingOrder
+            direction = Qt.SortOrder.AscendingOrder if direction == "ascending" else Qt.SortOrder.DescendingOrder
         self.model().sort(column, direction)
 
     def find_index_of(self, col_id: int, value: ty.Any):

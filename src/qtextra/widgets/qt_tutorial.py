@@ -1,5 +1,6 @@
 """Tutorial widget."""
 import typing as ty
+from enum import Enum
 
 from pydantic import BaseModel
 from qtpy.QtCore import QEasingCurve, QPoint, Qt, QVariantAnimation
@@ -9,13 +10,33 @@ from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBo
 import qtextra.helpers as hp
 
 
+class Position(str, Enum):
+    """Position."""
+
+    LEFT_TOP = "left_top"
+    LEFT = "left"
+    LEFT_BOTTOM = "left_bottom"
+
+    RIGHT_TOP = "right_top"
+    RIGHT = "right"
+    RIGHT_BOTTOM = "right_bottom"
+
+    TOP_LEFT = "top_left"
+    TOP = "top"
+    TOP_RIGHT = "top_right"
+
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM = "bottom"
+    BOTTOM_RIGHT = "bottom_right"
+
+
 class TutorialStep(BaseModel):
     """Tutorial step."""
 
     title: str = ""
     message: str
     widget: QWidget
-    position: str = "right"
+    position: Position = Position.RIGHT
 
     class Config:
         """Configuration."""
@@ -33,13 +54,14 @@ class QtTutorial(QDialog):
     ALLOW_CHEVRON = True
 
     _current = -1
-    _steps = None
+    steps: ty.List[TutorialStep]
+    chevrons: ty.Dict[str, QWidget]
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: ty.Optional[QWidget] = None):
         super().__init__(parent=parent)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
         self.setSizeGripEnabled(False)
         self.setModal(False)
 
@@ -49,29 +71,51 @@ class QtTutorial(QDialog):
         self._animation = QVariantAnimation()
         self._animation.setDuration(500)
         self._animation.valueChanged.connect(self._update_progress)
-        self._animation.setEasingCurve(QEasingCurve.InOutCubic)
+        self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
 
         # self._move_animation = QVariantAnimation()
         # self._move_animation.setDuration(1000)
         # self._move_animation.valueChanged.connect(self._update_position)
         # self._move_animation.setEasingCurve(QEasingCurve.InOutCubic)
 
+        self.steps = []
         self.make_ui()
         if not self.ALLOW_CHEVRON:
-            self.chevron_up_mid.hide()
-            self.chevron_down_mid.hide()
-            self.chevron_left_mid.hide()
-            self.chevron_right_mid.hide()
+            for chevron in self.chevrons.values():
+                chevron.hide()
 
     # noinspection PyAttributeOutsideInit
-    def make_ui(self):
+    def make_ui(self) -> None:
         """Setup UI."""
-        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", small=True)
-        # self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", small=True)
-        # self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", small=True)
-        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", small=True)
-        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", small=True)
-        self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True)
+        self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=True)
+        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=True)
+        self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=True)
+
+        self.chevron_down_left = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=True)
+        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=True)
+        self.chevron_down_right = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=True)
+
+        self.chevron_left_top = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=True)
+        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=True)
+        self.chevron_left_bottom = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=True)
+
+        self.chevron_right_top = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=True)
+        self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=True)
+        self.chevron_right_bottom = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=True)
+        self.chevrons = {
+            Position.BOTTOM_LEFT: self.chevron_up_left,
+            Position.BOTTOM: self.chevron_up_mid,
+            Position.BOTTOM_RIGHT: self.chevron_up_right,
+            Position.TOP_LEFT: self.chevron_down_left,
+            Position.TOP: self.chevron_down_mid,
+            Position.TOP_RIGHT: self.chevron_down_right,
+            Position.RIGHT_TOP: self.chevron_left_top,
+            Position.RIGHT: self.chevron_left_mid,
+            Position.RIGHT_BOTTOM: self.chevron_left_bottom,
+            Position.LEFT_TOP: self.chevron_right_top,
+            Position.LEFT: self.chevron_right_mid,
+            Position.LEFT_BOTTOM: self.chevron_right_bottom,
+        }
 
         header_widget = QWidget(self)
         header_widget.setObjectName("tutorial_header")
@@ -118,36 +162,49 @@ class QtTutorial(QDialog):
         main_layout.setContentsMargins(2, 2, 2, 2)
         main_layout.setSpacing(0)
         main_layout.setColumnStretch(1, True)
-        main_layout.setRowStretch(1, True)
-        main_layout.addWidget(self.chevron_up_mid, 0, 1, 1, -1, alignment=Qt.AlignHCenter)
-        main_layout.addLayout(layout, 1, 1, 1, 1)
-        main_layout.addWidget(self.chevron_left_mid, 1, 0, 1, 1, alignment=Qt.AlignVCenter)
-        main_layout.addWidget(self.chevron_right_mid, 1, 2, 1, 1, alignment=Qt.AlignVCenter)
-        main_layout.addWidget(self.chevron_down_mid, 2, 1, 1, -1, alignment=Qt.AlignHCenter)
+        main_layout.setRowStretch(3, True)
+        # top
+        main_layout.addWidget(self.chevron_up_left, 0, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(self.chevron_up_mid, 0, 1, 1, -1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(self.chevron_up_right, 0, 2, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # content
+        main_layout.addLayout(layout, 1, 1, 3, 1)
+        # left
+        main_layout.addWidget(self.chevron_left_top, 2, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        main_layout.addWidget(self.chevron_left_mid, 3, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        main_layout.addWidget(self.chevron_left_bottom, 4, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        # right
+        main_layout.addWidget(self.chevron_right_top, 2, 2, 1, 1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        main_layout.addWidget(self.chevron_right_mid, 3, 2, 1, 1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        main_layout.addWidget(self.chevron_right_bottom, 4, 2, 1, 1, alignment=Qt.AlignmentFlag.AlignVCenter)
+        # bottom
+        main_layout.addWidget(self.chevron_down_left, 5, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(self.chevron_down_mid, 5, 1, 1, -1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(self.chevron_down_right, 5, 2, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
 
-    def _update_progress(self, value: float):
+    def _update_progress(self, value: int) -> None:
         """Update progress bar."""
         self._step_indicator.setValue(value)
 
-    def set_steps(self, steps: ty.List[TutorialStep]):
+    def set_steps(self, steps: ty.List[TutorialStep]) -> None:
         """Set steps."""
-        self._steps = steps
+        self.steps = steps
         self._step_indicator.setMinimum(0)
         self._step_indicator.setMaximum(len(steps) * 100)
         self.set_step(0)
 
-    def set_step(self, index: int):
+    def set_step(self, index: int) -> None:
         """Show step."""
         self._current = index
 
-        step = self._steps[index]
+        step = self.steps[index]
         self._title_label.setText(step.title)
         self._message_label.setText(step.message)
-        self._step_label.setText(f"Step {index + 1}/{len(self._steps)}")
+        self._step_label.setText(f"Step {index + 1}/{len(self.steps)}")
 
         # enable/disable buttons
         hp.disable_widgets(self._prev_btn, disabled=index == 0)
-        self._next_btn.setText("Next" if index < len(self._steps) - 1 else "Done")
+        self._next_btn.setText("Next" if index < len(self.steps) - 1 else "Done")
         # move tutorial to specified location
         self._message_label.adjustSize()
         self.adjustSize()
@@ -159,49 +216,51 @@ class QtTutorial(QDialog):
         self._animation.setEndValue((index + 1) * 100)
         self._animation.start()
 
-    def move_to_widget(self, widget: QWidget, position: str = "right"):
+    def move_to_widget(self, widget: QWidget, position: str = "right") -> None:
         """Move tutorial to specified widget."""
+        position = Position(position)
         x_pad, y_pad = 5, 5
-        size = self.size()
-        rect = widget.rect()
-        if position == "left":
-            x = rect.left() - size.width() - x_pad
-            y = rect.center().y() - (size.height() * 0.5)
-        elif position == "right":
-            x = rect.right() + x_pad
-            y = rect.center().y() - (size.height() * 0.5)
-        elif position == "top":
-            x = rect.center().x() - (size.width() * 0.5)
-            y = rect.top() - size.height() - y_pad
-        elif position == "bottom":
-            x = rect.center().x() - (size.width() * 0.5)
-            y = rect.bottom() + y_pad
+        popup_size = self.size()
+        icon_pos = self.chevrons[position].pos()
+        rect_of_widget = widget.rect()
+        if position in ["left", "left_top", "left_bottom"]:
+            x = rect_of_widget.left() - popup_size.width() - x_pad
+            y = rect_of_widget.center().y() - icon_pos.y()
+        elif position in ["right", "right_top", "right_bottom"]:
+            x = rect_of_widget.right() + x_pad
+            y = rect_of_widget.center().y() - icon_pos.y()
+        elif position in ["top", "top_left", "top_right"]:
+            y = rect_of_widget.top() - popup_size.height() - y_pad
+            x = rect_of_widget.center().x() - icon_pos.x()
+        elif position in ["bottom", "bottom_left", "bottom_right"]:
+            x = rect_of_widget.center().x() - icon_pos.x()
+            y = rect_of_widget.bottom() + y_pad
         else:
             raise ValueError(f"Invalid position '{position}'.")
-        pos = widget.mapToGlobal(QPoint(x, y))
+        print(x, y)
+        pos = widget.mapToGlobal(QPoint(int(x), int(y)))
         self.move(pos)
 
-    def set_chevron(self, position: str):
+    def set_chevron(self, position: Position) -> None:
         """Show/hide chevron icons as required."""
+        position = Position(position)
         if self.ALLOW_CHEVRON:
-            self.chevron_up_mid.setVisible(position == "bottom")
-            self.chevron_down_mid.setVisible(position == "top")
-            self.chevron_left_mid.setVisible(position == "right")
-            self.chevron_right_mid.setVisible(position == "left")
+            for key, chevron in self.chevrons.items():
+                chevron.setVisible(key == position)
 
-    def on_next(self):
+    def on_next(self) -> None:
         """Next step."""
-        if self._current == len(self._steps) - 1:
+        if self._current == len(self.steps) - 1:
             self.close()
         else:
             self.set_step(self._current + 1)
 
-    def on_prev(self):
+    def on_prev(self) -> None:
         """Previous step."""
         if self._current > 0:
             self.set_step(self._current - 1)
 
-    def show(self):
+    def show(self) -> None:
         """Show widget."""
         if self._current == -1:
             self.on_next()
@@ -210,10 +269,10 @@ class QtTutorial(QDialog):
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Key press event handler."""
         key = event.key()
-        if key == Qt.Key_Left:
+        if key == Qt.Key.Key_Left:
             self.on_prev()
             event.accept()
-        elif key == Qt.Key_Right:
+        elif key == Qt.Key.Key_Right:
             self.on_next()
             event.accept()
         else:
@@ -222,34 +281,24 @@ class QtTutorial(QDialog):
 
 #
 def _popover(frame, widget):
-    text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Vestibulum lorem sed risus ultricies tristique nulla aliquet. Malesuada nunc vel risus commodo viverra maecenas. Nascetur ridiculus mus mauris vitae ultricies leo. Tellus in hac habitasse platea dictumst vestibulum rhoncus. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate. Amet nulla facilisi morbi tempus iaculis urna id volutpat lacus. Aliquet nec ullamcorper sit amet risus nullam eget felis. Pharetra magna ac placerat vestibulum lectus. Dignissim convallis aenean et tortor at risus. Vitae tempus quam pellentesque nec nam aliquam sem et. Pulvinar proin gravida hendrerit lectus."""
+    text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+    et dolore magna aliqua. Vestibulum lorem sed risus ultricies tristique nulla aliquet. Malesuada nunc vel risus
+     commodo viverra maecenas. Nascetur ridiculus mus mauris vitae ultricies leo. Tellus in hac habitasse platea
+     dictumst vestibulum rhoncus. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate.
+     Amet nulla facilisi morbi tempus iaculis urna id volutpat lacus. Aliquet nec ullamcorper sit amet risus nullam
+     eget felis. Pharetra magna ac placerat vestibulum lectus. Dignissim convallis aenean et tortor at risus. Vitae
+     tempus quam pellentesque nec nam aliquam sem et. Pulvinar proin gravida hendrerit lectus."""
     pop = QtTutorial(frame)
     pop.set_steps(
         [
             TutorialStep(
-                title="Title will be bold",
+                title=f"{position}",
                 message=text,
                 widget=widget,
-                position="right",
-            ),
-            TutorialStep(
-                title="Title will be bold",
-                message=text,
-                widget=widget,
-                position="left",
-            ),
-            TutorialStep(
-                title="Title will be bold",
-                message=text,
-                widget=widget,
-                position="top",
-            ),
-            TutorialStep(
-                title="Title will be bold",
-                message=text,
-                widget=widget,
-                position="bottom",
-            ),
+                position=position,
+            )
+            for position in Position
         ]
     )
+    pop.show()
     pop.show()

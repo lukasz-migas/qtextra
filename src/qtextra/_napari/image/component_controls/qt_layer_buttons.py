@@ -1,72 +1,75 @@
 """Layer buttons."""
+from __future__ import annotations
+
+import typing as ty
+
 from napari._qt.dialogs.qt_modal import QtPopup
 from napari._qt.widgets.qt_dims_sorter import QtDimsSorter
 from napari._qt.widgets.qt_spinbox import QtSpinBox
 from napari._qt.widgets.qt_tooltip import QtToolTipLabel
-from napari._qt.widgets.qt_viewer_buttons import QtDeleteButton, QtViewerPushButton
 from qtpy.QtCore import QPoint, Qt
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout
 
 import qtextra.helpers as hp
 from qtextra._napari.image.components._viewer_key_bindings import toggle_grid, toggle_ndisplay
+from qtextra.widgets.qt_image_button import QtImagePushButton
+
+if ty.TYPE_CHECKING:
+    from qtextra._napari.image.components.viewer_model import ViewerModel
+
+
+def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
+    """Make a button with an icon from QtAwesome."""
+    btn = hp.make_qta_btn(*args, **kwargs)
+    btn.set_medium()
+    btn.setProperty("layer_button", True)
+    return btn
 
 
 class QtLayerButtons(QFrame):
-    """Button controls for napari layers.
+    """Button controls for napari layers."""
 
-    Parameters
-    ----------
-    viewer : napari.components.ViewerModel
-        Napari viewer containing the rendered scene, layers, and controls.
-
-    Attributes
-    ----------
-    delete_btn : QtDeleteButton
-        Button to delete selected layers.
-    new_labels_btn : QtViewerPushButton
-        Button to add new Label layer.
-    new_shapes_btn : QtViewerPushButton
-        Button to add new Shapes layer.
-    viewer : napari.components.ViewerModel
-        Napari viewer containing the rendered scene, layers, and controls.
-    """
-
-    def __init__(self, viewer):
+    def __init__(self, viewer: ViewerModel):
         super().__init__()
         self.viewer = viewer
-        self.delete_btn = QtDeleteButton(self.viewer)
+        self.delete_btn = make_qta_btn(
+            self, "delete", tooltip="Delete selected layers", func=self.viewer.layers.remove_selected
+        )
         self.delete_btn.setParent(self)
 
-        self.new_points_btn = QtViewerPushButton(
+        self.new_points_btn = make_qta_btn(
+            self,
             "new_points",
             "Add new points layer",
-            lambda: self.viewer.add_points(
+            func=lambda: self.viewer.add_points(
                 ndim=max(self.viewer.dims.ndim, 2),
                 scale=self.viewer.layers.extent.step,
             ),
         )
 
-        self.new_shapes_btn = QtViewerPushButton(
+        self.new_shapes_btn = make_qta_btn(
+            self,
             "new_shapes",
             "Add new shapes layer",
-            lambda: self.viewer.add_shapes(
+            func=lambda: self.viewer.add_shapes(
                 ndim=max(self.viewer.dims.ndim, 2),
                 scale=self.viewer.layers.extent.step,
             ),
         )
-        self.new_shapes_btn.setParent(self)
 
-        self.new_labels_btn = QtViewerPushButton(
+        self.new_labels_btn = make_qta_btn(
+            self,
             "new_labels",
             "Add new free-hand draw shapes layer",
-            lambda: self.viewer._new_labels(name="Free-draw"),
+            func=lambda: self.viewer._new_labels(name="Free-draw"),
         )
         self.new_shapes_btn.setParent(self)
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.new_shapes_btn)
+        layout.setSpacing(2)
         layout.addWidget(self.new_points_btn)
+        layout.addWidget(self.new_shapes_btn)
         layout.addWidget(self.new_labels_btn)
         layout.addStretch(0)
         layout.addWidget(self.delete_btn)
@@ -74,83 +77,63 @@ class QtLayerButtons(QFrame):
 
 
 class QtViewerButtons(QFrame):
-    """Button controls for the napari viewer.
-
-    Parameters
-    ----------
-    viewer : napari.components.ViewerModel
-        Napari viewer containing the rendered scene, layers, and controls.
-    parent : QWidget
-        parent of the widget
-
-    Attributes
-    ----------
-    rollDimsButton : QtViewerPushButton
-        Button to roll orientation of spatial dimensions in the napari viewer.
-    transposeDimsButton : QtViewerPushButton
-        Button to transpose dimensions in the napari viewer.
-    resetViewButton : QtViewerPushButton
-        Button resetting the view of the rendered scene.
-    gridViewButton : QtStateButton
-        Button to toggle grid view mode of layers on and off.
-    ndisplayButton : QtStateButton
-        Button to toggle number of displayed dimensions.
-    viewer : napari.components.ViewerModel
-        Napari viewer containing the rendered scene, layers, and controls.
-    """
+    """Button controls for the napari viewer."""
 
     def __init__(self, viewer, parent=None):
         super().__init__()
         self.viewer = viewer
 
-        ndb = QtViewerPushButton("ndisplay_button")
-        self.ndisplayButton = ndb
-        self.ndisplayButton.setToolTip("Toggle number of displayed dimensions (Ctrl-Y)")
-        ndb.setCheckable(True)
-        ndb.setChecked(self.viewer.dims.ndisplay == 2)
-        ndb.clicked.connect(lambda _: toggle_ndisplay(self.viewer))
-        ndb.setContextMenuPolicy(Qt.CustomContextMenu)
-        ndb.customContextMenuRequested.connect(self.open_perspective_popup)
+        self.ndisplayButton = make_qta_btn(
+            self,
+            "ndisplay_off",
+            "Toggle number of displayed dimensions",
+            checkable=True,
+            checked=self.viewer.dims.ndisplay == 3,
+            checked_icon_name="ndisplay_on",
+            func=lambda: toggle_ndisplay(self.viewer),
+            func_menu=self.open_perspective_popup,
+        )
 
-        @self.viewer.dims.events.ndisplay.connect
-        def _set_ndisplay_mode_checkstate(event):
-            ndb.setChecked(event.value == 2)
-
-        self.rollDimsButton = QtViewerPushButton(
+        self.rollDimsButton = make_qta_btn(
+            self,
             "roll",
-            "Roll dimensions order for display (Ctrl-E)",
-            lambda: self.viewer.dims._roll(),
+            "Roll dimensions order for display. Right-click on the button to manually order dimensions.",
+            func=lambda: viewer.dims._roll(),
+            func_menu=self.open_roll_popup,
         )
-        self.rollDimsButton.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.rollDimsButton.customContextMenuRequested.connect(self.open_roll_popup)
 
-        self.transposeDimsButton = QtViewerPushButton(
+        self.transposeDimsButton = make_qta_btn(
+            self,
             "transpose",
-            "Transpose displayed dimensions (Ctrl-T)",
-            lambda: self.viewer.dims._transpose(),
+            "Transpose displayed dimensions.",
+            func=lambda: viewer.dims.transpose(),
         )
 
-        gvb = QtViewerPushButton("grid_view_button")
-        self.gridViewButton = gvb
-        gvb.setCheckable(True)
-        gvb.setChecked(viewer.grid.enabled)
-        gvb.setContextMenuPolicy(Qt.CustomContextMenu)
-        gvb.clicked.connect(lambda _: toggle_grid(self.viewer))
-        gvb.customContextMenuRequested.connect(self.open_grid_popup)
-        self.gridViewButton.setToolTip("Toggle grid view (Ctrl-G)")
+        self.gridViewButton = make_qta_btn(
+            self,
+            "grid_off",
+            "Toggle grid view. Right-click on the button to change grid settings.",
+            checkable=True,
+            checked=viewer.grid.enabled,
+            checked_icon_name="grid_on",
+            func=lambda: toggle_grid(viewer),
+            func_menu=self.open_grid_popup,
+        )
 
         @self.viewer.grid.events.enabled.connect
         def _set_grid_mode_checkstate(event):
-            gvb.setChecked(event.value)
+            self.gridViewButton.setChecked(event.value)
 
-        self.resetViewButton = QtViewerPushButton(
+        self.resetViewButton = make_qta_btn(
+            self,
             "home",
-            "Reset view (Ctrl-R)",
-            lambda: self.viewer.reset_view(),
+            "Reset view",
+            func=lambda: self.viewer.reset_view(),
         )
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
         layout.addWidget(self.ndisplayButton)
         layout.addWidget(self.rollDimsButton)
         layout.addWidget(self.transposeDimsButton)
@@ -182,7 +165,7 @@ class QtViewerButtons(QFrame):
             return
 
         # make slider connected to perspective parameter
-        sld = QSlider(Qt.Horizontal, self)
+        sld = QSlider(Qt.Orientation.Horizontal, self)
         sld.setRange(0, max(90, self.viewer.camera.perspective))
         sld.setValue(self.viewer.camera.perspective)
         sld.valueChanged.connect(lambda v: setattr(self.viewer.camera, "perspective", v))
@@ -225,7 +208,7 @@ class QtViewerButtons(QFrame):
         stride_max = self.viewer.grid.__fields__["stride"].type_.le
         stride_not = self.viewer.grid.__fields__["stride"].type_.ne
         grid_stride.setObjectName("gridStrideBox")
-        grid_stride.setAlignment(Qt.AlignCenter)
+        grid_stride.setAlignment(Qt.AlignmentFlag.AlignCenter)
         grid_stride.setRange(stride_min, stride_max)
         grid_stride.setProhibitValue(stride_not)
         grid_stride.setValue(self.viewer.grid.stride)
@@ -234,7 +217,7 @@ class QtViewerButtons(QFrame):
         width_min = self.viewer.grid.__fields__["shape"].sub_fields[1].type_.ge
         width_not = self.viewer.grid.__fields__["shape"].sub_fields[1].type_.ne
         grid_width.setObjectName("gridWidthBox")
-        grid_width.setAlignment(Qt.AlignCenter)
+        grid_width.setAlignment(Qt.AlignmentFlag.AlignCenter)
         grid_width.setMinimum(width_min)
         grid_width.setProhibitValue(width_not)
         grid_width.setValue(self.viewer.grid.shape[1])
@@ -243,7 +226,7 @@ class QtViewerButtons(QFrame):
         height_min = self.viewer.grid.__fields__["shape"].sub_fields[0].type_.ge
         height_not = self.viewer.grid.__fields__["shape"].sub_fields[0].type_.ne
         grid_height.setObjectName("gridStrideBox")
-        grid_height.setAlignment(Qt.AlignCenter)
+        grid_height.setAlignment(Qt.AlignmentFlag.AlignCenter)
         grid_height.setMinimum(height_min)
         grid_height.setProhibitValue(height_not)
         grid_height.setValue(self.viewer.grid.shape[0])

@@ -2,15 +2,20 @@
 import typing as ty
 import warnings
 
+import napari.layers as n_layers
 import numpy as np
 from napari.components.cursor import Cursor
 from napari.components.dims import Dims
 from napari.components.grid import GridCanvas
-from napari.layers import Layer
-from napari.utils.events import Event, EventedModel, disconnect_events
+from napari.components.overlays import Overlay
+from napari.components.tooltip import Tooltip
+from napari.settings import get_settings
+from napari.utils._register import create_func as create_add_method
+from napari.utils.events import Event, EventedDict, EventedModel, disconnect_events
 from napari.utils.key_bindings import KeymapProvider
 from napari.utils.mouse_bindings import MousemapProvider
-from pydantic import Extra, Field
+from napari.utils.theme import available_themes, is_theme_available
+from pydantic import Extra, Field, PrivateAttr, validator
 
 from qtextra._napari.common.components.layerlist import LayerList
 
@@ -18,6 +23,15 @@ try:
     from napari_plot.components.gridlines import GridLines
 except ImportError:
     GridLines = None
+
+
+def _current_theme():
+    return get_settings().appearance.theme
+
+
+DEFAULT_OVERLAYS = {}
+if GridLines:
+    DEFAULT_OVERLAYS["grid_lines"] = GridLines
 
 
 class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
@@ -29,18 +43,29 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
     dims: Dims = Field(default_factory=Dims, allow_mutation=False)
     cursor: Cursor = Field(default_factory=Cursor, allow_mutation=False)
     layers: LayerList = Field(default_factory=LayerList, allow_mutation=False)
-    if GridLines:
-        grid_lines: GridLines = Field(default_factory=GridLines, allow_mutation=False)
+
+    # private track of overlays, only expose the old ones for backward compatibility
+    _overlays: EventedDict[str, Overlay] = PrivateAttr(default_factory=EventedDict)
 
     help: str = ""
     status: ty.Union[str, ty.Dict] = "Ready"
     title: str = "qtextra"
-    theme: str = "dark"
+    tooltip: Tooltip = Field(default_factory=Tooltip, allow_mutation=False)
+    theme: str = Field(default_factory=_current_theme)
 
     # 2-tuple indicating height and width
     _canvas_size: ty.Tuple[int, int] = (400, 400)
+    # To check if mouse is over canvas to avoid race conditions between
+    # different events systems
+    mouse_over_canvas: bool = False
 
-    def __init__(self, title="qtextra", ndisplay=2, order=(), axis_labels=()):
+    def __init__(
+        self,
+        title: str = "qtextra",
+        ndisplay: int = 2,
+        order: ty.Tuple[int, ...] = (),
+        axis_labels: ty.Tuple[str, ...] = (),
+    ):
         self.__config__.extra = Extra.allow
         super().__init__(
             title=title,
@@ -58,16 +83,29 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         # Connect events
         self.grid.events.connect(self.reset_view)
         self.grid.events.connect(self._on_grid_change)
+
         self.dims.events.ndisplay.connect(self._update_layers)
         self.dims.events.ndisplay.connect(self.reset_view)
         self.dims.events.order.connect(self._update_layers)
         self.dims.events.order.connect(self.reset_view)
         self.dims.events.current_step.connect(self._update_layers)
+
         self.cursor.events.position.connect(self._on_cursor_position_change)
+
         self.layers.events.inserted.connect(self._on_add_layer)
         self.layers.events.removed.connect(self._on_remove_layer)
+        self.layers.events.reordered.connect(self._on_grid_change)
         self.layers.events.reordered.connect(self._on_layers_change)
         self.layers.selection.events.active.connect(self._on_active_layer)
+
+        self._overlays.update({k: v() for k, v in DEFAULT_OVERLAYS.items()})
+
+    def _tooltip_visible_update(self, event):
+        self.tooltip.visible = event.value
+
+    @property
+    def grid_lines(self) -> "GridLines":
+        return self._overlays["grid_lines"]
 
     def __hash__(self):
         return id(self)
@@ -76,12 +114,29 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         """Simple string representation."""
         return f"qtextra.Viewer: {self.title}"
 
-    def clear_canvas(self):
+    def _update_viewer_grid(self):
+        """Keep viewer grid settings up to date with settings values."""
+        # settings = get_settings()
+        #
+        # self.grid.stride = settings.application.grid_stride
+        # self.grid.shape = (
+        #     settings.application.grid_height,
+        #     settings.application.grid_width,
+        # )
+
+    @validator("theme", allow_reuse=True)
+    def _valid_theme(cls, v):
+        if not is_theme_available(v):
+            themes = ", ".join(available_themes())
+            raise ValueError(f"Theme '{v}' not found; options are {themes}.")
+        return v
+
+    def clear_canvas(self) -> None:
         """Remove all layers from the canvas."""
         self.layers.remove_all()
         self.events.clear_canvas()
 
-    def reset_view(self, event=None) -> None:
+    def reset_view(self, _event=None) -> None:
         """Reset the camera view."""
         extent = self._sliced_extent_world
         scene_size = extent[1] - extent[0]
@@ -128,12 +183,12 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
             return np.vstack([np.zeros(self.dims.ndim), np.repeat(512, self.dims.ndim)])
         return self.layers.extent.world[:, self.dims.displayed]
 
-    def _on_grid_change(self, event):
+    def _on_grid_change(self, event) -> None:
         """Arrange the current layers is a 2D grid."""
         extent = self._sliced_extent_world
-        n_layers = len(self.layers)
+        n = len(self.layers)
         for i, layer in enumerate(self.layers):
-            i_row, i_column = self.grid.position(n_layers - 1 - i, n_layers)
+            i_row, i_column = self.grid.position(n - 1 - i, n)
             self._subplot(layer, (i_row, i_column), extent)
 
     def _subplot(self, layer, position, extent):
@@ -179,7 +234,10 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         layer = event.value
 
         # Connect individual layer events to viewer events
-        layer.events.interactive.connect(self._update_interactive)
+        # TODO: in a future PR, we should now be able to connect viewer *only*
+        # to viewer.layers.events... and avoid direct viewer->layer connections
+        layer.events.mouse_pan.connect(self._update_mouse_pan)
+        layer.events.mouse_zoom.connect(self._update_mouse_zoom)
         layer.events.cursor.connect(self._update_cursor)
         layer.events.cursor_size.connect(self._update_cursor_size)
         layer.events.data.connect(self._on_layers_change)
@@ -236,7 +294,7 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         self._on_layers_change(None)
         self._on_grid_change(None)
 
-    def add_layer(self, layer: Layer) -> Layer:
+    def add_layer(self, layer: n_layers.Layer) -> n_layers.Layer:
         """Add a layer to the viewer.
 
         Parameters
@@ -262,16 +320,51 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         if active_layer is None:
             self.help = ""
             self.cursor.style = "standard"
-            self.camera.interactive = True
         else:
             self.help = active_layer.help
             self.cursor.style = active_layer.cursor
             self.cursor.size = active_layer.cursor_size
-            self.camera.interactive = active_layer.interactive
+            self.camera.mouse_pan = active_layer.mouse_pan
+            self.camera.mouse_zoom = active_layer.mouse_zoom
+            self._update_status_bar_from_cursor()
 
-    def _update_interactive(self, event):
-        """Set the viewer interactivity with the `event.interactive` bool."""
-        self.camera.interactive = event.interactive
+    def _update_status_bar_from_cursor(self, event: Event = None) -> None:
+        """Update the status bar based on the current cursor position.
+
+        This is generally used as a callback when cursor.position is updated.
+        """
+        # Update status and help bar based on active layer
+        if not self.mouse_over_canvas:
+            return
+        active = self.layers.selection.active
+        if active is not None:
+            self.status = active.get_status(
+                self.cursor.position,
+                view_direction=self.cursor._view_direction,
+                dims_displayed=list(self.dims.displayed),
+                world=True,
+            )
+
+            self.help = active.help
+            if self.tooltip.visible:
+                self.tooltip.text = active._get_tooltip_text(
+                    self.cursor.position,
+                    view_direction=self.cursor._view_direction,
+                    dims_displayed=list(self.dims.displayed),
+                    world=True,
+                )
+        else:
+            self.status = "Ready"
+
+    def _update_mouse_pan(self, event):
+        """Set the viewer interactive mouse panning"""
+        if event.source is self.layers.selection.active:
+            self.camera.mouse_pan = event.mouse_pan
+
+    def _update_mouse_zoom(self, event):
+        """Set the viewer interactive mouse zoom"""
+        if event.source is self.layers.selection.active:
+            self.camera.mouse_zoom = event.mouse_zoom
 
     def _update_cursor(self, event):
         """Set the viewer cursor with the `event.cursor` string."""
@@ -299,3 +392,8 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
                 world=True,
             )
             self.help = active.help
+
+
+for _layer in (n_layers.Image, n_layers.Labels):
+    func = create_add_method(_layer)
+    setattr(ViewerModelBase, func.__name__, func)

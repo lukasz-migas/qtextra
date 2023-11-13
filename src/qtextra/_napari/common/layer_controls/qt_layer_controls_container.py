@@ -1,31 +1,52 @@
 """Container class."""
-from napari.layers import Image
-from napari_plot._qt.layer_controls.qt_infline_controls import QtInfLineControls
-from napari_plot._qt.layer_controls.qt_line_controls import QtLineControls
-from napari_plot._qt.layer_controls.qt_multiline_controls import QtMultiLineControls
-from napari_plot._qt.layer_controls.qt_region_controls import QtRegionControls
-from napari_plot._qt.layer_controls.qt_scatter_controls import QtScatterControls
-from napari_plot.layers import Centroids, InfLine, Line, MultiLine, Region, Scatter
+try:
+    from napari_plot._qt.layer_controls.qt_infline_controls import QtInfLineControls
+    from napari_plot._qt.layer_controls.qt_line_controls import QtLineControls
+    from napari_plot._qt.layer_controls.qt_multiline_controls import QtMultiLineControls
+    from napari_plot._qt.layer_controls.qt_region_controls import QtRegionControls
+    from napari_plot._qt.layer_controls.qt_scatter_controls import QtScatterControls
+    from napari_plot.layers import Centroids, InfLine, Line, MultiLine, Region, Scatter
+except ImportError:
+    Centroids, InfLine, Line, MultiLine, Region, Scatter = None, None, None, None, None, None
+    QtInfLineControls, QtLineControls, QtMultiLineControls, QtRegionControls, QtScatterControls = (
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+
+# from napari._qt.layer_controls.qt_image_controls import QtImageControls
+from napari._qt.layer_controls.qt_surface_controls import QtSurfaceControls
+from napari._qt.layer_controls.qt_vectors_controls import QtVectorsControls
+from napari.layers import Image, Labels, Points, Shapes, Surface, Vectors
 from qtpy.QtWidgets import QFrame, QStackedWidget
 
+from qtextra._napari.common.layer_controls.qt_image_controls import QtImageControls
+from qtextra._napari.common.layer_controls.qt_labels_controls import QtLabelsControls
 from qtextra._napari.common.layer_controls.qt_points_controls import QtPointsControls
 from qtextra._napari.common.layer_controls.qt_shapes_controls import QtShapesControls
-from qtextra._napari.image.layer_controls.qt_image_controls import QtImageControls
-from qtextra._napari.image.layer_controls.qt_labels_controls import QtLabelsControls
-from qtextra._napari.image.layers import Labels, Points, Shapes
 
 layer_to_controls = {
     Labels: QtLabelsControls,
     Image: QtImageControls,  # must be after Labels layer
     Shapes: QtShapesControls,
     Points: QtPointsControls,
-    Line: QtLineControls,
-    Centroids: QtLineControls,
-    Scatter: QtScatterControls,
-    Region: QtRegionControls,
-    InfLine: QtInfLineControls,
-    MultiLine: QtMultiLineControls,
+    Surface: QtSurfaceControls,
+    Vectors: QtVectorsControls,
 }
+# add if napari-plot is available
+if Centroids is not None:
+    layer_to_controls.update(
+        {
+            Line: QtLineControls,
+            Centroids: QtLineControls,
+            Scatter: QtScatterControls,
+            Region: QtRegionControls,
+            InfLine: QtInfLineControls,
+            MultiLine: QtMultiLineControls,
+        }
+    )
 
 
 def create_qt_layer_controls(layer):
@@ -75,6 +96,7 @@ class QtLayerControlsContainer(QStackedWidget):
 
         self.setMouseTracking(True)
         self.empty_widget = QFrame()
+        self.empty_widget.setObjectName("empty_controls_widget")
         self.widgets = {}
         self.addWidget(self.empty_widget)
         self.setCurrentWidget(self.empty_widget)
@@ -82,6 +104,19 @@ class QtLayerControlsContainer(QStackedWidget):
         self.viewer.layers.events.inserted.connect(self._add)
         self.viewer.layers.events.removed.connect(self._remove)
         self.viewer.layers.selection.events.active.connect(self._display)
+        viewer.dims.events.ndisplay.connect(self._on_ndisplay_changed)
+
+    def _on_ndisplay_changed(self, event):
+        """Responds to a change in the dimensionality displayed in the canvas.
+
+        Parameters
+        ----------
+        event : Event
+            Event with the new dimensionality value at `event.value`.
+        """
+        for widget in self.widgets.values():
+            if widget is not self.empty_widget:
+                widget.ndisplay = event.value
 
     def _display(self, event):
         """Change the displayed controls to be those of the target layer.
@@ -108,6 +143,7 @@ class QtLayerControlsContainer(QStackedWidget):
         """
         layer = event.value
         controls = create_qt_layer_controls(layer)
+        controls.ndisplay = self.viewer.dims.ndisplay
         self.addWidget(controls)
         self.widgets[layer] = controls
 
