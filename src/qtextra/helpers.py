@@ -1,4 +1,6 @@
 """Various helpers to make making of UI elements easier."""
+from __future__ import annotations
+
 import os.path
 import typing as ty
 from contextlib import contextmanager
@@ -26,6 +28,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel
     from qtextra.widgets.qt_image_button import QtImagePushButton, QtLockButton, QtToolbarPushButton
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
+    from qtextra.widgets.qt_multi_select import QtMultiSelect
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
     from qtextra.widgets.qt_scroll_label import QtScrollableLabel
@@ -198,7 +201,7 @@ def make_label(
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
-        widget.setTextFormat(Qt.RichText)
+        widget.setTextFormat(Qt.RichText)  # type: ignore[attr-defined]
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextBrowserInteraction)
         widget.setOpenExternalLinks(True)
     if alignment is not None:
@@ -228,7 +231,7 @@ def make_scrollable_label(
     tooltip: ty.Optional[str] = None,
     selectable: bool = False,
     visible: bool = True,
-) -> "QtScrollableLabel":
+) -> QtScrollableLabel:
     """Make QLabel element."""
     from qtextra.widgets.qt_scroll_label import QtScrollableLabel
 
@@ -261,7 +264,7 @@ def make_click_label(
     bold: bool = False,
     elide: Qt.TextElideMode = Qt.ElideNone,
     tooltip: str = "",
-) -> "QtClickableLabel":
+) -> QtClickableLabel:
     """Make clickable label."""
     from qtextra.widgets.qt_click_label import QtClickableLabel
 
@@ -289,7 +292,7 @@ def make_qta_label(
     large: bool = False,
     retain_size: bool = False,
     **kwargs,
-) -> "QtQtaLabel":
+) -> QtQtaLabel:
     """Make QLabel element."""
     from qtextra.widgets.qt_icon_label import QtQtaLabel
 
@@ -332,7 +335,7 @@ def make_eliding_label(
     tooltip: ty.Optional[str] = None,
     elide: Qt.TextElideMode = Qt.ElideMiddle,
     font_size: ty.Optional[int] = None,
-) -> "QtElidingLabel":
+) -> QtElidingLabel:
     """Make single-line QLabel with automatic eliding."""
     from qtextra.widgets.qt_eliding_label import QtElidingLabel
 
@@ -438,6 +441,37 @@ def make_text_edit(parent, text: str = "", tooltip: ty.Optional[str] = None, pla
     return widget
 
 
+def make_multi_select(
+    parent: Qw.QWidget,
+    description: str = "",
+    options: list[str] | None = None,
+    value: str = "",
+    default: str = "",
+    placeholder: str = "Select...",
+    func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
+    func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
+    items: dict[str, ty.Any] | None = None,
+        show_btn: bool = True,
+    **kwargs: ty.Any,
+) -> QtMultiSelect:
+    """Make multi select."""
+    from qtextra.widgets.qt_multi_select import QtMultiSelect
+
+    return QtMultiSelect.from_schema(
+        parent,
+        description=description,
+        options=options,
+        value=value,
+        default=default,
+        placeholder=placeholder,
+        func=func,
+        func_changed=func_changed,
+        items=items,
+        show_btn=show_btn,
+        **kwargs,
+    )
+
+
 def make_combobox(
     parent,
     items: ty.Optional[ty.Iterable[str]] = None,
@@ -449,8 +483,8 @@ def make_combobox(
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     expand: bool = True,
     object_name: ty.Optional[str] = None,
-    data=None,
-    **kwargs,
+    data: dict | None = None,
+    **kwargs: ty.Any,
 ) -> Qw.QComboBox:
     """Make QComboBox."""
     if enum is not None:
@@ -470,7 +504,7 @@ def make_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -488,8 +522,8 @@ def make_checkable_combobox(
     default: ty.Optional[str] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     expand: bool = True,
-    data=None,
-    **kwargs,
+    data: dict | None = None,
+    **kwargs: ty.Any,
 ) -> Qw.QComboBox:
     """Make QComboBox."""
     from qtextra.widgets.qt_checkable_combobox import QtCheckableComboBox
@@ -509,7 +543,7 @@ def make_checkable_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -587,7 +621,7 @@ def make_searchable_combobox(
     object_name: ty.Optional[str] = None,
     data=None,
     **kwargs,
-) -> "QtSearchableComboBox":
+) -> QtSearchableComboBox:
     """Make QComboBox."""
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
 
@@ -608,7 +642,7 @@ def make_searchable_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -673,7 +707,7 @@ def make_qta_icon(name: str, color: ty.Optional[str] = None, **kwargs):
     return icon
 
 
-def make_svg_label(parent, object_name: str, tooltip: ty.Optional[str] = None) -> "QtIconLabel":
+def make_svg_label(parent, object_name: str, tooltip: ty.Optional[str] = None) -> QtIconLabel:
     """Make icon label."""
     widget = QtIconLabel(parent=parent, object_name=object_name)
     if tooltip:
@@ -690,7 +724,7 @@ def make_btn(
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     font_size: ty.Optional[int] = None,
     bold: bool = False,
-) -> "QtPushButton":
+) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
 
@@ -717,7 +751,7 @@ def make_tool_btn(
     flat: bool = False,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     font_size: ty.Optional[int] = None,
-) -> "QtPushButton":
+) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_tool_button import QtToolButton
 
@@ -734,7 +768,7 @@ def make_tool_btn(
     return widget
 
 
-def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> "QtRichTextButton":
+def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> QtRichTextButton:
     """Make button."""
     widget = QtRichTextButton(parent, text)
     if tooltip:
@@ -744,7 +778,7 @@ def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: boo
     return widget
 
 
-def make_active_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> "QtActivePushButton":
+def make_active_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> QtActivePushButton:
     """Make button with activity indicator."""
     widget = QtActivePushButton(parent=parent)
     widget.setParent(parent)
@@ -764,7 +798,7 @@ def make_scroll_area(parent, vertical=Qt.ScrollBarAsNeeded, horizontal=Qt.Scroll
     widget.setWidgetResizable(True)
     widget.setVerticalScrollBarPolicy(vertical)
     widget.setHorizontalScrollBarPolicy(horizontal)
-    widget.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)
+    widget.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
     return scroll_area, widget
 
 
@@ -790,7 +824,7 @@ def make_qta_btn(
     label: str = "",
     standout: bool = False,
     **kwargs,
-) -> "QtImagePushButton":
+) -> QtImagePushButton:
     """Make button with qtawesome icon."""
     from qtextra.widgets.qt_image_button import QtImagePushButton
 
@@ -837,7 +871,7 @@ def make_lock_btn(
     size: ty.Optional[ty.Tuple[int, int]] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     tooltip: ty.Optional[str] = None,
-) -> "QtLockButton":
+) -> QtLockButton:
     """Make lock button."""
     from qtextra.widgets.qt_image_button import QtLockButton
 
@@ -867,7 +901,7 @@ def make_svg_btn(
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
     checkable: bool = False,
-) -> "QtImagePushButton":
+) -> QtImagePushButton:
     """Make button."""
     from qtextra.widgets.qt_image_button import QtImagePushButton
 
@@ -893,7 +927,7 @@ def make_toolbar_btn(
     medium: bool = False,
     large: bool = False,
     icon_kwargs=None,
-) -> "QtToolbarPushButton":
+) -> QtToolbarPushButton:
     """Make button."""
     from qtextra.widgets.qt_image_button import QtToolbarPushButton
 
@@ -922,7 +956,7 @@ def make_swatch(
     tooltip: str = "",
     value: ty.Optional[ty.Union[str, np.ndarray]] = None,
     **kwargs,
-) -> "QtColorSwatch":
+) -> QtColorSwatch:
     """Make color swatch."""
     from qtextra.widgets.qt_color_button import QtColorSwatch
 
@@ -969,7 +1003,7 @@ def make_bitmap_tool_btn(
     min_size: ty.Optional[ty.Tuple[int]] = None,
     max_size: ty.Optional[ty.Tuple[int]] = None,
     tooltip: ty.Optional[str] = None,
-) -> "QtToolButton":
+) -> QtToolButton:
     """Make bitmap button."""
     from qtextra.widgets.qt_tool_button import QtToolButton
 
@@ -1013,7 +1047,7 @@ def make_checkbox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if tristate:
         widget.setTristate(tristate)
     if func:
@@ -1049,7 +1083,7 @@ def make_slider(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     return widget
 
 
@@ -1134,7 +1168,7 @@ def make_labelled_slider(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     return widget
 
 
@@ -1172,7 +1206,7 @@ def make_int_spin_box(
     if suffix:
         widget.setSuffix(suffix)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
@@ -1211,7 +1245,7 @@ def make_double_spin_box(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
@@ -1232,7 +1266,7 @@ def make_radio_btn(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)
+        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if checked:
         widget.setChecked(checked)
     if func:
@@ -1255,7 +1289,7 @@ def make_h_line_with_text(label: str, parent: Qw.QWidget = None, bold: bool = Fa
     )
 
 
-def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtHorzLine":
+def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> QtHorzLine:
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtHorzLine
 
@@ -1267,7 +1301,7 @@ def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtHorzLine":
     return widget
 
 
-def make_v_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtVertLine":
+def make_v_line(parent: Qw.QWidget = None, thin: bool = False) -> QtVertLine:
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtVertLine
 
@@ -1279,13 +1313,13 @@ def make_v_line(parent: Qw.QWidget = None, thin: bool = False) -> "QtVertLine":
 
 def make_v_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     """Make vertical QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Preferred, Qw.QSizePolicy.Expanding)
+    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Preferred, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
     return widget
 
 
 def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     """Make horizontal QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Preferred)
+    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Preferred)  # type: ignore[attr-defined]
     return widget
 
 
@@ -1366,7 +1400,7 @@ def _set_in_layout(
 
 def make_progressbar(
     parent, minimum: int = 0, maximum: int = 100, with_progress: bool = False
-) -> ty.Union[Qw.QProgressBar, "QtLabeledProgressBar"]:
+) -> ty.Union[Qw.QProgressBar, QtLabeledProgressBar]:
     """Make progressbar."""
     if with_progress:
         from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
@@ -1416,7 +1450,7 @@ def polish_widget(*widget: Qw.QWidget):
         widget_.style().polish(widget_)
 
 
-def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options") -> "QtCheckCollapsible":
+def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options") -> QtCheckCollapsible:
     """Make collapsible widget."""
     content = Qw.QWidget()
     content.setLayout(make_form_layout())
@@ -1462,6 +1496,7 @@ def set_expanding_sizer_policy(
     v_stretch: bool = False,
 ):
     """Set expanding policy."""
+
     size_policy = Qw.QSizePolicy(not_expanding if not horz else expanding, not_expanding if not vert else expanding)
     widget.setSizePolicy(size_policy)
     size_policy.setHorizontalStretch(h_stretch)
@@ -1509,7 +1544,7 @@ def make_menu_item(
     checkable: bool = False,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     disabled: bool = False,
-) -> "QtQtaAction":
+) -> QtQtaAction:
     """Make menu item."""
     from qtextra.widgets.qt_action import QtQtaAction
 
@@ -1556,7 +1591,7 @@ def make_overlay_message(
     ok_btn: bool = False,
     ok_func=None,
     ok_text="OK",
-) -> "QtOverlayDismissMessage":
+) -> QtOverlayDismissMessage:
     """Add overlay message to widget."""
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
 
@@ -1704,7 +1739,7 @@ def get_filename_with_path(
         return str((Path(path) / filename).with_suffix(extension))
 
 
-def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True, as_array: bool = False):
+def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True, as_array: bool = False) -> np.ndarray:
     """Get color."""
     from qtpy.QtGui import QColor
 
@@ -1719,7 +1754,7 @@ def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True
     dlg = Qw.QColorDialog(color, parent=parent)
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
-    new_color: ty.Optional[ty.Union, str, np.ndarray] = None
+    new_color: ty.Optional[ty.Union[str, np.ndarray]] = None
     if dlg.exec_():
         new_color = dlg.currentColor()
         if as_hex:
@@ -1734,7 +1769,7 @@ def confirm(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you
     from qtpy.QtWidgets import QDialog
 
     dlg = QDialog(parent)
-    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore[attr-defined]
     dlg.setObjectName("confirm_dialog")
     dlg.setMinimumSize(350, 200)
     dlg.setWindowTitle(title)
@@ -1767,7 +1802,7 @@ def confirm_with_text(
     return bool(dlg.exec_())
 
 
-def get_text(parent, label: str = "New value", title: str = "Text", value: str = "") -> ty.Optional[str]:
+def get_text(parent: Qw.QWidget, label: str = "New value", title: str = "Text", value: str = "") -> ty.Optional[str]:
     """Get text."""
     text, ok = Qw.QInputDialog.getText(parent, title, label, text=value)
     if ok:
@@ -1804,7 +1839,7 @@ def get_double(
 
 
 @contextmanager
-def qt_signals_blocked(*obj):
+def qt_signals_blocked(*obj) -> None:
     """Context manager to temporarily block signals from `obj`."""
     [_obj.blockSignals(True) for _obj in obj]
     yield
@@ -1812,7 +1847,7 @@ def qt_signals_blocked(*obj):
 
 
 @contextmanager
-def event_hook_removed():
+def event_hook_removed() -> None:
     """Context manager to temporarily remove the PyQt5 input hook."""
     from qtpy import QtCore
 
@@ -1837,7 +1872,7 @@ def disable_with_opacity(
     widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]],
     disabled: bool,
     min_opacity: float = 0.5,
-):
+) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     for wdg in widget_list:
         if isinstance(wdg, str):
@@ -1850,7 +1885,7 @@ def disable_with_opacity(
         widget.setGraphicsEffect(op)
 
 
-def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.5):
+def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.5) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     for wdg in objs:
         wdg.setEnabled(not disabled)
@@ -1863,13 +1898,13 @@ def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.5)
         wdg.setGraphicsEffect(op)
 
 
-def hide_widgets(*objs: Qw.QWidget, hidden: bool):
+def hide_widgets(*objs: Qw.QWidget, hidden: bool) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     for wdg in objs:
         wdg.setVisible(not hidden)
 
 
-def set_opacity(widget, disabled: bool, min_opacity: float = 0.5):
+def set_opacity(widget, disabled: bool, min_opacity: float = 0.5) -> None:
     """Set opacity on object."""
     op = Qw.QGraphicsOpacityEffect(widget)
     op.setOpacity(min_opacity if disabled else 1.0)
@@ -1889,8 +1924,8 @@ def make_spacer_widget(
 
 
 def add_flash_animation(
-    widget: Qw.QWidget, duration: int = 300, color: "Array" = (0.5, 0.5, 0.5, 0.5), n_loop: int = 1
-):
+    widget: Qw.QWidget, duration: int = 300, color: Array = (0.5, 0.5, 0.5, 0.5), n_loop: int = 1
+) -> None:
     """Add flash animation to widget to highlight certain action (e.g. taking a screenshot).
 
     Parameters

@@ -398,7 +398,7 @@ class QtCheckableTableView(QTableView):
         TEXT_COLOR = THEMES.get_theme_color()
         LINK_COLOR = THEMES.get_hex_color("highlight")
         with suppress(RuntimeError):
-            self.update()
+            self.update(QModelIndex())
 
     def _on_check_row(self, evt):
         """Event triggers check/uncheck of row."""
