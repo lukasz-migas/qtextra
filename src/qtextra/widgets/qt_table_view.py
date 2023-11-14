@@ -369,7 +369,7 @@ class QtCheckableTableView(QTableView):
         self._config = config
         self._header_columns = None
         self._is_init = False
-        self._enable_all_check = enable_all_check
+        self.enable_all_check = enable_all_check
         self._double_click_to_check = double_click_to_check
         self._sortable = sortable
 
@@ -687,7 +687,7 @@ class QtCheckableTableView(QTableView):
 
     def sortByColumn(self, index: int):
         """Override method."""
-        if index == 0 and self._enable_all_check:
+        if index == 0 and self.enable_all_check:
             self.header.setSortIndicatorShown(False)
             self.model().check_all_rows()
             return
