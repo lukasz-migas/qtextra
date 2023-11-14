@@ -2,11 +2,21 @@
 import operator
 import typing as ty
 from contextlib import suppress
+from enum import Enum
 
 import numpy as np
 from loguru import logger
 from natsort.natsort import index_natsorted, order_by_index
-from qtpy.QtCore import QAbstractTableModel, QModelIndex, Qt, Signal, Slot
+from qtpy.QtCore import (
+    QAbstractTableModel,
+    QModelIndex,
+    QRegularExpression,
+    QRegularExpressionMatch,
+    QSortFilterProxyModel,
+    Qt,
+    Signal,
+    Slot,
+)
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
 from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 
@@ -18,6 +28,46 @@ from qtextra.utils.utilities import connect
 
 TEXT_COLOR: str = "#000000"
 LINK_COLOR: str = "#0000FF"
+
+
+class MultiFilterMode(str, Enum):
+    """Multi filter mode."""
+
+    OR = "OR"
+    AND = "AND"
+
+
+class FilterProxyModel(QSortFilterProxyModel):
+    """Proxy model to filter by."""
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        QSortFilterProxyModel.__init__(self, *args, **kwargs)
+        self.filters: dict[int, str] = {}
+        self.multi_filter_mode = MultiFilterMode.AND
+
+    def setFilterByColumn(self, text: str, column: int) -> None:
+        """Set filter by column."""
+        if not text and column in self.filters:
+            del self.filters[column]
+        self.filters[column] = text
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        """Filter rows."""
+        if not self.filters:
+            return True
+
+        results: list[bool] = []
+        for key, text in self.filters.items():
+            value = ""
+            index = self.sourceModel().index(source_row, key, source_parent)
+            if index.isValid():
+                value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
+                if not value:
+                    return True
+            results.append(text in value)
+        matched = any(results) if self.multi_filter_mode == MultiFilterMode.OR else all(results)
+        return matched
 
 
 class QtCheckableItemModel(QAbstractTableModel):
@@ -53,8 +103,8 @@ class QtCheckableItemModel(QAbstractTableModel):
             icon_col = []
 
         self._table = data
-        self._no_sort_col = no_sort_col
-        self._hidden_col = hidden_col
+        self.no_sort_col = no_sort_col
+        self.hidden_col = hidden_col
         self.state = False
         self.original_index = list(range(len(self._table)))
         self.header = header
@@ -153,7 +203,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def sort(self, column: int, order=None) -> None:
         """Sort table."""
-        if self._no_sort_col and column in self._no_sort_col:
+        if self.no_sort_col and column in self.no_sort_col:
             return
 
         # emit signal about upcoming change
@@ -428,6 +478,13 @@ class QtCheckableTableView(QTableView):
         """Return header."""
         return self.horizontalHeader()
 
+    def model(self) -> QtCheckableItemModel:
+        """Return instance of model."""
+        model = super().model()
+        if isinstance(model, FilterProxyModel):
+            return model.sourceModel()
+        return model
+
     def on_table_clicked(self, index: ty.Optional[QModelIndex] = None) -> None:
         """Imitate row selection."""
         if index is None:
@@ -462,7 +519,7 @@ class QtCheckableTableView(QTableView):
 
         # hide columns
         model = self.model()
-        for n_col in model._hidden_col:
+        for n_col in model.hidden_col:
             self.setColumnHidden(n_col, True)
 
         self._is_init = True
@@ -529,10 +586,10 @@ class QtCheckableTableView(QTableView):
         self._validate_data(data, len(header))
         model = QtCheckableItemModel(
             self,
-            data,
-            header,
-            no_sort_col,
-            hidden_col,
+            data=data,
+            header=header,
+            no_sort_col=no_sort_col,
+            hidden_col=hidden_col,
             color_col=self._color_column,
             html_col=html_col,
             icon_col=icon_col,
