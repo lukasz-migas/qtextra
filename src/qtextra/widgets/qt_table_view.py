@@ -328,7 +328,7 @@ class QtCheckableItemModel(QAbstractTableModel):
     def roleNames(self):
         """Return role names."""
         roles = QAbstractTableModel.roleNames(self)
-        roles["Checked"] = Qt.ItemDataRole.CheckStateRole
+        roles[hash("Checked")] = Qt.ItemDataRole.CheckStateRole
         return roles
 
     def reset(self):
