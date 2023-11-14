@@ -1,4 +1,6 @@
 """Table view."""
+from __future__ import annotations
+
 import operator
 import typing as ty
 from contextlib import suppress
@@ -10,8 +12,6 @@ from natsort.natsort import index_natsorted, order_by_index
 from qtpy.QtCore import (
     QAbstractTableModel,
     QModelIndex,
-    QRegularExpression,
-    QRegularExpressionMatch,
     QSortFilterProxyModel,
     Qt,
     Signal,
@@ -39,6 +39,8 @@ class MultiFilterMode(str, Enum):
 
 class FilterProxyModel(QSortFilterProxyModel):
     """Proxy model to filter by."""
+
+    sourceModel: ty.Callable[[], QtCheckableItemModel]
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         QSortFilterProxyModel.__init__(self, *args, **kwargs)
@@ -410,6 +412,7 @@ class QtCheckableTableView(QTableView):
         enable_all_check: bool = True,
         double_click_to_check: bool = False,
         sortable: bool = True,
+        checkable: bool = False,
         **kwargs: ty.Any,
     ):
         super().__init__(*args, **kwargs)
@@ -420,6 +423,7 @@ class QtCheckableTableView(QTableView):
         self._header_columns = None
         self._is_init = False
         self.enable_all_check = enable_all_check
+        self.checkable = checkable
         self._double_click_to_check = double_click_to_check
         self._sortable = sortable
 
@@ -483,6 +487,17 @@ class QtCheckableTableView(QTableView):
         model = super().model()
         if isinstance(model, FilterProxyModel):
             return model.sourceModel()
+        return model
+
+    def is_proxy(self) -> bool:
+        """Return True if model is a proxy model."""
+        return isinstance(super().model(), FilterProxyModel)
+
+    def proxy_or_model(self) -> QtCheckableItemModel:
+        """Return instance of model."""
+        model = super().model()
+        if isinstance(model, FilterProxyModel):
+            return model
         return model
 
     def on_table_clicked(self, index: ty.Optional[QModelIndex] = None) -> None:
@@ -576,6 +591,7 @@ class QtCheckableTableView(QTableView):
         hidden_col: ty.Optional[ty.List[int]] = None,
         html_col: ty.Optional[ty.List[int]] = None,
         icon_col: ty.Optional[ty.List[int]] = None,
+        checkable: bool | str = "auto",
     ) -> None:
         """Set data."""
         if hidden_col is None:
@@ -583,6 +599,10 @@ class QtCheckableTableView(QTableView):
         if no_sort_col is None:
             no_sort_col = []
         self._header_columns = header
+        if checkable == "auto" and header:
+            checkable = header[0] == ""  # empty column usually indicates that that the first column is checkable
+        else:
+            checkable = checkable
         self._validate_data(data, len(header))
         model = QtCheckableItemModel(
             self,
@@ -594,6 +614,7 @@ class QtCheckableTableView(QTableView):
             html_col=html_col,
             icon_col=icon_col,
         )
+        self.checkable = bool(checkable)
         model.evt_checked.connect(self.on_check)
         self.set_model(model)
         self.init()
@@ -742,11 +763,12 @@ class QtCheckableTableView(QTableView):
         except ValueError:
             return -1
 
-    def sortByColumn(self, index: int):
+    def sortByColumn(self, index: int) -> None:
         """Override method."""
-        if index == 0 and self.enable_all_check:
+        if index == 0 and self.checkable:
             self.header.setSortIndicatorShown(False)
-            self.model().check_all_rows()
+            if self.enable_all_check:
+                self.model().check_all_rows()
             return
         else:
             self.header.setSortIndicatorShown(True)
