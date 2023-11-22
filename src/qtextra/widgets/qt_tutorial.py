@@ -87,21 +87,21 @@ class QtTutorial(QDialog):
     # noinspection PyAttributeOutsideInit
     def make_ui(self) -> None:
         """Setup UI."""
-        self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=True)
-        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=True)
-        self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=True)
+        self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=False)
+        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=False)
+        self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=False)
 
-        self.chevron_down_left = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=True)
-        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=True)
-        self.chevron_down_right = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=True)
+        self.chevron_down_left = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=False)
+        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=False)
+        self.chevron_down_right = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=False)
 
-        self.chevron_left_top = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=True)
-        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=True)
-        self.chevron_left_bottom = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=True)
+        self.chevron_left_top = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=False)
+        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=False)
+        self.chevron_left_bottom = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=False)
 
-        self.chevron_right_top = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=True)
-        self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=True)
-        self.chevron_right_bottom = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=True)
+        self.chevron_right_top = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
+        self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
+        self.chevron_right_bottom = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
         self.chevrons = {
             Position.BOTTOM_LEFT: self.chevron_up_left,
             Position.BOTTOM: self.chevron_up_mid,
@@ -222,22 +222,23 @@ class QtTutorial(QDialog):
         x_pad, y_pad = 5, 5
         popup_size = self.size()
         icon_pos = self.chevrons[position].pos()
+        x_offset = int(self.chevrons[position].size().width() / 2)
+        y_offset = int(self.chevrons[position].size().height() / 2)
         rect_of_widget = widget.rect()
         if position in ["left", "left_top", "left_bottom"]:
             x = rect_of_widget.left() - popup_size.width() - x_pad
-            y = rect_of_widget.center().y() - icon_pos.y()
+            y = rect_of_widget.center().y() - icon_pos.y() - y_offset
         elif position in ["right", "right_top", "right_bottom"]:
             x = rect_of_widget.right() + x_pad
-            y = rect_of_widget.center().y() - icon_pos.y()
+            y = rect_of_widget.center().y() - icon_pos.y() - y_offset
         elif position in ["top", "top_left", "top_right"]:
             y = rect_of_widget.top() - popup_size.height() - y_pad
-            x = rect_of_widget.center().x() - icon_pos.x()
+            x = rect_of_widget.center().x() - icon_pos.x() - x_offset
         elif position in ["bottom", "bottom_left", "bottom_right"]:
-            x = rect_of_widget.center().x() - icon_pos.x()
             y = rect_of_widget.bottom() + y_pad
+            x = rect_of_widget.center().x() - icon_pos.x() - x_offset
         else:
             raise ValueError(f"Invalid position '{position}'.")
-        print(x, y)
         pos = widget.mapToGlobal(QPoint(int(x), int(y)))
         self.move(pos)
 

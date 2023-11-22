@@ -5,7 +5,7 @@ import typing as ty
 
 from loguru import logger
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
-from qtpy.QtWidgets import QApplication, QMainWindow, QWidget
+from qtpy.QtWidgets import QApplication, QDockWidget, QMainWindow, QWidget
 
 if ty.TYPE_CHECKING:
     from qtreload.qt_reload import QtReloadWidget
@@ -29,7 +29,15 @@ def qdev(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> "QtRel
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
 
-    return QtReloadWidget(modules, parent=parent)
+    widget = QtReloadWidget(modules, parent=parent)
+    return widget
+
+
+def qdev_dock(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> ty.Tuple["QtReloadWidget", QDockWidget]:
+    """Create reload widget in dock."""
+    widget = qdev(parent, modules)
+    dock = QDockWidget("Reload", widget)
+    return widget, dock
 
 
 def qapplication(test_time: int = 3):

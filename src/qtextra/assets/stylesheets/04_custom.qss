@@ -392,3 +392,9 @@ QComboBox#filter_combo {
     font-size: {{ increase(font_size, 1) }};
     font-weight: bold;
 }
+
+
+QtPushButton#pick_option_button {
+    font-size: {{ increase(font_size, 4) }};
+    font-weight: bold;
+}

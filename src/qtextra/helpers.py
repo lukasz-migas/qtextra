@@ -6,6 +6,7 @@ import typing as ty
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
+from pathlib import Path
 
 import numpy as np
 import qtawesome as qta
@@ -57,8 +58,24 @@ def make_form_layout(
     return layout
 
 
+def find_row_for_widget(layout: Qw.QFormLayout, widget: Qw.QWidget):
+    """Find row for widget in form layout."""
+    row = None
+    for row in range(layout.rowCount()):
+        item = layout.itemAt(row, Qw.QFormLayout.ItemRole.FieldRole)
+        if item == widget:
+            break
+        if item and item.widget() == widget:
+            break
+        item = layout.itemAt(row, Qw.QFormLayout.ItemRole.LabelRole)
+        if item and item.widget() == widget:
+            break
+    return row
+
+
 def find_row_for_label_in_form_layout(layout: Qw.QFormLayout, label: str) -> ty.Optional[int]:
     """Find index at which label is located in form layout."""
+    row = None
     for row in range(layout.rowCount()):
         item = layout.itemAt(row, Qw.QFormLayout.ItemRole.LabelRole)
         if item and item.widget().text() == label:
@@ -451,7 +468,7 @@ def make_multi_select(
     func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
     func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
     items: dict[str, ty.Any] | None = None,
-        show_btn: bool = True,
+    show_btn: bool = True,
     **kwargs: ty.Any,
 ) -> QtMultiSelect:
     """Make multi select."""
@@ -724,6 +741,7 @@ def make_btn(
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     font_size: ty.Optional[int] = None,
     bold: bool = False,
+    object_name: str = "",
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
@@ -741,6 +759,8 @@ def make_btn(
         set_bold(widget, bold)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
+    if object_name:
+        widget.setObjectName(object_name)
     return widget
 
 
@@ -857,6 +877,7 @@ def make_qta_btn(
         polish_widget(widget)
     if label:
         widget.setText(label)
+        widget.setProperty("with_text", True)
     if standout:
         widget.setProperty("standout", True)
     return widget
@@ -1496,7 +1517,6 @@ def set_expanding_sizer_policy(
     v_stretch: bool = False,
 ):
     """Set expanding policy."""
-
     size_policy = Qw.QSizePolicy(not_expanding if not horz else expanding, not_expanding if not vert else expanding)
     widget.setSizePolicy(size_policy)
     size_policy.setHorizontalStretch(h_stretch)
@@ -1652,6 +1672,15 @@ def long_toast(
     if callable(func):
         func(message)
     QtToast(parent).show_long_message(title, message, duration, position=position, icon=icon)
+
+
+def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto") -> str:
+    """Parse into a hyperlink."""
+    if value is None:
+        value = link
+    if isinstance(link, Path):
+        return f"<a href='{link.as_uri()}'>{value}</a>"
+    return f"<a href='{prefix}:{link}'>{value}</a>"
 
 
 def open_filename(parent, title: str = "Select file...", base_dir: str = "", file_filter: str = "*") -> str:

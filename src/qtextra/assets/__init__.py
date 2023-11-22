@@ -87,19 +87,19 @@ QTA_MAPPING: ty.Dict[str, str] = {
 }
 
 
-def update_icon_mapping(mapping: ty.Dict[str, str]):
+def update_icon_mapping(mapping: ty.Dict[str, str]) -> None:
     """Update icon mapping."""
     global QTA_MAPPING
     QTA_MAPPING.update(mapping)
 
 
-def update_styles(mapping: ty.Dict[str, str]):
+def update_styles(mapping: ty.Dict[str, str]) -> None:
     """Update icon mapping."""
     global STYLES
     STYLES.update(mapping)
 
 
-def update_icons(mapping: ty.Dict[str, str]):
+def update_icons(mapping: ty.Dict[str, str]) -> None:
     """Update icon mapping."""
     global ICONS
     ICONS.update(mapping)
