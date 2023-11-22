@@ -5,7 +5,7 @@ import qtawesome
 from qtpy.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QBrush, QColor, QFontMetrics, QPainter
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QHBoxLayout, QPushButton, QToolTip, QVBoxLayout
-from superqt._eliding_label import QElidingLabel
+from superqt import QElidingLabel
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
@@ -24,7 +24,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.setProperty("transparent", False)
         self.transparent = False
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
