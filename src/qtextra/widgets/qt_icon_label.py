@@ -16,7 +16,7 @@ class QtIconLabel(QLabel):
     evt_clicked = Signal()
 
     def __init__(self, object_name: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.setMouseTracking(True)
         self.setObjectName(object_name)
 
