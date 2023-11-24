@@ -1,5 +1,6 @@
 """Simple dialog to select between two options."""
 import typing as ty
+from functools import partial
 
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
@@ -21,7 +22,8 @@ class QtPickOption(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.addStretch(1)
         for option, label in options.items():
-            btn = hp.make_btn(self, label, object_name="pick_option_button", func=self.accept)
+            btn = hp.make_btn(self, label, object_name="pick_option_button",
+                              func=partial(self.on_accept, option=option))
             btn_layout.addWidget(btn)
             self.responses[btn.text()] = option
         btn_layout.addStretch(1)
@@ -31,12 +33,10 @@ class QtPickOption(QDialog):
         layout.addStretch(1)
         layout.addLayout(btn_layout)
 
-    def accept(self):
-        sender: ty.Optional[QPushButton] = self.sender()
-        if sender is None:
-            raise ValueError("No button selected.")
-        self.option = self.responses[sender.text()]
-        return super().accept()
+    def on_accept(self, option: str):
+        """Set accepted."""
+        self.option = option
+        self.accept()
 
     def reject(self):
         self.option = None
