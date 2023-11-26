@@ -33,7 +33,7 @@ class QtActivePushButton(QtPushButton):
     @property
     def active(self) -> bool:
         """Update state of the loading label."""
-        return self.loading_movie.state() == QMovie.Running
+        return self.loading_movie.state() == QMovie.MovieState.Running
 
     @active.setter
     def active(self, value: bool):

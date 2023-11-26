@@ -790,6 +790,8 @@ def make_tool_btn(
 
 def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> QtRichTextButton:
     """Make button."""
+    from qtextra.widgets.qt_buttons import QtRichTextButton
+
     widget = QtRichTextButton(parent, text)
     if tooltip:
         widget.setToolTip(tooltip)
@@ -798,8 +800,16 @@ def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: boo
     return widget
 
 
-def make_active_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> QtActivePushButton:
+def make_active_btn(
+    parent,
+    text: str,
+    tooltip: ty.Optional[str] = None,
+    flat: bool = False,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+) -> QtActivePushButton:
     """Make button with activity indicator."""
+    from qtextra.widgets.qt_buttons import QtActivePushButton
+
     widget = QtActivePushButton(parent=parent)
     widget.setParent(parent)
     widget.setText(text)
@@ -807,6 +817,8 @@ def make_active_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: b
         widget.setToolTip(tooltip)
     if flat:
         widget.setFlat(flat)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -840,7 +852,7 @@ def make_qta_btn(
     checked: bool = False,
     func_menu: ty.Optional[ty.Callable] = None,
     checked_icon_name: str = "",
-    properties: dict[str, ty.Any] = None,
+    properties: ty.Optional[dict[str, ty.Any]] = None,
     label: str = "",
     standout: bool = False,
     **kwargs,
@@ -1115,7 +1127,7 @@ def make_slider_with_text(
     step_size: int = 1,
     value: int = 1,
     orientation="horizontal",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
 ) -> Qw.QSlider:
@@ -1143,7 +1155,7 @@ def make_double_slider_with_text(
     value: float = 1,
     n_decimals: int = 1,
     orientation="horizontal",
-    tooltip: str = None,
+    tooltip: ty.Optional[str] = None,
     focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
 ) -> Qw.QSlider:
@@ -1205,7 +1217,7 @@ def make_int_spin_box(
     suffix: ty.Optional[str] = None,
     expand: bool = True,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
-    keyboard_tracking: bool = None,
+    keyboard_tracking: ty.Optional[bool] = None,
     **kwargs,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""

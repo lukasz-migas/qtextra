@@ -1,13 +1,45 @@
 """QtIcon."""
 import typing as ty
 
-import qtawesome
-from qtpy.QtCore import QSize, Qt, Signal
+from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QLabel
 
-from qtextra.assets import get_icon
 from qtextra.config import THEMES
 from qtextra.widgets._qta_mixin import QtaMixin
+
+
+class QtActiveIcon(QLabel):
+    """Active icon that shows activity."""
+
+    def __init__(self, which: str = "square", size: tuple[int, int] = (20, 20), start: bool = False):
+        from qtextra.helpers import make_gif
+
+        super().__init__()
+        self.setScaledContents(True)
+        self._active = False
+
+        self.loading_movie = make_gif(which, size=size, start=start)
+        if size is not None:
+            self.setMaximumSize(*size)
+        self.setMovie(self.loading_movie)
+        self.active = start
+
+    @property
+    def active(self) -> bool:
+        """Get active state."""
+        return self._active
+
+    @active.setter
+    def active(self, value: bool) -> None:
+        """Set active state."""
+        self._active = value
+        self.loading_movie.start() if value else self.loading_movie.stop()
+        self.show() if value else self.hide()
+
+    def set_active(self, active: bool) -> None:
+        """Set active state."""
+        self.active = active
+        print("ACTIVE", active)
 
 
 class QtIconLabel(QLabel):
