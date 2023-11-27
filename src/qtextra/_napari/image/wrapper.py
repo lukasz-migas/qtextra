@@ -46,6 +46,7 @@ class NapariImageView(ViewerBase):
             add_dims=kwargs.pop("add_dims", True),
             add_toolbars=kwargs.pop("add_toolbars", True),
             allow_extraction=kwargs.pop("allow_extraction", True),
+            disable_new_layers=kwargs.pop("disable_new_layers", False),
             **kwargs,
         )
         self.toolbar = self.widget.viewerToolbar

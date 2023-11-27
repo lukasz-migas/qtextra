@@ -29,6 +29,7 @@ class ImageViewMixin:
         disable_controls=False,
         add_toolbars=True,
         allow_extraction=True,
+            disable_new_layers: bool = False,
         **kwargs,
     ) -> NapariImageView:
         """Make image view."""
@@ -40,6 +41,7 @@ class ImageViewMixin:
             disable_controls=disable_controls,
             add_toolbars=add_toolbars,
             allow_extraction=allow_extraction,
+            disable_new_layers=disable_new_layers,
             **kwargs,
         )
 

@@ -99,6 +99,7 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
             ha = QtWidgets.QVBoxLayout()
         if add_reload:
             w = qdev()
+            w.setMaximumHeight(120)
             ha.addWidget(w)
         frame.setLayout(ha)
     if set_style:

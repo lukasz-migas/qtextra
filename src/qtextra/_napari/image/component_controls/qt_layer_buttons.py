@@ -29,7 +29,7 @@ def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
 class QtLayerButtons(QFrame):
     """Button controls for napari layers."""
 
-    def __init__(self, viewer: ViewerModel):
+    def __init__(self, viewer: ViewerModel, disable_new_layers: bool = False, **_kwargs: ty.Any):
         super().__init__()
         self.viewer = viewer
         self.delete_btn = make_qta_btn(
@@ -46,7 +46,6 @@ class QtLayerButtons(QFrame):
                 scale=self.viewer.layers.extent.step,
             ),
         )
-
         self.new_shapes_btn = make_qta_btn(
             self,
             "new_shapes",
@@ -56,14 +55,16 @@ class QtLayerButtons(QFrame):
                 scale=self.viewer.layers.extent.step,
             ),
         )
-
         self.new_labels_btn = make_qta_btn(
             self,
             "new_labels",
             "Add new free-hand draw shapes layer",
             func=lambda: self.viewer._new_labels(name="Free-draw"),
         )
-        self.new_shapes_btn.setParent(self)
+        if disable_new_layers:
+            self.new_points_btn.hide()
+            self.new_shapes_btn.hide()
+            self.new_labels_btn.hide()
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

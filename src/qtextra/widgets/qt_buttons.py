@@ -1,5 +1,7 @@
 """Standard Qt button."""
-import sys
+from __future__ import annotations
+
+import typing as ty
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QMovie, QPainter
@@ -18,7 +20,7 @@ class QtActivePushButton(QtPushButton):
 
     _pixmap = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         from qtextra.helpers import make_gif
 
@@ -26,13 +28,13 @@ class QtActivePushButton(QtPushButton):
         self.loading_movie.frameChanged.connect(self._update_icon)
         self.active = False
 
-    def _update_icon(self, _frame: int):
+    def _update_icon(self, _frame: int) -> None:
         """Update frame."""
         self.setIcon(self.loading_movie.currentPixmap())
 
     @property
     def active(self) -> bool:
-        """Update state of the loading label."""
+        """Update the state of the loading label."""
         return self.loading_movie.state() == QMovie.MovieState.Running
 
     @active.setter
@@ -46,7 +48,7 @@ class QtActivePushButton(QtPushButton):
         self._pixmap = icon
         self.repaint()
 
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
         """Paint event/."""
         super().paintEvent(event)
         if self._pixmap is not None:
@@ -92,6 +94,8 @@ class QtRichTextButton(QtPushButton):
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import sys
+
     from qtextra.utils.dev import qframe
 
     def _test():

@@ -20,8 +20,7 @@ from qtextra.utils.utilities import IS_MAC, IS_WIN
 
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
-    from qtextra.widgets.qt_button import QtPushButton
-    from qtextra.widgets.qt_buttons import QtActivePushButton, QtRichTextButton
+    from qtextra.widgets.qt_buttons import QtActivePushButton, QtPushButton, QtRichTextButton
     from qtextra.widgets.qt_click_label import QtClickableLabel
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
     from qtextra.widgets.qt_color_button import QtColorSwatch
@@ -32,6 +31,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_multi_select import QtMultiSelect
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
+    from qtextra.widgets.qt_progress_button import QtActiveProgressBarButton
     from qtextra.widgets.qt_scroll_label import QtScrollableLabel
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
     from qtextra.widgets.qt_tool_button import QtToolButton
@@ -744,7 +744,7 @@ def make_btn(
     object_name: str = "",
 ) -> QtPushButton:
     """Make button."""
-    from qtextra.widgets.qt_button import QtPushButton
+    from qtextra.widgets.qt_buttons import QtPushButton
 
     widget = QtPushButton(parent=parent)
     widget.setText(text)
@@ -819,6 +819,28 @@ def make_active_btn(
         widget.setFlat(flat)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
+    return widget
+
+
+def make_active_progress_btn(
+    parent,
+    text: str,
+    tooltip: ty.Optional[str] = None,
+    func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+    cancel_func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
+) -> QtActiveProgressBarButton:
+    """Make button with activity indicator."""
+    from qtextra.widgets.qt_progress_button import QtActiveProgressBarButton
+
+    widget = QtActiveProgressBarButton(parent=parent)
+    widget.setParent(parent)
+    widget.setText(text)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if func:
+        [widget.evt_clicked.connect(func_) for func_ in _validate_func(func)]
+    if cancel_func:
+        [widget.evt_cancel.connect(func_) for func_ in _validate_func(cancel_func)]
     return widget
 
 

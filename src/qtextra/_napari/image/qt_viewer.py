@@ -26,6 +26,7 @@ class QtViewer(QtViewerBase):
         add_dims: bool = True,
         add_toolbars: bool = True,
         allow_extraction: bool = True,
+            disable_new_layers: bool = False,
         **kwargs,
     ):
         super().__init__(
@@ -36,6 +37,7 @@ class QtViewer(QtViewerBase):
             add_dims=add_dims,
             add_toolbars=add_toolbars,
             allow_extraction=allow_extraction,
+            disable_new_layers=disable_new_layers,
             **kwargs,
         )
         _QtMainWindow._instances.append(self)
@@ -59,7 +61,7 @@ class QtViewer(QtViewerBase):
         # widget showing current layers
         self.layers = QtLayerList(self.viewer.layers)
         # widget showing layer buttons (e.g. add new shape)
-        self.layerButtons = QtLayerButtons(self.viewer)
+        self.layerButtons = QtLayerButtons(self.viewer, **kwargs)
         # viewer buttons to control 2d/3d, grid, transpose, etc
         self.viewerButtons = QtViewerButtons(self.viewer, self)
         # toolbar
