@@ -19,6 +19,7 @@ from qtpy.QtCore import (
 )
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
 from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
+from superqt.utils import ensure_main_thread
 
 from qtextra.config import THEMES
 from qtextra.helpers import make_qta_icon
@@ -385,6 +386,7 @@ class QtCheckableItemModel(QAbstractTableModel):
                     return row_id
         return -1
 
+    @ensure_main_thread
     def add_data(self, data: ty.List) -> None:
         """Add data."""
         self._table.extend(data)
@@ -392,6 +394,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         # indicate that change to data has been made
         self.layoutChanged.emit()
 
+    @ensure_main_thread
     def reset_data(self) -> None:
         """Reset data."""
         self._table.clear()
