@@ -1,4 +1,6 @@
 """Close dialog with option to not ask again."""
+from __future__ import annotations
+
 import typing as ty
 
 from qtpy.QtGui import QKeySequence
@@ -10,7 +12,9 @@ import qtextra.helpers as hp
 class QtConfirmCloseDialog(QDialog):
     """Confirm close dialog with an option to not ask again."""
 
-    def __init__(self, parent: QWidget, attr: str, save_func: ty.Callable, config: ty.Optional[object] = None) -> None:
+    def __init__(
+        self, parent: QWidget, attr: str, save_func: ty.Callable | None = None, config: ty.Optional[object] = None
+    ) -> None:
         super().__init__(parent)
         self.attr = attr
         self.config = config

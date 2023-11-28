@@ -6,9 +6,9 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFormLayout
 
 import qtextra.helpers as hp
+from qtextra._napari.common.components._scalebar_constants import UNITS_TRANSLATIONS
 from qtextra._napari.common.components._viewer_constants import POSITION_TRANSLATIONS
 from qtextra._napari.image.components.viewer_model import ViewerModel
-from qtextra._napari.common.components._scalebar_constants import UNITS_TRANSLATIONS
 
 # from qtextra.widgets.qt_color_button import QtColorSwatch
 from qtextra.widgets.qt_dialog import QtFramelessPopup
@@ -79,7 +79,13 @@ class QtScaleBarControls(QtFramelessPopup):
         self.units_combobox.currentTextChanged.connect(self.on_change_unit)
 
         self.pixel_size = hp.make_double_spin_box(
-            self, minimum=0.01, maximum=10_000, step_size=5, n_decimals=3, value=pixel_size
+            self,
+            minimum=0.01,
+            maximum=10_000,
+            step_size=5,
+            n_decimals=3,
+            value=pixel_size,
+            tooltip="Size of a single pixel in the selected units.",
         )
         self.pixel_size.valueChanged.connect(self.on_change_unit)
 
