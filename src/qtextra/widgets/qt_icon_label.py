@@ -39,7 +39,6 @@ class QtActiveIcon(QLabel):
     def set_active(self, active: bool) -> None:
         """Set active state."""
         self.active = active
-        print("ACTIVE", active)
 
 
 class QtIconLabel(QLabel):

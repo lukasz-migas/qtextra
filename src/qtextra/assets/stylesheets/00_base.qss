@@ -751,3 +751,18 @@ QHeaderView::section {
     border-style: dotted;
     border-color: {{ foreground }};
 }
+
+QTableView::indicator:unchecked {
+  image: url("theme_{{ id }}:/2d.svg");
+}
+
+QTableView::indicator:checked {
+  image: url("theme_{{ id }}:/check.svg");
+}
+
+QTableView::indicator:indeterminate {
+  image: url("theme_{{ id }}:/minus.svg");
+  padding: 2px;
+  width: 14px;
+  height: 14px;
+}

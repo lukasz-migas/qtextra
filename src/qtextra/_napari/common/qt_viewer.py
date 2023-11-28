@@ -15,7 +15,7 @@ from napari.utils.interactions import (
 )
 from napari.utils.key_bindings import KeymapHandler
 from qtpy.QtCore import QCoreApplication, Qt
-from qtpy.QtGui import QCursor, QGuiApplication
+from qtpy.QtGui import QCursor, QGuiApplication, QImage
 from qtpy.QtWidgets import QWidget
 
 from qtextra._napari.common._utilities import crosshair_pixmap
@@ -264,13 +264,78 @@ class QtViewerBase(QWidget):
         if dialog.exec_():
             pass
 
-    def screenshot(self, path=None):
+    def _screenshot(self, size=None, scale=None, flash=True, canvas_only=False) -> QImage:
+        """Capture screenshot of the currently displayed viewer.
+
+        Parameters
+        ----------
+        flash : bool
+            Flag to indicate whether flash animation should be shown after
+            the screenshot was captured.
+        size : tuple (int, int)
+            Size (resolution) of the screenshot. By default, the currently displayed size.
+            Only used if `canvas_only` is True.
+        scale : float
+            Scale factor used to increase resolution of canvas for the screenshot. By default, the currently displayed
+             resolution.
+            Only used if `canvas_only` is True.
+        canvas_only : bool
+            If True, screenshot shows only the image display canvas, and
+            if False include the napari viewer frame in the screenshot,
+            By default, True.
+
+        Returns
+        -------
+        img : QImage
+        """
+        from napari._qt.utils import add_flash_animation
+
+        if canvas_only:
+            canvas = self.canvas
+            prev_size = canvas.size
+            if size is not None:
+                if len(size) != 2:
+                    raise ValueError(f"screenshot size must be 2 values, got {len(size)}")
+                # Scale the requested size to account for HiDPI
+                size = tuple(int(dim / self.devicePixelRatio()) for dim in size)
+                canvas.size = size[::-1]  # invert x ad y for vispy
+            if scale is not None:
+                # multiply canvas dimensions by the scale factor to get new size
+                canvas.size = tuple(int(dim * scale) for dim in canvas.size)
+            try:
+                img = self.canvas.native.grabFramebuffer()
+                if flash:
+                    add_flash_animation(self)
+            finally:
+                # make sure we always go back to the right canvas size
+                if size is not None or scale is not None:
+                    canvas.size = prev_size
+        else:
+            img = self.grab().toImage()
+            if flash:
+                add_flash_animation(self)
+        return img
+
+    def screenshot(self, path=None, size=None, scale=None, flash=True, canvas_only=False):
         """Take currently displayed screen and convert to an image array.
 
         Parameters
         ----------
         path : str
             Filename for saving screenshot image.
+        size : tuple (int, int)
+            Size (resolution) of the screenshot. By default, the currently displayed size.
+            Only used if `canvas_only` is True.
+        scale : float
+            Scale factor used to increase resolution of canvas for the screenshot. By default, the currently displayed resolution.
+            Only used if `canvas_only` is True.
+        flash : bool
+            Flag to indicate whether flash animation should be shown after
+            the screenshot was captured.
+        canvas_only : bool
+            If True, screenshot shows only the image display canvas, and
+            if False include the napari viewer frame in the screenshot,
+            By default, True.
 
         Returns
         -------
@@ -280,20 +345,17 @@ class QtViewerBase(QWidget):
         """
         from skimage.io import imsave
 
-        img = QImg2array(self.canvas.native.grabFramebuffer())
+        img = QImg2array(self._screenshot(size, scale, flash, canvas_only))
         if path is not None:
             imsave(path, img)  # scikit-image imsave method
         return img
 
-    def clipboard(self):
+    def clipboard(self, size=None, scale=None, flash=True, canvas_only=False):
         """Take a screenshot of the currently displayed viewer and copy the image to the clipboard."""
-        from qtextra.helpers import add_flash_animation
-
-        img = self.canvas.native.grabFramebuffer()
+        img = self._screenshot(size, scale, flash, canvas_only)
 
         cb = QGuiApplication.clipboard()
         cb.setImage(img)
-        add_flash_animation(self)
 
     def _on_interactive(self, _event):
         """Link interactive attributes of view and viewer.
@@ -455,7 +517,7 @@ class QtViewerBase(QWidget):
         self._process_mouse_event(mouse_wheel_callbacks, event)
 
     def on_mouse_double_click(self, event):
-        """Called whenever a mouse double-click happen on the canvas
+        """Called whenever a mouse double-click happen on the canvas.
 
         Parameters
         ----------

@@ -429,6 +429,7 @@ def make_line_edit(
         text = default
     widget = Qw.QLineEdit(parent)
     widget.setText(text)
+    widget.setClearButtonEnabled(True)
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)
     if bold:

@@ -47,6 +47,12 @@ class FilterProxyModel(QSortFilterProxyModel):
         self.filters: dict[int, str] = {}
         self.multi_filter_mode = MultiFilterMode.AND
 
+    def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
+        """Sort table."""
+        if self.sourceModel().no_sort_col and column in self.sourceModel().no_sort_col:
+            return
+        super().sort(column, order)
+
     def setFilterByColumn(self, text: str, column: int) -> None:
         """Set filter by column."""
         if not text and column in self.filters:
@@ -77,6 +83,8 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     evt_checked = Signal(int, bool)
 
+    table_proxy: FilterProxyModel | None = None
+
     def __init__(
         self,
         parent,
@@ -104,7 +112,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         if icon_col is None:
             icon_col = []
 
-        self._table = data
+        self._table: list[list[ty.Any]] = data
         self.no_sort_col = no_sort_col
         self.hidden_col = hidden_col
         self.state = False
@@ -159,7 +167,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         row = index.row()
         column = index.column()
 
-        # check background color role
+        # check the background color
         if role == Qt.ItemDataRole.BackgroundRole:
             if column in self.color_column:
                 color = self._table[row][column]
@@ -185,7 +193,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             if column not in self.icon_column:
                 value = self._table[row][column]
                 return value
-        # check alignment role
+        # check the alignment role
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
         # check state
@@ -197,13 +205,13 @@ class QtCheckableItemModel(QAbstractTableModel):
                 value = self._table[row][column]
                 return make_qta_icon(value)
 
-    def headerData(self, col, orientation, role=None):
+    def headerData(self, col: int, orientation: Qt.EventPriority, role: Qt.ItemDataRole | None = None) -> str | None:
         """Get header data."""
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.header[col]
         return None
 
-    def sort(self, column: int, order=None) -> None:
+    def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
         """Sort table."""
         if self.no_sort_col and column in self.no_sort_col:
             return
@@ -225,7 +233,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         # indicate that change to data has been made
         self.layoutChanged.emit()
 
-    def setData(self, index, value, role=Qt.ItemDataRole.EditRole) -> bool:
+    def setData(self, index: QModelIndex, value: ty.Any, role=Qt.ItemDataRole.EditRole) -> bool:
         """Set data in the model."""
         row = index.row()
         column = index.column()
@@ -251,7 +259,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             return True
         return False
 
-    def update_value(self, row, column, value, role=Qt.ItemDataRole.EditRole) -> None:
+    def update_value(self, row: int, column: int, value: ty.Any, role=Qt.ItemDataRole.EditRole) -> None:
         """Update value."""
         index = self.createIndex(row, column)
 
@@ -296,6 +304,8 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Check all rows in the table."""
         self.state = not self.state
         for row, __ in enumerate(self._table):
+            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
+                continue
             self._table[row][0] = self.state
             index = self.createIndex(row, 0)
             self.dataChanged.emit(index, index)
@@ -304,6 +314,8 @@ class QtCheckableItemModel(QAbstractTableModel):
     def uncheck_all_rows(self) -> None:
         """Uncheck all rows."""
         for row, __ in enumerate(self._table):
+            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
+                continue
             self._table[row][0] = False
             index = self.createIndex(row, 0)
             self.dataChanged.emit(index, index)
@@ -336,7 +348,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.beginResetModel()
         self.endResetModel()
 
-    def get_initial_index(self, row: int):
+    def get_initial_index(self, row: int) -> int:
         """Get the index of the initial array, regardless of whether it was sorted."""
         return self.original_index[row]
 
@@ -631,7 +643,15 @@ class QtCheckableTableView(QTableView):
         if n_items == 0:
             self.init()
 
-    def _validate_data(self, data: ty.List, n_cols=None) -> None:
+    def add_data_without_set(self, data: ty.List[ty.List]) -> None:
+        """Add data."""
+        n_items = self.n_rows
+        self._validate_data(data)
+        self.model().add_data(data)
+        if n_items == 0:
+            self.init()
+
+    def _validate_data(self, data: ty.List, n_cols: ty.Optional[int] = None) -> None:
         """Validate data."""
         if n_cols is None:
             if self._header_columns is not None:
