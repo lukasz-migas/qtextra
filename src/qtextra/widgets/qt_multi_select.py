@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import typing as ty
 
+from koyo.system import IS_MAC, IS_PYINSTALLER
 from qtpy.QtCore import QEvent, QObject
 from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtFramelessTool
-from qtextra.widgets.qt_table_view import QtCheckableTableView
+from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
 
 
 class SelectionWidget(QtFramelessTool):
@@ -52,10 +53,22 @@ class SelectionWidget(QtFramelessTool):
         self.table.setup_model(
             self.TABLE_CONFIG.header, self.TABLE_CONFIG.no_sort_columns, self.TABLE_CONFIG.hidden_columns
         )
+        if not IS_PYINSTALLER and not IS_MAC:
+            self.table_proxy = FilterProxyModel(self)
+            self.table_proxy.setSourceModel(self.table.model())
+            self.table.model().table_proxy = self.table_proxy
+            self.table.setModel(self.table_proxy)
+            self.filter_by_option = hp.make_line_edit(
+                self,
+                placeholder="Type in option value...",
+                func_changed=lambda text, col=self.TABLE_CONFIG.option: self.table_proxy.setFilterByColumn(text, col),
+            )
 
         layout = hp.make_form_layout(self)
         hp.style_form_layout(layout)
         layout.addRow(header_layout)
+        if not IS_PYINSTALLER and not IS_MAC:
+            layout.addRow(hp.make_label(self, "Filter:"), self.filter_by_option)
         layout.addRow(self.table)
         layout.addRow(
             hp.make_h_layout(hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.reject))
@@ -72,6 +85,7 @@ class QtMultiSelect(QWidget):
         self.selected_options: list[str] = []
         self.text_edit = hp.make_line_edit(self, placeholder="Select...")
         self.text_edit.setReadOnly(True)
+        self.text_edit.setClearButtonEnabled(False)
         self.text_edit.installEventFilter(self)
         self.select_btn = hp.make_qta_btn(
             self, "select", func=self.on_select, tooltip="Click here to select one or more options..."

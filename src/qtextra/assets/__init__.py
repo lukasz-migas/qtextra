@@ -85,6 +85,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "paint": "fa5s.paint-brush",
     "fill": "fa5s.fill-drip",
     "cancel": "mdi.close-circle",
+    "success": "mdi.check-circle",
 }
 
 
