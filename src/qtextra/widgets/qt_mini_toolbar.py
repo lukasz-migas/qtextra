@@ -25,11 +25,11 @@ class QtMiniToolbar(QFrame):
     @property
     def max_size(self) -> int:
         """Return maximum size."""
-        return self.maximumHeight() if self.orientation == Qt.Horizontal else self.maximumWidth()
+        return self.maximumHeight() if self.orientation == Qt.Orientation.Horizontal else self.maximumWidth()
 
     @max_size.setter
     def max_size(self, value: int):
-        self.setMaximumHeight(value) if self.orientation == Qt.Horizontal else self.setMaximumWidth(value)
+        self.setMaximumHeight(value) if self.orientation == Qt.Orientation.Horizontal else self.setMaximumWidth(value)
 
     @property
     def n_items(self) -> int:
@@ -39,32 +39,37 @@ class QtMiniToolbar(QFrame):
     def _make_qta_button(
         self,
         name: str,
-        flat: bool = True,
         func: ty.Optional[ty.Callable] = None,
         tooltip: ty.Optional[str] = None,
         checkable: bool = False,
         check: bool = False,
         size: ty.Tuple[int, int] = (26, 26),
+        flat: bool = True,
+        small: bool = False,
     ):
-        btn = hp.make_qta_btn(self, name, tooltip=tooltip, flat=flat, medium=False, size=size, checkable=checkable)
-        if callable(func):
-            if checkable:
-                btn.toggled.connect(func)
-            else:
-                btn.clicked.connect(func)
-        if check:
-            btn.setChecked(True)
+        btn = hp.make_qta_btn(
+            self,
+            name,
+            tooltip=tooltip,
+            flat=flat,
+            medium=False,
+            size=size,
+            checkable=checkable,
+            checked=check,
+            func=func,
+            small=small,
+        )
         self._tools[name] = btn
         return btn
 
     def add_button(self, button):
         """Add any button the toolbar."""
-        self.layout_.addWidget(button, alignment=Qt.AlignCenter)
+        self.layout_.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
         return button
 
     def add_widget(self, widget):
         """Insert any widget at specified position."""
-        self.layout_.addWidget(widget, alignment=Qt.AlignCenter)
+        self.layout_.addWidget(widget, alignment=Qt.AlignmentFlag.AlignCenter)
         return widget
 
     def add_layout(self, layout):
@@ -81,9 +86,12 @@ class QtMiniToolbar(QFrame):
         checkable: bool = False,
         check: bool = False,
         size: ty.Tuple[int, int] = (26, 26),
+        small: bool = False,
     ):
         """Insert tool."""
-        btn = self._make_qta_button(name, flat, func, tooltip, checkable, check, size=size)
+        btn = self._make_qta_button(
+            name, func=func, tooltip=tooltip, checkable=checkable, check=check, size=size, flat=flat, small=small
+        )
         self.add_button(btn)
         return btn
 
@@ -91,12 +99,12 @@ class QtMiniToolbar(QFrame):
         """Insert any button at specified position."""
         if hasattr(button, "set_size") and set_size:
             button.set_size((26, 26))
-        self.layout_.insertWidget(index, button, alignment=Qt.AlignCenter)
+        self.layout_.insertWidget(index, button, alignment=Qt.AlignmentFlag.AlignCenter)
         return button
 
     def insert_widget(self, widget, index: int = 0):
         """Insert any widget at specified position."""
-        self.layout_.insertWidget(index, widget, alignment=Qt.AlignCenter)
+        self.layout_.insertWidget(index, widget, alignment=Qt.AlignmentFlag.AlignCenter)
         return widget
 
     def insert_layout(self, layout, index: int = 0):
@@ -115,19 +123,26 @@ class QtMiniToolbar(QFrame):
         size: ty.Tuple[int, int] = (26, 26),
     ):
         """Insert tool."""
-        btn = self._make_qta_button(name, flat, func, tooltip, checkable, check, size=size)
+        btn = self._make_qta_button(
+            name, flat=flat, func=func, tooltip=tooltip, checkable=checkable, check=check, size=size
+        )
         self.insert_button(btn)
         return btn
 
     def insert_separator(self) -> None:
         """Insert horizontal or vertical separator."""
-        sep = hp.make_v_line() if self.orientation == Qt.Horizontal else hp.make_h_line(self)
+        sep = hp.make_v_line() if self.orientation == Qt.Orientation.Horizontal else hp.make_h_line(self)
         self.layout_.insertWidget(0, sep)
 
-    def insert_spacer(self):
+    def insert_spacer(self) -> None:
         """Insert spacer item."""
         spacer = hp.make_spacer_widget()  # make_v_spacer() if self.orientation == Qt.Horizontal else make_h_spacer()
         self.layout_.insertWidget(0, spacer, stretch=True)
+
+    def append_spacer(self) -> None:
+        """Insert spacer item."""
+        spacer = hp.make_spacer_widget()  # make_v_spacer() if self.orientation == Qt.Horizontal else make_h_spacer()
+        self.layout_.insertWidget(self.layout_.count(), spacer, stretch=True)
 
     def show_border(self):
         """Show border."""
@@ -135,7 +150,11 @@ class QtMiniToolbar(QFrame):
 
     def swap_orientation(self):
         """Swap orientation."""
-        self.orientation = QHBoxLayout.LeftToRight if self.orientation == Qt.Vertical else QVBoxLayout.TopToBottom
+        self.orientation = (
+            QHBoxLayout.Direction.LeftToRight
+            if self.orientation == Qt.Orientation.Vertical
+            else QVBoxLayout.Direction.TopToBottom
+        )
         self.layout_.setDirection(self.orientation)
         self.layout_.invalidate()
         self.layout_.update()
@@ -151,9 +170,9 @@ if __name__ == "__main__":
     ha = QHBoxLayout()
     frame.setLayout(ha)
 
-    h = QtMiniToolbar(None, orientation=Qt.Horizontal)
+    h = QtMiniToolbar(None, orientation=Qt.Orientation.Horizontal)
 
-    v = QtMiniToolbar(None, orientation=Qt.Vertical)
+    v = QtMiniToolbar(None, orientation=Qt.Orientation.Vertical)
 
     ha.addWidget(h)
     ha.addWidget(v)

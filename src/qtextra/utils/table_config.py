@@ -1,37 +1,53 @@
 """Table configuration class."""
+from __future__ import annotations
+
 import typing as ty
 
 from koyo.utilities import is_valid_python_name
 
 
-class TableConfig(dict):
+class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
     """Table configuration object."""
 
     def __init__(self):
-        super().__init__()
-        self.last_idx = -1
-        self.color_column = -1
-        self._no_sort_columns: ty.List[int] = []
-        self._icon_columns: ty.List[int] = []
+        self._dict = {}
+        self.last_index = -1
+        self.color_columns = []
+        self.no_sort_columns: list[int] = []
+        self.checkable_columns: list[int] = []
+        self.html_columns: list[int] = []
+        self.icon_columns: list[int] = []
 
     def __getitem__(self, tag: ty.Union[int, str]) -> ty.Any:
         """Get item id."""
         if isinstance(tag, int):
-            val = self[tag]
+            val = self._dict[tag]
         else:
             val = self.find_col_id(tag)
         if val == -1:
             raise KeyError("Could not retrieve value")
         return val
 
-    def __dir__(self) -> ty.List[str]:
+    def __dir__(self) -> list[str]:
         # noinspection PyUnresolvedReferences
         base = super().__dir__()
-        keys = sorted(set(base + list(self) + list(self.keys())))  # type: ignore[operator]
+        keys = sorted(set(base + list(self) + list(self._dict.keys())))  # type: ignore[operator]
         keys = [k for k in keys if is_valid_python_name(k)]
         return keys
 
-    def _ipython_key_completions_(self) -> ty.List[str]:
+    def __setitem__(self, __key, __value):
+        self._dict[__key] = __value
+
+    def __delitem__(self, __key):
+        del self._dict[__key]
+
+    def __len__(self):
+        return len(self._dict)
+
+    def __iter__(self):
+        return iter(self._dict)
+
+    def _ipython_key_completions_(self) -> list[str]:
         return sorted(self)
 
     def __getattr__(self, item: ty.Union[int, str]) -> ty.Any:
@@ -47,24 +63,14 @@ class TableConfig(dict):
         return len(self)
 
     @property
-    def header(self) -> ty.List[str]:
+    def header(self) -> list[str]:
         """Return header."""
         return [v["name"] for v in self.values()]
 
     @property
-    def hidden_columns(self) -> ty.List[int]:
+    def hidden_columns(self) -> list[int]:
         """Returns list of hidden columns."""
         return [value["order"] for value in self.values() if value["hidden"]]
-
-    @property
-    def icon_columns(self) -> ty.List[int]:
-        """Returns list of hidden columns."""
-        return self._icon_columns
-
-    @property
-    def no_sort_columns(self) -> ty.List[int]:
-        """Returns list of."""
-        return self._no_sort_columns
 
     def update_attribute(self, name: str, attr: str, value: ty.Any) -> None:
         """Update attribute value."""
@@ -83,30 +89,42 @@ class TableConfig(dict):
         is_color: bool = False,
         no_sort: bool = False,
         tooltip: str = "",
-    ) -> "TableConfig":
+        sizing: str = "stretch",
+        checkable: bool = False,
+    ) -> TableConfig:
         """Add an item to the configuration."""
-        self.last_idx += 1
-        self[self.last_idx] = {
+        self.last_index += 1
+        self[self.last_index] = {
             "name": name,
             "tag": tag,
             "type": dtype,
             "show": show,
             "width": width,
-            "order": self.last_idx,
+            "order": self.last_index,
             "hidden": hidden,
             "tooltip": tooltip,
+            "sizing": sizing,
         }
         if is_color:
-            self.color_column = self.last_idx
+            self.color_columns.append(self.last_index)
+        if checkable:
+            self.checkable_columns.append(self.last_index)
         if no_sort:
-            self._no_sort_columns.append(self.last_idx)
+            self.no_sort_columns.append(self.last_index)
         if dtype == "icon":
-            self._icon_columns.append(self.last_idx)
+            self.icon_columns.append(self.last_index)
         return self
 
     def find_col_id(self, tag: str) -> int:
         """Find column id by the tag."""
         for col_id, col_info in self.items():
             if col_info["tag"] == tag:
-                return col_id  # type: ignore
+                return col_id
         return -1
+
+    def get_width(self, column_id: int) -> int:
+        """Get the width of column."""
+        data = self.get(column_id, {})
+        if data:
+            return data["width"]
+        return 100

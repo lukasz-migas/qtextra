@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import operator
 import typing as ty
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from enum import Enum
 
 import numpy as np
@@ -22,7 +22,7 @@ from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 from superqt.utils import ensure_main_thread
 
 from qtextra.config import THEMES
-from qtextra.helpers import make_qta_icon
+from qtextra.helpers import make_qta_icon, qt_signals_blocked
 from qtextra.utils.color import get_text_color
 from qtextra.utils.table_config import TableConfig
 from qtextra.utils.utilities import connect
@@ -50,7 +50,7 @@ class FilterProxyModel(QSortFilterProxyModel):
 
     def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
         """Sort table."""
-        if self.sourceModel().no_sort_col and column in self.sourceModel().no_sort_col:
+        if self.sourceModel().no_sort_columns and column in self.sourceModel().no_sort_columns:
             return
         super().sort(column, order)
 
@@ -83,50 +83,39 @@ class QtCheckableItemModel(QAbstractTableModel):
     """Checkable item model."""
 
     evt_checked = Signal(int, bool)
+    evt_value_checked = Signal(int, int, bool)
 
     table_proxy: FilterProxyModel | None = None
 
     def __init__(
         self,
         parent,
-        data: ty.List[ty.List],
-        header=None,
-        no_sort_col=None,
-        hidden_col=None,
-        color_col: ty.Optional[ty.List[int]] = None,
-        html_col: ty.Optional[ty.List[int]] = None,
-        icon_col: ty.Optional[ty.List[int]] = None,
+        data: list[list],
+        header: list[str] | None = None,
+        no_sort_columns: list[int] | None = None,
+        hidden_columns: list[int] | None = None,
+        color_columns: list[int] | None = None,
+        html_columns: list[int] | None = None,
+        icon_columns: list[int] | None = None,
+        checkable_columns: list[int] | None = None,
     ):
         QAbstractTableModel.__init__(self, parent)
-
-        # attributes
-        if hidden_col is None:
-            hidden_col = []
-        if no_sort_col is None:
-            no_sort_col = []
-        if header is None:
-            header = []
-        if color_col is None:
-            color_col = []
-        if html_col is None:
-            html_col = []
-        if icon_col is None:
-            icon_col = []
-
         self._table: list[list[ty.Any]] = data
-        self.no_sort_col = no_sort_col
-        self.hidden_col = hidden_col
         self.state = False
         self.original_index = list(range(len(self._table)))
-        self.header = header
-        self.color_column = color_col
-        self.html_column = html_col
-        self.icon_column = icon_col
+        self.header = header or []
+        self.no_sort_columns = no_sort_columns or []
+        self.hidden_columns = hidden_columns or []
+        self.color_columns = color_columns or []
+        self.html_columns = html_columns or []
+        self.icon_columns = icon_columns or []
+        self.checkable_columns = checkable_columns or []
 
     def flags(self, index):
         """Return flags."""
         fl = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
-        if index.column() == 0:
+        column = index.column()
+        if column == 0 or column in self.checkable_columns:
             fl |= Qt.ItemFlag.ItemIsUserCheckable
         else:
             fl |= Qt.ItemFlag.ItemIsEditable
@@ -142,15 +131,15 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Return count of unchecked elements."""
         return [row[0] for row in self._table].count(False)
 
-    def rowCount(self, parent=None, **kwargs) -> int:
+    def rowCount(self, parent: QModelIndex | None = None, **kwargs: ty.Any) -> int:
         """Return number of rows."""
         return len(self._table) if self._table else 0
 
-    def columnCount(self, parent=None, **kwargs) -> int:
+    def columnCount(self, parent: QModelIndex | None = None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
         return len(self._table[0]) if self._table else 0
 
-    def removeRow(self, row: int, parent: QModelIndex = None) -> bool:
+    def removeRow(self, row: int, parent: QModelIndex | None = None) -> bool:
         """Remove row."""
         if parent is None:
             parent = QModelIndex()
@@ -160,7 +149,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.endRemoveRows()
         return True
 
-    def data(self, index, role=None):
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None):
         """Parse data."""
         if not index.isValid():
             return None
@@ -170,7 +159,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
         # check the background color
         if role == Qt.ItemDataRole.BackgroundRole:
-            if column in self.color_column:
+            if column in self.color_columns:
                 color = self._table[row][column]
                 if isinstance(color, str) and "#" in color:
                     return QBrush(QColor(color))
@@ -181,32 +170,33 @@ class QtCheckableItemModel(QAbstractTableModel):
             return QBrush()
         # check text color
         elif role == Qt.ItemDataRole.ForegroundRole:
-            if column == self.color_column:
+            if column in self.color_columns:
                 bg_color = self._table[row][column]
                 if isinstance(bg_color, str) and "#" in bg_color:
                     return QBrush(get_text_color(QColor(bg_color)))
             # let's use slightly different color html
-            if column in self.html_column:
+            if column in self.html_columns:
                 return QBrush(QColor(LINK_COLOR))
             return QBrush(QColor(TEXT_COLOR))
         # check value
         elif role == Qt.ItemDataRole.DisplayRole:
-            if column not in self.icon_column:
+            if column not in self.icon_columns:
                 value = self._table[row][column]
                 return value
         # check the alignment role
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
         # check state
-        elif role == Qt.ItemDataRole.CheckStateRole and column == 0:
+        elif role == Qt.ItemDataRole.CheckStateRole and column == 0 or column in self.checkable_columns:
             return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
         # icon state
         elif role == Qt.ItemDataRole.DecorationRole:
-            if column in self.icon_column:
+            if column in self.icon_columns:
                 value = self._table[row][column]
+
                 return make_qta_icon(value)
 
-    def headerData(self, col: int, orientation: Qt.EventPriority, role: Qt.ItemDataRole | None = None) -> str | None:
+    def headerData(self, col: int, orientation: Qt.Orientation, role: Qt.ItemDataRole | None = None) -> str | None:
         """Get header data."""
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.header[col]
@@ -214,7 +204,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
         """Sort table."""
-        if self.no_sort_col and column in self.no_sort_col:
+        if self.no_sort_columns and column in self.no_sort_columns:
             return
 
         # emit signal about upcoming change
@@ -257,6 +247,8 @@ class QtCheckableItemModel(QAbstractTableModel):
             self.dataChanged.emit(index, index)
             if column == 0:
                 self.evt_checked.emit(row, value)
+            elif column in self.checkable_columns:
+                self.evt_value_checked.emit(row, column, value)
             return True
         return False
 
@@ -265,7 +257,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         index = self.createIndex(row, column)
 
         # setup role
-        if column == 0:
+        if column == 0 or column in self.checkable_columns:
             role = Qt.ItemDataRole.CheckStateRole
 
         if index.isValid():
@@ -322,15 +314,15 @@ class QtCheckableItemModel(QAbstractTableModel):
             self.dataChanged.emit(index, index)
         self.evt_checked.emit(-1, False)
 
-    def get_all_checked(self) -> ty.List[int]:
+    def get_all_checked(self) -> list[int]:
         """Get all checked items."""
         return self._get_all_state(True)
 
-    def get_all_unchecked(self) -> ty.List[int]:
+    def get_all_unchecked(self) -> list[int]:
         """Get all unchecked items."""
         return self._get_all_state(False)
 
-    def _get_all_state(self, state: bool) -> ty.List[int]:
+    def _get_all_state(self, state: bool) -> list[int]:
         """Get all checked items."""
         checked = []
         for i, row in enumerate(self._table):
@@ -365,7 +357,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Get list of all sort indices."""
         return [self.get_sort_index(row) for row in index]
 
-    def get_data(self) -> ty.List[ty.List]:
+    def get_data(self) -> list[list]:
         """Get data from model."""
         return self._table
 
@@ -387,7 +379,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         return -1
 
     @ensure_main_thread
-    def add_data(self, data: ty.List) -> None:
+    def add_data(self, data: list) -> None:
         """Add data."""
         self._table.extend(data)
         self.original_index = list(range(len(self._table)))
@@ -415,6 +407,7 @@ class QtCheckableTableView(QTableView):
     # triggered whenever item is checked/unchecked. It returns the index and check state when its triggered.
     # It behaves slightly differently when user clicks on the header and -1 is emitted rather than actual index
     evt_checked = Signal(int, bool)
+    evt_value_checked = Signal(int, int, bool)
     # keyboard event
     evt_keypress = Signal(QKeyEvent)
     # value changed
@@ -423,24 +416,28 @@ class QtCheckableTableView(QTableView):
     def __init__(
         self,
         *args: ty.Any,
-        config: TableConfig = None,
+        config: TableConfig | None = None,
         enable_all_check: bool = True,
         double_click_to_check: bool = False,
         sortable: bool = True,
         checkable: bool = False,
+        drag: bool = False,
+        selection: QAbstractItemView.SelectionMode = QAbstractItemView.SelectionMode.ExtendedSelection,
         **kwargs: ty.Any,
     ):
         super().__init__(*args, **kwargs)
 
         # setup config
-        self._color_column = [-1]
         self._config = config
         self._header_columns = None
         self._is_init = False
         self.enable_all_check = enable_all_check
         self.checkable = checkable
+
         self._double_click_to_check = double_click_to_check
         self._sortable = sortable
+        self._drag = drag
+        self._selection = selection
 
         # register events
         self.clicked.connect(self.on_table_clicked)
@@ -508,7 +505,7 @@ class QtCheckableTableView(QTableView):
         """Return True if model is a proxy model."""
         return isinstance(super().model(), FilterProxyModel)
 
-    def proxy_or_model(self) -> QtCheckableItemModel:
+    def proxy_or_model(self) -> QtCheckableItemModel | FilterProxyModel:
         """Return instance of model."""
         model = super().model()
         if isinstance(model, FilterProxyModel):
@@ -526,36 +523,54 @@ class QtCheckableTableView(QTableView):
 
     def init(self) -> None:
         """Initialize table to ensure correct visuals."""
+        sizing = {
+            "stretch": QHeaderView.ResizeMode.Stretch,
+            "fixed": QHeaderView.ResizeMode.Fixed,
+            "contents": QHeaderView.ResizeMode.ResizeToContents,
+        }
         # Get hook for the header
+        config: TableConfig | None = self._config
         n_cols = self.column_count()
         header = self.header
         # 25 px is optimal size for checkbox
         header.setMinimumSectionSize(25)
-        for n_col in range(n_cols):
-            # The first column should always be a QCheckbox
-            mode = QHeaderView.Fixed if n_col == 0 else QHeaderView.Stretch
-            header.setSectionResizeMode(n_col, mode)
+        for column_id in range(n_cols):
+            if config:
+                sizing_ = config.get(column_id)["sizing"]
+                mode = sizing.get(
+                    sizing_, QHeaderView.ResizeMode.Stretch if column_id else QHeaderView.ResizeMode.Fixed
+                )
+            else:
+                # The first column should always be a QCheckbox
+                mode = QHeaderView.ResizeMode.Fixed if column_id == 0 else QHeaderView.ResizeMode.Stretch
+            header.setSectionResizeMode(column_id, mode)
+            if config and mode == QHeaderView.ResizeMode.Fixed:
+                header.resizeSection(column_id, config.get_width(column_id))
 
         # set column width for the first column (checkbox)
         self.setColumnWidth(0, 25)
 
         # disable editing
-        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         # enable sorting
         self.setSortingEnabled(self._sortable)
         # disable drag
-        self.setDragEnabled(False)
+        self.setDragEnabled(self._drag)
+        if self._drag:
+            # self.setDragDropMode(Qt.Dro.MoveAction)
+            self.setDropIndicatorShown(True)
+        # set selection mode
+        self.setSelectionMode(self._selection)
 
         # hide columns
         model = self.model()
-        for n_col in model.hidden_col:
+        for n_col in model.hidden_columns:
             self.setColumnHidden(n_col, True)
 
         self._is_init = True
         model.data_changed()
 
-    def set_column_resize_mode(self, index: int, mode: QHeaderView.ResizeMode = QHeaderView.Stretch):
+    def set_column_resize_mode(self, index: int, mode: QHeaderView.ResizeMode = QHeaderView.ResizeMode.Stretch):
         """Set column resize mode."""
         if self._is_init:
             self.header.setSectionResizeMode(index, mode)
@@ -566,33 +581,36 @@ class QtCheckableTableView(QTableView):
 
     def init_from_config(self) -> None:
         """Initialize based on config."""
-        self._color_column = [self._config.color_column]
         self.set_data(
             [],
             self._config.header,
             self._config.no_sort_columns,
             self._config.hidden_columns,
-            icon_col=self._config.icon_columns,
+            icon_columns=self._config.icon_columns,
         )
 
     def set_model(self, model: QtCheckableItemModel) -> None:
         """Set model."""
+        if self._config:
+            model.icon_columns = self._config.icon_columns
+            model.color_columns = self._config.color_columns
+            model.html_columns = self._config.html_columns
+            model.no_sort_columns = self._config.no_sort_columns
+            model.hidden_columns = self._config.hidden_columns
+            model.checkable_columns = self._config.checkable_columns
         self.setModel(model)
 
     def setup_model(
         self,
-        header: ty.List[str],
-        no_sort_col: ty.Optional[ty.List[int]] = None,
-        hidden_col: ty.Optional[ty.List[int]] = None,
-        html_col: ty.Optional[ty.List[int]] = None,
-        icon_col: ty.Optional[ty.List[int]] = None,
+        header: list[str],
+        no_sort_columns: list[int] | None = None,
+        hidden_columns: list[int] | None = None,
+        html_columns: list[int] | None = None,
+        icon_columns: list[int] | None = None,
+        checkable_columns: list[int] | None = None,
     ) -> None:
         """Setup model in the table."""
-        if hidden_col is None:
-            hidden_col = []
-        if no_sort_col is None:
-            no_sort_col = []
-        self.set_data([], header, no_sort_col, hidden_col, html_col, icon_col)
+        self.set_data([], header, no_sort_columns, hidden_columns, html_columns, icon_columns, checkable_columns)
 
     def reset_data(self) -> None:
         """Clear table."""
@@ -600,19 +618,17 @@ class QtCheckableTableView(QTableView):
 
     def set_data(
         self,
-        data: ty.List,
-        header: ty.List[str],
-        no_sort_col: ty.Optional[ty.List[int]] = None,
-        hidden_col: ty.Optional[ty.List[int]] = None,
-        html_col: ty.Optional[ty.List[int]] = None,
-        icon_col: ty.Optional[ty.List[int]] = None,
+        data: list,
+        header: list[str],
+        no_sort_columns: list[int] | None = None,
+        hidden_columns: list[int] | None = None,
+        html_columns: list[int] | None = None,
+        icon_columns: list[int] | None = None,
+        color_columns: list[int] | None = None,
+        checkable_columns: list[int] | None = None,
         checkable: bool | str = "auto",
     ) -> None:
         """Set data."""
-        if hidden_col is None:
-            hidden_col = []
-        if no_sort_col is None:
-            no_sort_col = []
         self._header_columns = header
         if checkable == "auto" and header:
             checkable = header[0] == ""  # empty column usually indicates that that the first column is checkable
@@ -623,22 +639,23 @@ class QtCheckableTableView(QTableView):
             self,
             data=data,
             header=header,
-            no_sort_col=no_sort_col,
-            hidden_col=hidden_col,
-            color_col=self._color_column,
-            html_col=html_col,
-            icon_col=icon_col,
+            no_sort_columns=no_sort_columns or [],
+            hidden_columns=hidden_columns or [],
+            color_columns=color_columns or [],
+            html_columns=html_columns or [],
+            icon_columns=icon_columns or [],
+            checkable_columns=checkable_columns or [],
         )
         self.checkable = bool(checkable)
         model.evt_checked.connect(self.on_check)
         self.set_model(model)
         self.init()
 
-    def add_row(self, data: ty.List) -> None:
+    def add_row(self, data: list) -> None:
         """ADd row to the data."""
         self.add_data([data])
 
-    def add_data(self, data: ty.List[ty.List]) -> None:
+    def add_data(self, data: list[list]) -> None:
         """Add data."""
         n_items = self.n_rows
         self._validate_data(data)
@@ -646,7 +663,7 @@ class QtCheckableTableView(QTableView):
         if n_items == 0:
             self.init()
 
-    def add_data_without_set(self, data: ty.List[ty.List]) -> None:
+    def add_data_without_set(self, data: list[list]) -> None:
         """Add data."""
         n_items = self.n_rows
         self._validate_data(data)
@@ -654,7 +671,7 @@ class QtCheckableTableView(QTableView):
         if n_items == 0:
             self.init()
 
-    def _validate_data(self, data: ty.List, n_cols: ty.Optional[int] = None) -> None:
+    def _validate_data(self, data: list, n_cols: ty.Optional[int] = None) -> None:
         """Validate data."""
         if n_cols is None:
             if self._header_columns is not None:
@@ -665,7 +682,7 @@ class QtCheckableTableView(QTableView):
             if len(_data) != n_cols:
                 logger.warning("Data is of incorrect size")
 
-    def get_data(self) -> ty.List[ty.List]:
+    def get_data(self) -> list[list]:
         """Get data from model.
 
         This returns the native data that is stored in the model.
@@ -673,11 +690,11 @@ class QtCheckableTableView(QTableView):
         data = self.model().get_data()
         return data
 
-    def get_all_checked(self) -> ty.List[int]:
+    def get_all_checked(self) -> list[int]:
         """Get all checked."""
         return self.model().get_all_checked()
 
-    def get_all_unchecked(self) -> ty.List[int]:
+    def get_all_unchecked(self) -> list[int]:
         """Get all unchecked.
 
         Returns
@@ -687,11 +704,15 @@ class QtCheckableTableView(QTableView):
         """
         return self.model().get_all_unchecked()
 
-    def uncheck_all_rows(self):
+    def check_all_rows(self) -> None:
+        """Uncheck all values."""
+        self.model().check_all_rows()
+
+    def uncheck_all_rows(self) -> None:
         """Uncheck all values."""
         self.model().uncheck_all_rows()
 
-    def get_initial_index(self, indices: ty.List) -> ty.List[int]:
+    def get_initial_index(self, indices: list) -> list[int]:
         """Get initial index."""
         return self.model().get_initial_indices(indices)
 
@@ -703,14 +724,14 @@ class QtCheckableTableView(QTableView):
         """Get the id of a value."""
         return self.model().get_row_id_for_values(*column_and_values)
 
-    def get_col_data(self, col_id: int) -> ty.List[ty.List]:
+    def get_col_data(self, col_id: int) -> list[ty.Any]:
         """Get data from model."""
         data = self.model().get_data()
         if col_id <= self.n_cols:
             data = [row[col_id] for row in data]
         return data
 
-    def get_row_data(self, row_id: int) -> ty.List:
+    def get_row_data(self, row_id: int) -> list:
         """Get data from model."""
         data = self.model().get_data()
         if row_id <= self.n_rows:
@@ -753,16 +774,27 @@ class QtCheckableTableView(QTableView):
         """Remove row from the model."""
         self.model().removeRow(row_id)
 
-    def update_row(self, row: int, value: ty.List, match_to_sort: bool = True) -> None:
+    def update_row(self, row: int, value: list, match_to_sort: bool = True) -> None:
         """Update entire row."""
         if match_to_sort:
             row = self.model().get_sort_index(row)
         self.model().update_row(row, value)
 
-    def update_column(self, col: int, values: ty.List, match_to_sort: bool = True) -> None:
+    @contextmanager
+    def block_model(self):
+        """Block model signals."""
+        with qt_signals_blocked(self.model(), block_signals=True):
+            yield
+        self.model().reset()
+
+    def update_column(self, col: int, values: list, match_to_sort: bool = True, block_signals: bool = False) -> None:
         """Update entire row."""
-        assert len(values) == self.n_rows, "Tried to set incorrect number of rows."
-        self.model().update_column(col, values, match_to_sort)
+        assert (
+            len(values) == self.n_rows
+        ), f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
+        model = self.model()
+        with qt_signals_blocked(model, block_signals=block_signals):
+            model.update_column(col, values, match_to_sort)
 
     def update_values(
         self, row: int, column_value: ty.Dict[int, ty.Union[str, int, float, bool]], match_to_sort: bool = True
@@ -809,3 +841,7 @@ class QtCheckableTableView(QTableView):
     #         # take into account change of order
     #         idx = self.model().get_initial_index(row) if row >= 0 else -1
     #         self.keyPressSignal.emit(idx)
+
+    def create_index(self, row: int = 0, column: int = 0) -> QModelIndex:
+        """Create index."""
+        return self.model().createIndex(row, column)

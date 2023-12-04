@@ -21,10 +21,6 @@ class QtActiveProgressBarButton(QWidget):
         hp.set_sizer_policy(self.progress_bar, h_stretch=True, v_stretch=False)
         self.progress_bar.setObjectName("progress_timer")
         self.progress_bar.setTextVisible(False)
-        self.setRange = self.progress_bar.setRange
-        self.setValue = self.progress_bar.setValue
-        self.setMinimum = self.progress_bar.setMinimum
-        self.setMaximum = self.progress_bar.setMaximum
 
         self.cancel_btn = hp.make_qta_btn(self, "cancel", average=True)
         self.evt_cancel = self.cancel_btn.clicked
@@ -62,8 +58,29 @@ class QtActiveProgressBarButton(QWidget):
         return self.progress_bar.value()
 
     @step.setter
-    def step(self, value: int):
+    def step(self, value: int) -> None:
         self.progress_bar.setValue(value)
+        self.progress_bar.setToolTip(f"Step {value} of {self.progress_bar.maximum()}")
+
+    def setMaximum(self, max_val: int) -> None:
+        """Set maximum."""
+        self.progress_bar.setMaximum(max_val)
+        self.progress_bar.setToolTip(f"Step {self.progress_bar.value()} of {max_val}")
+
+    def setMinimum(self, min_val: int) -> None:
+        """Set minimum."""
+        self.progress_bar.setMinimum(min_val)
+        self.progress_bar.setToolTip(f"Step {self.progress_bar.value()} of {self.progress_bar.maximum()}")
+
+    def setValue(self, value: int) -> None:
+        """Set value."""
+        self.progress_bar.setValue(value)
+        self.progress_bar.setToolTip(f"Step {value} of {self.progress_bar.maximum()}")
+
+    def setRange(self, min_val: int, max_val: int) -> None:
+        """Set range."""
+        self.progress_bar.setRange(min_val, max_val)
+        self.progress_bar.setToolTip(f"Step {self.progress_bar.value()} of {max_val}")
 
 
 if __name__ == "__main__":  # pragma: no cover

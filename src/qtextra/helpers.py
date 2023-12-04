@@ -186,7 +186,13 @@ def check_if_combobox_needs_update(combobox: Qw.QComboBox, new_data: ty.Dict[ty.
     return new_data != existing_data
 
 
-def increment_combobox(combobox: Qw.QComboBox, direction: int, reset_func: ty.Optional[ty.Callable] = None):
+def increment_combobox(
+    combobox: Qw.QComboBox,
+    direction: int,
+    reset_func: ty.Optional[ty.Callable] = None,
+    skip: list[int] | None = None,
+    skipped: bool = False,
+):
     """Increment combobox."""
     idx = combobox.currentIndex()
     count = combobox.count()
@@ -197,11 +203,16 @@ def increment_combobox(combobox: Qw.QComboBox, direction: int, reset_func: ty.Op
         idx = 0
     if idx < 0:
         idx = count - 1
-    combobox.setCurrentIndex(idx)
+    if skip is not None and idx in skip and not skipped:
+        with qt_signals_blocked(combobox):
+            combobox.setCurrentIndex(idx)
+        increment_combobox(combobox, direction, reset_func, skip, skipped=len(skip) > count)
+    else:
+        combobox.setCurrentIndex(idx)
 
 
 def make_label(
-    parent,
+    parent: Qw.QWidget | None,
     text: str = "",
     enable_url: bool = False,
     alignment=None,
@@ -237,7 +248,7 @@ def make_label(
 
 
 def make_scrollable_label(
-    parent,
+    parent: Qw.QWidget | None,
     text: str = "",
     enable_url: bool = False,
     alignment=None,
@@ -275,7 +286,7 @@ def make_scrollable_label(
 
 
 def make_click_label(
-    parent,
+    parent: Qw.QWidget | None,
     text: str = "",
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     bold: bool = False,
@@ -297,7 +308,7 @@ def make_click_label(
 
 
 def make_qta_label(
-    parent,
+    parent: Qw.QWidget | None,
     icon_name: str,
     alignment=None,
     tooltip: ty.Optional[str] = None,
@@ -342,7 +353,7 @@ def set_tooltip(widget: Qw.QWidget, tooltip: str):
 
 
 def make_eliding_label(
-    parent,
+    parent: Qw.QWidget | None,
     text: str,
     enable_url: bool = False,
     alignment=None,
@@ -377,7 +388,7 @@ def make_eliding_label(
 
 
 def make_eliding_label2(
-    parent,
+    parent: Qw.QWidget | None,
     text: str = "",
     enable_url: bool = False,
     alignment=None,
@@ -410,7 +421,7 @@ def make_eliding_label2(
 
 
 def make_line_edit(
-    parent,
+    parent: Qw.QWidget | None,
     text: str = "",
     tooltip: ty.Optional[str] = None,
     placeholder: str = "",
@@ -449,7 +460,9 @@ def make_line_edit(
     return widget
 
 
-def make_text_edit(parent, text: str = "", tooltip: ty.Optional[str] = None, placeholder: str = "") -> Qw.QTextEdit:
+def make_text_edit(
+    parent: Qw.QWidget | None, text: str = "", tooltip: ty.Optional[str] = None, placeholder: str = ""
+) -> Qw.QTextEdit:
     """Make QTextEdit - a multiline version of QLineEdit."""
     widget = Qw.QTextEdit(parent)
     widget.setText(text)
@@ -491,7 +504,7 @@ def make_multi_select(
 
 
 def make_combobox(
-    parent,
+    parent: Qw.QWidget | None,
     items: ty.Optional[ty.Iterable[str]] = None,
     tooltip: ty.Optional[str] = None,
     enum: ty.Optional[ty.List[str]] = None,
@@ -531,7 +544,7 @@ def make_combobox(
 
 
 def make_checkable_combobox(
-    parent,
+    parent: Qw.QWidget | None,
     items: ty.Optional[ty.Iterable[str]] = None,
     tooltip: ty.Optional[str] = None,
     enum: ty.Optional[ty.List[str]] = None,
@@ -571,7 +584,7 @@ def make_checkable_combobox(
 
 
 def make_colormap_combobox(
-    parent,
+    parent: Qw.QWidget | None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     default: str = "magma",
     label_min_width: int = 0,
@@ -627,7 +640,7 @@ def make_colormap_combobox_alone(
 
 
 def make_searchable_combobox(
-    parent,
+    parent: Qw.QWidget | None,
     items: ty.Optional[ty.Iterable[str]] = None,
     tooltip: ty.Optional[str] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
@@ -725,7 +738,7 @@ def make_qta_icon(name: str, color: ty.Optional[str] = None, **kwargs):
     return icon
 
 
-def make_svg_label(parent, object_name: str, tooltip: ty.Optional[str] = None) -> QtIconLabel:
+def make_svg_label(parent: Qw.QWidget | None, object_name: str, tooltip: ty.Optional[str] = None) -> QtIconLabel:
     """Make icon label."""
     widget = QtIconLabel(parent=parent, object_name=object_name)
     if tooltip:
@@ -734,7 +747,7 @@ def make_svg_label(parent, object_name: str, tooltip: ty.Optional[str] = None) -
 
 
 def make_btn(
-    parent,
+    parent: Qw.QWidget | None,
     text: str,
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
@@ -766,7 +779,7 @@ def make_btn(
 
 
 def make_tool_btn(
-    parent,
+    parent: Qw.QWidget | None,
     text: str,
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
@@ -789,7 +802,9 @@ def make_tool_btn(
     return widget
 
 
-def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: bool = False) -> QtRichTextButton:
+def make_rich_btn(
+    parent: Qw.QWidget | None, text: str, tooltip: ty.Optional[str] = None, flat: bool = False
+) -> QtRichTextButton:
     """Make button."""
     from qtextra.widgets.qt_buttons import QtRichTextButton
 
@@ -802,7 +817,7 @@ def make_rich_btn(parent, text: str, tooltip: ty.Optional[str] = None, flat: boo
 
 
 def make_active_btn(
-    parent,
+    parent: Qw.QWidget | None,
     text: str,
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
@@ -824,7 +839,7 @@ def make_active_btn(
 
 
 def make_active_progress_btn(
-    parent,
+    parent: Qw.QWidget | None,
     text: str,
     tooltip: ty.Optional[str] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
@@ -845,20 +860,24 @@ def make_active_progress_btn(
     return widget
 
 
-def make_scroll_area(parent, vertical=Qt.ScrollBarAsNeeded, horizontal=Qt.ScrollBarAsNeeded):
+def make_scroll_area(
+    parent: Qw.QWidget | None,
+    vertical=Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+    horizontal=Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+):
     """Make scroll area."""
     scroll_area = Qw.QWidget(parent)
-    widget = Qw.QScrollArea(parent)
-    widget.setWidget(scroll_area)
-    widget.setWidgetResizable(True)
-    widget.setVerticalScrollBarPolicy(vertical)
-    widget.setHorizontalScrollBarPolicy(horizontal)
-    widget.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
-    return scroll_area, widget
+    scroll_widget = Qw.QScrollArea(parent)
+    scroll_widget.setWidget(scroll_area)
+    scroll_widget.setWidgetResizable(True)
+    scroll_widget.setVerticalScrollBarPolicy(vertical)
+    scroll_widget.setHorizontalScrollBarPolicy(horizontal)
+    scroll_widget.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
+    return scroll_area, scroll_widget
 
 
 def make_qta_btn(
-    parent,
+    parent: Qw.QWidget | None,
     icon_name: str,
     tooltip: ty.Optional[str] = None,
     flat: bool = False,
@@ -919,7 +938,7 @@ def make_qta_btn(
 
 
 def make_lock_btn(
-    parent,
+    parent: Qw.QWidget | None,
     small: bool = False,
     normal: bool = False,
     medium: bool = False,
@@ -951,7 +970,7 @@ def make_lock_btn(
 
 
 def make_svg_btn(
-    parent,
+    parent: Qw.QWidget | None,
     object_name: str,
     text: str = "",
     tooltip: ty.Optional[str] = None,
@@ -974,7 +993,7 @@ def make_svg_btn(
 
 
 def make_toolbar_btn(
-    parent,
+    parent: Qw.QWidget | None,
     name: str,
     text: str = "",
     tooltip: ty.Optional[str] = None,
@@ -1007,7 +1026,7 @@ def make_toolbar_btn(
 
 
 def make_swatch(
-    parent,
+    parent: Qw.QWidget | None,
     default: ty.Union[str, np.ndarray],
     tooltip: str = "",
     value: ty.Optional[ty.Union[str, np.ndarray]] = None,
@@ -1023,7 +1042,7 @@ def make_swatch(
     return widget
 
 
-def make_swatch_grid(parent, colors: ty.Iterable[str], func: ty.Callable):
+def make_swatch_grid(parent: Qw.QWidget | None, colors: ty.Iterable[str], func: ty.Callable):
     """Make grid of swatches."""
     from koyo.utilities import chunks
 
@@ -1054,7 +1073,7 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu):
 
 
 def make_bitmap_tool_btn(
-    parent,
+    parent: Qw.QWidget | None,
     icon: QIcon,
     min_size: ty.Optional[ty.Tuple[int]] = None,
     max_size: ty.Optional[ty.Tuple[int]] = None,
@@ -1081,7 +1100,7 @@ def _validate_func(func: ty.Union[ty.Callable, ty.Sequence[ty.Callable]]) -> ty.
 
 
 def make_checkbox(
-    parent,
+    parent: Qw.QWidget | None,
     text: str = "",
     tooltip: ty.Optional[str] = None,
     default: bool = False,
@@ -1114,7 +1133,7 @@ def make_checkbox(
 
 
 def make_slider(
-    parent,
+    parent: Qw.QWidget | None,
     minimum: float = 0,
     maximum: float = 100,
     step_size: float = 1,
@@ -1200,7 +1219,7 @@ def make_double_slider_with_text(
 
 
 def make_labelled_slider(
-    parent,
+    parent: Qw.QWidget | None,
     minimum: float = 0,
     maximum: float = 100,
     step_size: float = 1,
@@ -1229,7 +1248,7 @@ def make_labelled_slider(
 
 
 def make_int_spin_box(
-    parent,
+    parent: Qw.QWidget | None,
     minimum: int = 0,
     maximum: int = 100,
     step_size: int = 1,
@@ -1269,7 +1288,7 @@ def make_int_spin_box(
 
 
 def make_double_spin_box(
-    parent,
+    parent: Qw.QWidget | None,
     minimum: float = 0,
     maximum: float = 100,
     step_size: float = 0.01,
@@ -1308,7 +1327,7 @@ def make_double_spin_box(
 
 
 def make_radio_btn(
-    parent,
+    parent: Qw.QWidget | None,
     title: str,
     tooltip: ty.Optional[str] = None,
     expand: bool = True,
@@ -1330,7 +1349,7 @@ def make_radio_btn(
     return widget
 
 
-def make_radio_btn_group(parent, radio_buttons) -> Qw.QButtonGroup:
+def make_radio_btn_group(parent: Qw.QWidget | None, radio_buttons) -> Qw.QButtonGroup:
     """Make radio button group."""
     widget = Qw.QButtonGroup(parent)
     for btn_id, radio_btn in enumerate(radio_buttons):
@@ -1455,7 +1474,7 @@ def _set_in_layout(
 
 
 def make_progressbar(
-    parent, minimum: int = 0, maximum: int = 100, with_progress: bool = False
+    parent: Qw.QWidget | None, minimum: int = 0, maximum: int = 100, with_progress: bool = False
 ) -> ty.Union[Qw.QProgressBar, QtLabeledProgressBar]:
     """Make progressbar."""
     if with_progress:
@@ -1565,7 +1584,7 @@ def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
     widget.setSizePolicy(policy)
 
 
-def make_group_box(parent, title: str, is_flat: bool = True) -> Qw.QGroupBox:
+def make_group_box(parent: Qw.QWidget | None, title: str, is_flat: bool = True) -> Qw.QGroupBox:
     """Make group box."""
     widget = Qw.QGroupBox(parent)
     widget.setFlat(is_flat)
@@ -1573,7 +1592,7 @@ def make_group_box(parent, title: str, is_flat: bool = True) -> Qw.QGroupBox:
     return widget
 
 
-def make_labelled_h_line(parent, title: str) -> Qw.QHBoxLayout:
+def make_labelled_h_line(parent: Qw.QWidget | None, title: str) -> Qw.QHBoxLayout:
     """Make labelled line - similar to flat version of the group box."""
     layout = Qw.QHBoxLayout()
     layout.addWidget(make_label(parent, title), alignment=Qt.AlignmentFlag.AlignVCenter)
@@ -1581,7 +1600,7 @@ def make_labelled_h_line(parent, title: str) -> Qw.QHBoxLayout:
     return layout
 
 
-def make_menu(parent, title: str = "") -> Qw.QMenu:
+def make_menu(parent: Qw.QWidget | None, title: str = "") -> Qw.QMenu:
     """Make menu."""
     widget = Qw.QMenu(parent)
     widget.setTitle(title)
@@ -1589,7 +1608,7 @@ def make_menu(parent, title: str = "") -> Qw.QMenu:
 
 
 def make_menu_item(
-    parent,
+    parent: Qw.QWidget | None,
     title: str,
     shortcut: ty.Optional[str] = None,
     icon: ty.Union[QPixmap, str] = None,
@@ -1636,7 +1655,7 @@ def make_menu_group(parent: Qw.QWidget, *actions):
 
 
 def make_overlay_message(
-    parent,
+    parent: Qw.QWidget | None,
     widget: Qw.QWidget,
     text: str = "",
     icon_name: str = "info",
@@ -1665,7 +1684,7 @@ def make_overlay_message(
     return _widget
 
 
-def warn(parent, message: str, title: str = "Warning"):
+def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning"):
     """Create a pop up dialog with a warning message."""
     from qtpy.QtWidgets import QMessageBox
 
@@ -1677,7 +1696,7 @@ def warn(parent, message: str, title: str = "Warning"):
 
 
 def toast(
-    parent,
+    parent: Qw.QWidget | None,
     title: str,
     message: str,
     func: ty.Optional[ty.Callable] = None,
@@ -1693,7 +1712,7 @@ def toast(
 
 
 def long_toast(
-    parent,
+    parent: Qw.QWidget | None,
     title: str,
     message: str,
     duration: int = 10000,
@@ -1718,7 +1737,9 @@ def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto
     return f"<a href='{prefix}:{link}'>{value}</a>"
 
 
-def open_filename(parent, title: str = "Select file...", base_dir: str = "", file_filter: str = "*") -> str:
+def open_filename(
+    parent: Qw.QWidget | None, title: str = "Select file...", base_dir: str = "", file_filter: str = "*"
+) -> str:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
 
@@ -1727,7 +1748,10 @@ def open_filename(parent, title: str = "Select file...", base_dir: str = "", fil
 
 
 def get_directory(
-    parent, title: str = "Select directory...", base_dir: ty.Optional[PathLike] = "", native: bool = True
+    parent: Qw.QWidget | None,
+    title: str = "Select directory...",
+    base_dir: ty.Optional[PathLike] = "",
+    native: bool = True,
 ) -> ty.Optional[str]:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
@@ -1742,7 +1766,7 @@ def get_directory(
 
 
 def get_filename(
-    parent,
+    parent: Qw.QWidget | None,
     title: str = "Save file...",
     base_dir: ty.Optional[PathLike] = "",
     file_filter: str = "*",
@@ -1772,7 +1796,7 @@ def get_filename(
 
 
 def get_save_filename(
-    parent,
+    parent: Qw.QWidget | None,
     title: str = "Save file...",
     base_dir: ty.Optional[PathLike] = "",
     file_filter: str = "*",
@@ -1788,7 +1812,7 @@ def get_save_filename(
 
 
 def get_filename_with_path(
-    parent,
+    parent: Qw.QWidget | None,
     path: str,
     filename: str,
     message: str = "Please specify filename that should be used to save the data.",
@@ -1803,7 +1827,9 @@ def get_filename_with_path(
         return str((Path(path) / filename).with_suffix(extension))
 
 
-def get_color(parent, color: ty.Optional[np.ndarray] = None, as_hex: bool = True, as_array: bool = False) -> np.ndarray:
+def get_color(
+    parent: Qw.QWidget | None, color: ty.Optional[np.ndarray] = None, as_hex: bool = True, as_array: bool = False
+) -> np.ndarray:
     """Get color."""
     from qtpy.QtGui import QColor
 
@@ -1875,7 +1901,7 @@ def get_text(parent: Qw.QWidget, label: str = "New value", title: str = "Text", 
 
 
 def get_integer(
-    parent, label: str = "New value", title: str = "Text", minimum: int = 0, maximum: int = 100
+    parent: Qw.QWidget | None, label: str = "New value", title: str = "Text", minimum: int = 0, maximum: int = 100
 ) -> ty.Optional[int]:
     """Get text."""
     value, ok = Qw.QInputDialog.getInt(parent, title, label, minValue=minimum, maxValue=maximum)
@@ -1885,7 +1911,7 @@ def get_integer(
 
 
 def get_double(
-    parent,
+    parent: Qw.QWidget | None,
     label: str = "New value",
     title: str = "Text",
     minimum: float = 0,
@@ -1903,11 +1929,14 @@ def get_double(
 
 
 @contextmanager
-def qt_signals_blocked(*obj) -> None:
+def qt_signals_blocked(*obj, block_signals: bool = True) -> None:
     """Context manager to temporarily block signals from `obj`."""
-    [_obj.blockSignals(True) for _obj in obj]
-    yield
-    [_obj.blockSignals(False) for _obj in obj]
+    if not block_signals:
+        yield
+    else:
+        [_obj.blockSignals(True) for _obj in obj]
+        yield
+        [_obj.blockSignals(False) for _obj in obj]
 
 
 @contextmanager
@@ -2177,7 +2206,7 @@ def make_auto_update_layout(parent: Qw.QWidget, func: ty.Callable):
     return widget, auto_update_check, layout
 
 
-def make_line_label(parent, text: str, bold: bool = False) -> Qw.QHBoxLayout:
+def make_line_label(parent: Qw.QWidget | None, text: str, bold: bool = False) -> Qw.QHBoxLayout:
     """Make layout with `--- TEXT ---` which looks pretty nice."""
     return make_h_layout(
         make_h_line(parent), make_label(parent, text, bold=bold), make_h_line(parent), stretch_id=(0, 2)

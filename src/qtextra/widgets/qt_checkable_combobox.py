@@ -4,7 +4,7 @@ from functools import partial
 
 from qtpy.QtCore import QModelIndex, Qt, Signal
 from qtpy.QtGui import QStandardItemModel
-from qtpy.QtWidgets import QComboBox, QCompleter, QStyledItemDelegate
+from qtpy.QtWidgets import QComboBox
 
 from qtextra.helpers import call_later, qt_signals_blocked
 
