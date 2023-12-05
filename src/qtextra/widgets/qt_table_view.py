@@ -180,7 +180,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             return QBrush(QColor(TEXT_COLOR))
         # check value
         elif role == Qt.ItemDataRole.DisplayRole:
-            if column not in self.icon_columns:
+            if column not in self.icon_columns and column not in self.checkable_columns:
                 value = self._table[row][column]
                 return value
         # check the alignment role
