@@ -6,7 +6,7 @@ from napari.layers import Image
 from napari.utils.colormaps import AVAILABLE_COLORMAPS
 from napari.utils.events.event_utils import connect_setattr
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QImage, QPixmap
+from qtpy.QtGui import QIcon, QImage, QPixmap
 from superqt.sliders import QDoubleRangeSlider
 
 import qtextra.helpers as hp
@@ -54,7 +54,9 @@ class QtBaseImageControls(QtLayerControls):
             colormap_combobox.currentTextChanged.connect(self.on_change_color)
         self.colormap_combobox = colormap_combobox
 
-        self.colorbar_label = hp.make_label(self, "", tooltip="Colorbar", object_name="colorbar")
+        self.colorbar_label = hp.make_btn(
+            self, "", tooltip="Colorbar", object_name="colorbar", func=self.on_make_colormap
+        )
 
         # Create contrast_limits slider
         self.contrast_limits_slider = _QDoubleRangeSlider(Qt.Orientation.Horizontal, self)
@@ -78,6 +80,15 @@ class QtBaseImageControls(QtLayerControls):
 
         self._on_gamma_change()
         self._on_colormap_change()
+
+    def on_make_colormap(self):
+        """Make new colormap."""
+        from qtextra.utils.color import napari_colormap
+
+        color = hp.get_color(self, as_hex=True)
+        if color:
+            colormap = napari_colormap(color, name=color)
+            self.layer.colormap = colormap
 
     def on_change_color(self, text):
         """Change colormap on the layer model."""
@@ -122,7 +133,7 @@ class QtBaseImageControls(QtLayerControls):
             cbar.shape[0],
             QImage.Format_RGBA8888,
         )
-        self.colorbar_label.setPixmap(QPixmap.fromImage(image))
+        self.colorbar_label.setIcon(QIcon(QPixmap.fromImage(image)))
 
     def _on_gamma_change(self):
         """Receive the layer model gamma change event and update the slider."""

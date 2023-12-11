@@ -59,9 +59,7 @@ def rgb_to_qt_rgb(color: np.ndarray):
 
 def rgb_to_hex(colors, multiplier: int = 255) -> str:
     """Convert list/tuple of colors to hex."""
-    return "#{:02x}{:02x}{:02x}".format(
-        int(colors[0] * multiplier), int(colors[1] * multiplier), int(colors[2] * multiplier)
-    )
+    return f"#{int(colors[0] * multiplier):02x}{int(colors[1] * multiplier):02x}{int(colors[2] * multiplier):02x}"
 
 
 def hex_to_rgb(hex_str, decimals=3, alpha: ty.Optional[float] = None):
@@ -98,6 +96,13 @@ def vispy_colormaps(colors: ty.List[np.ndarray]) -> ty.List[VispyColormap]:
     return [VispyColormap([np.asarray([0.0, 0.0, 0.0, 1.0]), color]) for color in colors]
 
 
-def vispy_colormap(color) -> VispyColormap:
+def vispy_colormap(color, name: str = "") -> VispyColormap:
     """Return vispy colormap."""
     return VispyColormap([np.asarray([0.0, 0.0, 0.0, 1.0]), color])
+
+
+def napari_colormap(color, name: str = ""):
+    """Return napari colormap."""
+    from napari.utils.colormaps.colormap_utils import convert_vispy_colormap
+
+    return convert_vispy_colormap(vispy_colormap(color), name=name)

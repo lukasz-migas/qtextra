@@ -187,13 +187,12 @@ class QtCheckableItemModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
         # check state
-        elif role == Qt.ItemDataRole.CheckStateRole and column == 0 or column in self.checkable_columns:
+        elif role == Qt.ItemDataRole.CheckStateRole and (column == 0 or column in self.checkable_columns):
             return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
         # icon state
         elif role == Qt.ItemDataRole.DecorationRole:
             if column in self.icon_columns:
                 value = self._table[row][column]
-
                 return make_qta_icon(value)
 
     def headerData(self, col: int, orientation: Qt.Orientation, role: Qt.ItemDataRole | None = None) -> str | None:
