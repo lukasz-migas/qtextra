@@ -155,6 +155,16 @@ class QtViewerBase(QWidget):
         self.canvas.connect(self.on_draw)
         self.canvas.connect(self.on_resize)
 
+    def enterEvent(self, event):
+        """Emit our own event when mouse enters the canvas."""
+        self.viewer.mouse_over_canvas = True
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        """Emit our own event when mouse leaves the canvas."""
+        self.viewer.mouse_over_canvas = False
+        super().leaveEvent(event)
+
     def _create_widgets(self, **kwargs):
         """Create ui widgets."""
         raise NotImplementedError("Must implement method")

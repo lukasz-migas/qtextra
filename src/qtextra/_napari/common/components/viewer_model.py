@@ -90,7 +90,7 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         self.dims.events.order.connect(self.reset_view)
         self.dims.events.current_step.connect(self._update_layers)
 
-        self.cursor.events.position.connect(self._on_cursor_position_change)
+        self.cursor.events.position.connect(self._update_status_bar_from_cursor)
 
         self.layers.events.inserted.connect(self._on_add_layer)
         self.layers.events.removed.connect(self._on_remove_layer)
@@ -335,6 +335,7 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
         """
         # Update status and help bar based on active layer
         if not self.mouse_over_canvas:
+            self.status = ""
             return
         active = self.layers.selection.active
         if active is not None:
@@ -357,12 +358,12 @@ class ViewerModelBase(KeymapProvider, MousemapProvider, EventedModel):
             self.status = "Ready"
 
     def _update_mouse_pan(self, event):
-        """Set the viewer interactive mouse panning"""
+        """Set the viewer interactive mouse panning."""
         if event.source is self.layers.selection.active:
             self.camera.mouse_pan = event.mouse_pan
 
     def _update_mouse_zoom(self, event):
-        """Set the viewer interactive mouse zoom"""
+        """Set the viewer interactive mouse zoom."""
         if event.source is self.layers.selection.active:
             self.camera.mouse_zoom = event.mouse_zoom
 

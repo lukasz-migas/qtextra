@@ -1901,10 +1901,16 @@ def get_text(parent: Qw.QWidget, label: str = "New value", title: str = "Text", 
 
 
 def get_integer(
-    parent: Qw.QWidget | None, label: str = "New value", title: str = "Text", minimum: int = 0, maximum: int = 100
+    parent: Qw.QWidget | None,
+    label: str = "New value",
+    title: str = "Text",
+    value: int = 1,
+    minimum: int = 0,
+    maximum: int = 100,
+    step: int = 1,
 ) -> ty.Optional[int]:
     """Get text."""
-    value, ok = Qw.QInputDialog.getInt(parent, title, label, minValue=minimum, maxValue=maximum)
+    value, ok = Qw.QInputDialog.getInt(parent, title, label, value=value, min=minimum, max=maximum, step=step)
     if ok:
         return value
     return None

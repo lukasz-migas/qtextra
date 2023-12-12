@@ -356,3 +356,14 @@ QtDimSliderWidget > QScrollBar::right-arrow:horizontal {
 QtDimSliderWidget > QLineEdit {
   background-color: {{ background }};
 }
+
+#help_label {
+  image: url("theme_{{ id }}:/help.svg");
+  max-width: 18px;
+  max-height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  margin: 0px;
+  margin-left: 1px;
+  padding: 2px;
+}

@@ -46,7 +46,10 @@ class QtMiniToolbar(QFrame):
         size: ty.Tuple[int, int] = (26, 26),
         flat: bool = True,
         small: bool = False,
+        average: bool = False,
     ):
+        if small or average:
+            size = None
         btn = hp.make_qta_btn(
             self,
             name,
@@ -58,6 +61,7 @@ class QtMiniToolbar(QFrame):
             checked=check,
             func=func,
             small=small,
+            average=average,
         )
         self._tools[name] = btn
         return btn
@@ -87,10 +91,19 @@ class QtMiniToolbar(QFrame):
         check: bool = False,
         size: ty.Tuple[int, int] = (26, 26),
         small: bool = False,
+        average: bool = False,
     ):
         """Insert tool."""
         btn = self._make_qta_button(
-            name, func=func, tooltip=tooltip, checkable=checkable, check=check, size=size, flat=flat, small=small
+            name,
+            func=func,
+            tooltip=tooltip,
+            checkable=checkable,
+            check=check,
+            size=size,
+            flat=flat,
+            small=small,
+            average=average,
         )
         self.add_button(btn)
         return btn

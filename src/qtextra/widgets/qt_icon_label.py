@@ -2,7 +2,7 @@
 import typing as ty
 
 from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]
-from qtpy.QtWidgets import QLabel
+from qtpy.QtWidgets import QLabel, QToolTip
 
 from qtextra.config import THEMES
 from qtextra.widgets._qta_mixin import QtaMixin
@@ -94,6 +94,23 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
         if self._icon:
             self.setPixmap(self._icon.pixmap(self._size))
         return super().update(*args, **kwargs)
+
+
+class QtQtaTooltipLabel(QtQtaLabel):
+    """Label."""
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self.set_qta("help")
+        self.set_average()
+
+    def enterEvent(self, event):
+        """Override to show tooltips instantly."""
+        if self.toolTip():
+            pos = self.mapToGlobal(self.contentsRect().center())
+            QToolTip.showText(pos, self.toolTip(), self)
+
+        super().enterEvent(event)
 
 
 class QtSeverityLabel(QtQtaLabel):

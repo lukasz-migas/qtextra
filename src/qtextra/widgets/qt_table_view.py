@@ -646,7 +646,8 @@ class QtCheckableTableView(QTableView):
             checkable_columns=checkable_columns or [],
         )
         self.checkable = bool(checkable)
-        model.evt_checked.connect(self.on_check)
+        model.evt_checked.connect(self.evt_checked.emit)
+        model.evt_value_checked.connect(self.evt_value_checked.emit)
         self.set_model(model)
         self.init()
 

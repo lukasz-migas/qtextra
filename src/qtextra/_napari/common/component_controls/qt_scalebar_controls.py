@@ -10,7 +10,6 @@ from qtextra._napari.common.components._scalebar_constants import UNITS_TRANSLAT
 from qtextra._napari.common.components._viewer_constants import POSITION_TRANSLATIONS
 from qtextra._napari.image.components.viewer_model import ViewerModel
 
-# from qtextra.widgets.qt_color_button import QtColorSwatch
 from qtextra.widgets.qt_dialog import QtFramelessPopup
 
 
