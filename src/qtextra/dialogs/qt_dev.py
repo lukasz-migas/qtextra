@@ -1,6 +1,5 @@
 """Popup for developer tools."""
-from PyQt6.QtWidgets import QLayout
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QLayout, QVBoxLayout, QWidget
 from qtreload.qt_reload import QtReloadWidget
 
 from qtextra.widgets.qt_dialog import QtFramelessTool
