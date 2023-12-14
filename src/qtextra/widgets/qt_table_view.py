@@ -46,7 +46,18 @@ class FilterProxyModel(QSortFilterProxyModel):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         QSortFilterProxyModel.__init__(self, *args, **kwargs)
         self.filters: dict[int, str] = {}
-        self.multi_filter_mode = MultiFilterMode.AND
+        self._multi_filter_mode = MultiFilterMode.AND
+        self.is_multi_or = self.multi_filter_mode == MultiFilterMode.OR
+
+    @property
+    def multi_filter_mode(self) -> MultiFilterMode:
+        """Return multi filter mode."""
+        return self._multi_filter_mode
+
+    @multi_filter_mode.setter
+    def multi_filter_mode(self, value: MultiFilterMode) -> None:
+        self._multi_filter_mode = value
+        self.is_multi_or = self.multi_filter_mode == MultiFilterMode.OR
 
     def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
         """Sort table."""
@@ -58,7 +69,7 @@ class FilterProxyModel(QSortFilterProxyModel):
         """Set filter by column."""
         if not text and column in self.filters:
             del self.filters[column]
-        self.filters[column] = text
+        self.filters[column] = str(text)
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
@@ -67,15 +78,15 @@ class FilterProxyModel(QSortFilterProxyModel):
             return True
 
         results: list[bool] = []
-        for key, text in self.filters.items():
+        for column, text in self.filters.items():
             value = ""
-            index = self.sourceModel().index(source_row, key, source_parent)
+            index = self.sourceModel().index(source_row, column, source_parent)
             if index.isValid():
                 value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
                 if not value:
                     return True
             results.append(text in value)
-        matched = any(results) if self.multi_filter_mode == MultiFilterMode.OR else all(results)
+        matched = any(results) if self.is_multi_or else all(results)
         return matched
 
 
@@ -89,7 +100,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def __init__(
         self,
-        parent,
+        parent: QtCheckableTableView,
         data: list[list],
         header: list[str] | None = None,
         no_sort_columns: list[int] | None = None,
@@ -149,7 +160,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.endRemoveRows()
         return True
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None):
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
         """Parse data."""
         if not index.isValid():
             return None
@@ -282,7 +293,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         if col > self.columnCount():
             raise ValueError("Cannot update column as its outside of the boundaries")
 
-        if col > self.rowCount():
+        if len(values) > self.rowCount():
             raise ValueError("Cannot update column as the length of the values does not match the number of rows")
 
         for row, value in enumerate(values):

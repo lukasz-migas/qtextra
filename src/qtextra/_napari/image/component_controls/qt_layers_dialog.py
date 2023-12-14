@@ -18,12 +18,13 @@ class DialogNapariControls(QtFramelessTool):
     def make_panel(self) -> QVBoxLayout:
         """Make panel."""
         va = QVBoxLayout()
+        va.setSpacing(1)
+        va.setContentsMargins(2, 2, 2, 2)
         va.addLayout(self._make_hide_handle("Viewer Controls")[1])
         va.addWidget(self.qt_viewer.controls)
         va.addWidget(self.qt_viewer.layerButtons)
         va.addWidget(self.qt_viewer.layers, stretch=True)
         va.addWidget(self.qt_viewer.viewerButtons)
-
         return va
 
     def keyPressEvent(self, event):

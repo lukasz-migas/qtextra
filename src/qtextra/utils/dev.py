@@ -40,6 +40,14 @@ def qdev_dock(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> t
     return widget, dock
 
 
+def qdev_popup(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> ty.Tuple["QtReloadWidget", QWidget]:
+    """Create reload widget in popup."""
+    widget = qdev(parent, modules)
+    popup = QWidget()
+    popup.setLayout(widget.layout())
+    return widget, popup
+
+
 def qapplication(test_time: int = 3):
     """Return QApplication instance.
 

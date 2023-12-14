@@ -58,6 +58,7 @@ class QtLayerButtons(QFrame):
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
         layout.addWidget(self.new_shapes_btn)
         layout.addWidget(self.new_points_btn)
         layout.addWidget(self.new_v_infline_btn)
@@ -97,6 +98,7 @@ class QtViewerButtons(QFrame):
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
         layout.addWidget(self.resetViewButton)
         layout.addStretch(0)
         self.setLayout(layout)

@@ -4,7 +4,7 @@ import warnings
 from abc import ABC
 from contextlib import suppress
 
-from napari.layers import Image
+from napari.layers import Image, Layer
 
 
 class ViewerBase(ABC):
@@ -54,7 +54,7 @@ class ViewerBase(ABC):
         """Get layer list."""
         return self.viewer.layers
 
-    def get_layer(self, name: str):
+    def get_layer(self, name: str) -> ty.Optional[Layer]:
         """Get layer."""
         try:
             return self.viewer.layers[name]
@@ -82,17 +82,17 @@ class ViewerBase(ABC):
         except KeyError:
             return None
 
-    def select_one_layer(self, layer):
+    def select_one_layer(self, layer: Layer):
         """Clear current selection and only select one layer."""
         self.viewer.layers.selection.clear()
         self.viewer.layers.selection.add(layer)
 
-    def deselect_one_layer(self, layer):
+    def deselect_one_layer(self, layer: Layer):
         """Deselect layer."""
         with suppress(KeyError):
             self.viewer.layers.selection.remove(layer)
 
-    def get_layers_of_type(self, cls):
+    def get_layers_of_type(self, cls: Layer) -> ty.List[Layer]:
         """Get all layers of type."""
         layers = []
         for layer in self.viewer.layers:
@@ -100,7 +100,7 @@ class ViewerBase(ABC):
                 layers.append(layer)
         return layers
 
-    def update_attribute(self, name: str, **kwargs):
+    def update_attribute(self, name: str, **kwargs: ty.Any) -> None:
         """Update attribute."""
         layer = self.get_layer(name)
         if layer:
