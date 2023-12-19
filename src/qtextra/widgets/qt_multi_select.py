@@ -17,8 +17,8 @@ class SelectionWidget(QtFramelessTool):
 
     TABLE_CONFIG = (
         TableConfig()  # type: ignore[no-untyped-call]
-        .add("", "check", "bool", 25, no_sort=True, hidden=False)
-        .add("option", "option", "str", 100)
+        .add("", "check", "bool", 25, no_sort=True, hidden=False, sizing="fixed")
+        .add("option", "option", "str", 100, sizing="stretch")
     )
 
     options: list[str] | None = None
@@ -68,7 +68,7 @@ class SelectionWidget(QtFramelessTool):
         hp.style_form_layout(layout)
         layout.addRow(header_layout)
         if (not IS_PYINSTALLER and not IS_MAC) and not is_envvar("IMAGE2IMAGE_NO_FILTER", "1"):
-            layout.addRow(hp.make_label(self, "Filter:"), self.filter_by_option)
+            layout.addRow(self.filter_by_option)
         layout.addRow(self.table)
         layout.addRow(
             hp.make_h_layout(hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.reject))

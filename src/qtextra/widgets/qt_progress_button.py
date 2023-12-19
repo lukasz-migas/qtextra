@@ -34,9 +34,9 @@ class QtActiveProgressBarButton(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addLayout(button_layout, stretch=True)
+        layout.addLayout(button_layout)
         layout.addWidget(self.progress_bar)
-        layout.addStretch(1)
+        # layout.addStretch(1)
 
         self.active = False
 

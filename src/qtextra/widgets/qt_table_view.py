@@ -69,13 +69,15 @@ class FilterProxyModel(QSortFilterProxyModel):
         """Set filter by column."""
         if not text and column in self.filters:
             del self.filters[column]
-        self.filters[column] = str(text)
+        self.filters[column] = str(text).lower()
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         """Filter rows."""
         if not self.filters:
             return True
+        # if not source_parent.isValid():
+        #     return True
 
         results: list[bool] = []
         for column, text in self.filters.items():
@@ -85,7 +87,7 @@ class FilterProxyModel(QSortFilterProxyModel):
                 value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
                 if not value:
                     return True
-            results.append(text in value)
+            results.append(text in value.lower())
         matched = any(results) if self.is_multi_or else all(results)
         return matched
 
@@ -394,6 +396,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self._table.extend(data)
         self.original_index = list(range(len(self._table)))
         # indicate that change to data has been made
+        self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
 
     @ensure_main_thread
@@ -401,6 +404,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Reset data."""
         self._table.clear()
         self.original_index.clear()
+        self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
 
     def data_changed(self) -> None:
