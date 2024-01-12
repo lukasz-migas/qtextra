@@ -5,14 +5,16 @@ import typing as ty
 
 from koyo.utilities import is_valid_python_name
 
+ColumnSizing = ty.Literal["stretch", "fixed", "contents"]
+
 
 class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
     """Table configuration object."""
 
-    def __init__(self):
-        self._dict = {}
+    def __init__(self) -> None:
+        self._dict: dict[int, dict] = {}
         self.last_index = -1
-        self.color_columns = []
+        self.color_columns: list[int] = []
         self.no_sort_columns: list[int] = []
         self.checkable_columns: list[int] = []
         self.html_columns: list[int] = []
@@ -35,13 +37,13 @@ class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
         keys = [k for k in keys if is_valid_python_name(k)]
         return keys
 
-    def __setitem__(self, __key, __value):
-        self._dict[__key] = __value
+    def __setitem__(self, key: int, value: dict) -> None:
+        self._dict[key] = value
 
-    def __delitem__(self, __key):
-        del self._dict[__key]
+    def __delitem__(self, key: int):
+        del self._dict[key]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dict)
 
     def __iter__(self):
@@ -89,10 +91,13 @@ class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
         is_color: bool = False,
         no_sort: bool = False,
         tooltip: str = "",
-        sizing: str = "stretch",
+        sizing: ColumnSizing | str = "stretch",
         checkable: bool = False,
     ) -> TableConfig:
         """Add an item to the configuration."""
+        if dtype == "bool":
+            sizing = "contents"
+
         self.last_index += 1
         self[self.last_index] = {
             "name": name,

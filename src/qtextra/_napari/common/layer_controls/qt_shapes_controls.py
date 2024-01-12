@@ -173,6 +173,28 @@ class QtShapesControls(QtLayerControls):
         self.layout().addRow(hp.make_label(self, "Editable"), self.editable_checkbox)
         self._on_editable_or_visible_change()
 
+    def set_layer(self, layer: "Shapes") -> None:
+        """Set new layer for this container."""
+        self.layer = layer
+        # update values
+        self._on_opacity_change()
+        # self._on_mode_change()
+        self._on_current_edge_color_change()
+        self._on_current_face_color_change()
+        self._on_edge_width_change()
+        self._on_text_visibility_change()
+        self._on_editable_or_visible_change()
+
+        # connect new events
+        self.layer.events.blending.connect(self._on_blending_change)
+        self.layer.events.opacity.connect(self._on_opacity_change)
+        self.layer.events.mode.connect(self._on_mode_change)
+        self.layer.events.edge_width.connect(self._on_edge_width_change)
+        self.layer.events.current_edge_color.connect(self._on_current_edge_color_change)
+        self.layer.events.current_face_color.connect(self._on_current_face_color_change)
+        self.layer.events.editable.connect(self._on_editable_or_visible_change)
+        self.layer.text.events.visible.connect(self._on_text_visibility_change)
+
     def _on_mode_change(self, event):
         """Update ticks in checkbox widgets when shapes layer mode changed."""
         mode_buttons = {
@@ -210,7 +232,7 @@ class QtShapesControls(QtLayerControls):
         """Toggle the visibility of the text."""
         self.layer.text.visible = Qt.CheckState(state) == Qt.CheckState.Checked
 
-    def _on_text_visibility_change(self, event):
+    def _on_text_visibility_change(self, event=None):
         """Receive layer model text visibility change event and update checkbox."""
         with self.layer.text.events.visible.blocker():
             self.text_display_checkbox.setChecked(self.layer.text.visible)

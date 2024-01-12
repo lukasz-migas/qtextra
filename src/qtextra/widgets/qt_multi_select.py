@@ -1,9 +1,9 @@
+"""Multi-selection widget."""
 from __future__ import annotations
 
 import typing as ty
 
-from koyo.system import IS_MAC, IS_PYINSTALLER, is_envvar
-from qtpy.QtCore import QEvent, QObject
+from qtpy.QtCore import QEvent, QObject, Signal
 from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
@@ -15,6 +15,7 @@ from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
 class SelectionWidget(QtFramelessTool):
     """Selection widget."""
 
+    evt_changed = Signal(list)
     TABLE_CONFIG = (
         TableConfig()  # type: ignore[no-untyped-call]
         .add("", "check", "bool", 25, no_sort=True, hidden=False, sizing="fixed")
@@ -35,12 +36,24 @@ class SelectionWidget(QtFramelessTool):
             data.append([option in selected_options, option])
         self.table.reset_data()
         self.table.add_data(data)
+        self.options = selected_options
 
     def accept(self) -> None:
         """Return state."""
         indices = self.table.get_all_checked()
         self.options = [self.table.get_value(self.TABLE_CONFIG.option, index) for index in indices]
         return super().accept()
+
+    def reject(self) -> None:
+        """Return state."""
+        self.evt_changed.emit(self.options)
+        return super().reject()
+
+    def on_check(self, _index: int, _state: bool) -> None:
+        """Check."""
+        indices = self.table.get_all_checked()
+        options = [self.table.get_value(self.TABLE_CONFIG.option, index) for index in indices]
+        self.evt_changed.emit(options)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
@@ -49,26 +62,25 @@ class SelectionWidget(QtFramelessTool):
 
         self.table = QtCheckableTableView(self, config=self.TABLE_CONFIG, enable_all_check=True, sortable=True)
         self.table.setCornerButtonEnabled(False)
+        self.table.evt_checked.connect(self.on_check)
         hp.set_font(self.table)
         self.table.setup_model(
             self.TABLE_CONFIG.header, self.TABLE_CONFIG.no_sort_columns, self.TABLE_CONFIG.hidden_columns
         )
-        if (not IS_PYINSTALLER and not IS_MAC) and not is_envvar("IMAGE2IMAGE_NO_FILTER", "1"):
-            self.table_proxy = FilterProxyModel(self)
-            self.table_proxy.setSourceModel(self.table.model())
-            self.table.model().table_proxy = self.table_proxy
-            self.table.setModel(self.table_proxy)
-            self.filter_by_option = hp.make_line_edit(
-                self,
-                placeholder="Type in option value...",
-                func_changed=lambda text, col=self.TABLE_CONFIG.option: self.table_proxy.setFilterByColumn(text, col),
-            )
+        self.table_proxy = FilterProxyModel(self)
+        self.table_proxy.setSourceModel(self.table.model())
+        self.table.model().table_proxy = self.table_proxy
+        self.table.setModel(self.table_proxy)
+        self.filter_by_option = hp.make_line_edit(
+            self,
+            placeholder="Type in option value...",
+            func_changed=lambda text, col=self.TABLE_CONFIG.option: self.table_proxy.setFilterByColumn(text, col),
+        )
 
         layout = hp.make_form_layout(self)
         hp.style_form_layout(layout)
         layout.addRow(header_layout)
-        if (not IS_PYINSTALLER and not IS_MAC) and not is_envvar("IMAGE2IMAGE_NO_FILTER", "1"):
-            layout.addRow(self.filter_by_option)
+        layout.addRow(self.filter_by_option)
         layout.addRow(self.table)
         layout.addRow(
             hp.make_h_layout(hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.reject))
@@ -170,6 +182,7 @@ class QtMultiSelect(QWidget):
         """Select."""
         dlg = SelectionWidget(self)
         dlg.set_options(self.options, self.selected_options)
+        dlg.evt_changed.connect(self.set_selected_options)
         if bool(dlg.exec()):
             selected_options = dlg.options
             if not selected_options:
