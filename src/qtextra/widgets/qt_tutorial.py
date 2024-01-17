@@ -31,12 +31,28 @@ class Position(str, Enum):
 
 
 class TutorialStep(BaseModel):
-    """Tutorial step."""
+    """Tutorial step.
+
+    Attributes
+    ----------
+    title: str
+        Title of the tutorial step.
+    message: str
+        Message to display. Can be HTML.
+    widget: QWidget
+        Widget to associate tutorial with. If widget is provided, chevron icon will be shown and it will point towards
+        it.
+    position: Position
+        The position of the tutorial chevron.
+    position_offset: tuple[int, int]
+        Offset position of the tutorial chevron.
+    """
 
     title: str = ""
     message: str
     widget: QWidget
     position: Position = Position.RIGHT
+    position_offset: tuple[int, int] = (0, 0)
 
     class Config:
         """Configuration."""
@@ -209,34 +225,37 @@ class QtTutorial(QDialog):
         self._message_label.adjustSize()
         self.adjustSize()
         self.set_chevron(step.position)
-        self.move_to_widget(step.widget, step.position)
+        self.move_to_widget(step.widget, step.position, step.position_offset)
 
         # update animation
         self._animation.setStartValue(self._step_indicator.value())
         self._animation.setEndValue((index + 1) * 100)
         self._animation.start()
 
-    def move_to_widget(self, widget: QWidget, position: str = "right") -> None:
+    def move_to_widget(
+        self, widget: QWidget, position: str = "right", position_offset: tuple[int, int] = (0, 0)
+    ) -> None:
         """Move tutorial to specified widget."""
         position = Position(position)
         x_pad, y_pad = 5, 5
         popup_size = self.size()
         icon_pos = self.chevrons[position].pos()
+        x_pos_offset, y_pos_offset = position_offset
         x_offset = int(self.chevrons[position].size().width() / 2)
         y_offset = int(self.chevrons[position].size().height() / 2)
         rect_of_widget = widget.rect()
         if position in ["left", "left_top", "left_bottom"]:
-            x = rect_of_widget.left() - popup_size.width() - x_pad
-            y = rect_of_widget.center().y() - icon_pos.y() - y_offset
+            x = rect_of_widget.left() - popup_size.width() - x_pad - x_pos_offset
+            y = rect_of_widget.center().y() - icon_pos.y() - y_offset - y_pos_offset
         elif position in ["right", "right_top", "right_bottom"]:
-            x = rect_of_widget.right() + x_pad
-            y = rect_of_widget.center().y() - icon_pos.y() - y_offset
+            x = rect_of_widget.right() + x_pad - x_pos_offset
+            y = rect_of_widget.center().y() - icon_pos.y() - y_offset - y_pos_offset
         elif position in ["top", "top_left", "top_right"]:
-            y = rect_of_widget.top() - popup_size.height() - y_pad
-            x = rect_of_widget.center().x() - icon_pos.x() - x_offset
+            x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
+            y = rect_of_widget.top() - popup_size.height() - y_pad - y_pos_offset
         elif position in ["bottom", "bottom_left", "bottom_right"]:
-            y = rect_of_widget.bottom() + y_pad
-            x = rect_of_widget.center().x() - icon_pos.x() - x_offset
+            x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
+            y = rect_of_widget.bottom() + y_pad - y_pos_offset
         else:
             raise ValueError(f"Invalid position '{position}'.")
         pos = widget.mapToGlobal(QPoint(int(x), int(y)))

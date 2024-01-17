@@ -1357,10 +1357,14 @@ def make_radio_btn_group(parent: Qw.QWidget | None, radio_buttons) -> Qw.QButton
     return widget
 
 
-def make_h_line_with_text(label: str, parent: Qw.QWidget = None, bold: bool = False):
+def make_h_line_with_text(label: str, parent: Qw.QWidget = None, bold: bool = False, **kwargs):
     """Make horizontal line with text."""
     return make_h_layout(
-        make_h_line(parent), make_label(parent, label, bold=bold), make_h_line(parent), stretch_id=(0, 2)
+        make_h_line(parent),
+        make_label(parent, label, bold=bold, **kwargs),
+        make_h_line(parent),
+        stretch_id=(0, 2),
+        spacing=2,
     )
 
 

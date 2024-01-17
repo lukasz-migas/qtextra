@@ -426,6 +426,7 @@ class QtCheckableTableView(QTableView):
     evt_keypress = Signal(QKeyEvent)
     # value changed
     evt_changed = Signal()
+    evt_double_clicked = Signal(int)
 
     def __init__(
         self,
@@ -454,15 +455,14 @@ class QtCheckableTableView(QTableView):
         self._selection = selection
 
         # register events
+        self.doubleClicked.connect(lambda v: self.evt_double_clicked.emit(v.row()))
         self.clicked.connect(self.on_table_clicked)
         if self._sortable:
             self.header.sectionClicked.connect(self.sortByColumn)
         if self._double_click_to_check:
             self.doubleClicked.connect(self._on_check_row)
-
         if isinstance(self._config, TableConfig):
             self.init_from_config()
-
         connect(THEMES.evt_theme_changed, self._update_color_theme, state=True)
         self._update_color_theme()
 
