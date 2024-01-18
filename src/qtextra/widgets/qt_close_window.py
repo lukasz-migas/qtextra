@@ -66,6 +66,7 @@ class QtConfirmCloseDialog(QDialog):
         # https://github.com/pytest-dev/pytest-qt/issues/254
         self.close_btn = close_btn
         self.cancel_btn = cancel_btn
+        self.setFixedSize(self.sizeHint())
 
     def accept(self):
         """Accept."""
