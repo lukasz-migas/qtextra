@@ -96,7 +96,7 @@ class QtLogger(QWidget):
         # setup logging
         self.handler = QtHandler(parent=self)
         self.handler.evt_signal.connect(self.update_log)
-        logger.add(self.handler, level=0)
+        logger.add(self.handler, level=0, backtrace=True, diagnose=True, catch=True)
 
     @Slot(str)
     @Slot(object)
