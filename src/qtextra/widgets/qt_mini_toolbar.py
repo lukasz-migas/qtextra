@@ -134,12 +134,15 @@ class QtMiniToolbar(QFrame):
         checkable: bool = False,
         check: bool = False,
         size: ty.Tuple[int, int] = (26, 26),
+        hidden: bool = False,
     ):
         """Insert tool."""
         btn = self._make_qta_button(
             name, flat=flat, func=func, tooltip=tooltip, checkable=checkable, check=check, size=size
         )
         self.insert_button(btn)
+        if hidden:
+            btn.hide()
         return btn
 
     def insert_separator(self) -> None:
