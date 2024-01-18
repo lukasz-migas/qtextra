@@ -72,7 +72,7 @@ class QtBaseImageControls(QtLayerControls):
         self.autoScaleBar = AutoScaleButtons(layer, self)
 
         # gamma slider
-        sld = hp.make_double_slider_with_text(self, 0.2, 2, step_size=0.02, n_decimals=2)
+        sld = hp.make_double_slider_with_text(self, 0.1, 2, step_size=0.02, n_decimals=2)
         sld.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         sld.setValue(layer.gamma)
         connect_setattr(sld.valueChanged, self.layer, "gamma")

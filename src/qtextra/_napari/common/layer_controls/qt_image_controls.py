@@ -119,6 +119,7 @@ class QtImageControls(QtBaseImageControls):
                 self.planeNormalButtons,
                 self.planeThicknessSlider,
                 self.colormap_combobox,
+                self.colorbar_label
             ],
             self.layer.editable and self.layer.visible,
         )
