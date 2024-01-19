@@ -6,12 +6,13 @@ from __future__ import annotations
 
 import typing as ty
 
+from koyo.logging import LOG_FMT
 from koyo.typing import PathLike
 from loguru import logger
 from qtpy.QtCore import QObject, Qt, Signal, Slot
-from qtpy.QtWidgets import QFormLayout, QHBoxLayout, QPlainTextEdit, QWidget
+from qtpy.QtGui import QFont
+from qtpy.QtWidgets import QHBoxLayout, QPlainTextEdit, QVBoxLayout, QWidget
 
-import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtFramelessTool
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
 
@@ -37,8 +38,8 @@ class QtLogger(QWidget):
             "BACKGROUND": "white",
             "TEXT": "black",
             "TRACE": "darkblue",
-            "DEBUG": "black",
-            "INFO": "green",
+            "DEBUG": "green",
+            "INFO": "black",
             "WARNING": "orange",
             "ERROR": "red",
             "CRITICAL": "darkred",
@@ -47,8 +48,8 @@ class QtLogger(QWidget):
             "BACKGROUND": "black",
             "TEXT": "white",
             "TRACE": "lightblue",
-            "DEBUG": "white",
-            "INFO": "green",
+            "DEBUG": "green",
+            "INFO": "white",
             "WARNING": "orange",
             "ERROR": "red",
             "CRITICAL": "darkred",
@@ -68,14 +69,13 @@ class QtLogger(QWidget):
     TEXT_COLOR: str
 
     def __init__(self, parent: QWidget | None = None, log_dir: PathLike | None = None):
-        super().__init__()
+        super().__init__(parent)
         self.log_dir = log_dir
-        self.textedit = QPlainTextEdit(self)
 
         # Set whatever the default monospace font is for the platform
-        f = hp.get_font(9)
-        f.setStyleHint(f.Monospace)
-        self.textedit.setFont(f)
+        self.textedit = QPlainTextEdit(self)
+        font = QFont("monospace")
+        self.textedit.setFont(font)
         self.textedit.setReadOnly(True)
 
         toolbar = QtMiniToolbar(self, Qt.Orientation.Vertical)
@@ -96,7 +96,7 @@ class QtLogger(QWidget):
         # setup logging
         self.handler = QtHandler(parent=self)
         self.handler.evt_signal.connect(self.update_log)
-        logger.add(self.handler, level=0, backtrace=True, diagnose=True, catch=True)
+        logger.add(self.handler, level=0, backtrace=True, diagnose=True, catch=True, enqueue=True, format=LOG_FMT)
 
     @Slot(str)
     @Slot(object)
@@ -118,6 +118,7 @@ class QtLogger(QWidget):
             log entry
         """
         self.textedit.appendHtml(f'<pre><font color="{color}">{message}</font></pre>')
+        # self.textedit.appendHtml(f'<span><font color="{color}">{message}</font></span>')
 
     def on_open_log_dir(self):
         """Open directory containing log files."""
@@ -170,7 +171,7 @@ class QtLoggerDialog(QtFramelessTool):
 
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent: ty.Optional[QWidget], log_dir: PathLike | None = None) -> None:
+    def __init__(self, parent: ty.Optional[QWidget] = None, log_dir: PathLike | None = None) -> None:
         self.log_dir = log_dir
         super().__init__(parent)
         self.setMinimumWidth(600)
@@ -178,17 +179,18 @@ class QtLoggerDialog(QtFramelessTool):
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore
 
     # noinspection PyAttributeOutsideInit
-    def make_panel(self) -> QFormLayout:
+    def make_panel(self) -> QVBoxLayout:
         """Make panel."""
         _, header_layout = self._make_hide_handle()
         self._title_label.setText("Logger")
 
         self._logger = QtLogger(self, log_dir=self.log_dir)
 
-        layout = hp.make_form_layout(self)
-        hp.style_form_layout(layout)
-        layout.addRow(header_layout)
-        layout.addRow(self._logger)
+        layout = QVBoxLayout()
+        layout.addLayout(header_layout)
+        layout.addWidget(self._logger)
+        layout.setSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
         return layout
 
 
@@ -199,12 +201,12 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qapplication
 
     app = qapplication(1)
-    dlg = QtLogger(app)
+    dlg = QtLoggerDialog()
     THEMES.set_theme_stylesheet(dlg)
     dlg.show()
 
     logger.trace("TRACE")
-    logger.debug("INFO")
+    logger.debug("DEBUG")
     logger.info("INFO")
     logger.warning("WARNING")
     logger.error("ERROR")

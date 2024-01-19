@@ -197,6 +197,7 @@ QtConsole > QTextEdit, QtTextDialog > QTextEdit, TaskInfoDialog > QTextEdit {
 .in-prompt { color: #6ab825; }
 .out-prompt { color: #b72121; }
 
+
 /* ----------------- QtFramelessPopup ----------------- */
 QtFramelessPopup {
     border: 2px solid {{ highlight }};
