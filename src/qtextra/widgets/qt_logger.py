@@ -5,6 +5,7 @@ Copied and modified from this post: http://plumberjack.blogspot.com/2019/11/a-qt
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 
 from koyo.logging import LOG_FMT
 from koyo.typing import PathLike
@@ -13,6 +14,7 @@ from qtpy.QtCore import QObject, Qt, Signal, Slot
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import QHBoxLayout, QPlainTextEdit, QVBoxLayout, QWidget
 
+from qtextra.utils.utilities import connect
 from qtextra.widgets.qt_dialog import QtFramelessTool
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
 
@@ -27,7 +29,8 @@ class QtHandler(QObject):
 
     def write(self, message: str):
         """Emit message."""
-        self.evt_signal.emit(message)
+        with suppress(RuntimeError):
+            self.evt_signal.emit(message)
 
 
 class QtLogger(QWidget):
@@ -57,12 +60,12 @@ class QtLogger(QWidget):
     }
     THEMES: ty.ClassVar[list] = list(THEME_COLORS.keys())
     LOG_LEVELS: ty.ClassVar[dict] = {
-        "| TRACE ": "TRACE",
-        "| DEBUG ": "DEBUG",
-        "| INFO ": "INFO",
-        "| WARNING ": "WARNING",
-        "| ERROR ": "ERROR",
-        "| CRITICAL ": "CRITICAL",
+        "[TRACE ": "TRACE",
+        "[DEBUG ": "DEBUG",
+        "[INFO ": "INFO",
+        "[WARNING ": "WARNING",
+        "[ERROR ": "ERROR",
+        "[CRITICAL ": "CRITICAL",
     }
     THEME: str
     COLORS: ty.Dict[str, str]
@@ -95,8 +98,17 @@ class QtLogger(QWidget):
 
         # setup logging
         self.handler = QtHandler(parent=self)
-        self.handler.evt_signal.connect(self.update_log)
-        logger.add(self.handler, level=0, backtrace=True, diagnose=True, catch=True, enqueue=True, format=LOG_FMT)
+        connect(self.handler.evt_signal, self.update_log, state=True)
+        self.log_id = logger.add(
+            self.handler, level=0, backtrace=True, diagnose=True, catch=True, enqueue=True, format=LOG_FMT
+        )
+
+    def close(self) -> bool:
+        """Close logger."""
+        with suppress(Exception):
+            logger.remove(self.log_id)
+        connect(self.handler.evt_signal, self.update_log, state=False)
+        return super().close()
 
     @Slot(str)
     @Slot(object)
@@ -107,16 +119,8 @@ class QtLogger(QWidget):
         color = self.COLORS.get(level, self.TEXT_COLOR)
         self.append_log_entry(color, message)
 
-    def append_log_entry(self, color, message):
-        """Add log entry to the window.
-
-        Parameters
-        ----------
-        color : str or list
-            color of the log entry
-        message : str
-            log entry
-        """
+    def append_log_entry(self, color: str | list, message: str) -> None:
+        """Add log entry to the window."""
         self.textedit.appendHtml(f'<pre><font color="{color}">{message}</font></pre>')
         # self.textedit.appendHtml(f'<span><font color="{color}">{message}</font></span>')
 
