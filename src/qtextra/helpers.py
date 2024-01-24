@@ -441,6 +441,8 @@ def make_line_edit(
     widget = Qw.QLineEdit(parent)
     widget.setText(text)
     widget.setClearButtonEnabled(True)
+    widget.setDisabled(disabled)
+    widget.setPlaceholderText(placeholder)
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)
     if bold:
@@ -455,8 +457,6 @@ def make_line_edit(
         [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
     if func_changed:
         [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
-    widget.setDisabled(disabled)
-    widget.setPlaceholderText(placeholder)
     return widget
 
 
@@ -1539,7 +1539,7 @@ def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options
     return advanced_widget
 
 
-def get_font(font_size: int, font_weight: int = QFont.Normal) -> QFont:
+def get_font(font_size: int, font_weight: int = QFont.Weight.Normal) -> QFont:
     """Get font."""
     font = QFont(QFont().defaultFamily(), weight=font_weight)
     font.setPointSize(font_size if IS_WIN else font_size + 2)

@@ -28,6 +28,7 @@ class SelectionWidget(QtFramelessTool):
         super().__init__(parent)
         self.setMinimumWidth(200)
         self.setMinimumHeight(200)
+        self.filter_by_option.setFocus()
 
     def set_options(self, options: list[str], selected_options: list[str]) -> None:
         """Set options."""
@@ -130,11 +131,16 @@ class QtMultiSelect(QWidget):
         **_kwargs: ty.Any,
     ) -> QtMultiSelect:
         """Init."""
+        if default:
+            value = default
         if value is None:
             value = default
         if items and "enum" in items:
             options = items["enum"]
-        values = value.split(";") if value else []
+        if isinstance(value, str):
+            values = value.split(";") if value else []
+        else:
+            values = value
         obj = cls(parent)
         obj.text_edit.setPlaceholderText(placeholder)
         obj.options = options or []
@@ -160,6 +166,10 @@ class QtMultiSelect(QWidget):
         """Set object name."""
         self.text_edit.setObjectName(name)
         super().setObjectName(name)
+
+    def currenOptions(self) -> list[str]:
+        """Return current options."""
+        return self.options
 
     def clear(self) -> None:
         """Clear selection."""

@@ -130,6 +130,11 @@ class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
     def get_width(self, column_id: int) -> int:
         """Get the width of column."""
         data = self.get(column_id, {})
-        if data:
-            return data["width"]
-        return 100
+        width: int = data.get("width", 100)
+        return width
+
+    def to_columns(self, include_check: bool = True) -> list[str]:
+        """Return columns."""
+        if include_check:
+            return [v["name"] for v in self.values()]
+        return [v["name"] for v in self.values() if v["tag"] != "check"]

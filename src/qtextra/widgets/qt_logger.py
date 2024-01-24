@@ -103,12 +103,12 @@ class QtLogger(QWidget):
             self.handler, level=0, backtrace=True, diagnose=True, catch=True, enqueue=True, format=LOG_FMT
         )
 
-    def close(self) -> bool:
-        """Close logger."""
+    def closeEvent(self, evt):
+        """Close."""
         with suppress(Exception):
             logger.remove(self.log_id)
         connect(self.handler.evt_signal, self.update_log, state=False)
-        return super().close()
+        return super().closeEvent(evt)
 
     @Slot(str)
     @Slot(object)

@@ -20,10 +20,6 @@ class QtScrollableLabel(QScrollArea):
 
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        # self.label.setWordWrap(True)
-        # self.label.setTextFormat(Qt.RichText)  # type: ignore
-        # self.label.setTextInteractionFlags(Qt.TextBrowserInteraction | Qt.TextSelectableByMouse)  # type: ignore
-        # self.label.setOpenExternalLinks(True)
 
         if text:
             self.setText(text)
