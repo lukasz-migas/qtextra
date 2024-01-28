@@ -55,6 +55,10 @@ QtImagePushButton[with_text="true"]{
     max-height : 500px;
 }
 
+QtImagePushButton[flat="true"]{
+    background-color: none;
+}
+
 QtImagePushButton[layer_button="true"]{
     background-color: {{ foreground }};
 }

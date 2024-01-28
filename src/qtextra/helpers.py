@@ -911,6 +911,7 @@ def make_qta_btn(
         widget.setToolTip(tooltip)
     if flat:
         widget.setFlat(flat)
+        widget.setProperty("flat", True)
     if checkable:
         widget.setCheckable(checkable)
         widget.setChecked(checked)
