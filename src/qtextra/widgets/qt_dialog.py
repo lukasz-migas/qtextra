@@ -68,6 +68,14 @@ class ScreenManager:
 class DialogMixin:
     """Mixin class for dialogs."""
 
+    def show_in_center_of(self, widget: QWidget, show: bool = True):
+        """Show dialog in the center of the widget."""
+        rect = widget.rect()
+        pos = widget.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top() + rect.height() / 2))
+        self.move(pos)
+        if show:
+            self.show()
+
     def show_above_widget(self, widget: QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0):
         """Show popup dialog above the widget."""
         rect = widget.rect()

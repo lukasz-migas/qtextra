@@ -33,11 +33,13 @@ class SelectionWidget(QtFramelessTool):
     def set_options(self, options: list[str], selected_options: list[str]) -> None:
         """Set options."""
         data = []
+        selected_options_ = []
         for option in options:
             data.append([option in selected_options, option])
+            selected_options_.append(option)
         self.table.reset_data()
         self.table.add_data(data)
-        self.options = selected_options
+        self.options = selected_options_
 
     def accept(self) -> None:
         """Return state."""
@@ -92,6 +94,9 @@ class SelectionWidget(QtFramelessTool):
 class QtMultiSelect(QWidget):
     """Multi select widget."""
 
+    editingFinished = Signal()
+    textChanged = Signal(str)
+
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.options: list[str] = []
@@ -108,9 +113,12 @@ class QtMultiSelect(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
+        self.text_edit.editingFinished.connect(self.editingFinished.emit)
+        self.text_edit.textChanged.connect(self.textChanged.emit)
+
     def eventFilter(self, obj: QObject, evt: QEvent) -> bool:
         """Event filter."""
-        if obj == self.text_edit and evt.type() == QEvent.MouseButtonPress:  # type: ignore
+        if self.isEnabled() and obj == self.text_edit and evt.type() == QEvent.MouseButtonPress:  # type: ignore
             self.on_select()
             return True
         return super().eventFilter(obj, evt)
@@ -151,9 +159,9 @@ class QtMultiSelect(QWidget):
         if not show_btn:
             obj.select_btn.hide()
         if func:
-            [obj.text_edit.editingFinished.connect(func_) for func_ in hp._validate_func(func)]
+            [obj.editingFinished.connect(func_) for func_ in hp._validate_func(func)]
         if func_changed:
-            [obj.text_edit.textChanged.connect(func_) for func_ in hp._validate_func(func_changed)]
+            [obj.textChanged.connect(func_) for func_ in hp._validate_func(func_changed)]
         return obj
 
     def polish(self) -> None:
@@ -185,6 +193,8 @@ class QtMultiSelect(QWidget):
 
     def set_selected_options(self, selected_options: list[str]) -> None:
         """List of options."""
+        if selected_options is None:
+            selected_options = []
         self.selected_options = selected_options
         self.text_edit.setText("; ".join(selected_options))
 
