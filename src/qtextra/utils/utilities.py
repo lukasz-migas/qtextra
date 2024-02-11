@@ -7,6 +7,17 @@ from koyo.utilities import running_as_pyinstaller_app
 from loguru import logger
 
 
+def running_under_pytest() -> bool:
+    """Return True if currently running under py.test.
+
+    This function is used to do some adjustment for testing. The environment
+    variable ORIGAMI_PYTEST is defined in conftest.py.
+    """
+    import os
+
+    return bool(os.environ.get("QTEXTRA_PYTEST"))
+
+
 def get_docs_path() -> Path:
     """Get path to docs directory."""
     base_path = Path(sys.executable).parent

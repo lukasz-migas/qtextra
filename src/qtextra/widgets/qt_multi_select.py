@@ -12,6 +12,11 @@ from qtextra.widgets.qt_dialog import QtFramelessTool
 from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
 
 
+def filter_selected(options: list[str], all_options: list[str]) -> list[str]:
+    """Filter selected options."""
+    return [option for option in options if option in all_options]
+
+
 class SelectionWidget(QtFramelessTool):
     """Selection widget."""
 
@@ -23,6 +28,7 @@ class SelectionWidget(QtFramelessTool):
     )
 
     options: list[str] | None = None
+    original_options: list[str] | None = None
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
@@ -35,11 +41,14 @@ class SelectionWidget(QtFramelessTool):
         data = []
         selected_options_ = []
         for option in options:
-            data.append([option in selected_options, option])
-            selected_options_.append(option)
+            is_selected = option in selected_options
+            data.append([is_selected, option])
+            if is_selected:
+                selected_options_.append(option)
         self.table.reset_data()
         self.table.add_data(data)
         self.options = selected_options_
+        self.original_options = selected_options
 
     def accept(self) -> None:
         """Return state."""
@@ -49,7 +58,7 @@ class SelectionWidget(QtFramelessTool):
 
     def reject(self) -> None:
         """Return state."""
-        self.evt_changed.emit(self.options)
+        self.evt_changed.emit(self.original_options)
         return super().reject()
 
     def on_check(self, _index: int, _state: bool) -> None:
@@ -187,6 +196,7 @@ class QtMultiSelect(QWidget):
 
     def set_options(self, options: list[str], selected_options: list[str]) -> None:
         """List of options."""
+        selected_options = filter_selected(options, selected_options)
         self.options = options
         self.selected_options = selected_options
         self.text_edit.setText("; ".join(selected_options))

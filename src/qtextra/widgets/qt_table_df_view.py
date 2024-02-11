@@ -20,20 +20,27 @@ class QtDataFrameWidget(Qw.QWidget):
         df (DataFrame): The DataFrame to display
     """
 
-    def __init__(self, df, inplace=True, parent=None):
+    def __init__(
+        self, parent: Qw.QWidget, df: pd.DataFrame, inplace: bool = True, editable: bool = False, stretch: bool = False
+    ):
         super().__init__(parent)
+        if df is None:
+            df = pd.DataFrame()
         if not inplace:
             df = df.copy()
 
         # Indicates whether the widget has been shown yet. Set to True in
         self._loaded = False
+        self.editable = editable
 
         # Set up DataFrame TableView and Model
         self.dataView = DataTableView(df, parent=self)
+        if not editable:
+            self.dataView.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)
 
         # Create headers
-        self.columnHeader = HeaderView(parent=self, df=df, orientation=Qt.Horizontal)
-        self.indexHeader = HeaderView(parent=self, df=df, orientation=Qt.Vertical)
+        self.columnHeader = HeaderView(self, df, Qt.Orientation.Horizontal)
+        self.indexHeader = HeaderView(self, df, Qt.Orientation.Vertical)
 
         # Link scrollbars
         # Scrolling in data table also scrolls the headers
@@ -43,8 +50,8 @@ class QtDataFrameWidget(Qw.QWidget):
         self.columnHeader.horizontalScrollBar().valueChanged.connect(self.dataView.horizontalScrollBar().setValue)
         self.indexHeader.verticalScrollBar().valueChanged.connect(self.dataView.verticalScrollBar().setValue)
 
-        self.dataView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.dataView.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
         self.indexHeader.horizontalScrollBar().valueChanged.connect(lambda: None)
@@ -461,7 +468,7 @@ class HeaderView(Qw.QTableView):
 
     df = None
 
-    def __init__(self, parent: QtDataFrameWidget, df, orientation):
+    def __init__(self, parent: QtDataFrameWidget, df: pd.DataFrame, orientation: Qt.Orientation):
         super().__init__(parent)
 
         # Setup
@@ -484,7 +491,7 @@ class HeaderView(Qw.QTableView):
         self.setSizePolicy(Qw.QSizePolicy(Qw.QSizePolicy.Maximum, Qw.QSizePolicy.Maximum))
         self.setWordWrap(False)
         self.setFont(Qg.QFont("Times", weight=Qg.QFont.Bold))
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollPerPixel)
         self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollPerPixel)
 
@@ -495,7 +502,9 @@ class HeaderView(Qw.QTableView):
 
         # Orientation specific settings
         if orientation == Qt.Horizontal:
-            self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # Scrollbar is replaced in DataFrameViewer
+            self.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+            )  # Scrollbar is replaced in DataFrameViewer
             self.horizontalHeader().hide()
             self.verticalHeader().setDisabled(True)
             self.verticalHeader().setHighlightSections(False)  # Selection lags a lot without this
@@ -612,7 +621,7 @@ class HeaderView(Qw.QTableView):
         df = self.model().df
 
         # Find spans for horizontal HeaderView
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             # Find how many levels the MultiIndex has
             if type(df.columns) == pd.MultiIndex:
                 N = len(df.columns[0])
@@ -686,7 +695,7 @@ class HeaderView(Qw.QTableView):
     def over_header_edge(self, mouse_position, margin=3):
         """Return the index of the column or row the mouse is over the edge of, or None if it is not over an edge."""
         # Return the index of the column this x position is on the right edge of
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             x = mouse_position
             if self.columnAt(x - margin) != self.columnAt(x + margin):
                 if self.columnAt(x + margin) == 0:
@@ -698,7 +707,7 @@ class HeaderView(Qw.QTableView):
                 return None
 
         # Return the index of the row this y position is on the top edge of
-        elif self.orientation == Qt.Vertical:
+        elif self.orientation == Qt.Orientation.Vertical:
             y = mouse_position
             if self.rowAt(y - margin) != self.rowAt(y + margin):
                 if self.rowAt(y + margin) == 0:
@@ -713,17 +722,17 @@ class HeaderView(Qw.QTableView):
         """Event filter."""
         # If mouse is on an edge, start the drag resize process
         if event.type() == Qc.QEvent.MouseButtonPress:
-            if self.orientation == Qt.Horizontal:
+            if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
-            elif self.orientation == Qt.Vertical:
+            elif self.orientation == Qt.Orientation.Vertical:
                 mouse_position = event.pos().y()
 
             if self.over_header_edge(mouse_position) is not None:
                 self.header_being_resized = self.over_header_edge(mouse_position)
                 self.resize_start_position = mouse_position
-                if self.orientation == Qt.Horizontal:
+                if self.orientation == Qt.Orientation.Horizontal:
                     self.initial_header_size = self.columnWidth(self.header_being_resized)
-                elif self.orientation == Qt.Vertical:
+                elif self.orientation == Qt.Orientation.Vertical:
                     self.initial_header_size = self.rowHeight(self.header_being_resized)
                 return True
             else:
@@ -735,35 +744,35 @@ class HeaderView(Qw.QTableView):
 
         # Auto size the column that was double clicked
         if event.type() == Qc.QEvent.MouseButtonDblClick:
-            if self.orientation == Qt.Horizontal:
+            if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
-            elif self.orientation == Qt.Vertical:
+            elif self.orientation == Qt.Orientation.Vertical:
                 mouse_position = event.pos().y()
 
             # Find which column or row edge the mouse was over and auto size it
             if self.over_header_edge(mouse_position) is not None:
                 header_index = self.over_header_edge(mouse_position)
-                if self.orientation == Qt.Horizontal:
+                if self.orientation == Qt.Orientation.Horizontal:
                     self.parent.auto_size_column(header_index)
-                elif self.orientation == Qt.Vertical:
+                elif self.orientation == Qt.Orientation.Vertical:
                     self.parent.auto_size_row(header_index)
                 return True
 
         # Handle active drag resizing
         if event.type() == Qc.QEvent.MouseMove:
-            if self.orientation == Qt.Horizontal:
+            if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
-            elif self.orientation == Qt.Vertical:
+            elif self.orientation == Qt.Orientation.Vertical:
                 mouse_position = event.pos().y()
 
             # If this is None, there is no drag resize happening
             if self.header_being_resized is not None:
                 size = self.initial_header_size + (mouse_position - self.resize_start_position)
                 if size > 10:
-                    if self.orientation == Qt.Horizontal:
+                    if self.orientation == Qt.Orientation.Horizontal:
                         self.setColumnWidth(self.header_being_resized, size)
                         self.parent.dataView.setColumnWidth(self.header_being_resized, size)
-                    if self.orientation == Qt.Vertical:
+                    if self.orientation == Qt.Orientation.Vertical:
                         self.setRowHeight(self.header_being_resized, size)
                         self.parent.dataView.setRowHeight(self.header_being_resized, size)
 
@@ -773,9 +782,9 @@ class HeaderView(Qw.QTableView):
 
             # Set the cursor shape
             if self.over_header_edge(mouse_position) is not None:
-                if self.orientation == Qt.Horizontal:
+                if self.orientation == Qt.Orientation.Horizontal:
                     self.viewport().setCursor(Qg.QCursor(Qt.SplitHCursor))
-                elif self.orientation == Qt.Vertical:
+                elif self.orientation == Qt.Orientation.Vertical:
                     self.viewport().setCursor(Qg.QCursor(Qt.SplitVCursor))
             else:
                 self.viewport().setCursor(Qg.QCursor(Qt.ArrowCursor))
@@ -786,7 +795,7 @@ class HeaderView(Qw.QTableView):
     def sizeHint(self):
         """Size hint."""
         # Horizontal HeaderView
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             # Width of DataTableView
             width = self.table.sizeHint().width() + self.verticalHeader().width()
             # Height
@@ -807,7 +816,7 @@ class HeaderView(Qw.QTableView):
     # This is needed because otherwise when the horizontal header is a single row it will add whitespace to be bigger
     def minimumSizeHint(self):
         """Minimum size hint."""
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             return Qc.QSize(0, self.sizeHint().height())
         else:
             return Qc.QSize(self.sizeHint().width(), 0)
