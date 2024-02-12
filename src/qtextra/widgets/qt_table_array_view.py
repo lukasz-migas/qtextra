@@ -3,12 +3,12 @@ import typing as ty
 
 import numpy as np
 import pandas as pd
-from imimspy.processing.utilities import find_nearest_index_batch
+from koyo.utilities import find_nearest_index_batch
 from qtpy.QtCore import QAbstractTableModel, QModelIndex, QRect, Qt, Signal
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
 from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 
-from qtextra.utils.utilities import get_text_color
+from qtextra.utils.color import get_text_color
 
 TEXT_COLOR: str = "#000000"
 N_COLORS = 256

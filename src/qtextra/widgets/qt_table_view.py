@@ -200,7 +200,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
         # check state
-        elif role == Qt.ItemDataRole.CheckStateRole and (column == 0 or column in self.checkable_columns):
+        elif role == Qt.ItemDataRole.CheckStateRole and column in self.checkable_columns:
             return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
         # icon state
         elif role == Qt.ItemDataRole.DecorationRole:
@@ -508,6 +508,11 @@ class QtCheckableTableView(QTableView):
         """Return header."""
         return self.horizontalHeader()
 
+    @property
+    def index(self) -> QHeaderView:
+        """Return index."""
+        return self.verticalHeader()
+
     def model(self) -> QtCheckableItemModel:
         """Return instance of model."""
         model = super().model()
@@ -677,6 +682,14 @@ class QtCheckableTableView(QTableView):
         self.model().add_data(data)
         if n_items == 0:
             self.init()
+            
+    def add_index(self, rows: list[str]):
+        """Add vertical index."""
+        header = self.index
+        # header.set
+        # for i, row in enumerate(rows):
+        #     header.setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
+        #     header.item
 
     def add_data_without_set(self, data: list[list]) -> None:
         """Add data."""
