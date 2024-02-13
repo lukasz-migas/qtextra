@@ -205,6 +205,7 @@ class QtMultiSelect(QWidget):
         """List of options."""
         if selected_options is None:
             selected_options = []
+        selected_options = filter_selected(self.options, selected_options)
         self.selected_options = selected_options
         self.text_edit.setText("; ".join(selected_options))
 
