@@ -46,12 +46,12 @@ def strip_sensitive_data(event: dict, hint: dict):
         for exc in event["exception"]["values"]:
             for frame in exc["stacktrace"]["frames"]:
                 frame.pop("abs_path", None)
-        # only include the name of the executable in sys.argv (remove pathsƒ)
+        # only include the name of the executable in sys.argv (remove paths)
         if args := event["extra"]["sys.argv"]:
             args[0] = args[0].split(os.sep)[-1]
     if DEBUG:  # pragma: no cover
         pprint(event)
-    logger.debug(f"Sentry event: {event}")
+    logger.debug(f"Sending sentry event")
     return event
 
 
