@@ -1,23 +1,24 @@
 """sentry utilities."""
+import logging
 import os
-import typing as ty
 import platform
+import typing as ty
+import warnings
 from contextlib import suppress
 from functools import lru_cache
 from importlib import metadata
 from subprocess import run
-import logging
-import warnings
 
+from loguru import logger
 
 try:
     from rich import print as pprint
 except ImportError:  # pragma: no cover
     from pprint import pprint
 
-import sentry_sdk
 from getpass import getuser
 
+import sentry_sdk
 from koyo.utilities import running_as_pyinstaller_app
 
 sentry_sdk.set_user({"username": getuser(), "ip_address": "{{auto}}"})
@@ -50,6 +51,7 @@ def strip_sensitive_data(event: dict, hint: dict):
             args[0] = args[0].split(os.sep)[-1]
     if DEBUG:  # pragma: no cover
         pprint(event)
+    logger.debug(f"Sentry event: {event}")
     return event
 
 
@@ -100,7 +102,7 @@ def get_release(package: ty.Optional[str] = None) -> str:
                 if sha:
                     return sha
             return metadata.version(package)
-    except Exception:  # noqa
+    except Exception:
         pass
     return "UNDETECTED"
 
@@ -159,7 +161,7 @@ def get_sample_event(**kwargs) -> dict:
 
     with suppress(KeyError, IndexError):
         # remove the mock hub from the event
-        frames = EVENT["exception"]["values"][0]["stacktrace"]["frames"]  # noqa
+        frames = EVENT["exception"]["values"][0]["stacktrace"]["frames"]
         del frames[-1]["vars"]["hub"]
     return EVENT
 
