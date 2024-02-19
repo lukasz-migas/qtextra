@@ -17,10 +17,21 @@ def filter_selected(options: list[str], all_options: list[str]) -> list[str]:
     return [option for option in options if option in all_options]
 
 
+def format_options(options: list[str]) -> str:
+    """Format options."""
+    return "; ".join(options)
+
+
+def unformat_options(options: str) -> list[str]:
+    """Unformat options."""
+    return [option.strip() for option in options.split(";") if option.strip()]
+
+
 class SelectionWidget(QtFramelessTool):
     """Selection widget."""
 
     evt_changed = Signal(list)
+    evt_temp_changed = Signal(list)
     TABLE_CONFIG = (
         TableConfig()  # type: ignore[no-untyped-call]
         .add("", "check", "bool", 25, no_sort=True, hidden=False, sizing="fixed")
@@ -65,7 +76,7 @@ class SelectionWidget(QtFramelessTool):
         """Check."""
         indices = self.table.get_all_checked()
         options = [self.table.get_value(self.TABLE_CONFIG.option, index) for index in indices]
-        self.evt_changed.emit(options)
+        self.evt_temp_changed.emit(options)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
@@ -162,7 +173,7 @@ class QtMultiSelect(QWidget):
         obj.text_edit.setPlaceholderText(placeholder)
         obj.options = options or []
         obj.selected_options = values
-        obj.text_edit.setText("; ".join(obj.selected_options))
+        obj.text_edit.setText(format_options(obj.selected_options))
         obj.setToolTip(description)
         obj.text_edit.setToolTip(description)
         if not show_btn:
@@ -199,26 +210,37 @@ class QtMultiSelect(QWidget):
         selected_options = filter_selected(options, selected_options)
         self.options = options
         self.selected_options = selected_options
-        self.text_edit.setText("; ".join(selected_options))
+        self.text_edit.setText(format_options(selected_options))
 
     def set_selected_options(self, selected_options: list[str]) -> None:
         """List of options."""
         if selected_options is None:
             selected_options = []
+        if self.options:
+            selected_options = filter_selected(self.options, selected_options)
         self.selected_options = selected_options
-        self.text_edit.setText("; ".join(selected_options))
+        self.text_edit.setText(format_options(selected_options))
+
+    def set_selected_options_temp(self, selected_options: list[str]) -> None:
+        """List of options."""
+        with hp.qt_signals_blocked(self.text_edit):
+            self.set_selected_options(selected_options)
 
     def on_select(self) -> None:
         """Select."""
         dlg = SelectionWidget(self)
         dlg.set_options(self.options, self.selected_options)
         dlg.evt_changed.connect(self.set_selected_options)
+        dlg.evt_temp_changed.connect(self.set_selected_options_temp)
         if bool(dlg.exec()):
             selected_options = dlg.options
             if not selected_options:
                 selected_options = []
             self.selected_options = selected_options
-            self.text_edit.setText("; ".join(selected_options))
+            self.text_edit.setText(format_options(selected_options))
+            # trigger update events
+            self.textChanged.emit(format_options(selected_options))
+            self.editingFinished.emit()
 
     def get_checked(self) -> list[str]:
         """Return list of checked values."""
