@@ -223,14 +223,19 @@ def make_label(
     tooltip: ty.Optional[str] = None,
     selectable: bool = False,
     visible: bool = True,
+    disabled: bool = False,
+    **kwargs,
 ) -> Qw.QLabel:
     """Make QLabel element."""
+    tooltip = kwargs.get("description", tooltip)
+    text = kwargs.get("default", text)
+
     widget = Qw.QLabel(parent)
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
         widget.setTextFormat(Qt.RichText)  # type: ignore[attr-defined]
-        widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextBrowserInteraction)
+        widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)
         widget.setOpenExternalLinks(True)
     if alignment is not None:
         widget.setAlignment(alignment)
@@ -241,7 +246,9 @@ def make_label(
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)
     if selectable:
-        widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextSelectableByMouse)
+        widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse)
+    if disabled:
+        widget.setProperty("disabled", True)
     widget.setWordWrap(wrap)
     widget.setVisible(visible)
     return widget
@@ -705,10 +712,12 @@ def set_combobox_text_data(
     if isinstance(data, ty.List):
         data = {m: m for m in data}
     for index, (text, item) in enumerate(data.items()):
-        widget.addItem(text, item)
-        if current_item is not None:
-            if current_item == item or current_item == text:
-                widget.setCurrentIndex(index)
+        widget.addItem(str(text), item)
+    set_index = widget.findText(current_item)
+    if set_index is None:
+        set_index = widget.findData(current_item)
+    if set_index is not None:
+        widget.setCurrentIndex(set_index)
 
 
 def set_combobox_current_index(widget: Qw.QComboBox, current_data):

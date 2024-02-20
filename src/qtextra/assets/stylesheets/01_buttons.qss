@@ -28,7 +28,7 @@ QtImagePushButton::pressed{
 
 QtImagePushButton::hover{
     border-radius: 2px;
-    background-color: {{ darken(foreground, 5) }};
+    background-color: {{ darken(foreground, 10) }};
 }
 
 QtImagePushButton:disabled {
