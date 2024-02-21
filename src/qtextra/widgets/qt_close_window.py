@@ -20,20 +20,24 @@ class QtConfirmCloseDialog(QDialog):
         self.config = config
         self.save_func = save_func
 
-        cancel_btn = hp.make_btn(self, "Cancel")
-        save_btn = hp.make_qta_btn(self, "save", label="Save", standout=True)
-        close_btn = hp.make_qta_btn(self, "warning", color="orange", label="Close", standout=True)
+        cancel_btn = hp.make_qta_btn(
+            self, "cancel", label="Cancel", standout=True, tooltip="Cancel and return to the app."
+        )
+        save_btn = hp.make_qta_btn(self, "save", label="Save", standout=True, tooltip="Save and close the app.")
+        close_btn = hp.make_qta_btn(
+            self, "warning", color="orange", label="Close", standout=True, tooltip="Close the app."
+        )
 
         icon_label = hp.make_qta_label(self, "warning", color="orange")
-        icon_label.set_xxlarge()
+        icon_label.set_xxxlarge()
 
         self.do_not_ask = hp.make_checkbox(self, "Do not ask in future")
 
         self.setWindowTitle("Close Application?")
         shortcut = QKeySequence("Ctrl+Q").toString(QKeySequence.SequenceFormat.NativeText)
         text = (
-            f"Do you want to close the application? There might be some <b>unsaved</b> changes. ('{shortcut}' to"
-            f" confirm)."
+            f"Do you want to close the application? There might be some <b>unsaved</b> changes."
+            f"<br><br>(<b>{shortcut}</b> to confirm)."
         )
         close_btn.setShortcut(QKeySequence("Ctrl+Q"))
 
@@ -45,7 +49,7 @@ class QtConfirmCloseDialog(QDialog):
         close_btn.clicked.connect(self.accept)
 
         body_layout = QVBoxLayout()
-        body_layout.addWidget(hp.make_label(self, text, enable_url=True))
+        body_layout.addWidget(hp.make_label(self, text, enable_url=True, wrap=True))
         body_layout.addWidget(self.do_not_ask)
 
         icon_layout = QHBoxLayout()

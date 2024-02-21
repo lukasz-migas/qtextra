@@ -10,11 +10,11 @@ class QtSearchableComboBox(QComboBox):
         super().__init__(parent)
         self.setEditable(True)
         self.completer_object = QCompleter()
-        self.completer_object.setCaseSensitivity(Qt.CaseInsensitive)
-        self.completer_object.setModelSorting(QCompleter.CaseSensitivelySortedModel)
-        self.completer_object.setFilterMode(Qt.MatchContains)
+        self.completer_object.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.completer_object.setModelSorting(QCompleter.ModelSorting.CaseSensitivelySortedModel)
+        self.completer_object.setFilterMode(Qt.MatchFlag.MatchContains)
         self.setCompleter(self.completer_object)
-        self.setInsertPolicy(QComboBox.NoInsert)  # ensures that incorrect values are not added
+        self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
         self.completer_object.popup().setItemDelegate(QStyledItemDelegate(self))
         self.completer_object.popup().setObjectName("search_box_popup")
 
@@ -35,3 +35,18 @@ class QtSearchableComboBox(QComboBox):
         """Remove item."""
         super().removeItem(index)
         self.completer_object.setModel(self.model())
+
+
+def add_search_to_combobox(combo: QComboBox) -> QComboBox:
+    """Add search to combobox."""
+    combo.setEditable(True)
+    completer_object = QCompleter()
+    completer_object.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+    completer_object.setModelSorting(QCompleter.ModelSorting.CaseSensitivelySortedModel)
+    completer_object.setFilterMode(Qt.MatchFlag.MatchContains)
+    combo.setCompleter(completer_object)
+    combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
+    completer_object.popup().setItemDelegate(QStyledItemDelegate(combo))
+    completer_object.popup().setObjectName("search_box_popup")
+    combo.completer_object = completer_object
+    combo._text_activated = lambda: combo.textActivated.emit(combo.currentText())

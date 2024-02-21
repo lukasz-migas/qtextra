@@ -51,6 +51,7 @@ QtImagePushButton[standout="true"]:hover {
 }
 
 QtImagePushButton[with_text="true"]{
+    min-width : 60px;
     max-width : 500px;
     max-height : 500px;
 }

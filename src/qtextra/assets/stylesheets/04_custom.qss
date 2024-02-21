@@ -399,3 +399,7 @@ QtPushButton#pick_option_button {
     font-size: {{ increase(font_size, 4) }};
     font-weight: bold;
 }
+
+QtConfirmCloseDialog QLabel {
+    font-size: {{ increase(font_size, 4) }};
+}
