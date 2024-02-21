@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import typing as ty
 
+from koyo.system import IS_PYINSTALLER, IS_WIN
 from qtpy.QtGui import QKeySequence
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
 
@@ -20,13 +21,18 @@ class QtConfirmCloseDialog(QDialog):
         self.config = config
         self.save_func = save_func
 
-        cancel_btn = hp.make_qta_btn(
-            self, "cancel", label="Cancel", standout=True, tooltip="Cancel and return to the app."
-        )
-        save_btn = hp.make_qta_btn(self, "save", label="Save", standout=True, tooltip="Save and close the app.")
-        close_btn = hp.make_qta_btn(
-            self, "warning", color="orange", label="Close", standout=True, tooltip="Close the app."
-        )
+        if IS_PYINSTALLER and IS_WIN:
+            cancel_btn = hp.make_btn(self, "Cancel", tooltip="Cancel and return to the app.")
+            save_btn = hp.make_btn(self, "Save", tooltip="Save and close the app.")
+            close_btn = hp.make_btn(self, "Close", tooltip="Close the app.")
+        else:
+            cancel_btn = hp.make_qta_btn(
+                self, "cancel", label="Cancel", standout=True, tooltip="Cancel and return to the app."
+            )
+            save_btn = hp.make_qta_btn(self, "save", label="Save", standout=True, tooltip="Save and close the app.")
+            close_btn = hp.make_qta_btn(
+                self, "warning", color="orange", label="Close", standout=True, tooltip="Close the app."
+            )
 
         icon_label = hp.make_qta_label(self, "warning", color="orange")
         icon_label.set_xxxlarge()
@@ -58,9 +64,9 @@ class QtConfirmCloseDialog(QDialog):
 
         btn_layout = QHBoxLayout()
         btn_layout.addStretch(1)
-        btn_layout.addWidget(cancel_btn)
-        btn_layout.addWidget(save_btn)
         btn_layout.addWidget(close_btn)
+        btn_layout.addWidget(save_btn)
+        btn_layout.addWidget(cancel_btn)
 
         layout = QVBoxLayout(self)
         layout.addLayout(icon_layout)
