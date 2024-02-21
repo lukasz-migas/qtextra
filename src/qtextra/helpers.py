@@ -713,11 +713,14 @@ def set_combobox_text_data(
         data = {m: m for m in data}
     for index, (text, item) in enumerate(data.items()):
         widget.addItem(str(text), item)
-    set_index = widget.findText(current_item)
-    if set_index is None:
-        set_index = widget.findData(current_item)
-    if set_index is not None:
-        widget.setCurrentIndex(set_index)
+        if current_item is not None:
+            if current_item == item or current_item == text:
+                widget.setCurrentIndex(index)
+    # set_index = widget.findText(current_item)
+    # if set_index is None:
+    #     set_index = widget.findData(current_item)
+    # if set_index is not None:
+    #     widget.setCurrentIndex(set_index)
 
 
 def set_combobox_current_index(widget: Qw.QComboBox, current_data):
