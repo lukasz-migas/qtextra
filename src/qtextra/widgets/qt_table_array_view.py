@@ -183,8 +183,11 @@ class QtArrayTableView(QTableView):
 
     evt_key_release = Signal(QKeyEvent)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, sortable: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.sortable = sortable
+        if self.sortable:
+            self.horizontalHeader().sectionClicked.connect(self.sortByColumn)
 
     def keyReleaseEvent(self, event):
         """Process key event press."""
@@ -231,7 +234,7 @@ class QtArrayTableView(QTableView):
 
     def init(self) -> None:
         """Initialize table to ensure correct visuals."""
-        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setDragEnabled(True)
         # self.setHorizontalHeader(QtRotatedHeaderView(self))
 
