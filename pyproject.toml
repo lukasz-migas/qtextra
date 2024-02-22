@@ -37,6 +37,7 @@ dependencies = [
     "qtawesome",
     "psygnal",
     "sentry_sdk",
+    "vispy",
     "qtconsole>=4.5.1,!=4.7.6,!=5.4.2",
     "ipykernel>=5.2.0",
 ]
@@ -49,9 +50,9 @@ pyside2 = ["pyside2"]
 pyside6 = ["pyside6"]
 pyqt5 = ["pyqt5"]
 pyqt6 = ["pyqt6"]
-plot = ["napari", "napari-plot", "vispy"]
-1d = ["napari-plot", "vispy"]
-2d = ["napari", "vispy"]
+plot = ["napari", "napari-plot"]
+1d = ["napari-plot"]
+2d = ["napari"]
 dev = [
     "black",
     "ipython",
