@@ -62,6 +62,7 @@ class QtMiniToolbar(QFrame):
             func=func,
             small=small,
             average=average,
+            properties={"wide_border": True},
         )
         self._tools[name] = btn
         return btn
@@ -128,7 +129,7 @@ class QtMiniToolbar(QFrame):
     def insert_qta_tool(
         self,
         name: str,
-        flat: bool = True,
+        flat: bool = False,
         func: ty.Optional[ty.Callable] = None,
         tooltip: ty.Optional[str] = None,
         checkable: bool = False,
