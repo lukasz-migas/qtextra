@@ -768,6 +768,7 @@ def make_btn(
     font_size: ty.Optional[int] = None,
     bold: bool = False,
     object_name: str = "",
+    properties: ty.Optional[dict[str, ty.Any]] = None,
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_buttons import QtPushButton
@@ -787,6 +788,10 @@ def make_btn(
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     if object_name:
         widget.setObjectName(object_name)
+    if properties:
+        for key, value in properties.items():
+            widget.setProperty(key, value)
+        polish_widget(widget)
     return widget
 
 

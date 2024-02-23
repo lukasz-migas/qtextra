@@ -403,3 +403,14 @@ QtPushButton#pick_option_button {
 QtConfirmCloseDialog QLabel {
     font-size: {{ increase(font_size, 4) }};
 }
+
+QPushButton[type="error"], QLabel[type="error"] {
+    color: {{ error }};
+}
+QPushButton[type="warning"], QLabel[type="warning"] {
+    color: {{ warning }};
+}
+QPushButton[type="success"], QLabel[type="success"] {
+    color: {{ success }};
+}
+

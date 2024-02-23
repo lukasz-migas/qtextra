@@ -87,6 +87,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "cancel": "mdi.close-circle",
     "success": "mdi.check-circle",
     "paint_palette": "ph.palette-fill",
+    "warning": "fa.warning",
 }
 
 

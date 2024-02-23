@@ -14,17 +14,22 @@ class QtConfirmCloseDialog(QDialog):
     """Confirm close dialog with an option to not ask again."""
 
     def __init__(
-        self, parent: QWidget, attr: str, save_func: ty.Callable | None = None, config: ty.Optional[object] = None
+        self,
+        parent: QWidget,
+        attr: str | None = None,
+        save_func: ty.Callable | None = None,
+        config: ty.Optional[object] = None,
+        no_icon: bool = False,
     ) -> None:
         super().__init__(parent)
         self.attr = attr
         self.config = config
         self.save_func = save_func
 
-        if IS_PYINSTALLER and IS_WIN:
+        if (IS_PYINSTALLER and IS_WIN) or no_icon:
             cancel_btn = hp.make_btn(self, "Cancel", tooltip="Cancel and return to the app.")
             save_btn = hp.make_btn(self, "Save", tooltip="Save and close the app.")
-            close_btn = hp.make_btn(self, "Close", tooltip="Close the app.")
+            close_btn = hp.make_btn(self, "Close", tooltip="Close the app.", properties={"type": "error"})
         else:
             cancel_btn = hp.make_qta_btn(
                 self, "cancel", label="Cancel", standout=True, tooltip="Cancel and return to the app."
@@ -54,33 +59,38 @@ class QtConfirmCloseDialog(QDialog):
         cancel_btn.clicked.connect(self.reject)
         close_btn.clicked.connect(self.accept)
 
-        body_layout = QVBoxLayout()
-        body_layout.addWidget(hp.make_label(self, text, enable_url=True, wrap=True))
-        body_layout.addWidget(self.do_not_ask)
-
-        icon_layout = QHBoxLayout()
-        icon_layout.addWidget(icon_label)
-        icon_layout.addLayout(body_layout)
-
         btn_layout = QHBoxLayout()
-        btn_layout.addStretch(1)
         btn_layout.addWidget(close_btn)
+        btn_layout.addStretch(1)
         btn_layout.addWidget(save_btn)
         btn_layout.addWidget(cancel_btn)
 
-        layout = QVBoxLayout(self)
-        layout.addLayout(icon_layout)
-        layout.addLayout(btn_layout)
+        body_layout = QVBoxLayout()
+        body_layout.addWidget(hp.make_label(self, text, enable_url=True, wrap=True))
+        body_layout.addWidget(self.do_not_ask)
+        body_layout.addLayout(btn_layout)
+
+        icon_layout = QHBoxLayout(self)
+        icon_layout.addWidget(icon_label)
+        icon_layout.addLayout(body_layout)
 
         # for test purposes because of the problem with shortcut testing:
         # https://github.com/pytest-dev/pytest-qt/issues/254
         self.close_btn = close_btn
         self.cancel_btn = cancel_btn
-        self.setFixedSize(self.sizeHint())
 
     def accept(self):
         """Accept."""
         if self.do_not_ask.isChecked():
-            if self.config:
+            if self.config and self.attr is not None:
                 setattr(self.config, self.attr, False)
         super().accept()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    from qtextra.utils.dev import apply_style, qapplication
+
+    app = qapplication()
+    dlg = QtConfirmCloseDialog(None, no_icon=True)
+    apply_style(dlg)
+    dlg.exec_()
