@@ -91,7 +91,7 @@ class QtTagButton(QFrame):
 
         layout = QHBoxLayout()
         layout.addWidget(self.selected)
-        layout.addWidget(self.label, alignment=Qt.AlignCenter, stretch=True)
+        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter, stretch=True)
         layout.addWidget(self.action_btn)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)

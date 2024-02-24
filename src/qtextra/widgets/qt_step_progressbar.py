@@ -107,7 +107,7 @@ class QtStepProgressBar(QWidget):
                 painter.drawEllipse(r)
                 # painter.setFont(font_icon)
                 painter.setPen(white)
-                # painter.drawText(r, Qt.AlignCenter, chr(0xF00C))
+                # painter.drawText(r, Qt.AlignmentFlag.AlignCenter, chr(0xF00C))
                 painter.setPen(green)
 
             else:
@@ -122,7 +122,7 @@ class QtStepProgressBar(QWidget):
             rect = fm.boundingRect(text)
             rect.moveCenter(QPoint(x, y + 2 * radius))
             painter.setFont(font_text)
-            painter.drawText(rect, Qt.AlignCenter, text)
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
 
             x += step_width
 

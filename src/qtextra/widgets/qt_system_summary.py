@@ -164,7 +164,7 @@ class SystemSummaryWidget(QWidget):
                 self.gpu_memory_free_label.setStyleSheet("QLabel {color: green;}")
 
         self.layout = QVBoxLayout(self)
-        self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.cpu_group_box)
         self.layout.addWidget(self.memory_group_box)
         self.layout.addWidget(self.gpu_group_box)

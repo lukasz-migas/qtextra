@@ -75,5 +75,5 @@ class QtActiveWidget(QWidget):
         spinner, _ = make_loading_gif(self, size=size)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(label, alignment=Qt.AlignHCenter)
-        layout.addWidget(spinner, alignment=Qt.AlignCenter)
+        layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(spinner, alignment=Qt.AlignmentFlag.AlignCenter)

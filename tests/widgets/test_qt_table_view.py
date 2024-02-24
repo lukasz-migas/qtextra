@@ -4,7 +4,7 @@
 import pytest
 
 # Local imports
-from ionglow._qt.qt_table_view import QtCheckableTableView
+from qtextra.widgets.qt_table_view import QtCheckableTableView
 
 
 @pytest.fixture

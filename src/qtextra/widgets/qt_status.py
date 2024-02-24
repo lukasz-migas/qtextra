@@ -123,7 +123,7 @@ class QtStatusbarIconWidget(QWidget):
         layout = QHBoxLayout(self)
         layout.setSpacing(0)  # Reduce space between icon and label
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label_icon, alignment=Qt.AlignHCenter)
+        layout.addWidget(self.label_icon, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         # Setup
         if index is None:

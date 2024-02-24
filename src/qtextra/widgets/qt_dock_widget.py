@@ -160,9 +160,9 @@ class QtCustomTitleBar(QLabel):
             layout.setSpacing(4)
             layout.setContentsMargins(0, 8, 0, 8)
             line.setFixedWidth(1)
-            layout.addWidget(self.close_button, 0, Qt.AlignHCenter)
-            layout.addWidget(self.float_button, 0, Qt.AlignHCenter)
-            layout.addWidget(line, 0, Qt.AlignHCenter)
+            layout.addWidget(self.close_button, 0, Qt.AlignmentFlag.AlignHCenter)
+            layout.addWidget(self.float_button, 0, Qt.AlignmentFlag.AlignHCenter)
+            layout.addWidget(line, 0, Qt.AlignmentFlag.AlignHCenter)
             self.title.hide()
 
         else:

@@ -51,7 +51,7 @@ class FeedbackDialog(QtDialog):
             self,
             "<b>Send feedback</b><br><br>We always welcome user feedback, whether its good or bad. Please type in"
             " your thoughts and send them onwards.<br>",
-            alignment=Qt.AlignHCenter,
+            alignment=Qt.AlignmentFlag.AlignHCenter,
         )
         self.name = hp.make_line_edit(self, getpass.getuser(), placeholder="Your name")
 

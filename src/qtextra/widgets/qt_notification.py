@@ -387,7 +387,7 @@ class SettingsPopup(QtFramelessPopup):
         self.level.currentTextChanged.connect(self.on_apply)
 
         main_layout = QFormLayout()
-        main_layout.addRow(hp.make_label(self, "Notification Settings", alignment=Qt.AlignHCenter, bold=True))
+        main_layout.addRow(hp.make_label(self, "Notification Settings", alignment=Qt.AlignmentFlag.AlignHCenter, bold=True))
         main_layout.addRow(hp.make_label(self, "Auto-dismiss time (ms)"), self.dismiss_time)
         main_layout.addRow(hp.make_label(self, "Auto-expand"), self.auto_expand)
         main_layout.addRow(hp.make_label(self, "Notification level"), self.level)

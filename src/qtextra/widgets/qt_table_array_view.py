@@ -146,7 +146,7 @@ class QtArrayTableModel(QAbstractTableModel):
             return self.fmt.format(value)
         # check alignment role
         elif role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
+            return Qt.AlignmentFlag.AlignCenter
 
     def headerData(self, index, orientation, role=None):
         """Get header data."""

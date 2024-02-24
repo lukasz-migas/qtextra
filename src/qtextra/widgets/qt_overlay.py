@@ -13,7 +13,7 @@ from qtextra.widgets.qt_icon_label import QtIconLabel
 class QtOverlay(QWidget):
     """A widget positioned on top of another widget."""
 
-    def __init__(self, parent=None, alignment=Qt.AlignCenter, **kwargs):
+    def __init__(self, parent=None, alignment=Qt.AlignmentFlag.AlignCenter, **kwargs):
         super().__init__(parent, **kwargs)
         self.setContentsMargins(0, 0, 0, 0)
         self.__alignment = alignment
@@ -259,9 +259,9 @@ class QtMessageWidget(QFrame):
         self.dismiss_btn.setVisible(False)
 
         self.btn_row = QHBoxLayout()
-        self.btn_row.addWidget(self.ok_btn, alignment=Qt.AlignCenter)
-        self.btn_row.addWidget(self.cancel_btn, alignment=Qt.AlignCenter)
-        self.btn_row.addWidget(self.dismiss_btn, alignment=Qt.AlignCenter)
+        self.btn_row.addWidget(self.ok_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.btn_row.addWidget(self.cancel_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.btn_row.addWidget(self.dismiss_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         row = QHBoxLayout()
         row.addWidget(self.icon_label, alignment=Qt.AlignTop)
