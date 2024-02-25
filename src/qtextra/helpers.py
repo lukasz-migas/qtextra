@@ -224,6 +224,7 @@ def make_label(
     selectable: bool = False,
     visible: bool = True,
     disabled: bool = False,
+    activated_func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     **kwargs,
 ) -> Qw.QLabel:
     """Make QLabel element."""
@@ -236,7 +237,8 @@ def make_label(
     if enable_url:
         widget.setTextFormat(Qt.RichText)  # type: ignore[attr-defined]
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)
-        widget.setOpenExternalLinks(True)
+        if not activated_func:
+            widget.setOpenExternalLinks(True)
     if alignment is not None:
         widget.setAlignment(alignment)
     if bold:
@@ -247,6 +249,8 @@ def make_label(
         set_font(widget, font_size=font_size, bold=bold)
     if selectable:
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse)
+    if activated_func:
+        [widget.linkActivated.connect(func) for func in _validate_func(activated_func)]
     if disabled:
         widget.setProperty("disabled", True)
     widget.setWordWrap(wrap)
@@ -266,6 +270,7 @@ def make_scrollable_label(
     tooltip: ty.Optional[str] = None,
     selectable: bool = False,
     visible: bool = True,
+    activated_func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
 ) -> QtScrollableLabel:
     """Make QLabel element."""
     from qtextra.widgets.qt_scroll_label import QtScrollableLabel
@@ -275,7 +280,9 @@ def make_scrollable_label(
     widget.label.setObjectName(object_name)
     if enable_url:
         widget.label.setTextFormat(Qt.RichText)
-        widget.label.setTextInteractionFlags(widget.label.textInteractionFlags() | Qt.TextBrowserInteraction)
+        widget.label.setTextInteractionFlags(
+            widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction
+        )
         widget.label.setOpenExternalLinks(True)
     if alignment is not None:
         widget.label.setAlignment(alignment)
@@ -286,7 +293,11 @@ def make_scrollable_label(
     if font_size:
         set_font(widget.label, font_size=font_size, bold=bold)
     if selectable:
-        widget.label.setTextInteractionFlags(widget.label.textInteractionFlags() | Qt.TextSelectableByMouse)
+        widget.label.setTextInteractionFlags(
+            widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+    if activated_func:
+        [widget.label.linkActivated.connect(func) for func in _validate_func(activated_func)]
     widget.label.setWordWrap(wrap)
     widget.setVisible(visible)
     return widget
@@ -368,7 +379,7 @@ def make_eliding_label(
     object_name: str = "",
     bold: bool = False,
     tooltip: ty.Optional[str] = None,
-    elide: Qt.TextElideMode = Qt.ElideMiddle,
+    elide: Qt.TextElideMode = Qt.TextElideMode.ElideMiddle,
     font_size: ty.Optional[int] = None,
 ) -> QtElidingLabel:
     """Make single-line QLabel with automatic eliding."""
@@ -380,7 +391,7 @@ def make_eliding_label(
     widget.setObjectName(object_name)
     if enable_url:
         widget.setTextFormat(Qt.RichText)
-        widget.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        widget.setTextInteractionFlags(Qt.TextInteractionFlag.Qt.TextBrowserInteraction)
         widget.setOpenExternalLinks(True)
     if alignment is not None:
         widget.setAlignment(alignment)
@@ -403,7 +414,7 @@ def make_eliding_label2(
     object_name: str = "",
     bold: bool = False,
     tooltip: ty.Optional[str] = None,
-    elide: Qt.TextElideMode = Qt.ElideMiddle,
+    elide: Qt.TextElideMode = Qt.TextElideMode.ElideMiddle,
     font_size: ty.Optional[int] = None,
 ) -> QElidingLabel:
     """Make single-line QLabel with automatic eliding."""
@@ -412,8 +423,8 @@ def make_eliding_label2(
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
-        widget.setTextFormat(Qt.RichText)
-        widget.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        widget.setTextFormat(Qt.TextFormat.RichText)
+        widget.setTextInteractionFlags(Qt.TextInteractionFlag.Qt.TextBrowserInteraction)
         widget.setOpenExternalLinks(True)
     if alignment is not None:
         widget.setAlignment(alignment)
