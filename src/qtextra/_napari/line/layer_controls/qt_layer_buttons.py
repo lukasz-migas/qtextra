@@ -1,7 +1,19 @@
 """Layer buttons."""
-from napari._qt.widgets.qt_viewer_buttons import QtDeleteButton, QtViewerPushButton
+import typing as ty
+
+from napari._qt.widgets.qt_viewer_buttons import QtViewerPushButton
 from qtpy.QtWidgets import QFrame, QHBoxLayout
 
+import qtextra.helpers as hp
+from qtextra.widgets.qt_image_button import QtImagePushButton
+
+
+def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
+    """Make a button with an icon from QtAwesome."""
+    btn = hp.make_qta_btn(*args, **kwargs)
+    btn.set_medium()
+    btn.setProperty("layer_button", True)
+    return btn
 
 class QtLayerButtons(QFrame):
     """Button controls for napari layers.
@@ -22,7 +34,10 @@ class QtLayerButtons(QFrame):
     def __init__(self, viewer):
         super().__init__()
         self.viewer = viewer
-        self.delete_btn = QtDeleteButton(self.viewer)
+
+        self.delete_btn = make_qta_btn(
+            self, "delete", tooltip="Delete selected layers", func=self.viewer.layers.remove_selected
+        )
         self.delete_btn.setParent(self)
 
         self.new_points_btn = QtViewerPushButton(

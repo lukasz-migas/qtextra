@@ -8,8 +8,6 @@ from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
 
 from qtextra._napari.common.layer_controls.qt_layer_controls_container import QtLayerControlsContainer
 from qtextra._napari.common.qt_viewer import QtViewerBase
-
-# from qtextra._napari.image._vispy.utils import create_vispy_visual
 from qtextra._napari.image.component_controls.qt_layer_buttons import QtLayerButtons, QtViewerButtons
 from qtextra._napari.image.component_controls.qt_view_toolbar import QtViewToolbar
 

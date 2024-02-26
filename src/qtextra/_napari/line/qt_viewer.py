@@ -2,13 +2,11 @@
 from typing import TYPE_CHECKING
 
 from napari._qt.containers.qt_layer_list import QtLayerList
+from napari._vispy.utils.visual import create_vispy_layer
 from napari.utils._proxies import ReadOnlyWrapper
 from napari_plot._vispy.camera import VispyCamera
 from napari_plot._vispy.overlays.axis import VispyXAxisVisual, VispyYAxisVisual
-from napari_plot._vispy.overlays.grid_lines import VispyGridLinesVisual
-from napari_plot._vispy.overlays.text import VispyTextVisual
 from napari_plot._vispy.tools.drag import VispyDragTool
-from napari_plot._vispy.utils.visual import create_vispy_visual
 from qtpy.QtWidgets import QHBoxLayout, QVBoxLayout
 
 from qtextra._napari.common.layer_controls.qt_layer_controls_container import QtLayerControlsContainer
@@ -125,7 +123,8 @@ class QtViewer(QtViewerBase):
     def _set_events(self):
         # bind events
         self.viewer.layers.selection.events.active.connect(self._on_active_change)
-        self.viewer.camera.events.interactive.connect(self._on_interactive)
+        self.viewer.camera.events.mouse_pan.connect(self._on_mouse_pan)
+        self.viewer.camera.events.mouse_zoom.connect(self._on_mouse_zoom)
         self.viewer.cursor.events.style.connect(self._on_cursor)
         self.viewer.cursor.events.size.connect(self._on_cursor)
         self.viewer.layers.events.reordered.connect(self._reorder_layers)
@@ -149,7 +148,6 @@ class QtViewer(QtViewerBase):
     def _set_camera(self):
         self.camera = VispyCamera(self.view, self.viewer.camera, self.viewer)
         self.canvas.connect(self.camera.on_draw)
-
         # self.camera.camera.events.box_press.connect(self._on_boxzoom)
         # self.camera.camera.events.box_move.connect(self._on_boxzoom_move)
 
@@ -169,12 +167,18 @@ class QtViewer(QtViewerBase):
 
     def _add_visuals(self) -> None:
         """Add visuals for axes, scale bar."""
+        print(self.viewer._overlays)
+        for layer in self.viewer.layers:
+            self._add_layer(layer)
+        for overlay in self.viewer._overlays.values():
+            self._add_overlay(overlay)
+
         # add span
         self.tool = VispyDragTool(self.viewer, view=self.view, order=1e5)
 
         # add gridlines
-        self.grid_lines = VispyGridLinesVisual(self.viewer, parent=self.view, order=1e6)
-
+        # self.grid_lines = VispyGridLinesOverlay(self.viewer, parent=self.view, order=1e6)
+        #
         # add x-axis widget
         self.x_axis = VispyXAxisVisual(self.viewer, parent=self.view, order=1e6 + 1)
         self.grid.add_widget(self.x_axis.node, row=2, col=1)
@@ -189,8 +193,8 @@ class QtViewer(QtViewerBase):
         self.y_axis.node.width_max = self.viewer.axis.y_max_size
         self.y_axis.interactive = True
 
-        # add label
-        self.text_overlay = VispyTextVisual(self, self.viewer, parent=self.view, order=1e6 + 2)
+        # # add label
+        # self.text_overlay = VispyTextOverlay(self, self.viewer, parent=self.view, order=1e6 + 2)
 
         # add box zoom visual
         # self.boxzoom = VispyBoxZoomVisual(self.viewer, self.camera.camera, parent=self.view)
@@ -207,7 +211,7 @@ class QtViewer(QtViewerBase):
         layer : napari.layers.Layer
             Layer to be added.
         """
-        vispy_layer = create_vispy_visual(layer)
+        vispy_layer = create_vispy_layer(layer)
         vispy_layer.node.parent = self.view.scene
         vispy_layer.order = len(self.viewer.layers) - 1
         self.layer_to_visual[layer] = vispy_layer

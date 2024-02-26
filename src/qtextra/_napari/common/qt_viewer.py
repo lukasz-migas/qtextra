@@ -50,7 +50,8 @@ class QtViewerBase(QWidget):
         self._instances.add(self)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setAcceptDrops(False)
-        QCoreApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
+        if hasattr(Qt, "AA_UseStyleSheetPropagationInWidgetStyles"):
+            QCoreApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
 
         # handle to the viewer instance
         self.view = view
@@ -68,11 +69,11 @@ class QtViewerBase(QWidget):
         self.overlay_to_visual = {}
 
         self._cursors = {
-            "cross": Qt.CrossCursor,
-            "forbidden": Qt.ForbiddenCursor,
-            "pointing": Qt.PointingHandCursor,
-            "horizontal_move": Qt.SizeHorCursor,
-            "vertical_move": Qt.SizeVerCursor,
+            "cross": Qt.CursorShape.CrossCursor,
+            "forbidden": Qt.CursorShape.ForbiddenCursor,
+            "pointing": Qt.CursorShape.PointingHandCursor,
+            "horizontal_move": Qt.CursorShape.SizeHorCursor,
+            "vertical_move": Qt.CursorShape.SizeVerCursor,
             "standard": QCursor(),
         }
 
@@ -110,12 +111,12 @@ class QtViewerBase(QWidget):
     @property
     def grid_lines(self):
         """Grid lines."""
-        return self.overlay_to_visual["grid_lines"]
+        return self.overlay_to_visual[self.viewer._overlays["grid_lines"]]
 
     @property
     def text_overlay(self):
         """Grid lines."""
-        return self.overlay_to_visual["text_overlay"]
+        return self.overlay_to_visual[self.viewer._overlays["text"]]
 
     def _add_overlay(self, overlay: Overlay) -> None:
         vispy_overlay = create_vispy_overlay(overlay, viewer=self.viewer)
@@ -124,7 +125,6 @@ class QtViewerBase(QWidget):
             vispy_overlay.node.parent = self.view
         elif isinstance(overlay, SceneOverlay):
             vispy_overlay.node.parent = self.view.scene
-
         self.overlay_to_visual[overlay] = vispy_overlay
 
     def __getattr__(self, name):
@@ -376,6 +376,24 @@ class QtViewerBase(QWidget):
             The napari event that triggered this method.
         """
         self.view.interactive = self.viewer.camera.interactive
+    def _on_mouse_pan(self, _event):
+        """Link interactive attributes of view and viewer.
+
+        Parameters
+        ----------
+        _event : napari.utils.event.Event
+            The napari event that triggered this method.
+        """
+        self.view.interactive = self.viewer.camera.mouse_pan
+    def _on_mouse_zoom(self, _event):
+        """Link interactive attributes of view and viewer.
+
+        Parameters
+        ----------
+        _event : napari.utils.event.Event
+            The napari event that triggered this method.
+        """
+        self.view.interactive = self.viewer.camera.mouse_zoom
 
     def _on_cursor(self, _event=None):
         """Set the appearance of the mouse cursor."""
