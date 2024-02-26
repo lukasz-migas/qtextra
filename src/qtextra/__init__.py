@@ -1,13 +1,7 @@
 """Extra widgets for Qt."""
-from importlib.metadata import PackageNotFoundError, version
-
 from loguru import logger
 
-try:
-    __version__ = version("qtextra")
-except PackageNotFoundError:
-    __version__ = "uninstalled"
-
+__version__ = "0.1.2"
 __author__ = "Lukasz G. Migas"
 __email__ = "lukas.migas@yahoo.com"
 __issue_url__ = "https://github.com/illumion-io/qtextra-issues/issues"
