@@ -83,7 +83,7 @@ class QtBaseImageControls(QtLayerControls):
 
     def on_make_colormap(self):
         """Make new colormap."""
-        from qtextra.utils.color import napari_colormap
+        from qtextra.utils.colormap import napari_colormap
 
         color = hp.get_color(self, as_hex=True)
         if color:

@@ -5,12 +5,13 @@ import typing as ty
 import warnings
 
 import numpy as np
-from matplotlib.colors import Colormap as MplColormap
 from qtpy.QtGui import QColor
-from vispy.color import Colormap as VispyColormap
+
+if ty.TYPE_CHECKING:
+    from matplotlib.colors import Colormap as MplColormap
 
 
-def get_text_color(background: QColor | str, light_color: QColor = None, dark_color: QColor = None):
+def get_text_color(background: QColor | str, light_color: QColor | None = None, dark_color: QColor | None = None):
     """Select color depending on whether the background is light or dark.
 
     Parameters
@@ -32,26 +33,26 @@ def get_text_color(background: QColor | str, light_color: QColor = None, dark_co
     return dark_color if is_dark else light_color
 
 
-def is_dark_color(background: QColor):
+def is_dark_color(background: QColor) -> bool:
     """Check whether its a dark background."""
     a = 1 - (0.299 * background.redF() + 0.587 * background.greenF() + 0.114 * background.blueF())
     return background.alphaF() > 0 and a >= 0.45
 
 
-def qt_rgb_to_hex(color: str):
+def qt_rgb_to_hex(color: str) -> str:
     """Qt color to hex."""
     assert color.startswith("rgb("), "Incorrect color provided"
     colors = np.asarray(list(map(int, color.split("rgb(")[1].split(")")[0].split(",")))) / 255
     return rgb_to_hex(colors)
 
 
-def hex_to_qt_rgb(color: str):
+def hex_to_qt_rgb(color: str) -> str:
     """Convert hex to Qt color."""
     rgb = np.round(hex_to_rgb(color) * 255, 0).astype(np.int32)
     return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
 
 
-def rgb_to_qt_rgb(color: np.ndarray):
+def rgb_to_qt_rgb(color: np.ndarray) -> str:
     """Convert numpy array to Qt color."""
     color = (255 * color).astype("int")
     return f"rgb({color[0]}, {color[1]}, {color[2]})"
@@ -89,20 +90,3 @@ def get_colors_from_colormap(colormap: str, n_colors: int, is_reversed: bool = F
         colormap += "_r"
 
     return colormap_to_hex(matplotlib.cm.get_cmap(colormap, n_colors))
-
-
-def vispy_colormaps(colors: ty.List[np.ndarray]) -> ty.List[VispyColormap]:
-    """Return list of colormaps."""
-    return [VispyColormap([np.asarray([0.0, 0.0, 0.0, 1.0]), color]) for color in colors]
-
-
-def vispy_colormap(color, name: str = "") -> VispyColormap:
-    """Return vispy colormap."""
-    return VispyColormap([np.asarray([0.0, 0.0, 0.0, 1.0]), color])
-
-
-def napari_colormap(color, name: str = ""):
-    """Return napari colormap."""
-    from napari.utils.colormaps.colormap_utils import convert_vispy_colormap
-
-    return convert_vispy_colormap(vispy_colormap(color), name=name)
