@@ -30,7 +30,7 @@ class FeedbackDialog(QtDialog):
         title = self.title.text()
         message = self.message.toPlainText()
         if not message:
-            hp.warn(self, "Please write-in a message before continuing.")
+            hp.warn_pretty(self, "Please write-in a message before continuing.")
             return
         event_id = submit_feedback(title, message)
         hp.toast(

@@ -1908,6 +1908,22 @@ def confirm(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you
     return bool(dlg.exec_())
 
 
+def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
+    """Confirm action."""
+    from qtpy.QtWidgets import QDialog
+
+    dlg = QDialog(parent)
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore[attr-defined]
+    dlg.setObjectName("confirm_dialog")
+    dlg.setMinimumSize(350, 200)
+    dlg.setWindowTitle(title)
+    layout = make_v_layout()
+    layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True), stretch=True)
+    layout.addWidget(make_btn(dlg, "Ok", func=dlg.reject))
+    dlg.setLayout(layout)
+    return bool(dlg.exec_())
+
+
 def confirm_with_text(
     parent: Qw.QWidget,
     message: str = "Please confirm action by typing <b>confirm</b> to continue.",
