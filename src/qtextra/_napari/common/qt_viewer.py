@@ -376,6 +376,7 @@ class QtViewerBase(QWidget):
             The napari event that triggered this method.
         """
         self.view.interactive = self.viewer.camera.interactive
+
     def _on_mouse_pan(self, _event):
         """Link interactive attributes of view and viewer.
 
@@ -385,6 +386,7 @@ class QtViewerBase(QWidget):
             The napari event that triggered this method.
         """
         self.view.interactive = self.viewer.camera.mouse_pan
+
     def _on_mouse_zoom(self, _event):
         """Link interactive attributes of view and viewer.
 

@@ -15,6 +15,7 @@ def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
     btn.setProperty("layer_button", True)
     return btn
 
+
 class QtLayerButtons(QFrame):
     """Button controls for napari layers.
 

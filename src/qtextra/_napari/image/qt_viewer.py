@@ -24,7 +24,7 @@ class QtViewer(QtViewerBase):
         add_dims: bool = True,
         add_toolbars: bool = True,
         allow_extraction: bool = True,
-            disable_new_layers: bool = False,
+        disable_new_layers: bool = False,
         **kwargs,
     ):
         super().__init__(
