@@ -109,11 +109,11 @@ def update_icons(mapping: ty.Dict[str, str]) -> None:
     ICONS.update(mapping)
 
 
-def get_icon(name: str):
+def get_icon(name: str) -> str:
     """Return icon."""
     original_name = name
     if name == "":
-        return name
+        return QTA_MAPPING["MISSING"]
     if "." not in name:
         name = QTA_MAPPING.get(name)
         if name is None:

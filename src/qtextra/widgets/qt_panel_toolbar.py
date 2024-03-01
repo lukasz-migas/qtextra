@@ -86,7 +86,7 @@ class QtPanelWidget(QWidget):
         self._hidden_dict: ty.Dict[QtToolbarPushButton, QAction] = {}
 
         # Widget setup
-        self._buttons.setOrientation(Qt.Vertical)
+        self._buttons.setOrientation(Qt.Orientation.Vertical)
         self._group.setExclusive(True)
         self._group.buttonToggled.connect(self._toggle_widget)
 

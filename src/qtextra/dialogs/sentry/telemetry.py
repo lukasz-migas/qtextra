@@ -71,7 +71,7 @@ class TelemetryOptInDialog(QtDialog):
 
         _lbl2 = QLabel("<small>You may change your settings at any time in the Help menu.</small>")
         _lbl2.setStyleSheet("color: #999;")
-        _lbl2.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        _lbl2.setAlignment(Qt.AlignRight | Qt.Orientation.AlignVCenter)
 
         w = QWidget()
         layout = QHBoxLayout()

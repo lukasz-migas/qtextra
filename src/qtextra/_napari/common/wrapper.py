@@ -1,9 +1,9 @@
 """Viewer base."""
 import typing as ty
-import warnings
 from abc import ABC
 from contextlib import suppress
 
+from napari.components.layerlist import LayerList
 from napari.layers import Image, Layer
 
 
@@ -31,26 +31,22 @@ class ViewerBase(ABC):
         """Get camera."""
         return self.widget.view.camera
 
-    def _clear(self, _evt=None):  # noqa: B027
+    def _clear(self, _evt=None) -> None:  # noqa: B027
         """Clear canvas."""
 
-    def reset(self):
-        """Reset."""
-        warnings.warn("This method should no longer be used", stacklevel=2)
-
-    def clear(self):
+    def clear(self) -> None:
         """Clear canvas."""
         self._clear()
         self.viewer.layers.clear()
         self.viewer.text_overlay.text = ""
 
-    def close(self):
+    def close(self) -> None:
         """Close the view instance."""
         self.viewer.layers.clear()
         self.widget.close()
 
     @property
-    def layers(self):
+    def layers(self) -> LayerList:
         """Get layer list."""
         return self.viewer.layers
 
@@ -61,7 +57,7 @@ class ViewerBase(ABC):
         except KeyError:
             return None
 
-    def remove_layer(self, name: str, silent: bool = True):
+    def remove_layer(self, name: str, silent: bool = True) -> None:
         """Remove layer with `name`."""
         try:
             self.viewer.layers.remove(name)
@@ -69,12 +65,12 @@ class ViewerBase(ABC):
             if not silent:
                 print(f"Failed to remove layer `{name}`\n{err}")
 
-    def remove_layers(self, names: ty.Iterable[str]):
+    def remove_layers(self, names: ty.Iterable[str]) -> None:
         """Remove multiple layers."""
         for name in names:
             self.remove_layer(name)
 
-    def try_reuse(self, name: str, cls):
+    def try_reuse(self, name: str, cls: ty.Type[Layer]) -> ty.Optional[Layer]:
         """Try retrieving layer from the layer list."""
         try:
             layer = self.viewer.layers[name]
@@ -82,12 +78,12 @@ class ViewerBase(ABC):
         except KeyError:
             return None
 
-    def select_one_layer(self, layer: Layer):
+    def select_one_layer(self, layer: Layer) -> None:
         """Clear current selection and only select one layer."""
         self.viewer.layers.selection.clear()
         self.viewer.layers.selection.add(layer)
 
-    def deselect_one_layer(self, layer: Layer):
+    def deselect_one_layer(self, layer: Layer) -> None:
         """Deselect layer."""
         with suppress(KeyError):
             self.viewer.layers.selection.remove(layer)
@@ -111,7 +107,8 @@ class ViewerBase(ABC):
                     except Exception as err:
                         print(f"Failed to update attribute: {err}")
 
-    def update_image_contrast_limits(self, image_layer: Image, new_range: ty.Optional[ty.Tuple] = None):
+    @staticmethod
+    def update_image_contrast_limits(image_layer: Image, new_range: ty.Optional[ty.Tuple] = None):
         """Update contrast limits for specified layer."""
         if new_range is None or len(new_range) != 2:
             new_range = image_layer._calc_data_range()

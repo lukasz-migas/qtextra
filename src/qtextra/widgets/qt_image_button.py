@@ -277,7 +277,7 @@ class QtDirectionButton(QtImagePushButton):
 class QtVisibleButton(QtImagePushButton):
     """Lock button with shown/hidden icon."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._is_visible = False
         self.visible = True
@@ -288,7 +288,7 @@ class QtVisibleButton(QtImagePushButton):
         return self._is_visible
 
     @visible.setter
-    def visible(self, state: bool):
+    def visible(self, state: bool) -> None:
         self._is_visible = state
         self.set_qta("visible" if state else "visible_off")
 
@@ -297,7 +297,7 @@ class QtVisibleButton(QtImagePushButton):
         """Get toggle state."""
         return not self._is_visible
 
-    def toggle_state(self):
+    def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
         self.visible = not self.visible
 

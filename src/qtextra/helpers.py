@@ -12,7 +12,7 @@ import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
-from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, QTimer
+from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QSize, Qt, QTimer
 from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
 
@@ -1397,7 +1397,7 @@ def make_h_line_with_text(label: str, parent: Qw.QWidget = None, bold: bool = Fa
     )
 
 
-def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> QtHorzLine:
+def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzLine:
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtHorzLine
 
@@ -1409,7 +1409,7 @@ def make_h_line(parent: Qw.QWidget = None, thin: bool = False) -> QtHorzLine:
     return widget
 
 
-def make_v_line(parent: Qw.QWidget = None, thin: bool = False) -> QtVertLine:
+def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtVertLine:
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtVertLine
 
@@ -1829,7 +1829,7 @@ def get_filename(
 
 
 def get_save_filename(
-    parent: Qw.QWidget | None,
+    parent: QObject | None,
     title: str = "Save file...",
     base_dir: ty.Optional[PathLike] = "",
     file_filter: str = "*",
@@ -1887,7 +1887,7 @@ def get_color(
     return new_color
 
 
-def confirm(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
+def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
 
@@ -1941,7 +1941,9 @@ def confirm_with_text(
     return bool(dlg.exec_())
 
 
-def get_text(parent: Qw.QWidget, label: str = "New value", title: str = "Text", value: str = "") -> ty.Optional[str]:
+def get_text(
+    parent: QObject | None, label: str = "New value", title: str = "Text", value: str = ""
+) -> ty.Optional[str]:
     """Get text."""
     text, ok = Qw.QInputDialog.getText(parent, title, label, text=value)
     if ok:
@@ -1950,7 +1952,7 @@ def get_text(parent: Qw.QWidget, label: str = "New value", title: str = "Text", 
 
 
 def get_integer(
-    parent: Qw.QWidget | None,
+    parent: QObject | None,
     label: str = "New value",
     title: str = "Text",
     value: int = 1,
@@ -1966,7 +1968,7 @@ def get_integer(
 
 
 def get_double(
-    parent: Qw.QWidget | None,
+    parent: QObject | None,
     label: str = "New value",
     title: str = "Text",
     minimum: float = 0,
@@ -2291,7 +2293,7 @@ def parse_path_to_link_tag(path: str, desc_text: ty.Optional[PathLike] = None) -
     return f"""<a href="{path}" style="color: {THEMES.get_theme_color(key="text")}">{desc_text}</a>"""
 
 
-def clear_layout(layout):
+def clear_layout(layout: Qw.QLayout) -> None:
     """Clear layout."""
     if hasattr(layout, "count"):
         while layout.count():
@@ -2366,7 +2368,7 @@ def disconnect_event(widget: Qw.QWidget, evt_name, func):
         pass
 
 
-def get_parent(parent):
+def get_parent(parent: QObject | None) -> Qw.QWidget | None:
     """Get top level parent."""
     if parent is None:
         app = Qw.QApplication.instance()

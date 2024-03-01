@@ -27,8 +27,11 @@ class QtaMixin:
         self._qta_data = (name, kwargs)
         color_ = kwargs.pop("color", None)
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
-        icon = qtawesome.icon(name, **self._qta_data[1], color=color)
-        self.setIcon(icon)
+        try:
+            icon = qtawesome.icon(name, **self._qta_data[1], color=color)
+            self.setIcon(icon)
+        except Exception:
+            raise Exception(f"Failed to set icon: {name}")
 
     def _set_qta_icon(self, name: str, **kwargs: ty.Any) -> None:
         """Update icon without setting any attributes."""

@@ -93,10 +93,10 @@ class QtFlowLayout(QLayout):
         for item in self.items:
             wid = item.widget()
             x_spacing = self.spacing() + wid.style().layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Horizontal
+                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Orientation.Horizontal
             )
             y_spacing = self.spacing() + wid.style().layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical
+                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Orientation.Vertical
             )
             x_next = x + item.sizeHint().width() + x_spacing
             if x_next - x_spacing > rect.right() and line_height > 0:

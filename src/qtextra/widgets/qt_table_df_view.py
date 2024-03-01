@@ -415,16 +415,16 @@ class HeaderModel(Qc.QAbstractTableModel):
 
     def columnCount(self, parent=None):
         """Number of columns."""
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             return self.df.columns.shape[0]
         else:  # Vertical
             return self.df.index.nlevels
 
     def rowCount(self, parent=None):
         """Number of rows."""
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             return self.df.columns.nlevels
-        elif self.orientation == Qt.Vertical:
+        elif self.orientation == Qt.Orientation.Vertical:
             return self.df.index.shape[0]
 
     def data(self, index, role=None):
@@ -433,13 +433,13 @@ class HeaderModel(Qc.QAbstractTableModel):
         col = index.column()
 
         if role == Qc.Qt.DisplayRole or role == Qc.Qt.ToolTipRole:
-            if self.orientation == Qt.Horizontal:
+            if self.orientation == Qt.Orientation.Horizontal:
                 if type(self.df.columns) == pd.MultiIndex:
                     return str(self.df.columns.values[col][row])
                 else:
                     return str(self.df.columns.values[col])
 
-            elif self.orientation == Qt.Vertical:
+            elif self.orientation == Qt.Orientation.Vertical:
                 if type(self.df.index) == pd.MultiIndex:
                     return str(self.df.index.values[row][col])
                 else:
@@ -449,12 +449,12 @@ class HeaderModel(Qc.QAbstractTableModel):
     def headerData(self, section, orientation, role=None):
         """Header data."""
         if role in [Qc.Qt.DisplayRole, Qc.Qt.ToolTipRole]:
-            if self.orientation == Qt.Horizontal and orientation == Qt.Vertical:
+            if self.orientation == Qt.Orientation.Horizontal and orientation == Qt.Orientation.Vertical:
                 if type(self.df.columns) == pd.MultiIndex:
                     return str(self.df.columns.names[section])
                 else:
                     return str(self.df.columns.name)
-            elif self.orientation == Qt.Vertical and orientation == Qt.Horizontal:
+            elif self.orientation == Qt.Orientation.Vertical and orientation == Qt.Orientation.Horizontal:
                 if type(self.df.index) == pd.MultiIndex:
                     return str(self.df.index.names[section])
                 else:
@@ -501,7 +501,7 @@ class HeaderView(Qw.QTableView):
         self.initSize()
 
         # Orientation specific settings
-        if orientation == Qt.Horizontal:
+        if orientation == Qt.Orientation.Horizontal:
             self.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOff
             )  # Scrollbar is replaced in DataFrameViewer
@@ -535,7 +535,7 @@ class HeaderView(Qw.QTableView):
             dataView = self.parent.dataView
 
             # Set selection mode so selecting one row or column at a time adds to selection each time
-            if self.orientation == Qt.Horizontal:  # This case is for the horizontal header
+            if self.orientation == Qt.Orientation.Horizontal:  # This case is for the horizontal header
                 # Get the header's selected columns
                 selection = self.selectionModel().selection()
 
@@ -551,7 +551,7 @@ class HeaderView(Qw.QTableView):
                 dataView.selectionModel().select(
                     selection, Qc.QItemSelectionModel.Columns | Qc.QItemSelectionModel.ClearAndSelect
                 )
-            if self.orientation == Qt.Vertical:
+            if self.orientation == Qt.Orientation.Vertical:
                 selection = self.selectionModel().selection()
 
                 last_row_ix = self.model().rowCount() - 1
@@ -571,7 +571,7 @@ class HeaderView(Qw.QTableView):
     # This should happen after every selection change
     def selectAbove(self):
         """Select above."""
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             if self.df.columns.nlevels == 1:
                 return
         else:
@@ -579,7 +579,7 @@ class HeaderView(Qw.QTableView):
                 return
 
         for ix in self.selectedIndexes():
-            if self.orientation == Qt.Horizontal:
+            if self.orientation == Qt.Orientation.Horizontal:
                 # Loop over the rows above this one
                 for row in range(ix.row()):
                     ix2 = self.model().index(row, ix.column())
@@ -595,7 +595,7 @@ class HeaderView(Qw.QTableView):
         """Initialize size."""
         padding = 20
 
-        if self.orientation == Qt.Horizontal:
+        if self.orientation == Qt.Orientation.Horizontal:
             min_size = 100
 
             self.resizeColumnsToContents()

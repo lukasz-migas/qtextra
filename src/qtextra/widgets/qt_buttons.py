@@ -72,7 +72,7 @@ class QtRichTextButton(QtPushButton):
         self.setLayout(self._layout)
         self._label.setAttribute(Qt.WA_TranslucentBackground)
         self._label.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignVCenter)
+        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.Orientation.AlignVCenter)
         self._label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._label.setTextFormat(Qt.RichText)
         self._label.setWordWrap(True)

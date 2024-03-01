@@ -75,7 +75,7 @@ class ConfigMixin:
         yield
         self._is_setting_config = False
 
-    def on_set_from_config(self):
+    def on_set_from_config(self) -> None:
         """Init from config."""
         with self.setting_config():
             self._on_set_from_config(get_settings())
@@ -168,45 +168,45 @@ class IndicatorMixin:
         QtToast(self).show_message(title, message)
 
     @staticmethod
-    def on_notify_critical(msg: str, func=logger.critical):
+    def on_notify_critical(msg: str, func: ty.Callable = logger.critical) -> None:
         """Notify the user of an error."""
         EVENTS.evt_msg_critical.emit(msg)
         func(msg)
 
     @staticmethod
-    def on_notify_error(msg: str, func=logger.error):
+    def on_notify_error(msg: str, func: ty.Callable = logger.error) -> None:
         """Notify the user of an error."""
         EVENTS.evt_msg_error.emit(msg)
         func(msg)
 
     @staticmethod
-    def on_notify_warning(msg: str, func=logger.warning):
+    def on_notify_warning(msg: str, func: ty.Callable = logger.warning) -> None:
         """Notify the user of a warning."""
         EVENTS.evt_msg_warning.emit(msg)
         func(msg)
 
     @staticmethod
-    def on_notify_info(msg: str, func=logger.info):
+    def on_notify_info(msg: str, func: ty.Callable = logger.info) -> None:
         """Notify the user of an info."""
         EVENTS.evt_msg_info.emit(msg)
         func(msg)
 
     @staticmethod
-    def on_notify_success(msg: str, func=logger.success):
+    def on_notify_success(msg: str, func: ty.Callable = logger.success) -> None:
         """Notify the user of an success."""
         EVENTS.evt_msg_success.emit(msg)
         func(msg)
 
-    def _indicate_success(self, source: ty.Optional[str] = None):
+    def _indicate_success(self, source: ty.Optional[str] = None) -> None:
         if source and isinstance(source, str):
             self.evt_indicate_about.emit("success", source)
         else:
             self.evt_indicate.emit("success")
 
-    def _indicate_success_any(self, *_args, **_kwargs):
+    def _indicate_success_any(self, *_args: ty.Any, **_kwargs: ty.Any) -> None:
         self._indicate_success()
 
-    def _indicate_failure(self, source: ty.Optional[str] = None):
+    def _indicate_failure(self, source: ty.Optional[str] = None) -> None:
         if source:
             self.evt_indicate_about.emit("warning", source)
         else:

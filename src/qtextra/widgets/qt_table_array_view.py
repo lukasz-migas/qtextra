@@ -20,7 +20,7 @@ class QtRotatedHeaderView(QHeaderView):
     """Horizontal header where the view is rotated by 90 degrees."""
 
     def __init__(self, parent=None):
-        super().__init__(Qt.Horizontal, parent)
+        super().__init__(Qt.Orientation.Horizontal, parent)
         self.setMinimumSectionSize(20)
 
     def paintSection(self, painter, rect, logicalIndex):
@@ -150,9 +150,9 @@ class QtArrayTableModel(QAbstractTableModel):
 
     def headerData(self, index, orientation, role=None):
         """Get header data."""
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.DisplayRole:
             return str(self.df.columns[index])
-        if orientation == Qt.Vertical and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Vertical and role == Qt.DisplayRole:
             return str(self.df.index[index])
         return None
 

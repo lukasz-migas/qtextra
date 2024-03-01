@@ -26,7 +26,7 @@ class QtLineProgressBar(QProgressBar):
         self._direction = None  # direction
         self._alpha = 255  # transparency
         self.is_error = False  # flag to indicate whether progress had failed
-        self.setOrientation(Qt.Horizontal)
+        self.setOrientation(Qt.Orientation.Horizontal)
         self.setTextVisible(False)
         self.animation = QPropertyAnimation(self, b"alpha", self, loopCount=1, duration=1000)
         self.animation.setEasingCurve(QEasingCurve.SineCurve)

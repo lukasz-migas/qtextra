@@ -167,7 +167,6 @@ class QtViewer(QtViewerBase):
 
     def _add_visuals(self) -> None:
         """Add visuals for axes, scale bar."""
-        print(self.viewer._overlays)
         for layer in self.viewer.layers:
             self._add_layer(layer)
         for overlay in self.viewer._overlays.values():

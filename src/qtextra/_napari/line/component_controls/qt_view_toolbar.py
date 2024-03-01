@@ -10,7 +10,7 @@ class QtViewLeftToolbar(QtMiniToolbar):
     """Mini toolbar."""
 
     def __init__(self, view, viewer, qt_viewer, **kwargs):
-        super().__init__(parent=qt_viewer, orientation=Qt.Vertical)
+        super().__init__(parent=qt_viewer, orientation=Qt.Orientation.Vertical)
         self.view = view
         self.viewer = viewer
         self.qt_viewer = qt_viewer
@@ -89,7 +89,7 @@ class QtViewRightToolbar(QtMiniToolbar):
     _dlg_shapes, _dlg_region = None, None
 
     def __init__(self, view, viewer, qt_viewer, **kwargs):
-        super().__init__(parent=qt_viewer, orientation=Qt.Vertical)
+        super().__init__(parent=qt_viewer, orientation=Qt.Orientation.Vertical)
         self.view = view
         self.viewer = viewer
         self.qt_viewer = qt_viewer

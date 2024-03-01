@@ -1,11 +1,13 @@
 """Base dialog."""
+from __future__ import annotations
+
 import typing as ty
 from contextlib import contextmanager
 
 import numpy as np
 from loguru import logger
-from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QCursor, QGuiApplication
+from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, Signal
+from qtpy.QtGui import QCloseEvent, QCursor, QGuiApplication
 from qtpy.QtWidgets import (
     QApplication,
     QDialog,
@@ -133,7 +135,7 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_left_of_widget(self, widget: QWidget, show: bool = True, x_offset: int = 14):
+    def show_left_of_widget(self, widget: QObject | None, show: bool = True, x_offset: int = 14):
         """Show popup dialog above the widget."""
         rect = widget.rect()
         pos = widget.mapToGlobal(QPoint(rect.left(), rect.top()))
@@ -350,10 +352,18 @@ class ScreenshotMixin:
 class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, ScreenshotMixin):
     """Mixin class with common functionality for Dialogs and Tabs."""
 
+    _is_init = False
     _main_layout = None
     _title = ""
+    _views_1d: ty.List | None = None
+    _views_2d: ty.List | None = None
 
-    def __init__(self, parent=None, title: str = "", delay: bool = False):
+    setLayout: ty.Callable[[QLayout], None]
+
+    def __init__(self, parent: QWidget | None = None, title: str = "", delay: bool = False):
+        if self._is_init:
+            return
+
         self.logger = logger.bind(src=self.__class__.__name__)
         # Qt stuff
         if hasattr(self, "setWindowTitle"):
@@ -369,11 +379,13 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
         # Connect signals
         if not delay:
             self.connect_events()
+        self._is_init = True
 
     def make_panel(self) -> QLayout:
         """Make panel."""
+        raise NotImplementedError("Must implement method")
 
-    def make_gui(self):
+    def make_gui(self) -> None:
         """Make and arrange main panel."""
         layout = self.make_panel()
         if layout is None:
@@ -382,16 +394,16 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
             self.setLayout(layout)
         self._main_layout = layout
 
-    def on_apply(self, *args):
+    def on_apply(self, *args: ty.Any) -> None:
         """Update config."""
 
-    def _on_teardown(self):
+    def _on_teardown(self) -> None:
         """Teardown."""
 
-    def connect_events(self, state: bool = True):
+    def connect_events(self, state: bool = True) -> None:
         """Connect events."""
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """Hide rather than close."""
         self._on_teardown()
         self.connect_events(False)
@@ -399,14 +411,42 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
             self.evt_close.emit()
         self.close()
 
+    def _register_views(self, views_1d: ty.List | None = None, views_2d: ty.List | None = None) -> None:
+        """Register views."""
+        if self._views_1d is None:
+            self._views_1d = []
+        if views_1d:
+            self._views_1d.extend(views_1d)
+        if self._views_2d is None:
+            self._views_2d = []
+        if views_2d:
+            self._views_2d.extend(views_2d)
+
+    def _update_after_activate(self) -> None:
+        """This method is called just after user requested to see this widget.
+
+        It is necessary in order to force updates in the vispy canvas which is otherwise not updated when the panel
+        is not visible.
+        """
+        if self._views_2d:
+            for view in self._views_2d:
+                view.widget.canvas.native.update()
+
+        # try to fix axes issues
+        if self._views_1d:
+            for view in self._views_1d:
+                xmin, xmax, ymin, ymax = view.viewer.camera.rect
+                view.viewer.camera.rect = xmin + 1, xmax, ymin, ymax
+                view.viewer.camera.rect = xmin, xmax, ymin, ymax
+
 
 class QtTab(QWidget, QtBase):
     """Dialog base class."""
 
-    _description: ty.Dict = None
+    _description: ty.Dict | None = None
     _tab_index: ty.Optional[ty.Dict] = None
 
-    def __init__(self, parent, title: str = "Panel"):
+    def __init__(self, parent: QWidget | None, title: str = "Panel"):
         QWidget.__init__(self, parent)
         QtBase.__init__(self, parent, title)
 
@@ -581,7 +621,7 @@ class QtCollapsibleFramelessTool(QtFramelessTool):
 
     GEOM_TIME = 250
 
-    expand_btn: "QtExpandButton"
+    expand_btn: QtExpandButton
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

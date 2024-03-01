@@ -677,7 +677,7 @@ def generate_colorized_svgs(
     svg_paths: ty.Iterable[ty.Union[str, Path]],
     colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
     opacities: ty.Iterable[float] = (1.0,),
-    theme_override: ty.Optional[ty.Optional[ty.Dict[str, str]]] = None,
+    theme_override: ty.Optional[ty.Dict[str, str]] = None,
 ) -> ty.Iterator[ty.Tuple[str, str]]:
     """Helper function to generate colorized SVGs.
 
@@ -739,7 +739,7 @@ def write_colorized_svgs(
     svg_paths: ty.Iterable[ty.Union[str, Path]],
     colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
     opacities: ty.Iterable[float] = (1.0,),
-    theme_override: ty.Optional[ty.Optional[ty.Dict[str, str]]] = None,
+    theme_override: ty.Optional[ty.Dict[str, str]] = None,
 ):
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)

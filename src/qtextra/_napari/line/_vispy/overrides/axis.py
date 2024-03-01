@@ -1,12 +1,13 @@
 """Improvements."""
-import napari_plot._vispy.overlays.axis  # noqa
+# import napari_plot._vispy.overlays.axis
 import numpy as np
 
 
 def tick_formatter(value: float) -> str:
     """Format tick value."""
     value = float(value)
-    exp_value = np.round(np.log10(abs(value)))
+    with np.errstate(divide="ignore"):
+        exp_value = np.round(np.log10(abs(value)))
     if np.isinf(exp_value):
         exp_value = 1
     if exp_value < 3:
@@ -24,3 +25,4 @@ def tick_formatter(value: float) -> str:
         return f"{value / 1e9:.1f}B"
     elif exp_value < 16:
         return f"{value / 1e12:.1f}T"
+    return f"{value:.2G}"

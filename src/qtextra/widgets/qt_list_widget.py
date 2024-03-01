@@ -1,4 +1,5 @@
 """Common widget list interface."""
+from __future__ import annotations
 
 import time
 import typing as ty
@@ -100,7 +101,7 @@ class QtListWidget(QListWidget):
 
     _is_setup = False
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setSpacing(1)
         self.setMinimumHeight(12)
@@ -125,7 +126,7 @@ class QtListWidget(QListWidget):
 
     def _get_check_state(self, state: bool, attr: str = "is_checked"):
         items = []
-        for widget in self.iter_widgets():
+        for widget in self.widget_iter():
             if hasattr(widget, attr) and getattr(widget, attr) == state:
                 items.append((widget.hash_id, state))
         return items
@@ -142,12 +143,12 @@ class QtListWidget(QListWidget):
         """Return the current number of rows in the widget."""
         return self.count()
 
-    def iter_widgets(self) -> ty.Iterator[_W]:
+    def widget_iter(self) -> ty.Iterator[_W]:
         """Iterate through list of widgets."""
         for index in range(self.count()):
             yield self.itemWidget(self.item(index))
 
-    def iter_item(self, reverse: bool = False) -> ty.Iterator[_W]:
+    def item_iter(self, reverse: bool = False) -> ty.Iterator[_W]:
         """Iterate through list of widgets."""
         iterator = range(self.count()) if not reverse else reversed(range(self.count()))
         for index in iterator:
@@ -170,7 +171,7 @@ class QtListWidget(QListWidget):
     def get_all_checked(self, *, reverse: bool = False) -> ty.List[int]:
         """Get list of checked items."""
         checked = []
-        for index, widget in enumerate(self.iter_widgets()):
+        for index, widget in enumerate(self.widget_iter()):
             if widget.is_checked:
                 checked.append(index)
         if reverse:
@@ -180,7 +181,7 @@ class QtListWidget(QListWidget):
     def get_all_unchecked(self) -> ty.List[int]:
         """Get list of checked items."""
         checked = []
-        for index, widget in enumerate(self.iter_widgets()):
+        for index, widget in enumerate(self.widget_iter()):
             if not widget.is_checked:
                 checked.append(index)
         return checked
@@ -200,7 +201,7 @@ class QtListWidget(QListWidget):
 
     def get_index_for_hash_id(self, hash_id: str) -> int:
         """Get index of the item."""
-        for index, widget in enumerate(self.iter_widgets()):
+        for index, widget in enumerate(self.widget_iter()):
             if widget.hash_id == hash_id:
                 return index
         return -1
