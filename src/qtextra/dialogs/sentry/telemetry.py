@@ -11,9 +11,10 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from qtextra.widgets.qt_dialog import QtDialog
-from qtextra.dialogs.sentry.utilities import get_sample_event, PACKAGE
+
+from qtextra.dialogs.sentry.utilities import PACKAGE, get_sample_event
 from qtextra.helpers import get_parent
+from qtextra.widgets.qt_dialog import QtDialog
 
 
 class TelemetryOptInDialog(QtDialog):
@@ -107,7 +108,7 @@ class TelemetryOptInDialog(QtDialog):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.utils.dev import qapplication, apply_style
+    from qtextra.utils.dev import apply_style, qapplication
 
     app = qapplication(1)
     dlg = TelemetryOptInDialog(None)

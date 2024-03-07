@@ -177,7 +177,7 @@ class QtArrayTableModel(QAbstractTableModel):
         self.df = self.base_df.iloc[: self.n_loaded, :]
         self.endInsertRows()
 
-    def sort(self, column, order = ...):
+    def sort(self, column, order=...):
         """Sort data."""
         self.beginResetModel()
         self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.AscendingOrder)

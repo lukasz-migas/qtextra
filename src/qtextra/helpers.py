@@ -1971,6 +1971,7 @@ def get_double(
     parent: QObject | None,
     label: str = "New value",
     title: str = "Text",
+    value: int = 1,
     minimum: float = 0,
     maximum: float = 100,
     n_decimals: int = 2,
@@ -1978,7 +1979,7 @@ def get_double(
 ) -> ty.Optional[float]:
     """Get text."""
     value, ok = Qw.QInputDialog.getDouble(
-        parent, title, label, minValue=minimum, maxValue=maximum, decimals=n_decimals, step=step
+        parent, title, label, value=value, minValue=minimum, maxValue=maximum, decimals=n_decimals, step=step
     )
     if ok:
         return value

@@ -154,7 +154,7 @@ class QtListWidget(QListWidget):
         for index in iterator:
             yield self.item(index)
 
-    def iter_item_model_widget(self) -> ty.Iterator[ty.Tuple[QListWidgetItem, _M, _W]]:
+    def item_model_widget_iter(self) -> ty.Iterator[ty.Tuple[QListWidgetItem, _M, _W]]:
         """Iterate through list of widgets."""
         for index in range(self.count()):
             item = self.item(index)
@@ -213,7 +213,7 @@ class QtListWidget(QListWidget):
 
     def get_item_for_item_model(self, item_model: _M) -> ty.Optional[QListWidgetItem]:
         """Get item by its model."""
-        for item, _item_model, _ in self.iter_item_model_widget():
+        for item, _item_model, _ in self.item_model_widget_iter():
             if _item_model is item_model or _item_model == item_model:
                 return item
         return None
@@ -227,7 +227,7 @@ class QtListWidget(QListWidget):
 
     def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
         """Get widget by its model."""
-        for _, _item_model, widget in self.iter_item_model_widget():
+        for _, _item_model, widget in self.item_model_widget_iter():
             if _item_model is item_model or _item_model == item_model:
                 return widget
         return None

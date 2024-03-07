@@ -17,7 +17,9 @@ class QtMiniToolbar(QFrame):
 
         self.layout_ = QHBoxLayout(self) if orientation == Qt.Orientation.Horizontal else QVBoxLayout(self)
         if add_spacer:
-            self.layout_.addSpacerItem(hp.make_h_spacer() if orientation == Qt.Orientation.Horizontal else hp.make_v_spacer())
+            self.layout_.addSpacerItem(
+                hp.make_h_spacer() if orientation == Qt.Orientation.Horizontal else hp.make_v_spacer()
+            )
         self.layout_.setSpacing(0)
         self.layout_.setContentsMargins(0, 0, 0, 0)
         self.max_size = 28
@@ -153,12 +155,16 @@ class QtMiniToolbar(QFrame):
 
     def insert_spacer(self) -> None:
         """Insert spacer item."""
-        spacer = hp.make_spacer_widget()  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
+        spacer = (
+            hp.make_spacer_widget()
+        )  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
         self.layout_.insertWidget(0, spacer, stretch=True)
 
     def append_spacer(self) -> None:
         """Insert spacer item."""
-        spacer = hp.make_spacer_widget()  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
+        spacer = (
+            hp.make_spacer_widget()
+        )  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
         self.layout_.insertWidget(self.layout_.count(), spacer, stretch=True)
 
     def show_border(self):

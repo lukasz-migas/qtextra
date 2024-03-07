@@ -48,7 +48,10 @@ class QtViewToolbar(QWidget):
         )
 
         # create instance
-        toolbar_left, toolbar_right = QtMiniToolbar(qt_viewer, Qt.Orientation.Vertical), QtMiniToolbar(qt_viewer, Qt.Orientation.Vertical)
+        toolbar_left, toolbar_right = (
+            QtMiniToolbar(qt_viewer, Qt.Orientation.Vertical),
+            QtMiniToolbar(qt_viewer, Qt.Orientation.Vertical),
+        )
         self.toolbar_left = toolbar_left
         self.toolbar_right = toolbar_right
 
