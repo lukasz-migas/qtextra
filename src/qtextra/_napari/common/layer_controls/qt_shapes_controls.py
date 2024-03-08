@@ -175,6 +175,10 @@ class QtShapesControls(QtLayerControls):
 
     def set_layer(self, layer: "Shapes") -> None:
         """Set new layer for this container."""
+        if layer == self.layer:
+            return
+        disconnect_events(self.layer.events, self)
+
         self.layer = layer
         # update values
         self._on_opacity_change()
@@ -184,6 +188,10 @@ class QtShapesControls(QtLayerControls):
         self._on_edge_width_change()
         self._on_text_visibility_change()
         self._on_editable_or_visible_change()
+        for button in self.button_group.buttons():
+            button.set_layer(layer)
+        for button in [self.move_front_button, self.move_back_button, self.move_front_button, self.delete_button]:
+            button.set_layer(layer)
 
         # connect new events
         self.layer.events.blending.connect(self._on_blending_change)

@@ -26,6 +26,10 @@ class QtModeRadioButton(QtImagePushButton):
         if mode is not None:
             self.toggled.connect(self._set_mode)
 
+    def set_layer(self, layer: Layer):
+        """Set layer."""
+        self.layer_ref = weakref.ref(layer)
+
     def _set_mode(self, mode_selected):
         """Toggle the mode associated with the layer.
 
@@ -54,6 +58,10 @@ class QtModePushButton(QtImagePushButton):
         self.set_medium()
         if func is not None:
             self.clicked.connect(func)
+
+    def set_layer(self, layer: Layer):
+        """Set layer."""
+        self.layer_ref = weakref.ref(layer)
 
     def _set_mode(self, mode_selected):
         """Toggle the mode associated with the layer.
