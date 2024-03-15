@@ -1,4 +1,5 @@
 """Points controls."""
+
 import numpy as np
 from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.layers import Points
@@ -33,7 +34,10 @@ class QtPointsControls(QtLayerControls):
         self.layer.events.visible.connect(self._on_editable_or_visible_change)
         self.layer.text.events.visible.connect(self._on_text_visibility_change)
 
-        max_value = max(100, int(np.max(self.layer.size)) + 1) if self.layer.size else 100
+        if self.layer.size.size:
+            max_value = max(100, int(np.max(self.layer.size)) + 1)
+        else:
+            max_value = 100
         self.sizeSlider = hp.make_slider_with_text(self, 1, max_value, tooltip="Scatter point size")
         self.sizeSlider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.sizeSlider.setValue(int(self.layer.current_size))
@@ -50,7 +54,7 @@ class QtPointsControls(QtLayerControls):
         self.edgeColorEdit.color_changed.connect(self.on_change_edge_color)
 
         self.symbolComboBox = hp.make_combobox(self, tooltip="Next marker symbol")
-        hp.set_combobox_data(self.symbolComboBox, SYMBOL_TRANSLATION, self.layer.symbol)
+        hp.set_combobox_data(self.symbolComboBox, SYMBOL_TRANSLATION, self.layer.current_symbol)
         self.symbolComboBox.currentTextChanged.connect(self.on_change_symbol)
 
         self.outOfSliceCheckBox = hp.make_checkbox(

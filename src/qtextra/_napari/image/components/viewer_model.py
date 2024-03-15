@@ -1,4 +1,5 @@
 """Viewer model."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -128,6 +129,10 @@ class ViewerModel(ViewerModelBase):
     def add_shapes(self, *args, **kwargs) -> n_layers.Shapes:
         """Add image."""
         return NapariViewer.add_shapes(self, *args, **kwargs)
+
+    def add_points(self, *args, **kwargs) -> n_layers.Points:
+        """Add image."""
+        return NapariViewer.add_points(self, *args, **kwargs)
 
     def add_labels(self, *args, **kwargs) -> n_layers.Shapes:
         """Add image."""
