@@ -1,4 +1,5 @@
 """Base dialog."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -516,8 +517,9 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         title: str = "",
         position: ty.Any = None,
         flags: ty.Any = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowType.Popup,
+        delay: bool = False,
     ):
-        super().__init__(parent, title)
+        super().__init__(parent, title, delay=delay)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setWindowFlags(flags)
@@ -612,8 +614,9 @@ class QtFramelessTool(QtFramelessPopup):
         title: str = "",
         position=None,
         flags=Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool,
+        delay: bool = False,
     ):
-        super().__init__(parent, title, position, flags)
+        super().__init__(parent, title, position, flags, delay=delay)
 
 
 class QtCollapsibleFramelessTool(QtFramelessTool):

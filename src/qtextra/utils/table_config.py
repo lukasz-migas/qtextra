@@ -1,4 +1,5 @@
 """Table configuration class."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -6,6 +7,7 @@ import typing as ty
 from koyo.utilities import is_valid_python_name
 
 ColumnSizing = ty.Literal["stretch", "fixed", "contents"]
+Alignment = ty.Literal["left", "center", "right"]
 
 
 class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
@@ -19,6 +21,7 @@ class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
         self.checkable_columns: list[int] = []
         self.html_columns: list[int] = []
         self.icon_columns: list[int] = []
+        self.text_alignment = "center"
 
     def __getitem__(self, tag: ty.Union[int, str]) -> ty.Any:
         """Get item id."""

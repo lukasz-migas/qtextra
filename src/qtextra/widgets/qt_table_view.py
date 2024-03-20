@@ -1,4 +1,5 @@
 """Table view."""
+
 from __future__ import annotations
 
 import operator
@@ -111,6 +112,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         html_columns: list[int] | None = None,
         icon_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
+        text_alignment: Qt.AlignmentFlag | None = None,
     ):
         QAbstractTableModel.__init__(self, parent)
         self._table: list[list[ty.Any]] = data
@@ -123,6 +125,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.html_columns = html_columns or []
         self.icon_columns = icon_columns or []
         self.checkable_columns = checkable_columns or []
+        self.text_alignment = text_alignment or Qt.AlignmentFlag.AlignCenter
 
     def flags(self, index):
         """Return flags."""
@@ -198,7 +201,7 @@ class QtCheckableItemModel(QAbstractTableModel):
                 return value
         # check the alignment role
         elif role == Qt.ItemDataRole.TextAlignmentRole:
-            return Qt.AlignmentFlag.AlignCenter
+            return self.text_alignment
         # check state
         elif role == Qt.ItemDataRole.CheckStateRole and column in self.checkable_columns:
             return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
@@ -617,6 +620,11 @@ class QtCheckableTableView(QTableView):
             model.no_sort_columns = self._config.no_sort_columns
             model.hidden_columns = self._config.hidden_columns
             model.checkable_columns = self._config.checkable_columns
+            model.text_alignment = {
+                "left": Qt.AlignmentFlag.AlignLeft,
+                "center": Qt.AlignmentFlag.AlignCenter,
+                "right": Qt.AlignmentFlag.AlignRight,
+            }[self._config.text_alignment]
         self.setModel(model)
 
     def setup_model(
@@ -645,6 +653,7 @@ class QtCheckableTableView(QTableView):
         icon_columns: list[int] | None = None,
         color_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
+        text_alignment: Qt.AlignmentFlag | None = None,
         checkable: bool | str = "auto",
     ) -> None:
         """Set data."""
@@ -664,6 +673,7 @@ class QtCheckableTableView(QTableView):
             html_columns=html_columns or [],
             icon_columns=icon_columns or [],
             checkable_columns=checkable_columns or [],
+            text_alignment=text_alignment,
         )
         self.checkable = bool(checkable)
         model.evt_checked.connect(self.evt_checked.emit)
@@ -682,7 +692,7 @@ class QtCheckableTableView(QTableView):
         self.model().add_data(data)
         if n_items == 0:
             self.init()
-            
+
     def add_index(self, rows: list[str]):
         """Add vertical index."""
         header = self.index
@@ -838,13 +848,27 @@ class QtCheckableTableView(QTableView):
             direction = Qt.SortOrder.AscendingOrder if direction == "ascending" else Qt.SortOrder.DescendingOrder
         self.model().sort(column, direction)
 
-    def find_index_of(self, col_id: int, value: ty.Any):
+    def find_index_of(self, col_id: int, value: ty.Any) -> int:
         """Find index of value. Return -1 if not found."""
         col_data = self.get_col_data(col_id)
         try:
             return col_data.index(value)
         except ValueError:
             return -1
+
+    def find_indices_of(self, col_id: int, value: ty.Any):
+        """Find index of value. Return -1 if not found."""
+        col_data = self.get_col_data(col_id)
+        indices = [i for i, x in enumerate(col_data) if x == value]
+        return indices
+
+    def find_index_of_value_with_indices(self, col_id: int, value: ty.Any, indices: list[int]) -> int:
+        """Find index of value. Return -1 if not found."""
+        col_data = self.get_col_data(col_id)
+        for i in indices:
+            if col_data[i] == value:
+                return i
+        return -1
 
     def sortByColumn(self, index: int) -> None:
         """Override method."""

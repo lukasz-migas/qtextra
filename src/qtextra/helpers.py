@@ -1,4 +1,5 @@
 """Various helpers to make making of UI elements easier."""
+
 from __future__ import annotations
 
 import os.path
@@ -1767,7 +1768,9 @@ def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto
         value = link
     if isinstance(link, Path):
         return f"<a href='{link.as_uri()}'>{value}</a>"
-    return f"<a href='{prefix}:{link}'>{value}</a>"
+    if prefix:
+        return f"<a href='{prefix}:{link}'>{value}</a>"
+    return f"<a href='{link}'>{value}</a>"
 
 
 def open_filename(
