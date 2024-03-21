@@ -620,11 +620,11 @@ class QtCheckableTableView(QTableView):
             model.no_sort_columns = self._config.no_sort_columns
             model.hidden_columns = self._config.hidden_columns
             model.checkable_columns = self._config.checkable_columns
-            model.text_alignment = {
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[self._config.text_alignment]
+            # model.text_alignment = {
+            #     "left": Qt.AlignmentFlag.AlignLeft,
+            #     "center": Qt.AlignmentFlag.AlignCenter,
+            #     "right": Qt.AlignmentFlag.AlignRight,
+            # }[self._config.text_alignment]
         self.setModel(model)
 
     def setup_model(
@@ -635,9 +635,19 @@ class QtCheckableTableView(QTableView):
         html_columns: list[int] | None = None,
         icon_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
+        text_alignment: str | None = None,
     ) -> None:
         """Setup model in the table."""
-        self.set_data([], header, no_sort_columns, hidden_columns, html_columns, icon_columns, checkable_columns)
+        self.set_data(
+            [],
+            header,
+            no_sort_columns,
+            hidden_columns,
+            html_columns,
+            icon_columns,
+            checkable_columns,
+            text_alignment=text_alignment,
+        )
 
     def reset_data(self) -> None:
         """Clear table."""
@@ -653,7 +663,7 @@ class QtCheckableTableView(QTableView):
         icon_columns: list[int] | None = None,
         color_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
-        text_alignment: Qt.AlignmentFlag | None = None,
+        text_alignment: str | None = None,
         checkable: bool | str = "auto",
     ) -> None:
         """Set data."""
