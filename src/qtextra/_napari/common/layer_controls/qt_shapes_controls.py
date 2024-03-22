@@ -1,4 +1,5 @@
 """Shape controls."""
+
 import typing as ty
 from collections.abc import Iterable
 
@@ -55,6 +56,18 @@ class QtShapesControls(QtLayerControls):
             Mode.PAN_ZOOM,
             tooltip="Pan/zoom (Space)",
             checked=True,
+        )
+        self.line_button = QtModeRadioButton(
+            layer,
+            "line",
+            Mode.ADD_LINE,
+            tooltip="Add line (L)",
+        )
+        self.path_button = QtModeRadioButton(
+            layer,
+            "path",
+            Mode.ADD_PATH,
+            tooltip="Add path (A)",
         )
         self.rectangle_button = QtModeRadioButton(
             layer,
@@ -116,6 +129,8 @@ class QtShapesControls(QtLayerControls):
         self.button_group.addButton(self.select_button)
         self.button_group.addButton(self.direct_button)
         self.button_group.addButton(self.panzoom_button)
+        self.button_group.addButton(self.line_button)
+        self.button_group.addButton(self.path_button)
         self.button_group.addButton(self.rectangle_button)
         self.button_group.addButton(self.ellipse_button)
         self.button_group.addButton(self.polygon_button)
@@ -125,19 +140,21 @@ class QtShapesControls(QtLayerControls):
 
         button_grid = QGridLayout()
         # row 0
-        button_grid.addWidget(self.vertex_remove_button, 0, 2)
-        button_grid.addWidget(self.vertex_insert_button, 0, 3)
-        button_grid.addWidget(self.direct_button, 0, 4)
-        button_grid.addWidget(self.select_button, 0, 5)
-        button_grid.addWidget(self.panzoom_button, 0, 6)
-        button_grid.addWidget(self.delete_button, 0, 7)
+        button_grid.addWidget(self.move_back_button, 0, 0)
+        button_grid.addWidget(self.vertex_remove_button, 0, 1)
+        button_grid.addWidget(self.vertex_insert_button, 0, 2)
+        button_grid.addWidget(self.direct_button, 0, 3)
+        button_grid.addWidget(self.select_button, 0, 4)
+        button_grid.addWidget(self.panzoom_button, 0, 5)
+        button_grid.addWidget(self.delete_button, 0, 6)
         # row 1
-        button_grid.addWidget(self.move_back_button, 1, 2)
-        button_grid.addWidget(self.move_front_button, 1, 3)
-        button_grid.addWidget(self.ellipse_button, 1, 4)
-        button_grid.addWidget(self.rectangle_button, 1, 5)
-        button_grid.addWidget(self.polygon_button, 1, 6)
-        button_grid.addWidget(self.lasso_button, 1, 7)
+        button_grid.addWidget(self.move_front_button, 1, 0)
+        button_grid.addWidget(self.line_button, 1, 1)
+        button_grid.addWidget(self.path_button, 1, 2)
+        button_grid.addWidget(self.ellipse_button, 1, 3)
+        button_grid.addWidget(self.rectangle_button, 1, 4)
+        button_grid.addWidget(self.polygon_button, 1, 5)
+        button_grid.addWidget(self.lasso_button, 1, 6)
         button_grid.setContentsMargins(5, 0, 0, 5)
         button_grid.setColumnStretch(0, 1)
         button_grid.setSpacing(4)
@@ -210,6 +227,8 @@ class QtShapesControls(QtLayerControls):
             Mode.DIRECT: self.direct_button,
             Mode.PAN_ZOOM: self.panzoom_button,
             Mode.ADD_RECTANGLE: self.rectangle_button,
+            Mode.ADD_LINE: self.line_button,
+            Mode.ADD_PATH: self.path_button,
             Mode.ADD_ELLIPSE: self.ellipse_button,
             Mode.ADD_POLYGON: self.polygon_button,
             Mode.ADD_POLYGON_LASSO: self.lasso_button,

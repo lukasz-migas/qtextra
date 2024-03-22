@@ -481,6 +481,7 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):
 
     # events
     evt_resized = Signal()
+    evt_hide = Signal()
     evt_close = Signal()
 
     def __init__(self, parent=None, title: str = "Dialog", delay: bool = False):
@@ -587,6 +588,8 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         if self.HIDE_WHEN_CLOSE:
             self.hide()
             self.clearFocus()
+            if hasattr(self, "evt_hide"):
+                self.evt_hide.emit()
             event.ignore()
         else:
             self._on_teardown()

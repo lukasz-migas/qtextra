@@ -1,4 +1,5 @@
 """Assets."""
+
 import typing as ty
 from pathlib import Path
 
@@ -74,7 +75,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "delete_shape": "fa5s.times",
     "move_back": "mdi6.arrange-send-backward",
     "move_front": "mdi6.arrange-bring-to-front",
-    "line": "mdi6.line",
+    "line": "ph.line-segment-fill",
     "path": "mdi.chart-line-variant",
     "vertex_insert": "mdi.map-marker-plus",
     "vertex_remove": "mdi.map-marker-minus",
