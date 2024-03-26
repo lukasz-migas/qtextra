@@ -1,4 +1,5 @@
 """Toast."""
+
 from contextlib import suppress
 
 from qtpy.QtCore import Qt, QTimer
@@ -64,9 +65,12 @@ class QtToast(SubWindowBase):
         layout.addStretch(1)
         layout.addWidget(self._timer_indicator)
 
-    def show_message(self, title: str, message: str, icon: str = "info", position: str = "top_right") -> None:
+    def show_message(
+        self, title: str, message: str, icon: str = "info", position: str = "top_right", duration: int = 5000
+    ) -> None:
         """Show message."""
         self.POSITION = position
+        self.DISMISS_AFTER = duration
         self._title_label.setText(title)
         self._title_label.adjustSize()
         self._message_label.setText(message)
@@ -75,14 +79,6 @@ class QtToast(SubWindowBase):
         self.adjustSize()
         self.move_to(self.POSITION)
         self.show()
-
-    def show_long_message(
-        self, title: str, message: str, duration: int = 5000, position: str = "top_right", icon: str = "info"
-    ) -> None:
-        """Show message that appears for longer but is also longer in time."""
-        self.DISMISS_AFTER = duration
-        self.POSITION = position
-        self.show_message(title, message, icon=icon, position=position)
 
     def show(self) -> None:
         """Show the message with a fade and slight slide in from the bottom."""
@@ -128,15 +124,26 @@ if __name__ == "__main__":  # pragma: no cover
             # pop.show_message("Title", "Here is a message..")
             pop.show_message("Title", "Here is a message.\nA couple of lines long.\nAnother line")
 
+        def _popup_notif3():
+            from qtextra.helpers import toast_alt
+
+            pop = toast_alt(
+                frame,
+                "Title",
+                "Here is a message.\nA couple of lines long.\nAnother line",
+                icon=choice(["info", "warning", "error", "success"]),
+            )
+
         def _popup_notif2():
             pop = QtToast(frame)
             THEMES.set_theme_stylesheet(pop)
-            pop.show_long_message(
+            pop.show_message(
                 "Title",
                 (
                     "You can easily move images around by clicking inside the image and moving it left-right and"
                     "up-down.\nRotation is currently disabled and changes to scale and shearing will not be supported."
                 ),
+                duration=10000,
             )
 
         def _toggle_theme():
@@ -147,7 +154,7 @@ if __name__ == "__main__":  # pragma: no cover
             THEMES.set_theme_stylesheet(frame)
 
         #
-        app, frame, ha = qframe(False)
+        app, frame, ha = qframe(False, set_style=True)
         frame.setMinimumSize(600, 600)
 
         btn2 = hp.make_btn(frame, "Create random notification")
@@ -155,6 +162,9 @@ if __name__ == "__main__":  # pragma: no cover
         ha.addWidget(btn2)
         btn2 = hp.make_btn(frame, "Create long notification")
         btn2.clicked.connect(_popup_notif2)
+        ha.addWidget(btn2)
+        btn2 = hp.make_btn(frame, "Create alternate notification")
+        btn2.clicked.connect(_popup_notif3)
         ha.addWidget(btn2)
         btn2 = hp.make_btn(frame, "Click me to toggle theme")
         btn2.clicked.connect(_toggle_theme)

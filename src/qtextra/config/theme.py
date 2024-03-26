@@ -1,4 +1,5 @@
 """Themes configuration file."""
+
 import re
 import typing as ty
 from functools import lru_cache
@@ -499,6 +500,11 @@ class Themes(ConfigBase):
             return _theme
         else:
             raise ValueError(f"Unrecognized theme {theme_name}. Available themes are {self.available_themes()}")
+
+    @property
+    def is_dark(self) -> bool:
+        """Check if theme is dark."""
+        return self.active.type == "dark"
 
     def add_theme(self, name: str, theme_data: ty.Union[Theme, ty.Dict[str, str]], register: bool = False):
         """Add theme."""

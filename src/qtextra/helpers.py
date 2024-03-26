@@ -1745,6 +1745,70 @@ def toast(
     QtToast(parent).show_message(title, message, position=position, icon=icon)
 
 
+def toast_alt(
+    parent: Qw.QWidget | None,
+    title: str,
+    message: str,
+    func: ty.Optional[ty.Callable] = None,
+    position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
+    icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
+    duration: int = 5000,
+):
+    """Alternative toast implementation."""
+    from pyqttoast import Toast, ToastIcon, ToastPosition, ToastPreset
+
+    from qtextra.config.theme import THEMES
+
+    if callable(func):
+        func(message)
+    obj = Toast(parent)
+    obj.setObjectName("Toast")
+    obj.setTitle(title)
+    obj.setText(message)
+    obj.setDuration(duration)
+    obj.setIcon(
+        {
+            "success": ToastIcon.SUCCESS,
+            "warning": ToastIcon.WARNING,
+            "error": ToastIcon.ERROR,
+            "critical": ToastIcon.ERROR,
+        }.get(icon, ToastIcon.INFORMATION)
+    )
+    obj.setShowIcon(icon != "none")
+    obj.setPosition(
+        {"top_right": ToastPosition.TOP_RIGHT, "top_left": ToastPosition.TOP_LEFT}.get(
+            position, ToastPosition.BOTTOM_RIGHT
+        )
+    )
+    obj.setAlwaysOnMainScreen(False)
+
+    font = obj.getTitleFont()
+    font.setPointSize(12)
+    obj.setTitleFont(font)
+    text = obj.getTextFont()
+    text.setPointSize(10)
+    obj.setTextFont(text)
+
+    if not THEMES.is_dark:
+        preset = {
+            "success": ToastPreset.SUCCESS,
+            "warning": ToastPreset.WARNING,
+            "error": ToastPreset.ERROR,
+            "critical": ToastPreset.ERROR,
+        }.get(icon, ToastPreset.INFORMATION)
+    else:
+        preset = {
+            "success": ToastPreset.SUCCESS_DARK,
+            "warning": ToastPreset.WARNING_DARK,
+            "error": ToastPreset.ERROR_DARK,
+            "critical": ToastPreset.ERROR_DARK,
+        }.get(icon, ToastPreset.INFORMATION_DARK)
+
+    obj.applyPreset(preset)
+    obj.show()
+    return obj
+
+
 def long_toast(
     parent: Qw.QWidget | None,
     title: str,

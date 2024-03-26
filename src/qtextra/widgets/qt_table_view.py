@@ -13,13 +13,14 @@ from natsort.natsort import index_natsorted, order_by_index
 from qtpy.QtCore import (
     QAbstractTableModel,
     QModelIndex,
+    QSize,
     QSortFilterProxyModel,
     Qt,
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QKeyEvent
-from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
+from qtpy.QtGui import QBrush, QColor, QKeyEvent, QPainter
+from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QStyledItemDelegate, QStyleOptionViewItem, QTableView
 from superqt.utils import ensure_main_thread
 
 from qtextra.config import THEMES
@@ -30,6 +31,19 @@ from qtextra.utils.utilities import connect
 
 TEXT_COLOR: str = "#000000"
 LINK_COLOR: str = "#0000FF"
+
+
+class TextWrapDelegate(QStyledItemDelegate):
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        options = QStyleOptionViewItem(option)
+        options.wrapText = True  # Enable text wrapping
+
+        super().paint(painter, options, index)
+
+    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
+        size = super().sizeHint(option, index)
+        size.setHeight(size.height() * 2)  # Adjust the height if necessary
+        return size
 
 
 class MultiFilterMode(str, Enum):
@@ -473,6 +487,11 @@ class QtCheckableTableView(QTableView):
         """Close event."""
         connect(THEMES.evt_theme_changed, self._update_color_theme, state=False)
         return super().closeEvent(event)
+
+    def set_word_wrap(self) -> None:
+        """Set word wrap."""
+        self.setWordWrap(True)
+        self.setItemDelegate(TextWrapDelegate())  # Use the custom delegate
 
     @Slot()
     def _update_color_theme(self):

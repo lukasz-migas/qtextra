@@ -38,6 +38,7 @@ dependencies = [
     "psygnal",
     "sentry_sdk",
     "vispy",
+    "pyqt-toast-notification",
     "qtconsole>=4.5.1,!=4.7.6,!=5.4.2",
     "ipykernel>=5.2.0",
 ]
