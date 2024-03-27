@@ -19,7 +19,7 @@ from qtpy.QtCore import (
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QKeyEvent, QPainter
+from qtpy.QtGui import QBrush, QColor, QKeyEvent, QPainter, QTextDocument
 from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QStyledItemDelegate, QStyleOptionViewItem, QTableView
 from superqt.utils import ensure_main_thread
 
@@ -33,17 +33,30 @@ TEXT_COLOR: str = "#000000"
 LINK_COLOR: str = "#0000FF"
 
 
-class TextWrapDelegate(QStyledItemDelegate):
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        options = QStyleOptionViewItem(option)
-        options.wrapText = True  # Enable text wrapping
+class WrapTextDelegate(QStyledItemDelegate):
+    """Wrap text delegate."""
 
-        super().paint(painter, options, index)
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index) -> None:
+        """Paint."""
+        text = index.model().data(index)
+        document = QTextDocument()
+        document.setTextWidth(option.rect.width())  # Set text width to cell width
+        document.setDefaultFont(option.font)
+        document.setHtml(str(text))
 
-    def sizeHint(self, option: QStyleOptionViewItem, index: QModelIndex) -> QSize:
-        size = super().sizeHint(option, index)
-        size.setHeight(size.height() * 2)  # Adjust the height if necessary
-        return size
+        painter.save()
+        painter.translate(option.rect.topLeft())
+        document.drawContents(painter)
+        painter.restore()
+
+    def sizeHint(self, option: QStyleOptionViewItem, index) -> QSize:
+        """Size hint."""
+        text = index.model().data(index)
+        document = QTextDocument()
+        document.setTextWidth(option.rect.width())  # Set text width to option's width
+        document.setDefaultFont(option.font)
+        document.setHtml(text)
+        return QSize(document.idealWidth(), document.size().height() / 4.5)
 
 
 class MultiFilterMode(str, Enum):
@@ -488,10 +501,23 @@ class QtCheckableTableView(QTableView):
         connect(THEMES.evt_theme_changed, self._update_color_theme, state=False)
         return super().closeEvent(event)
 
-    def set_word_wrap(self) -> None:
+    def activate_word_wrap(self) -> None:
         """Set word wrap."""
         self.setWordWrap(True)
-        self.setItemDelegate(TextWrapDelegate())  # Use the custom delegate
+        self.setItemDelegate(WrapTextDelegate())  # Use the custom delegate
+
+    def resize_wrapped_rows(self) -> None:
+        """Resize wrapped rows."""
+        # This is a simplistic approach to dynamically calculate row height.
+        # You might need a more sophisticated calculation based on your content.
+        for row in range(self.model().rowCount()):
+            new_height = 0
+            for column in range(self.model().columnCount()):
+                index = self.model().index(row, column)
+                height = self.itemDelegate().sizeHint(QStyleOptionViewItem(), index).height()
+                if height > new_height:
+                    new_height = height
+            self.setRowHeight(row, new_height)
 
     @Slot()
     def _update_color_theme(self):

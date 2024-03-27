@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import typing as ty
 
-from koyo.utilities import is_valid_python_name
+from koyo.containers import MutableMapping
 
 ColumnSizing = ty.Literal["stretch", "fixed", "contents"]
 Alignment = ty.Literal["left", "center", "right"]
 
 
-class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
+class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
     """Table configuration object."""
 
     def __init__(self) -> None:
@@ -33,27 +33,8 @@ class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
             raise KeyError("Could not retrieve value")
         return val
 
-    def __dir__(self) -> list[str]:
-        # noinspection PyUnresolvedReferences
-        base = super().__dir__()
-        keys = sorted(set(base + list(self) + list(self._dict.keys())))  # type: ignore[operator]
-        keys = [k for k in keys if is_valid_python_name(k)]
-        return keys
-
-    def __setitem__(self, key: int, value: dict) -> None:
-        self._dict[key] = value
-
-    def __delitem__(self, key: int):
-        del self._dict[key]
-
-    def __len__(self) -> int:
-        return len(self._dict)
-
     def __iter__(self):
         return iter(self._dict)
-
-    def _ipython_key_completions_(self) -> list[str]:
-        return sorted(self)
 
     def __getattr__(self, item: ty.Union[int, str]) -> ty.Any:
         # allow access to group members via dot notation
@@ -122,6 +103,13 @@ class TableConfig(ty.MutableMapping[int, dict[str, ty.Any]]):
         if dtype == "icon":
             self.icon_columns.append(self.last_index)
         return self
+
+    def get_column(self, tag: str) -> dict[str, ty.Any]:
+        """Get column by tag."""
+        for col_id, col_info in self.items():
+            if col_info["tag"] == tag:
+                return col_info
+        return None
 
     def find_col_id(self, tag: str) -> int:
         """Find column id by the tag."""
