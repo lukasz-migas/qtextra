@@ -1823,7 +1823,7 @@ def long_toast(
 
     if callable(func):
         func(message)
-    QtToast(parent).show_long_message(title, message, duration, position=position, icon=icon)
+    QtToast(parent).show_message(title, message, duration=duration, position=position, icon=icon)
 
 
 def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto") -> str:
