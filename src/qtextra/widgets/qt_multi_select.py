@@ -4,7 +4,7 @@ from __future__ import annotations
 import typing as ty
 
 from qtpy.QtCore import QEvent, QObject, Signal
-from qtpy.QtWidgets import QFormLayout, QWidget, QSizeGrip
+from qtpy.QtWidgets import QFormLayout, QSizeGrip, QWidget
 
 import qtextra.helpers as hp
 from qtextra.utils.table_config import TableConfig
@@ -44,7 +44,7 @@ class SelectionWidget(QtFramelessTool):
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.setMinimumWidth(350)
-        self.setMinimumHeight(250)
+        self.setMinimumHeight(350)
         self.filter_by_option.setFocus()
 
     def set_options(self, options: list[str], selected_options: list[str]) -> None:
