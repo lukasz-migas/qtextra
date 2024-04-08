@@ -408,7 +408,7 @@ class QtBase(TimerMixin, ScreenshotMixin):
         if hasattr(self, "setWindowTitle"):
             self.setWindowTitle(str(title))
         if hasattr(self, "setAttribute"):
-            self.setAttribute(Qt.WA_DeleteOnClose)
+            self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         # Own attributes
         self._parent = parent
         # Make interface

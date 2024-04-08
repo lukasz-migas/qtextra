@@ -87,7 +87,6 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "cancel": "mdi.close-circle",
     "paint_palette": "ph.palette-fill",
     "copy_to_clipboard": "mdi.clipboard-arrow-left-outline",
-    "dev": "mdi6.code-braces",
     "reload": "mdi6.cached",
     "save": "fa5s.save",
     "screenshot": "mdi.camera-outline",
@@ -104,6 +103,13 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "true": "mdi6.check-circle-outline",
     "false": "mdi6.close-circle-outline",
     "settings": "mdi6.tools",
+    "reset": "mdi.lock-reset",
+    "update": "fa.refresh",
+    "telemetry": "mdi.telegram",
+    "feedback": "msc.feedback",
+    "handshake": "fa5.handshake",
+    "dev": "mdi6.code-braces",
+    "axes_label": "mdi.axis-arrow",
 }
 
 

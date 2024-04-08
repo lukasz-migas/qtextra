@@ -370,7 +370,7 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
         if hasattr(self, "setWindowTitle"):
             self.setWindowTitle(QApplication.translate(str(self), self._title or title, None, -1))
         if hasattr(self, "setAttribute"):
-            self.setAttribute(Qt.WA_DeleteOnClose)
+            self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         # Own attributes
         self._parent = parent
         # Make interface
@@ -779,8 +779,8 @@ class SubWindowBase(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
-        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowFlags(Qt.SubWindow)
         self.setSizeGripEnabled(False)
         self.setModal(False)

@@ -1,4 +1,5 @@
 """ScaleBar model controls."""
+
 import numpy as np
 from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.utils.events import disconnect_events
@@ -51,7 +52,7 @@ class QtTextOverlayControls(QtFramelessPopup):
         )
 
         layout = hp.make_form_layout(self)
-        layout.addRow(self._make_move_handle())
+        layout.addRow(self._make_move_handle("Text overlay"))
         layout.addRow(hp.make_label(self, "Visible"), self.visible_checkbox)
         layout.addRow(hp.make_label(self, "Text"), self.text_edit)
         layout.addRow(hp.make_label(self, "Text position"), self.position_combobox)
