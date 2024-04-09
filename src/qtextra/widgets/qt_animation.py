@@ -30,6 +30,7 @@ LOOP_COUNTS = {
     LoopMode.LOOP: 1,
     LoopMode.BACK_AND_FORTH: 2,
 }
+LOOP_MODE_TRANSLATIONS = {LoopMode.ONCE: "Once", LoopMode.LOOP: "Loop", LoopMode.BACK_AND_FORTH: "Back-and-forth"}
 
 
 class QtAmnimationBase(QObject):
