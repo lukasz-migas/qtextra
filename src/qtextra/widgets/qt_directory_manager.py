@@ -52,7 +52,7 @@ class QtDirectoryWidget(QFrame):
         self.edit_btn.setVisible(False)
 
         self.row = QHBoxLayout()
-        self.row.addWidget(self.checkbox, alignment=Qt.Orientation.AlignVCenter)
+        self.row.addWidget(self.checkbox, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.row.addWidget(self.path_label, stretch=True, alignment=Qt.AlignLeft)
         self.row.addWidget(self.new_icon)
         self.row.addWidget(self.warning_icon)
