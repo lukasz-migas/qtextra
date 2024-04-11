@@ -1,4 +1,5 @@
 """Line viewer."""
+
 import typing as ty
 
 import numpy as np
@@ -54,7 +55,7 @@ class NapariLineView(ViewerBase):
         self.PLOT_ID = get_short_hash()
 
         # create instance of viewer
-        self.viewer = Viewer()
+        self.viewer: Viewer = Viewer()
         self.viewer.axis.y_tick_formatter = tick_formatter
         self.viewer.drag_tool.active = "box"
         self.viewer.camera.extent_mode = "restricted"

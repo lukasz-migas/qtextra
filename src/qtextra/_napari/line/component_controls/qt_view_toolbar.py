@@ -1,4 +1,5 @@
 """Toolbar."""
+
 from napari_plot.components.dragtool import DragMode
 from qtpy.QtCore import Qt
 
@@ -102,25 +103,36 @@ class QtViewRightToolbar(QtMiniToolbar):
         # view modifiers
         self.insert_separator()
         self.tools_clip_btn = self.insert_qta_tool(
-            "clipboard", tooltip="Copy figure to clipboard", func=self.qt_viewer.clipboard
+            "clipboard",
+            tooltip="Copy figure to clipboard",
+            func=self.qt_viewer.clipboard,
+            func_menu=self.on_open_save_figure,
         )
-        self.tools_save_btn = self.insert_qta_tool("save", tooltip="Save figure", func=self.qt_viewer.on_save_figure)
+        self.tools_save_btn = self.insert_qta_tool(
+            "save", tooltip="Save figure", func=self.qt_viewer.on_save_figure, func_menu=self.on_open_save_figure
+        )
         self.tools_axes_btn = self.insert_qta_tool(
             "axes_label",
             tooltip="Show axes controls",
-            checkable=False,
+            checkable=True,
+            check=self.viewer.axis.visible,
+            func=self._toggle_axes_visible,
+            func_menu=self.on_open_axes_config,
         )
-        self.tools_axes_btn.evt_click.connect(self.on_open_axes_config)
         self.tools_text_btn = self.insert_qta_tool(
             "text",
             tooltip="Show/hide text label",
             checkable=True,
+            check=self.viewer.text_overlay.visible,
+            func=self._toggle_text_visible,
+            func_menu=self.on_open_text_config,
         )
-        self.tools_text_btn.connect_to_right_click(self.on_open_text_config)
         self.tools_grid_btn = self.insert_qta_tool(
             "grid",
             tooltip="Show/hide grid",
             checkable=True,
+            check=self.viewer.grid_lines.visible,
+            func=self._toggle_grid_lines_visible,
         )
         self.layers_btn = self.insert_qta_tool(
             "layers",
@@ -134,16 +146,14 @@ class QtViewRightToolbar(QtMiniToolbar):
 
     def connect_toolbar(self):
         """Connect events."""
-        self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-        self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
         self.qt_viewer.viewer.grid_lines.events.visible.connect(
             lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
         )
-
-        self.tools_text_btn.setChecked(self.qt_viewer.viewer.text_overlay.visible)
-        self.tools_text_btn.clicked.connect(self._toggle_text_visible)
         self.qt_viewer.viewer.text_overlay.events.visible.connect(
             lambda x: self.tools_text_btn.setChecked(self.qt_viewer.viewer.text_overlay.visible)
+        )
+        self.qt_viewer.viewer.axis.events.visible.connect(
+            lambda x: self.tools_axes_btn.setChecked(self.qt_viewer.viewer.axis.visible)
         )
 
     def _toggle_grid_lines_visible(self, state):
@@ -159,6 +169,9 @@ class QtViewRightToolbar(QtMiniToolbar):
         dlg = QtTextOverlayControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
 
+    def _toggle_axes_visible(self, state):
+        self.qt_viewer.viewer.axis.visible = state
+
     def on_open_axes_config(self):
         """Open scalebar config."""
         from napari_plot._qt.component_controls.qt_axis_controls import QtAxisControls
@@ -172,3 +185,10 @@ class QtViewRightToolbar(QtMiniToolbar):
 
         dlg = QtCameraControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
+
+    def on_open_save_figure(self) -> None:
+        """Show scale bar controls for the viewer."""
+        from qtextra._napari.common.widgets.screenshot_dialog import QtScreenshotDialog
+
+        dlg = QtScreenshotDialog(self.view, self)
+        dlg.show_above_widget(self.tools_save_btn)

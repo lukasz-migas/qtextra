@@ -12,7 +12,7 @@ class QtLabeledProgressBar(QWidget):
 
     def __init__(self, parent: ty.Optional[QWidget] = None, progress: ty.Optional[Progress] = None) -> None:
         super().__init__(parent)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
         self.progress = progress
 

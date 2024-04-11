@@ -61,12 +61,14 @@ class QtViewToolbar(QWidget):
         self.tools_erase_btn.hide()
         self.tools_zoomout_btn = toolbar_right.insert_qta_tool("zoom_out", tooltip="Zoom-out", func=viewer.reset_view)
         # view modifiers
-        toolbar_right.insert_separator()
         self.tools_clip_btn = toolbar_right.insert_qta_tool(
-            "clipboard", tooltip="Copy figure to clipboard", func=self.qt_viewer.clipboard
+            "clipboard",
+            tooltip="Copy figure to clipboard",
+            func=self.qt_viewer.clipboard,
+            func_menu=self.on_open_save_figure,
         )
         self.tools_save_btn = toolbar_right.insert_qta_tool(
-            "save", tooltip="Save figure", func=self.qt_viewer.on_save_figure
+            "save", tooltip="Save figure", func=self.qt_viewer.on_save_figure, func_menu=self.on_open_save_figure
         )
         self.tools_colorbar_btn = toolbar_right.insert_qta_tool(
             "colorbar", tooltip="Show/hide colorbar", checkable=True
@@ -76,12 +78,16 @@ class QtViewToolbar(QWidget):
             "ruler",
             tooltip="Show/hide scalebar",
             checkable=True,
+            check=self.viewer.scale_bar.visible,
+            func=self._toggle_scale_bar_visible,
         )
         self.tools_scalebar_btn.connect_to_right_click(self.on_open_scalebar_config)
         self.tools_text_btn = toolbar_right.insert_qta_tool(
             "text",
             tooltip="Show/hide text label",
-            checkable=True,
+            check=self.viewer.text_overlay.visible,
+            func=self._toggle_text_visible,
+            func_menu=self.on_open_text_config,
         )
         self.tools_text_btn.connect_to_right_click(self.on_open_text_config)
         if self.allow_crosshair:
@@ -89,8 +95,10 @@ class QtViewToolbar(QWidget):
                 "crosshair",
                 tooltip="Show/hide crosshair",
                 checkable=True,
+                check=self.viewer.cross_hair.visible,
+                func=self._toggle_crosshair_visible,
+                func_menu=self.on_open_crosshair_config,
             )
-            self.tools_cross_btn.connect_to_right_click(self.on_open_crosshair_config)
         self.tools_grid_btn = toolbar_right.insert_qta_tool(
             "grid",
             tooltip="Show/hide grid",
@@ -156,8 +164,6 @@ class QtViewToolbar(QWidget):
 
     def connect_toolbar(self):
         """Connect events."""
-        self.tools_scalebar_btn.setChecked(self.qt_viewer.viewer.scale_bar.visible)
-        self.tools_scalebar_btn.clicked.connect(self._toggle_scale_bar_visible)
         self.qt_viewer.viewer.scale_bar.events.visible.connect(
             lambda x: self.tools_scalebar_btn.setChecked(self.qt_viewer.viewer.scale_bar.visible)
         )
@@ -180,15 +186,11 @@ class QtViewToolbar(QWidget):
         except KeyError:
             pass
 
-        self.tools_text_btn.setChecked(self.qt_viewer.viewer.text_overlay.visible)
-        self.tools_text_btn.clicked.connect(self._toggle_text_visible)
         self.qt_viewer.viewer.text_overlay.events.visible.connect(
             lambda x: self.tools_text_btn.setChecked(self.qt_viewer.viewer.text_overlay.visible)
         )
 
         if self.allow_crosshair:
-            self.tools_cross_btn.setChecked(self.qt_viewer.viewer.cross_hair.visible)
-            self.tools_cross_btn.clicked.connect(self._toggle_crosshair_visible)
             self.qt_viewer.viewer.cross_hair.events.visible.connect(
                 lambda x: self.tools_cross_btn.setChecked(self.qt_viewer.viewer.cross_hair.visible)
             )
@@ -235,3 +237,10 @@ class QtViewToolbar(QWidget):
 
         dlg = QtColorBarControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
+
+    def on_open_save_figure(self) -> None:
+        """Show scale bar controls for the viewer."""
+        from qtextra._napari.common.widgets.screenshot_dialog import QtScreenshotDialog
+
+        dlg = QtScreenshotDialog(self.view, self)
+        dlg.show_above_widget(self.tools_save_btn)

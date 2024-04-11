@@ -1,4 +1,5 @@
 """Mini toolbar."""
+
 import typing as ty
 
 from qtpy.QtCore import Qt
@@ -42,6 +43,7 @@ class QtMiniToolbar(QFrame):
         self,
         name: str,
         func: ty.Optional[ty.Callable] = None,
+        func_menu: ty.Optional[ty.Callable] = None,
         tooltip: ty.Optional[str] = None,
         checkable: bool = False,
         check: bool = False,
@@ -62,6 +64,7 @@ class QtMiniToolbar(QFrame):
             checkable=checkable,
             checked=check,
             func=func,
+            func_menu=func_menu,
             small=small,
             average=average,
             properties={"wide_border": True},
@@ -133,6 +136,7 @@ class QtMiniToolbar(QFrame):
         name: str,
         flat: bool = False,
         func: ty.Optional[ty.Callable] = None,
+        func_menu: ty.Optional[ty.Callable] = None,
         tooltip: ty.Optional[str] = None,
         checkable: bool = False,
         check: bool = False,
@@ -141,7 +145,14 @@ class QtMiniToolbar(QFrame):
     ):
         """Insert tool."""
         btn = self._make_qta_button(
-            name, flat=flat, func=func, tooltip=tooltip, checkable=checkable, check=check, size=size
+            name,
+            flat=flat,
+            func=func,
+            func_menu=func_menu,
+            tooltip=tooltip,
+            checkable=checkable,
+            check=check,
+            size=size,
         )
         self.insert_button(btn)
         if hidden:
