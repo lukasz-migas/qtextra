@@ -1,4 +1,5 @@
 """Layer buttons."""
+
 import typing as ty
 
 from napari._qt.widgets.qt_viewer_buttons import QtViewerPushButton
@@ -8,9 +9,9 @@ import qtextra.helpers as hp
 from qtextra.widgets.qt_image_button import QtImagePushButton
 
 
-def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
+def make_qta_btn(parent, icon_name: str, tooltip: str, **kwargs: ty.Any) -> QtImagePushButton:
     """Make a button with an icon from QtAwesome."""
-    btn = hp.make_qta_btn(*args, **kwargs)
+    btn = hp.make_qta_btn(parent=parent, icon_name=icon_name, tooltip=tooltip, **kwargs)
     btn.set_medium()
     btn.setProperty("layer_button", True)
     return btn
@@ -41,36 +42,34 @@ class QtLayerButtons(QFrame):
         )
         self.delete_btn.setParent(self)
 
-        self.new_points_btn = QtViewerPushButton(
+        self.new_points_btn = make_qta_btn(
+            self,
             "new_points",
             "Add new points layer",
-            lambda: self.viewer.add_points(
+            func=lambda: self.viewer.add_points(
                 ndim=2,
                 scale=self.viewer.layers.extent.step,
             ),
         )
-        self.new_points_btn.setParent(self)
-
-        self.new_shapes_btn = QtViewerPushButton(
+        self.new_shapes_btn = make_qta_btn(
+            self,
             "new_shapes",
             "Add new shapes layer",
-            lambda: self.viewer.add_shapes(
+            func=lambda: self.viewer.add_shapes(
                 ndim=2,
                 scale=self.viewer.layers.extent.step,
             ),
         )
-        self.new_shapes_btn.setParent(self)
-
-        self.new_v_infline_btn = QtViewerPushButton(
+        self.new_v_infline_btn = make_qta_btn(
+            self,
             "new_inf_line",
             "Add new vertical infinite line layer",
-            lambda: self.viewer.add_inf_line(
+            func=lambda: self.viewer.add_inf_line(
                 [0],
                 scale=self.viewer.layers.extent.step,
                 orientation="vertical",
             ),
         )
-        self.new_v_infline_btn.setParent(self)
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -106,10 +105,11 @@ class QtViewerButtons(QFrame):
 
         self.viewer = viewer
 
-        self.resetViewButton = QtViewerPushButton(
+        self.resetViewButton = make_qta_btn(
+            self,
             "home",
-            "Reset view (Ctrl-R)",
-            lambda: self.viewer.reset_view(),
+            "Reset view",
+            func=lambda: self.viewer.reset_view(),
         )
 
         layout = QHBoxLayout()

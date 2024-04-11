@@ -174,14 +174,14 @@ class QtViewRightToolbar(QtMiniToolbar):
 
     def on_open_axes_config(self):
         """Open scalebar config."""
-        from napari_plot._qt.component_controls.qt_axis_controls import QtAxisControls
+        from qtextra._napari.line.component_controls.qt_axis_controls import QtAxisControls
 
         dlg = QtAxisControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
 
     def on_open_camera_config(self):
         """Open scalebar config."""
-        from napari_plot._qt.component_controls.qt_camera_controls import QtCameraControls
+        from qtextra._napari.line.component_controls.qt_camera_controls import QtCameraControls
 
         dlg = QtCameraControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
