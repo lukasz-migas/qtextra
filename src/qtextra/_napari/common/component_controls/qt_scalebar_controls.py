@@ -1,4 +1,5 @@
 """ScaleBar model controls."""
+
 import numpy as np
 from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.utils.events import disconnect_events
@@ -9,7 +10,6 @@ import qtextra.helpers as hp
 from qtextra._napari.common.components._scalebar_constants import UNITS_TRANSLATIONS
 from qtextra._napari.common.components._viewer_constants import POSITION_TRANSLATIONS
 from qtextra._napari.image.components.viewer_model import ViewerModel
-
 from qtextra.widgets.qt_dialog import QtFramelessPopup
 
 
@@ -217,5 +217,7 @@ def get_value_for_unit(value: str) -> tuple[float, str]:
     elif value == "px":
         return 1, UNITS_TRANSLATIONS[value]
     elif "um" in value:
+        if value[:-2] == "":
+            return 1, UNITS_TRANSLATIONS["um"]
         return float(value[:-2]), UNITS_TRANSLATIONS["um"]
     return 1, UNITS_TRANSLATIONS[""]

@@ -163,14 +163,18 @@ def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[st
         The combined stylesheet.
     """
     stylesheet = ""
-    for key in sorted(STYLES):
-        file = STYLES[key]
-        with open(file) as f:
-            stylesheet += f.read()
-    if extra:
-        for file in extra:
+    try:
+        for key in sorted(STYLES):
+            file = STYLES[key]
+            print(key, file)
             with open(file) as f:
                 stylesheet += f.read()
+        if extra:
+            for file in extra:
+                with open(file) as f:
+                    stylesheet += f.read()
+    except FileNotFoundError as e:
+        logger.error(f"Failed to load stylesheet: {e}")
 
     if theme:
         from qtextra.config.theme import THEMES
