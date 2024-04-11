@@ -4,7 +4,7 @@ from __future__ import annotations
 import typing as ty
 
 from qtpy.QtCore import QEvent, QObject, Signal
-from qtpy.QtWidgets import QFormLayout, QSizeGrip, QWidget
+from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.utils.table_config import TableConfig
@@ -12,9 +12,9 @@ from qtextra.widgets.qt_dialog import QtFramelessTool
 from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
 
 
-def filter_selected(options: list[str], all_options: list[str]) -> list[str]:
+def filter_selected(current_options: list[str], all_options: list[str]) -> list[str]:
     """Filter selected options."""
-    return [option for option in options if option in all_options]
+    return [option for option in current_options if option in all_options]
 
 
 def format_options(options: list[str]) -> str:
@@ -207,7 +207,7 @@ class QtMultiSelect(QWidget):
 
     def set_options(self, options: list[str], selected_options: list[str]) -> None:
         """List of options."""
-        selected_options = filter_selected(options, selected_options)
+        selected_options = filter_selected(selected_options, options)
         self.options = options
         self.selected_options = selected_options
         self.text_edit.setText(format_options(selected_options))
@@ -217,7 +217,7 @@ class QtMultiSelect(QWidget):
         if selected_options is None:
             selected_options = []
         if self.options:
-            selected_options = filter_selected(self.options, selected_options)
+            selected_options = filter_selected(selected_options, self.options)
         self.selected_options = selected_options
         self.text_edit.setText(format_options(selected_options))
 

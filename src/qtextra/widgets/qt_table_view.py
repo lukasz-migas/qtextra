@@ -787,6 +787,15 @@ class QtCheckableTableView(QTableView):
         """Get all checked."""
         return self.model().get_all_checked()
 
+    def get_all_shown(self) -> list[int]:
+        """Get all checked."""
+        model = self.model()
+        shown = []
+        for index in range(model.rowCount()):
+            if not self.isRowHidden(index):
+                shown.append(index)
+        return shown
+
     def get_all_unchecked(self) -> list[int]:
         """Get all unchecked.
 
