@@ -166,7 +166,6 @@ def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[st
     try:
         for key in sorted(STYLES):
             file = STYLES[key]
-            print(key, file)
             with open(file) as f:
                 stylesheet += f.read()
         if extra:

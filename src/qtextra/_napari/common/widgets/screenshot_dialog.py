@@ -73,7 +73,7 @@ class QtScreenshotDialog(QtFramelessPopup):
             canvas_only=self.canvas_only.isChecked(),
         )
 
-        dialog = ScreenshotDialog(save_func, self, HOME_DIRECTORY, history=[])
+        dialog = ScreenshotDialog(save_func, self.parent() or self, HOME_DIRECTORY, history=[])
         if dialog.exec_():
             pass
 
