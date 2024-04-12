@@ -21,7 +21,7 @@ class SystemSummaryWidget(QWidget):
         self.cpu_group_box = QGroupBox("CPU Summary")
         self.cpu_group_box_layout = QVBoxLayout()
         self.cpu_group_box_layout.setSpacing(0)
-        self.cpu_group_box_layout.setAlignment(Qt.AlignTop)
+        self.cpu_group_box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.cpu_group_box.setLayout(self.cpu_group_box_layout)
 
         # CPU freq
@@ -77,7 +77,7 @@ class SystemSummaryWidget(QWidget):
         self.memory_group_box = QGroupBox("Memory Summary")
         self.memory_group_box_layout = QVBoxLayout()
         self.memory_group_box_layout.setSpacing(0)
-        self.memory_group_box_layout.setAlignment(Qt.AlignTop)
+        self.memory_group_box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.memory_group_box.setLayout(self.memory_group_box_layout)
 
         self.free_memory_label = QLabel(
@@ -109,7 +109,7 @@ class SystemSummaryWidget(QWidget):
         self.gpu_group_box = QGroupBox("GPU Summary")
         self.gpu_group_box_layout = QVBoxLayout()
         self.gpu_group_box_layout.setSpacing(0)
-        self.gpu_group_box_layout.setAlignment(Qt.AlignTop)
+        self.gpu_group_box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.gpu_group_box.setLayout(self.gpu_group_box_layout)
 
         try:
@@ -187,7 +187,7 @@ class SystemSummaryPopup(QtFramelessPopup):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
         from random import choice
 

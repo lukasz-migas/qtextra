@@ -1,4 +1,5 @@
 """Qt widget that embeds the canvas."""
+
 from typing import TYPE_CHECKING
 
 from napari._qt.containers.qt_layer_list import QtLayerList
@@ -86,6 +87,7 @@ class QtViewer(QtViewerBase):
 
         # view widget
         main_layout = QHBoxLayout()
+        main_layout.setSpacing(1)
         main_layout.addLayout(image_layout)
 
         if add_toolbars:

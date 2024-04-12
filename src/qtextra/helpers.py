@@ -554,7 +554,7 @@ def make_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -593,7 +593,7 @@ def make_checkable_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -692,7 +692,7 @@ def make_searchable_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -901,7 +901,7 @@ def make_scroll_area(
     scroll_widget.setWidgetResizable(True)
     scroll_widget.setVerticalScrollBarPolicy(vertical)
     scroll_widget.setHorizontalScrollBarPolicy(horizontal)
-    scroll_widget.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
+    scroll_widget.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)  # type: ignore[attr-defined]
     return scroll_area, scroll_widget
 
 
@@ -1153,7 +1153,7 @@ def make_checkbox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if tristate:
         widget.setTristate(tristate)
     if func:
@@ -1189,7 +1189,7 @@ def make_slider(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     return widget
 
 
@@ -1274,7 +1274,7 @@ def make_labelled_slider(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     return widget
 
 
@@ -1312,7 +1312,7 @@ def make_int_spin_box(
     if suffix:
         widget.setSuffix(suffix)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
@@ -1351,7 +1351,7 @@ def make_double_spin_box(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
@@ -1372,7 +1372,7 @@ def make_radio_btn(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
     if checked:
         widget.setChecked(checked)
     if func:
@@ -1423,13 +1423,13 @@ def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtVertL
 
 def make_v_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     """Make vertical QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Preferred, Qw.QSizePolicy.Expanding)  # type: ignore[attr-defined]
+    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Preferred, Qw.QSizePolicy.Policy.Expanding)
     return widget
 
 
 def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     """Make horizontal QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Preferred)  # type: ignore[attr-defined]
+    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Preferred)
     return widget
 
 
@@ -1951,7 +1951,7 @@ def get_color(
         if as_hex:
             new_color = new_color.name()
         if as_array:
-            new_color = np.asarray(new_color.toTuple()) / 255
+            new_color = np.asarray([new_color.red(), new_color.green(), new_color.blue()]) / 255
     return new_color
 
 

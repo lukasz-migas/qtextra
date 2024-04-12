@@ -60,7 +60,7 @@ class QtToolButton(QToolButton):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():  # pragma: no cover
+    def _main():  # type: ignore[no-untyped-def]
         import sys
 
         from qtextra.utils.dev import qframe
@@ -77,4 +77,4 @@ if __name__ == "__main__":  # pragma: no cover
         frame.show()
         sys.exit(app.exec_())
 
-    _main()
+    _main()  # type: ignore[no-untyped-call]

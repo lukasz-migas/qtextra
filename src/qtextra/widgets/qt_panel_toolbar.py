@@ -34,10 +34,10 @@ class QtAboutWidget(QWidget):
 
         self._layout = QVBoxLayout(self)
         self._layout.addWidget(self.title_label)
-        self._layout.addWidget(self.description_label, stretch=True, alignment=Qt.AlignTop | Qt.AlignLeft)
+        self._layout.addWidget(self.description_label, stretch=True, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self._layout.addWidget(self.docs_label)
 
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     @classmethod
     def make_widget(cls, title: str, description: str, docs: str, parent=None):
@@ -298,7 +298,7 @@ class QtPanelToolbar(QToolBar):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
         from random import choice
 

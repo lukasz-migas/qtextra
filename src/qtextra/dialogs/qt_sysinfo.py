@@ -103,7 +103,7 @@ class QtSystemInfo(QDialog):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
 
         from qtextra.config import THEMES
@@ -115,4 +115,4 @@ if __name__ == "__main__":  # pragma: no cover
         dlg.show()
         sys.exit(dlg.exec_())
 
-    _main()
+    _main()  # type: ignore[no-untyped-call]

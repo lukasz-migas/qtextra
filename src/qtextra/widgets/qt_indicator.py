@@ -30,7 +30,7 @@ class QtIndicator(QWidget):
         self.opacity_anim.finished.connect(self.stop_pulse)
 
         self.setContentsMargins(2, 2, 2, 2)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
     @property
     def state(self):
@@ -88,7 +88,7 @@ class QtIndicator(QWidget):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
         from random import choice
 

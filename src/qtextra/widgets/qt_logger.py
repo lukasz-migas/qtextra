@@ -2,6 +2,7 @@
 
 Copied and modified from this post: http://plumberjack.blogspot.com/2019/11/a-qt-gui-for-logging.html
 """
+
 from __future__ import annotations
 
 import typing as ty
@@ -201,12 +202,11 @@ class QtLoggerDialog(QtFramelessTool):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.config import THEMES
-    from qtextra.utils.dev import qapplication
+    from qtextra.utils.dev import apply_style, qapplication
 
     app = qapplication(1)
     dlg = QtLoggerDialog()
-    THEMES.set_theme_stylesheet(dlg)
+    apply_style(dlg)
     dlg.show()
 
     logger.trace("TRACE")

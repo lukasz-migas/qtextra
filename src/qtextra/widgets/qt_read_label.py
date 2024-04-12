@@ -16,7 +16,7 @@ class QReadMoreLessLabel(QWidget):
 
         # Explanation text
         self.explanation_layout = QHBoxLayout()
-        self.explanation_layout.setAlignment(Qt.AlignTop)
+        self.explanation_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.mousePressEvent = self.state_toggle
 
         if "<moreless>" in text:
@@ -72,7 +72,7 @@ if __name__ == "__main__":  # pragma: no cover
     Even some more text
     """
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
         from random import choice
 

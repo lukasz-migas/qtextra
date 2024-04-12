@@ -1,4 +1,5 @@
 """Qt flow layout."""
+
 from qtpy.QtCore import QPoint, QRect, QSize, Qt
 from qtpy.QtWidgets import QLayout, QSizePolicy
 
@@ -52,7 +53,7 @@ class QtFlowLayout(QLayout):
 
     def expandingDirections(self):
         """Get expanding direction."""
-        return Qt.Orientations(Qt.Orientation(0))
+        return Qt.Orientation(Qt.Orientation(0))
 
     def hasHeightForWidth(self) -> bool:
         """Check height for width."""
@@ -93,10 +94,10 @@ class QtFlowLayout(QLayout):
         for item in self.items:
             wid = item.widget()
             x_spacing = self.spacing() + wid.style().layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Orientation.Horizontal
+                QSizePolicy.ControlType.PushButton, QSizePolicy.ControlType.PushButton, Qt.Orientation.Horizontal
             )
             y_spacing = self.spacing() + wid.style().layoutSpacing(
-                QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Orientation.Vertical
+                QSizePolicy.ControlType.PushButton, QSizePolicy.ControlType.PushButton, Qt.Orientation.Vertical
             )
             x_next = x + item.sizeHint().width() + x_spacing
             if x_next - x_spacing > rect.right() and line_height > 0:

@@ -1,4 +1,5 @@
 """Sentry monitoring service."""
+
 """Init."""
 import typing as ty
 
@@ -52,10 +53,13 @@ def ask_opt_in(settings: Settings, force=False, parent=None):
     assert hasattr(settings, "telemetry_enabled"), "Settings must have telemetry_enabled attribute."
     assert hasattr(settings, "telemetry_with_locals"), "Settings must have telemetry_with_locals attribute."
 
-    if not force and settings.telemetry_enabled:
+    enabled_attr = "enabled" if hasattr(settings, "enabled") else "telemetry_enabled"
+    with_locals_attr = "with_locals" if hasattr(settings, "with_locals") else "telemetry_with_locals"
+
+    if not force and getattr(settings, enabled_attr) is not None:
         return settings
 
-    dlg = TelemetryOptInDialog(parent=parent, with_locals=settings.telemetry_with_locals)
+    dlg = TelemetryOptInDialog(parent=parent, with_locals=getattr(settings, with_locals_attr))
     send: ty.Optional[bool] = None
     if bool(dlg.exec()):
         send = True  # pragma: no cover
@@ -63,8 +67,8 @@ def ask_opt_in(settings: Settings, force=False, parent=None):
         send = False  # pragma: no cover
 
     if send is not None:
-        settings.telemetry_enabled = send
-        settings.telemetry_with_locals = dlg._send_locals
+        setattr(settings, enabled_attr, send)
+        setattr(settings, with_locals_attr, dlg._send_locals)
     return settings
 
 
@@ -74,12 +78,15 @@ def install_error_monitor(settings: Settings, **extra_kws):
     if INSTALLED:
         return
 
+    enabled_attr = "enabled" if hasattr(settings, "enabled") else "telemetry_enabled"
+    with_locals_attr = "with_locals" if hasattr(settings, "with_locals") else "telemetry_with_locals"
+
     settings = ask_opt_in(settings)
-    if not settings.telemetry_enabled:
+    if not getattr(settings, enabled_attr):
         return
 
     _settings = SENTRY_SETTINGS.copy()
-    _settings["with_locals"] = settings.telemetry_with_locals
+    _settings["with_locals"] = getattr(settings, with_locals_attr)
     sentry_sdk.init(**_settings)
     for k, v in _get_tags().items():
         sentry_sdk.set_tag(k, v)
