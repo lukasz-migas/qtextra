@@ -34,7 +34,9 @@ class QtAboutWidget(QWidget):
 
         self._layout = QVBoxLayout(self)
         self._layout.addWidget(self.title_label)
-        self._layout.addWidget(self.description_label, stretch=True, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self._layout.addWidget(
+            self.description_label, stretch=True, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+        )
         self._layout.addWidget(self.docs_label)
 
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

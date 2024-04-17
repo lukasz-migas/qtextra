@@ -81,7 +81,9 @@ class QtDataFrameWidget(Qw.QWidget):
         # These placeholders will ensure the size of the blank spaces beside our headers
         self.gridLayout.addWidget(TrackingSpacer(ref_x=self.columnHeader.verticalHeader()), 3, 1, 1, 1)
         self.gridLayout.addWidget(TrackingSpacer(ref_y=self.indexHeader.horizontalHeader()), 1, 2, 1, 1)
-        self.gridLayout.addItem(Qw.QSpacerItem(0, 0, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding), 0, 0, 1, 1)
+        self.gridLayout.addItem(
+            Qw.QSpacerItem(0, 0, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding), 0, 0, 1, 1
+        )
 
         # Styling
         for header in [self.indexHeader, self.columnHeader]:

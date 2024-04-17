@@ -3,7 +3,7 @@ import typing as ty
 
 import numpy as np
 from napari.layers.utils.color_transformations import ColorType
-from napari.utils.colormaps.standardize_color import transform_color, rgb_to_hex
+from napari.utils.colormaps.standardize_color import rgb_to_hex, transform_color
 from qtpy.QtCore import QEvent, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QColorDialog, QFrame, QPushButton, QWidget
@@ -146,7 +146,7 @@ class QtColorSwatch(QFrame):
     @Slot(np.ndarray)
     def _update_swatch_style(self, _color: ColorType) -> None:
         """Update appearance."""
-        rgba = f'rgba({",".join((str(int(x*255)) for x in self._color))})'
+        rgba = f'rgba({",".join(str(int(x*255)) for x in self._color)})'
         self.setStyleSheet("#colorSwatch {background-color: " + rgba + ";}")
 
     def mouseReleaseEvent(self, event: QEvent):
