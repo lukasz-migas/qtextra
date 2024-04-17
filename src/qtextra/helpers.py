@@ -2506,7 +2506,7 @@ def show_right_of_mouse(widget: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(-14, sz_hint.height() / 4)  # type: ignore[call-overload]
+    pos -= QPoint(-20, sz_hint.height() / 8)  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
