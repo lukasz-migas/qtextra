@@ -21,7 +21,7 @@ class QtSplashScreen(QSplashScreen):
         super().__init__(pm)
         self.show()
         hp.set_font(self, font_size=16)
-        self.showMessage(f"Loading {self.TITLE}...", alignment=Qt.AlignLeft, color=Qt.black)
+        self.showMessage(f"Loading {self.TITLE}...", alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.black)
 
         EVENTS.evt_splash_msg.connect(self.on_message)
         EVENTS.evt_splash_close.connect(self.close)
@@ -29,7 +29,7 @@ class QtSplashScreen(QSplashScreen):
     @Slot(str)
     def on_message(self, msg: str):
         """Show message."""
-        self.showMessage(msg, alignment=Qt.AlignLeft, color=Qt.white)
+        self.showMessage(msg, alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.white)
 
 
 if __name__ == "__main__":  # pragma: no cover

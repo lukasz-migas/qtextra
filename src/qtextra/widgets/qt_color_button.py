@@ -188,7 +188,7 @@ class QtColorSwatch(QFrame):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
 
         from qtpy import QtWidgets

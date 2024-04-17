@@ -432,10 +432,10 @@ class QtBase(TimerMixin, ScreenshotMixin):
     def on_apply(self, *args):
         """Update config."""
 
-    def _on_teardown(self):
+    def on_teardown(self) -> None:
         """Teardown."""
 
-    def connect_events(self, state: bool = True):
+    def connect_events(self, state: bool = True) -> None:
         """Connect events."""
 
     def closeEvent(self, event):

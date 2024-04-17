@@ -463,7 +463,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     val = True
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         pass
 
         from qtextra.assets import QTA_MAPPING

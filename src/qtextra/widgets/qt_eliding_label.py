@@ -11,7 +11,7 @@ class QtElidingLabel(QElidingLabel):
         text="",
         bold: bool = False,
         parent=None,
-        elide: Qt.TextElideMode = Qt.ElideMiddle,
+        elide: Qt.TextElideMode = Qt.TextElideMode.ElideMiddle,
         multiline: bool = False,
     ):
         super().__init__(text, parent=parent)
@@ -28,7 +28,7 @@ class QtElidingLabel(QElidingLabel):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():  # pragma: no cover
+    def _main():  # type: ignore[no-untyped-def]
         import sys
 
         from qtextra.utils.dev import qframe

@@ -32,8 +32,8 @@ class QtDirectoryWidget(QFrame):
         self.checkbox = hp.make_checkbox(self, tooltip="Click here to check item")
         self.checkbox.stateChanged.connect(self._on_check)
 
-        self.path_label = hp.make_eliding_label2(self, path, elide=Qt.ElideRight, tooltip="Directory path")
-        self.path_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+        self.path_label = hp.make_eliding_label2(self, path, elide=Qt.TextElideMode.ElideRight, tooltip="Directory path")
+        self.path_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         self.path_label.setMinimumWidth(600)
 
         self.new_icon = hp.make_qta_btn(self, "new", tooltip="This directory does not exist and will be created.")
@@ -53,7 +53,7 @@ class QtDirectoryWidget(QFrame):
 
         self.row = QHBoxLayout()
         self.row.addWidget(self.checkbox, alignment=Qt.AlignmentFlag.AlignVCenter)
-        self.row.addWidget(self.path_label, stretch=True, alignment=Qt.AlignLeft)
+        self.row.addWidget(self.path_label, stretch=True, alignment=Qt.AlignmentFlag.AlignLeft)
         self.row.addWidget(self.new_icon)
         self.row.addWidget(self.warning_icon)
         self.row.addWidget(self.open_btn)
@@ -159,7 +159,7 @@ class QtDirectoryManager(QScrollArea):
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._layout = main_layout
 
     @property
@@ -240,7 +240,7 @@ class QtDirectoryManager(QScrollArea):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         def _check():
             print(widget.checked_paths)
 

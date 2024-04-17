@@ -73,17 +73,17 @@ class QtTagButton(QFrame):
         self.selected.set_small()
         if not self._allow_selected:
             self.selected.evt_clicked.connect(self.evt_clicked.emit)
-        self.selected.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.selected.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.label = QtLeftPillLabel(parent=self, text=label)
-        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+        self.label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         if not label:
             self.label.setVisible(False)
 
         self.action_btn = QtPillActionButton(parent=self)
         self.action_btn.set_small()
         self.action_btn.clicked.connect(self._on_action)
-        self.action_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.MinimumExpanding)
+        self.action_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Policy.MinimumExpanding)
         self.action_btn.setVisible(allow_action)
         self.action_btn.mode = action_type
         self.setProperty("mode", action_type)
@@ -96,7 +96,7 @@ class QtTagButton(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         self.setLayout(layout)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.label.adjustSize()
         self.action_btn.adjustSize()
@@ -159,7 +159,7 @@ class QtTagManager(QWidget):
 
         self._layout = QtFlowLayout(self)
         self.widgets: Dict[str, QtTagButton] = {}
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def add_tag(
         self,
@@ -234,7 +234,7 @@ class QtTagManager(QWidget):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():  # pragma: no cover
+    def _main():  # type: ignore[no-untyped-def]
         import sys
 
         from qtextra.utils.dev import qframe

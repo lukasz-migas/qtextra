@@ -105,7 +105,7 @@ class QtListWidget(QListWidget):
         super().__init__(parent)
         self.setSpacing(1)
         self.setMinimumHeight(12)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.setUniformItemSizes(True)
 
     def closeEvent(self, event):
@@ -113,7 +113,7 @@ class QtListWidget(QListWidget):
         self.teardown()
         return super().closeEvent(event)
 
-    def teardown(self):
+    def teardown(self) -> None:
         """Teardown method."""
 
     def refresh_list(self):
@@ -292,7 +292,7 @@ class QtListWidget(QListWidget):
         item = QListWidgetItem(parent=self)
         item.item_model = item_model
         widget = self._make_widget(item)
-        widget.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         item.setSizeHint(widget.sizeHint())
         self.addItem(item)
         self.setItemWidget(item, widget)

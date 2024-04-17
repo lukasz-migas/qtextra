@@ -171,7 +171,7 @@ class QtStatusbarWidget(QtStatusbarIconWidget):
         self.layout().addWidget(self.label_value)
 
         # See spyder-ide/spyder#9044.
-        self.label_value.setAlignment(Qt.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.label_value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.label_value.setFont(hp.get_font(7, QFont.Bold))
         if hide_label:
             self.label_value.setVisible(False)

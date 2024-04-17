@@ -144,16 +144,16 @@ class QtOverlay(QWidget):
             height = _get_size(effective_sh.height(), minsize.height(), maxsize.height(), v_policy)
 
         size = QSize(width, height)
-        if alignment & Qt.AlignLeft:
+        if alignment & Qt.AlignmentFlag.AlignLeft:
             x = bounds.x()
-        elif alignment & Qt.AlignRight:
+        elif alignment & Qt.AlignmentFlag.AlignRight:
             x = bounds.x() + bounds.width() - size.width()
         else:
             x = bounds.x() + max(0, bounds.width() - size.width()) // 2
 
-        if alignment & Qt.AlignTop:
+        if alignment & Qt.AlignmentFlag.AlignTop:
             y = bounds.y()
-        elif alignment & Qt.AlignBottom:
+        elif alignment & Qt.AlignmentFlag.AlignBottom:
             y = bounds.y() + bounds.height() - size.height()
         else:
             y = bounds.y() + max(0, bounds.height() - size.height()) // 2
@@ -200,7 +200,7 @@ class QtOverlayLabel(QtOverlay):
         self,
         parent=None,
         text="",
-        alignment=Qt.AlignTop,
+        alignment=Qt.AlignmentFlag.AlignTop,
         **kwargs,
     ):
         super().__init__(parent, alignment=alignment, **kwargs)
@@ -264,7 +264,7 @@ class QtMessageWidget(QFrame):
         self.btn_row.addWidget(self.dismiss_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         row = QHBoxLayout()
-        row.addWidget(self.icon_label, alignment=Qt.AlignTop)
+        row.addWidget(self.icon_label, alignment=Qt.AlignmentFlag.AlignTop)
         row.addWidget(self.text_label, stretch=True)
         row.setSpacing(5)
 
@@ -329,7 +329,7 @@ class QtOverlayMessage(QtOverlay):
         parent=None,
         text="",
         icon_name="",
-        alignment=Qt.AlignTop,
+        alignment=Qt.AlignmentFlag.AlignTop,
         word_wrap=False,
         can_dismiss: bool = True,
         **kwargs,
@@ -380,7 +380,7 @@ class QtOverlayDismissMessage(QtOverlayMessage):
         parent=None,
         text="",
         icon_name="",
-        alignment=Qt.AlignTop,
+        alignment=Qt.AlignmentFlag.AlignTop,
         word_wrap=False,
         dismiss_btn=True,
         ok_btn=False,

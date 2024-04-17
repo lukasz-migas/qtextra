@@ -98,7 +98,7 @@ class NapariLineView(ViewerBase):
         # own instances
         self._instances.append(self)
 
-    def _update_view(self):
+    def _update_view(self) -> None:
         self.widget.canvas.native.update()
         xmin, xmax, ymin, ymax = self.viewer.camera.rect
         self.viewer.camera.rect = xmin + 1, xmax, ymin, ymax
@@ -277,7 +277,7 @@ class NapariLineView(ViewerBase):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
 
         from qtextra.config.theme import THEMES

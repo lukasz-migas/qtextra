@@ -58,7 +58,7 @@ class XZoomPopup(ZoomPopup):
         super().__init__(viewer, parent=parent)
         self.setup()
 
-    def setup(self):
+    def setup(self) -> None:
         """Setup widget."""
         with hp.qt_signals_blocked(self.position):
             xmin, xmax, _, _ = self.ref_viewer()._get_rect_extent()

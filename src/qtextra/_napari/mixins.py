@@ -1,8 +1,10 @@
 """Various toolbars that are used throughout the app."""
+
 from __future__ import annotations
 
 import typing as ty
 
+import numpy as np
 from qtpy.QtWidgets import QWidget
 
 import qtextra.helpers as hp
@@ -29,7 +31,7 @@ class ImageViewMixin:
         disable_controls=False,
         add_toolbars=True,
         allow_extraction=True,
-            disable_new_layers: bool = False,
+        disable_new_layers: bool = False,
         **kwargs,
     ) -> NapariImageView:
         """Make image view."""
@@ -44,6 +46,37 @@ class ImageViewMixin:
             disable_new_layers=disable_new_layers,
             **kwargs,
         )
+
+    def _plot_image(
+        self, image: ty.Union[np.ndarray, ty.Dict[str, np.ndarray]], *, view_image: ty.Optional[NapariImageView] = None
+    ):
+        """Update image or images."""
+        from ionglow.config import ENV
+
+        if view_image is None:
+            view_image = self.view_image
+
+        # update image
+        if image is None:
+            return
+        # single-dataset mode
+        if isinstance(image, np.ndarray):
+            if image.ndim == 1:
+                image = ENV.reshape(image)
+            if image.ndim == 3:
+                self.image_layer = view_image.plot_rgb(image)
+            else:
+                self.image_layer = view_image.plot(image)
+        # multi-dataset mode
+        else:
+            layers = {}
+            for name, array in image.items():
+                if array.ndim == 1:
+                    array = ENV.reshape(array)
+                tr = ENV.get_image_transformation(name)
+                layers[name] = view_image.add_image(array, name=name, **tr, metadata={"dataset": name})
+            self.image_layer = layers
+        return True
 
 
 class LineViewMixin:

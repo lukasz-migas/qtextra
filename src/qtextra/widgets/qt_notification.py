@@ -104,7 +104,7 @@ class QtNotification(SubWindowBase):
         self.message.setWordWrap(True)
         self.message.setMinimumWidth(self.MIN_WIDTH - 200)
         self.message.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.message.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+        self.message.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.expand_btn = QtExpandButton(parent=self.row1_widget)
         self.expand_btn.expanded = True
@@ -135,11 +135,11 @@ class QtNotification(SubWindowBase):
         self._timer_indicator.setTextVisible(False)
 
         row_1 = QHBoxLayout(self.row1_widget)
-        row_1.addWidget(self.severity_icon, alignment=Qt.AlignTop)
-        row_1.addWidget(self.message, stretch=1, alignment=Qt.AlignTop)
-        row_1.addWidget(self.expand_btn, alignment=Qt.AlignTop)
-        row_1.addWidget(self.settings_btn, alignment=Qt.AlignTop)
-        row_1.addWidget(self.dismiss_btn, alignment=Qt.AlignTop)
+        row_1.addWidget(self.severity_icon, alignment=Qt.AlignmentFlag.AlignTop)
+        row_1.addWidget(self.message, stretch=1, alignment=Qt.AlignmentFlag.AlignTop)
+        row_1.addWidget(self.expand_btn, alignment=Qt.AlignmentFlag.AlignTop)
+        row_1.addWidget(self.settings_btn, alignment=Qt.AlignmentFlag.AlignTop)
+        row_1.addWidget(self.dismiss_btn, alignment=Qt.AlignmentFlag.AlignTop)
         row_1.setSpacing(5)
 
         self.row2_widget = QWidget(self)
@@ -421,7 +421,7 @@ def show_tb(notification: ErrorNotification, parent):
 
     debug_btn.clicked.connect(_enter_debug_mode)
     tb_dialog.layout().addWidget(text)
-    tb_dialog.layout().addWidget(debug_btn, 0, Qt.AlignRight)
+    tb_dialog.layout().addWidget(debug_btn, 0, Qt.AlignmentFlag.AlignRight)
     tb_dialog.show()
 
 
@@ -480,8 +480,8 @@ def show_report(notification: ErrorNotification, parent):
 
     btn_layout = QHBoxLayout()
     btn_layout.addStretch(True)
-    btn_layout.addWidget(copy_btn, 0, Qt.AlignRight)
-    btn_layout.addWidget(github_btn, 0, Qt.AlignRight)
+    btn_layout.addWidget(copy_btn, 0, Qt.AlignmentFlag.AlignRight)
+    btn_layout.addWidget(github_btn, 0, Qt.AlignmentFlag.AlignRight)
 
     report_dialog.layout().addWidget(text)
     report_dialog.layout().addLayout(btn_layout)
@@ -503,7 +503,7 @@ def _debug_tb(tb):
 
 if __name__ == "__main__":  # pragma: no cover
 
-    def _main():
+    def _main():  # type: ignore[no-untyped-def]
         import sys
         from random import choice
 
