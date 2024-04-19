@@ -1,4 +1,5 @@
 """Simple dialog to select between two options."""
+
 import typing as ty
 from functools import partial
 
