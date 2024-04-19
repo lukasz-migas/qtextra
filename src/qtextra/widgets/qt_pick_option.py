@@ -54,9 +54,9 @@ class QtScrollablePickOption(QDialog):
     def __init__(self, parent: QWidget, text: str, options: ty.Dict[str, str]):
         super().__init__(parent)
         self.setWindowTitle("Select option")
-        min_height = min(400, 40 * len(options) + 50)
+        min_height = min(400, 40 * len(options) + 70)
 
-        self.setMinimumSize(300, min_height)
+        self.setMinimumSize(500, min_height)
 
         self.options = options
         self.responses = {}

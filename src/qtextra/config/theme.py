@@ -11,8 +11,9 @@ from loguru import logger
 from psygnal import EventedModel
 from pydantic import PrivateAttr, ValidationError, validator
 from pydantic.color import Color
-from qtpy.QtCore import QDateTime, QTime, Signal
-from qtpy.QtWidgets import QWidget
+from qtpy.QtCore import QDateTime, Qt, QTime, Signal
+from qtpy.QtGui import QColor, QPalette
+from qtpy.QtWidgets import QApplication, QWidget
 
 from qtextra.config.config import ConfigBase, _get_previous_configs
 from qtextra.utils.appdirs import USER_CACHE_DIR
@@ -455,6 +456,16 @@ class Themes(ConfigBase):
         self.evt_theme_changed.emit()
         self.evt_theme_icon_changed.emit()
         logger.debug(f"Changed theme to '{value}'")
+
+    def update_palette(self):
+        """Get updated palette."""
+        qapp = QApplication.instance()
+        if qapp is None:
+            return
+        palette = qapp.palette()
+        palette.setColor(QPalette.ColorRole.Link, QColor("#f56833"))
+        palette.setColor(QPalette.ColorRole.LinkVisited, QColor("#f56833"))
+        qapp.setPalette(palette)
 
     @property
     def syntax_style(self) -> str:
