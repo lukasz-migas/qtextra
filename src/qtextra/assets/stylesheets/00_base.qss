@@ -220,11 +220,13 @@ QAbstractSpinBox::down-button {
     subcontrol-origin: margin;
     width: 20px;
     height: 20px;
+    border: 1px solid {{ background }};
+    background: {{ darken(background, 20) }};
 }
 
 QAbstractSpinBox::up-button:hover,
 QAbstractSpinBox::down-button:hover {
-  background-color: {{ primary }};
+        background: {{ darken(background, 40) }};
 }
 
 QWidget[emphasized="true"] QAbstractSpinBox::up-button:hover,
@@ -298,7 +300,7 @@ QCheckBox::indicator:hover {
 }
 
 QCheckBox::indicator:unchecked {
-  image: none;
+  image: url("theme_{{ id }}:/2d.svg");
 }
 
 QCheckBox::indicator:checked {

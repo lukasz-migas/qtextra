@@ -554,7 +554,7 @@ def make_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -593,7 +593,7 @@ def make_checkable_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -692,7 +692,7 @@ def make_searchable_combobox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if data:
         set_combobox_data(widget, data, value)
     if func:
@@ -770,6 +770,14 @@ def make_svg_label(parent: Qw.QWidget | None, object_name: str, tooltip: ty.Opti
     return widget
 
 
+def set_properties(widget: Qw.QWidget, properties: dict[str, ty.Any]) -> None:
+    """Set properties on widget."""
+    if properties:
+        for key, value in properties.items():
+            widget.setProperty(key, value)
+        polish_widget(widget)
+
+
 def make_btn(
     parent: Qw.QWidget | None,
     text: str,
@@ -800,10 +808,7 @@ def make_btn(
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     if object_name:
         widget.setObjectName(object_name)
-    if properties:
-        for key, value in properties.items():
-            widget.setProperty(key, value)
-        polish_widget(widget)
+    set_properties(widget, properties)
     return widget
 
 
@@ -956,10 +961,7 @@ def make_qta_btn(
         widget.has_right_click = True
     if retain_size:
         set_retain_hidden_size_policy(widget)
-    if properties:
-        for key, value in properties.items():
-            widget.setProperty(key, value)
-        polish_widget(widget)
+    set_properties(widget, properties)
     if label:
         widget.setText(label)
         widget.setProperty("with_text", True)
@@ -1141,6 +1143,7 @@ def make_checkbox(
     clicked: ty.Optional[ty.Callable] = None,
     tristate: bool = False,
     model: ty.Optional[ty.Callable] = None,
+    properties: ty.Optional[dict[str, ty.Any]] = None,
     **kwargs,
 ) -> Qw.QCheckBox:
     """Make checkbox."""
@@ -1153,13 +1156,14 @@ def make_checkbox(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if tristate:
         widget.setTristate(tristate)
     if func:
         [widget.stateChanged.connect(func_) for func_ in _validate_func(func)]
     if clicked:
         widget.clicked.connect(clicked)
+    set_properties(widget, properties)
     return widget
 
 
@@ -1189,7 +1193,7 @@ def make_slider(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     return widget
 
 
@@ -1274,7 +1278,7 @@ def make_labelled_slider(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     return widget
 
 
@@ -1291,6 +1295,7 @@ def make_int_spin_box(
     expand: bool = True,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     keyboard_tracking: ty.Optional[bool] = None,
+    properties: ty.Optional[dict[str, ty.Any]] = None,
     **kwargs,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""
@@ -1312,9 +1317,10 @@ def make_int_spin_box(
     if suffix:
         widget.setSuffix(suffix)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
+    set_properties(widget, properties)
     return widget
 
 
@@ -1351,7 +1357,7 @@ def make_double_spin_box(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
@@ -1372,7 +1378,7 @@ def make_radio_btn(
     if tooltip:
         widget.setToolTip(tooltip)
     if expand:
-        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Minimum)  # type: ignore[attr-defined]
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if checked:
         widget.setChecked(checked)
     if func:

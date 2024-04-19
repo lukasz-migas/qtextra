@@ -274,4 +274,3 @@ QPushButton[type="warning"], QLabel[type="warning"] {
 QPushButton[type="success"], QLabel[type="success"] {
     color: {{ success }};
 }
-
