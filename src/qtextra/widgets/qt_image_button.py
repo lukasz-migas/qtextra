@@ -1,11 +1,11 @@
 """Custom image button class."""
+
 import typing as ty
 
 import qtawesome
-from qtpy.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, QSize, Qt, Signal, Slot
-from qtpy.QtGui import QBrush, QColor, QFontMetrics, QPainter
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QHBoxLayout, QPushButton, QToolTip, QVBoxLayout
-from superqt import QElidingLabel
+from qtpy.QtCore import QEasingCurve, QEvent, QPoint, QPointF, QPropertyAnimation, Qt, Signal, Slot
+from qtpy.QtGui import QBrush, QColor, QPainter
+from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip, QVBoxLayout
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
@@ -43,9 +43,9 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     def mousePressEvent(self, evt) -> None:
         """Mouse press event."""
-        if evt.button() == Qt.RightButton:
+        if evt.button() == Qt.MouseButton.RightButton:
             self.on_right_click()
-        elif evt.button() == Qt.LeftButton:
+        elif evt.button() == Qt.MouseButton.LeftButton:
             self.on_click()
         super().mousePressEvent(evt)
 
@@ -89,22 +89,36 @@ class QtImagePushButton(QPushButton, QtaMixin):
         """
         self.evt_right_click.connect(func)
         self.has_right_click = True
+        hp.set_properties(self, {"right_click": True})
 
     def paintEvent(self, *args) -> None:
         """Paint event."""
         super().paintEvent(*args)
 
         if self.has_right_click:
-            width = self.rect().width() / 4
-            rect = QRect()
-            rect.moveTo(self.rect().width() - width, self.rect().height() - width)
-            rect.setWidth(width)
-            rect.setHeight(width)
+            width = self.rect().width() / 6
+            radius = self.rect().width() / 8
+            x = self.rect().width() - width
+            y = self.rect().height() - width
             paint = QPainter(self)
-            paint.fillRect(rect, QColor(THEMES.get_hex_color("text")))
+            paint.setPen(QColor(THEMES.get_hex_color("secondary")))
+            paint.setBrush(QColor(THEMES.get_hex_color("secondary")))
+            paint.drawEllipse(QPointF(x, y), radius, radius)
 
 
-class QtAnimationPlayButton(QtImagePushButton):
+class QtTogglePushButton(QtImagePushButton):
+    """Toggle button."""
+
+    def auto_connect(self) -> None:
+        """Automatically connect."""
+        self.evt_click.connect(self.toggle_state)
+
+    def toggle_state(self) -> None:
+        """Toggle state between on/off state."""
+        raise NotImplementedError("Must implement method")
+
+
+class QtAnimationPlayButton(QtTogglePushButton):
     """Play button with multiple states to indicate current state."""
 
     def __init__(self, *args, **kwargs):
@@ -134,12 +148,16 @@ class QtAnimationPlayButton(QtImagePushButton):
         from qtextra.helpers import polish_widget
 
         self._reverse = state
-        self.set_qta("left_arrow" if state else "right_arrow")
+        self.set_qta("arrow_left" if state else "arrow_right")
         self.setProperty("reverse", str(state))
         polish_widget(self)
 
+    def toggle_state(self) -> None:
+        """Toggle state."""
+        self.playing = not self.playing
 
-class QtPauseButton(QtImagePushButton):
+
+class QtPauseButton(QtTogglePushButton):
     """Play button with multiple states to indicate current state."""
 
     def __init__(self, *args, **kwargs):
@@ -157,18 +175,18 @@ class QtPauseButton(QtImagePushButton):
         self._paused = state
         self.set_qta("start" if state else "pause")
 
+    def toggle_state(self) -> None:
+        """Toggle state."""
+        self.paused = not self.paused
 
-class QtLockButton(QtImagePushButton):
+
+class QtLockButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._locked = False
         self.locked = False
-
-    def auto_connect(self):
-        """Automatically connect."""
-        self.evt_click.connect(self.toggle_lock)
 
     def toggle_lock(self):
         """Toggle lock."""
@@ -184,18 +202,18 @@ class QtLockButton(QtImagePushButton):
         self._locked = state
         self.set_qta("lock_closed" if state else "lock_open")
 
+    def toggle_state(self) -> None:
+        """Toggle state."""
+        self.locked = not self.locked
 
-class QtThemeButton(QtImagePushButton):
+
+class QtThemeButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._dark = False
         self.dark = False
-
-    def auto_connect(self) -> None:
-        """Automatically connect."""
-        self.evt_click.connect(self.toggle_theme)
 
     def toggle_theme(self) -> None:
         """Toggle lock."""
@@ -211,8 +229,12 @@ class QtThemeButton(QtImagePushButton):
         self._dark = state
         self.set_qta("dark_theme" if state else "light_theme")
 
+    def toggle_state(self) -> None:
+        """Toggle state between shown/hidden."""
+        self.dark = not self.dark
 
-class QtExpandButton(QtImagePushButton):
+
+class QtExpandButton(QtTogglePushButton):
     """Button that has chevron point up or down."""
 
     def __init__(self, *args, **kwargs):
@@ -230,8 +252,12 @@ class QtExpandButton(QtImagePushButton):
         self._expanded = state
         self.set_qta("chevron_up" if state else "chevron_down")
 
+    def toggle_state(self) -> None:
+        """Toggle state between shown/hidden."""
+        self.expanded = not self.expanded
 
-class QtToggleButton(QtImagePushButton):
+
+class QtToggleButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
     def __init__(self, *args, **kwargs):
@@ -245,12 +271,16 @@ class QtToggleButton(QtImagePushButton):
         return self._toggled
 
     @toggled.setter
-    def toggled(self, state: bool):
+    def toggled(self, state: bool) -> None:
         self._toggled = state
         self.set_qta("toggle_on" if state else "toggle_off")
 
+    def toggle_state(self) -> None:
+        """Toggle state between shown/hidden."""
+        self.toggled = not self.toggled
 
-class QtDirectionButton(QtImagePushButton):
+
+class QtDirectionButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
     def __init__(self, *args, **kwargs):
@@ -273,8 +303,12 @@ class QtDirectionButton(QtImagePushButton):
         """Get toggle state."""
         return not self._is_up
 
+    def toggle_state(self) -> None:
+        """Toggle state between shown/hidden."""
+        self.up = not self.up
 
-class QtVisibleButton(QtImagePushButton):
+
+class QtVisibleButton(QtTogglePushButton):
     """Lock button with shown/hidden icon."""
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
@@ -448,7 +482,7 @@ class QtPriorityButton(QtImagePushButton):
         menu.addAction("Normal", lambda: setattr(self, "priority", "normal"))
         menu.addAction("High", lambda: setattr(self, "priority", "high"))
         self._menu = menu
-        hp.show_below_widget(menu, self)
+        hp.show_below_widget(menu, self, x_offset=20)
         super().enterEvent(event)
 
     def leaveEvent(self, event):
@@ -464,66 +498,71 @@ if __name__ == "__main__":  # pragma: no cover
     val = True
 
     def _main():  # type: ignore[no-untyped-def]
-        pass
-
         from qtextra.assets import QTA_MAPPING
         from qtextra.config.theme import THEMES
-        from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain
-
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
-
-        def _check_pause():
-            pause_btn.paused = not pause_btn.paused
-
-        def _check_lock():
-            lock_btn.locked = not lock_btn.locked
-
-        def _check_play():
-            play_btn.playing = not play_btn.playing
+        from qtextra.utils.dev import qmain, theme_toggle_btn
 
         app, frame, ha = qmain(True)
         frame.setMinimumSize(600, 600)
+        ha.addWidget(theme_toggle_btn(frame))
 
-        lay = QHBoxLayout()
+        lay = QVBoxLayout()
         ha.addLayout(lay)
-
-        btn2 = make_btn(frame, "Click here to toggle theme")
-        btn2.clicked.connect(_toggle_theme)
-        lay.addWidget(btn2)
 
         btn2 = QtImagePushButton(parent=frame)
         btn2.setObjectName("info")
         lay.addWidget(btn2)
+
         play_btn = QtAnimationPlayButton(parent=frame)
-        play_btn.clicked.connect(_check_play)
+        play_btn.clicked.connect(play_btn.toggle_state)
         lay.addWidget(play_btn)
+
         pause_btn = QtPauseButton(parent=frame)
-        pause_btn.clicked.connect(_check_pause)
+        pause_btn.clicked.connect(pause_btn.toggle_state)
         lay.addWidget(pause_btn)
+
         lock_btn = QtLockButton(parent=frame)
-        lock_btn.clicked.connect(_check_lock)
+        lock_btn.clicked.connect(lock_btn.toggle_state)
         lay.addWidget(lock_btn)
+
+        btn = QtDirectionButton(parent=frame)
+        btn.clicked.connect(btn.toggle_state)
+        lay.addWidget(btn)
+
+        btn = QtVisibleButton(parent=frame)
+        btn.clicked.connect(btn.toggle_state)
+        lay.addWidget(btn)
+
+        btn = QtToggleButton(parent=frame)
+        btn.clicked.connect(btn.toggle_state)
+        lay.addWidget(btn)
+
+        btn = QtExpandButton(parent=frame)
+        btn.clicked.connect(btn.toggle_state)
+        lay.addWidget(btn)
+
+        priority_btn = QtPriorityButton(parent=frame)
+        lay.addWidget(priority_btn)
 
         lay = QVBoxLayout()
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
-            label = QtImagePushButton()
-            label.set_qta(qta_name, scale_factor=1)
-            label.setToolTip(f"{name} :: {qta_name}")
-            lay.addWidget(label)
+            btn = QtImagePushButton()
+            if i % 2 == 0:
+                btn.connect_to_right_click(lambda: print("Right click"))
+            btn.set_qta(qta_name, scale_factor=1)
+            btn.setToolTip(f"{name} :: {qta_name}")
+            lay.addWidget(btn)
             if i % 10 == 0:
                 ha.addLayout(lay)
                 lay = QVBoxLayout()
 
         lay = QVBoxLayout()
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
-            label = QtToolbarPushButton()
-            label.set_qta(qta_name)
-            label.set_large()
-            label.setToolTip(f"{name} :: {qta_name}")
-            lay.addWidget(label)
+            btn = QtToolbarPushButton()
+            btn.set_qta(qta_name)
+            btn.set_large()
+            btn.setToolTip(f"{name} :: {qta_name}")
+            lay.addWidget(btn)
             if i % 10 == 0:
                 ha.addLayout(lay)
                 lay = QVBoxLayout()

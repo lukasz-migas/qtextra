@@ -1,5 +1,7 @@
 """Widget with indicators."""
 
+from __future__ import annotations
+
 import typing as ty
 
 from loguru import logger
@@ -259,7 +261,7 @@ class QtPanelToolbar(QToolBar):
 
         self.setWindowTitle("Toolbar")
         self.setMovable(False)
-        self.setAllowedAreas(Qt.LeftToolBarArea | Qt.RightToolBarArea)
+        self.setAllowedAreas(Qt.ToolBarArea.LeftToolBarArea | Qt.ToolBarArea.RightToolBarArea)
         self.setObjectName(position)
         self.addWidget(self._widget)
         self.setContentsMargins(0, 0, 0, 0)
@@ -304,9 +306,8 @@ if __name__ == "__main__":  # pragma: no cover
         import sys
         from random import choice
 
-        from qtextra.config import THEMES
         from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain
+        from qtextra.utils.dev import qmain, theme_toggle_btn
         from qtextra.widgets.qt_dialog import QtTab
 
         def _add_button():
@@ -334,10 +335,6 @@ if __name__ == "__main__":  # pragma: no cover
             name = choice(["help", "filter", "open", "edit", "mask"])
             toolbar.add_widget(name, widget=panel)
 
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
-
         def _disable_btn():
             button = choice(list(toolbar._widget._button_dict.keys()))
             toolbar._widget.disable_widget(button)
@@ -350,7 +347,7 @@ if __name__ == "__main__":  # pragma: no cover
         frame.setMinimumSize(600, 600)
 
         toolbar = QtPanelToolbar(frame)
-        frame.addToolBar(Qt.LeftToolBarArea, toolbar)
+        frame.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
 
         btn2 = make_btn(frame, "Click me to add widget")
         btn2.clicked.connect(_add_button)
@@ -360,9 +357,7 @@ if __name__ == "__main__":  # pragma: no cover
         btn2.clicked.connect(_add_widget)
         ha.addWidget(btn2)
 
-        btn2 = make_btn(frame, "Click me to toggle theme")
-        btn2.clicked.connect(_toggle_theme)
-        ha.addWidget(btn2)
+        ha.addWidget(theme_toggle_btn(frame))
 
         btn2 = make_btn(frame, "Enable button")
         btn2.clicked.connect(_enable_btn)

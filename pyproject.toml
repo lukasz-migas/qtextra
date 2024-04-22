@@ -141,7 +141,7 @@ extend-ignore = [
     "S607",
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["D", "S"]
 "setup.py" = ["D"]
 

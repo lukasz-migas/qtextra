@@ -1,4 +1,6 @@
 """Splash screen."""
+
+from koyo.typing import PathLike
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import QSplashScreen
@@ -11,17 +13,18 @@ class QtSplashScreen(QSplashScreen):
 
     TITLE = "qtextra"
 
-    def __init__(self, width: int = 360):
-        from ionglow.app.event_loop import ICON_PATH, get_app
-
+    def __init__(self, path: PathLike, width: int = 360):
         from qtextra.config import EVENTS
+        from qtextra.event_loop import get_app
 
         get_app()
-        pm = QPixmap(ICON_PATH).scaled(width, width, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pm = QPixmap(path).scaled(
+            width, width, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+        )
         super().__init__(pm)
         self.show()
         hp.set_font(self, font_size=16)
-        self.showMessage(f"Loading {self.TITLE}...", alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.black)
+        self.showMessage(f"Loading {self.TITLE}...", alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.GlobalColor.black)
 
         EVENTS.evt_splash_msg.connect(self.on_message)
         EVENTS.evt_splash_close.connect(self.close)
@@ -29,7 +32,7 @@ class QtSplashScreen(QSplashScreen):
     @Slot(str)
     def on_message(self, msg: str):
         """Show message."""
-        self.showMessage(msg, alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.white)
+        self.showMessage(msg, alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.GlobalColor.white)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -2,6 +2,8 @@ from qtpy.QtWidgets import QLabel
 
 
 class QImageLabel(QLabel):
+    """Image label."""
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.pixmap_width: int = 1

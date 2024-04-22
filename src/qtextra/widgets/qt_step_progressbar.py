@@ -1,3 +1,5 @@
+"""Progress bar."""
+
 from qtpy.QtCore import Property, QPoint, QRect, QSize, Qt, QVariantAnimation, Signal
 from qtpy.QtGui import QColor, QFontMetrics, QPainter, QPen
 from qtpy.QtWidgets import QWidget
@@ -76,8 +78,8 @@ class QtStepProgressBar(QWidget):
             return
 
         step_width = busy_rect.width() / number_of_steps
-        x = offset + step_width / 2
-        y = busy_rect.center().y()
+        x = int(round(offset + step_width / 2))
+        y = int(round(busy_rect.center().y()))
         radius = 10
 
         font_text = painter.font()
@@ -85,7 +87,7 @@ class QtStepProgressBar(QWidget):
         # font_icon = QFont("Font Awesome 5 Free")
         # font_icon.setPixelSize(radius)
 
-        r = QRect(0, 0, 1.5 * radius, 1.5 * radius)
+        r = QRect(0, 0, round(1.5 * radius), round(1.5 * radius))
         fm = QFontMetrics(font_text)
 
         for i, text in enumerate(self.labels, 1):
@@ -93,7 +95,7 @@ class QtStepProgressBar(QWidget):
 
             if i <= self.value:
                 w = step_width if i < self.value else self._animation.currentValue() * step_width
-                r_busy = QRect(0, 0, w, height)
+                r_busy = QRect(0, 0, round(w), round(height))
                 r_busy.moveCenter(busy_rect.center())
 
                 if i < number_of_steps:
@@ -120,7 +122,7 @@ class QtStepProgressBar(QWidget):
                 painter.setPen(blue if is_active else QColor("black"))
 
             rect = fm.boundingRect(text)
-            rect.moveCenter(QPoint(x, y + 2 * radius))
+            rect.moveCenter(QPoint(int(x), int(round(y + 2 * radius))))
             painter.setFont(font_text)
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
 

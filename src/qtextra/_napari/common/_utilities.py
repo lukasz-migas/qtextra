@@ -21,7 +21,7 @@ def crosshair_pixmap():
     rect_size = center + 2 * width
     square = rect_size + width * 4
 
-    pen = QPen(Qt.white, 1)
+    pen = QPen(Qt.GlobalColor.white, 1)
     pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
     painter.setPen(pen)
 
@@ -34,7 +34,7 @@ def crosshair_pixmap():
     # Square
     painter.drawRect((size - square) // 2, (size - square) // 2, square - 1, square - 1)
 
-    pen = QPen(Qt.black, 2)
+    pen = QPen(Qt.GlobalColor.black, 2)
     pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
     painter.setPen(pen)
 
@@ -46,7 +46,7 @@ def crosshair_pixmap():
         square - 4,
     )
 
-    pen = QPen(Qt.black, 3)
+    pen = QPen(Qt.GlobalColor.black, 3)
     pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
     painter.setPen(pen)
 

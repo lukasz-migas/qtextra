@@ -1,4 +1,5 @@
 """Slightly modified QToolButton with nicer interface."""
+
 from typing import Callable, List, Tuple, Union
 
 from qtpy.QtCore import QSize, Qt
@@ -14,8 +15,8 @@ class QtToolButton(QToolButton):
     def __init__(self, parent, text="", icon: Union[QIcon, None] = None):
         super().__init__(parent)
         self.setText(text)
-        self.setPopupMode(self.MenuButtonPopup)
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setPopupMode(self.ToolButtonPopupMode.MenuButtonPopup)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         # Widget setup
         if icon:

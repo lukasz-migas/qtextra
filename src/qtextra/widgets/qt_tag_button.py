@@ -1,4 +1,7 @@
 """Pill button."""
+
+from __future__ import annotations
+
 from typing import Dict
 
 from koyo.secret import get_short_hash
@@ -30,12 +33,12 @@ class QtPillActionButton(QtImagePushButton):
         self.mode = "delete"
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         """Get mode."""
         return self._mode
 
     @mode.setter
-    def mode(self, action_type: str):
+    def mode(self, action_type: str) -> None:
         self._mode = action_type
         self.set_qta(action_type)
         self.setProperty("mode", action_type)
@@ -81,21 +84,20 @@ class QtTagButton(QFrame):
             self.label.setVisible(False)
 
         self.action_btn = QtPillActionButton(parent=self)
-        self.action_btn.set_small()
+        self.action_btn.set_xsmall()
         self.action_btn.clicked.connect(self._on_action)
-        self.action_btn.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Policy.MinimumExpanding)
+        self.action_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.MinimumExpanding)
         self.action_btn.setVisible(allow_action)
         self.action_btn.mode = action_type
         self.setProperty("mode", action_type)
         hp.polish_widget(self.action_btn)
 
-        layout = QHBoxLayout()
-        layout.addWidget(self.selected)
+        layout = QHBoxLayout(self)
+        layout.addWidget(self.selected, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter, stretch=True)
-        layout.addWidget(self.action_btn)
+        layout.addWidget(self.action_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.label.adjustSize()
@@ -154,8 +156,9 @@ class QtTagManager(QWidget):
     evt_plus_clicked = Signal()
     _action_btn = None
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, allow_action: bool = False):
         super().__init__(parent=parent)
+        self.allow_action = allow_action
 
         self._layout = QtFlowLayout(self)
         self.widgets: Dict[str, QtTagButton] = {}
@@ -165,13 +168,14 @@ class QtTagManager(QWidget):
         self,
         text: str,
         hash_id: str = None,
-        allow_action: bool = False,
+        allow_action: bool | None = None,
         active: bool = False,
         allow_selected: bool = True,
     ) -> str:
         """Add tag to ."""
         if not hash_id:
             hash_id = get_short_hash()
+        allow_action = self.allow_action if allow_action is None else allow_action
         widget = QtTagButton(text, hash_id, allow_action=allow_action, parent=self, allow_selected=allow_selected)
         widget.active = active
         widget.evt_action.connect(self.remove_tag)
@@ -207,7 +211,7 @@ class QtTagManager(QWidget):
 
     def add_plus(self):
         """Add plus button."""
-        self.add_button("plus")
+        self.add_button("add")
         self._action_btn.clicked.connect(self.on_add_click)
 
     def on_add_click(self):
@@ -237,18 +241,26 @@ if __name__ == "__main__":  # pragma: no cover
     def _main():  # type: ignore[no-untyped-def]
         import sys
 
-        from qtextra.utils.dev import qframe
+        from qtextra.utils.dev import qframe, theme_toggle_btn
 
         app, frame, va = qframe(False)
         frame.setMinimumSize(400, 400)
+        va.addWidget(theme_toggle_btn(frame), stretch=True)
 
-        mgr = QtTagManager()
+        mgr = QtTagManager(allow_action=True)
         for i in range(5):
-            mgr.add_tag(f"Tag number: {i}", allow_action=True)
+            mgr.add_tag(f"Tag number: {i}")
         mgr.add_plus()
-        mgr.add_tag("Tag number: 10", allow_action=False, allow_selected=False)
-
+        mgr.add_tag("Tag number: 10", allow_selected=False)
         va.addWidget(mgr, stretch=True)
+
+        mgr = QtTagManager(allow_action=False)
+        for i in range(5):
+            mgr.add_tag(f"Tag number: {i}")
+        mgr.add_plus()
+        mgr.add_tag("Tag number: 10", allow_selected=False)
+        va.addWidget(mgr, stretch=True)
+
         widget = QtTagButton("Tag 1", "TEST", frame)
         va.addWidget(widget)
         widget = QtTagButton("Much longer label", "TEST", frame)

@@ -51,7 +51,7 @@ class QtToast(SubWindowBase):
         title_layout = QHBoxLayout(title_widget)
         hp.set_layout_margin(title_layout, 2)
         title_layout.addWidget(self._icon_label, alignment=Qt.AlignmentFlag.AlignVCenter)
-        title_layout.addWidget(self._title_label, stretch=True, alignment=Qt.AlignmentFlag.AlignTop)
+        title_layout.addWidget(self._title_label, stretch=True, alignment=Qt.AlignmentFlag.AlignVCenter)
         title_layout.addWidget(self._date_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         title_layout.addStretch(1)
         title_layout.addWidget(self._close_btn, alignment=Qt.AlignmentFlag.AlignTop)
@@ -116,7 +116,7 @@ if __name__ == "__main__":  # pragma: no cover
         from random import choice
 
         from qtextra.config import THEMES
-        from qtextra.utils.dev import qframe
+        from qtextra.utils.dev import qframe, theme_toggle_btn
 
         def _popup_notif():
             pop = QtToast(frame)
@@ -146,14 +146,6 @@ if __name__ == "__main__":  # pragma: no cover
                 duration=10000,
             )
 
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
-
-        def _reload_theme():
-            THEMES.set_theme_stylesheet(frame)
-
-        #
         app, frame, ha = qframe(False, set_style=True)
         frame.setMinimumSize(600, 600)
 
@@ -166,11 +158,7 @@ if __name__ == "__main__":  # pragma: no cover
         btn2 = hp.make_btn(frame, "Create alternate notification")
         btn2.clicked.connect(_popup_notif3)
         ha.addWidget(btn2)
-        btn2 = hp.make_btn(frame, "Click me to toggle theme")
-        btn2.clicked.connect(_toggle_theme)
-        ha.addWidget(btn2)
-        btn2 = hp.make_btn(frame, "Click me to reload theme")
-        btn2.clicked.connect(_reload_theme)
+        ha.addWidget(theme_toggle_btn(frame))
         ha.addWidget(btn2)
         ha.addStretch(1)
 

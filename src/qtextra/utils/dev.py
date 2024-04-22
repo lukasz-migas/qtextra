@@ -1,4 +1,5 @@
 """Utilities for QtExtra widgets."""
+
 import os
 import sys
 import typing as ty
@@ -107,7 +108,7 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
             ha = QtWidgets.QVBoxLayout()
         if add_reload:
             w = qdev()
-            w.setMaximumHeight(120)
+            w.setMaximumHeight(180)
             ha.addWidget(w)
         frame.setLayout(ha)
     if set_style:
@@ -137,6 +138,26 @@ def qmain(horz: bool = True, set_style: bool = True):
     if set_style:
         apply_style(main)
     return app, main, ha
+
+
+def theme_toggle_btn(parent: QWidget):
+    """Toggle button."""
+    from random import choice
+
+    from qtextra.config import THEMES
+    from qtextra.helpers import make_btn
+
+    def _toggle_theme():
+        while True:
+            theme = choice(THEMES.available_themes())
+            if theme != THEMES.theme:
+                THEMES.theme = theme
+                break
+        THEMES.set_theme_stylesheet(parent)
+
+    button = make_btn(parent, "Click here to toggle theme")
+    button.clicked.connect(_toggle_theme)
+    return button
 
 
 def get_parent(parent):

@@ -74,22 +74,13 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main():  # type: ignore[no-untyped-def]
         import sys
-        from random import choice
 
-        from qtextra.config import THEMES
-        from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain
-
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
+        from qtextra.utils.dev import qmain, theme_toggle_btn
 
         app, frame, ha = qmain(False)
         frame.setMinimumSize(600, 600)
 
-        wdg = make_btn(frame, "Click here to toggle theme")
-        wdg.clicked.connect(_toggle_theme)
-        ha.addWidget(wdg)
+        ha.addWidget(theme_toggle_btn(frame))
 
         wdg = QReadMoreLessLabel(parent=frame, text=_make_text())
         ha.addWidget(wdg)

@@ -1,4 +1,5 @@
 """Overlay Message Widget - A Widget to display a temporary dismissible message over another widget."""
+
 import sys
 
 from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, Signal, Slot
@@ -38,14 +39,14 @@ class QtOverlay(QWidget):
         """Return the overlaid widget."""
         return self.__widget
 
-    def setAlignment(self, alignment: Qt.Alignment):
+    def setAlignment(self, alignment: Qt.AlignmentFlag):
         """Set overlay alignment."""
         if self.__alignment != alignment:
             self.__alignment = alignment
             if self.__widget is not None:
                 self.__layout()
 
-    def alignment(self) -> Qt.Alignment:
+    def alignment(self) -> Qt.AlignmentFlag:
         """Return the overlay alignment."""
         return self.__alignment
 
@@ -87,9 +88,9 @@ class QtOverlay(QWidget):
         # position itself over `widget`
         # noinspection PyShadowingNames
         def _get_size(hint, minimum, maximum, policy):
-            if policy == QSizePolicy.Ignored:
+            if policy == QSizePolicy.Policy.Ignored:
                 return maximum
-            elif policy & QSizePolicy.ExpandFlag:
+            elif policy == QSizePolicy.PolicyFlag.ExpandFlag:
                 return maximum
             else:
                 return max(hint, minimum)

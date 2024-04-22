@@ -1,4 +1,5 @@
 """Progress bar with label."""
+
 import typing as ty
 
 from qtpy import QtCore
@@ -18,8 +19,7 @@ class QtLabeledProgressBar(QWidget):
 
         self.description_label = QLabel()
         self.qt_progress_bar = QProgressBar()
-        self.eta_label = QLabel()
-        self.eta_label.setObjectName("small")
+        self.qt_progress_bar.setTextVisible(True)
 
         layout = QHBoxLayout()
         layout.addWidget(self.description_label)
@@ -27,7 +27,6 @@ class QtLabeledProgressBar(QWidget):
 
         pbar_layout = QVBoxLayout(self)
         pbar_layout.addLayout(layout, stretch=True)
-        pbar_layout.addWidget(self.eta_label, stretch=True)
         pbar_layout.setContentsMargins(0, 0, 0, 0)
         pbar_layout.setSpacing(0)
 
@@ -61,10 +60,9 @@ class QtLabeledProgressBar(QWidget):
         self.setRange(0, 0)
 
     def _set_eta(self, event):
-        self.eta_label.setText(event.value)
+        self.qt_progress_bar.setFormat(event.value)
 
     def _on_clear(self, event):
-        self.eta_label.setText("")
         self.description_label.setText("")
 
 
@@ -93,11 +91,10 @@ def set_progress_bar(progress: Progress, progress_bar: QtLabeledProgressBar):
 def _test(pbar):
     import time
 
-    prog = Progress(range(100))
+    prog = Progress(range(50))
     set_progress_bar(prog, pbar)
     for _v in prog:
-        time.sleep(0.5)
-        # prog.update(1)
+        time.sleep(0.1)
     prog.close()
 
 
@@ -113,14 +110,15 @@ if __name__ == "__main__":  # pragma: no cover
     frame.setLayout(ha)
     frame.setMinimumSize(400, 400)
 
-    pbar = QtLabeledProgressBar()
-    ha.addWidget(pbar)
+    pbar1 = QtLabeledProgressBar()
+    ha.addWidget(pbar1)
 
-    pbar = QtLabeledProgressBar()
-    ha.addWidget(pbar)
+    pbar2 = QtLabeledProgressBar()
+    ha.addWidget(pbar2)
 
     btn = QPushButton("Press me to start")
-    btn.clicked.connect(partial(_test, pbar))
+    btn.clicked.connect(partial(_test, pbar1))
+    btn.clicked.connect(partial(_test, pbar2))
     ha.addWidget(btn)
 
     frame.show()

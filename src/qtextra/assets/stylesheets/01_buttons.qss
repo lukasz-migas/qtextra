@@ -38,19 +38,23 @@ QtImagePushButton:disabled {
     color: {{ opacity(text, 90) }};
 }
 
-QtImagePushButton[transparent="true"]{
+QtImagePushButton[transparent=true]{
     background-color: none;
 }
 
-QtImagePushButton[standout="true"]{
+QtImagePushButton[standout=true]{
     background-color: {{ foreground }};
 }
 
-QtImagePushButton[standout="true"]:hover {
+QtImagePushButton[standout=true]:hover {
   background-color: {{ primary }};
 }
 
-QtImagePushButton[with_text="true"]{
+/*QtImagePushButton[right_click=true] {*/
+/*  border: 2px solid {{ success }};*/
+/*}*/
+
+QtImagePushButton[with_text=true]{
     min-width : 60px;
     max-width : 500px;
     max-height : 500px;
@@ -144,3 +148,4 @@ QtToolbarPushButton::hover{
 QtLockButton:hover, QtLockButton:hover{
     background: {{ primary }};
 }
+

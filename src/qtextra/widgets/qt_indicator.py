@@ -1,4 +1,5 @@
 """Simple indicator widget."""
+
 from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, Slot
 from qtpy.QtGui import QPainter
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QSizePolicy, QWidget
@@ -90,22 +91,12 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main():  # type: ignore[no-untyped-def]
         import sys
-        from random import choice
 
-        from qtextra.config import THEMES
-        from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain
-
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
+        from qtextra.utils.dev import qmain, theme_toggle_btn
 
         app, frame, ha = qmain(False)
         frame.setMinimumSize(600, 600)
-
-        btn2 = make_btn(frame, "Click here to toggle theme")
-        btn2.clicked.connect(_toggle_theme)
-        ha.addWidget(btn2)
+        ha.addWidget(theme_toggle_btn(frame))
 
         btn2 = QtIndicator(parent=frame)
         btn2.setMaximumSize(16, 16)

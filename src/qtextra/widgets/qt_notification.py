@@ -1,4 +1,5 @@
 """Alternative notification."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -56,14 +57,13 @@ class QtNotification(SubWindowBase):
         self.setMinimumWidth(self.MIN_WIDTH)
         self.setMaximumWidth(self.MIN_WIDTH)
         self.setMinimumHeight(self.MIN_HEIGHT)
-        from ionglow.tabs.panel_main_window import MainWindow
 
         self.is_bottom = is_bottom
         # if the notification is not meant to automatically close, set the DISMISS_AFTER value to 0
         if not auto_close:
             self.DISMISS_AFTER = 0
 
-        parent = MainWindow.current()
+        parent = None
         if parent is not None:
             self.setParent(parent)
         if hasattr(parent, "evt_window_resize"):
@@ -509,10 +509,8 @@ if __name__ == "__main__":  # pragma: no cover
         import sys
         from random import choice
 
-        from ionglow.tabs.panel_main_window import MainWindow
-
         from qtextra.config import THEMES
-        from qtextra.utils.dev import qframe
+        from qtextra.utils.dev import qframe, theme_toggle_btn
 
         def _popup_notif(severity=None):
             if not isinstance(severity, NotificationSeverity):
@@ -540,12 +538,7 @@ if __name__ == "__main__":  # pragma: no cover
             THEMES.set_theme_stylesheet(pop)
             pop.show()
 
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
-
         app, frame, ha = qframe(False)
-        MainWindow._instances.append(frame)  # necessary so we can test notification inside a window.
         frame.setMinimumSize(600, 600)
 
         btn2 = hp.make_btn(frame, "Create random notification")
@@ -558,9 +551,7 @@ if __name__ == "__main__":  # pragma: no cover
         btn2.clicked.connect(_warning)
         ha.addWidget(btn2)
 
-        btn2 = hp.make_btn(frame, "Click me to toggle theme")
-        btn2.clicked.connect(_toggle_theme)
-        ha.addWidget(btn2)
+        ha.addWidget(theme_toggle_btn(frame))
 
         ha.addWidget(btn2)
         frame.show()

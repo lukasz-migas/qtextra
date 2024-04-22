@@ -1,4 +1,5 @@
 """Loading bar."""
+
 from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt
 from qtpy.QtGui import QColor, QPainter
 from qtpy.QtWidgets import QProgressBar
@@ -15,6 +16,7 @@ class QtLineProgressBar(QProgressBar):
     # Enum attributes
     TOP = 0
     BOTTOM = 1
+    Instances = {}
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(*args, parent=parent, **kwargs)
@@ -29,9 +31,10 @@ class QtLineProgressBar(QProgressBar):
         self.setOrientation(Qt.Orientation.Horizontal)
         self.setTextVisible(False)
         self.animation = QPropertyAnimation(self, b"alpha", self, loopCount=1, duration=1000)
-        self.animation.setEasingCurve(QEasingCurve.SineCurve)
+        self.animation.setEasingCurve(QEasingCurve.Type.SineCurve)
         self.animation.setStartValue(0)
         self.animation.setEndValue(255)
+        self.Instances[self] = self
 
     @property
     def alpha(self):
@@ -46,9 +49,9 @@ class QtLineProgressBar(QProgressBar):
     def paintEvent(self, _):
         """Paint event."""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        # painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
         # background color
         painter.fillRect(self.rect(), Qt.transparent)
         # progress
@@ -135,22 +138,12 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main():  # type: ignore[no-untyped-def]
         import sys
-        from random import choice
 
-        from qtextra.config import THEMES
-        from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain
-
-        def _toggle_theme():
-            THEMES.theme = choice(THEMES.available_themes())
-            THEMES.set_theme_stylesheet(frame)
+        from qtextra.utils.dev import qmain, theme_toggle_btn
 
         app, frame, ha = qmain(False)
         frame.setMinimumSize(600, 600)
-
-        btn2 = make_btn(frame, "Click here to toggle theme")
-        btn2.clicked.connect(_toggle_theme)
-        ha.addWidget(btn2)
+        ha.addWidget(theme_toggle_btn(frame))
 
         widget = QtLineProgressBar(parent=frame)
         widget.start(height=50)
@@ -159,7 +152,12 @@ if __name__ == "__main__":  # pragma: no cover
 
         widget = QtLineProgressBar(parent=frame)
         widget.start(height=1, direction=QtLineProgressBar.TOP)
-        widget.update_value(50)
+        widget.update_value(30)
+        ha.addWidget(widget)
+
+        widget = QtLineProgressBar(parent=frame)
+        widget.start(height=1, direction=QtLineProgressBar.TOP)
+        widget.update_value(76)
         ha.addWidget(widget)
 
         frame.show()
