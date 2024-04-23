@@ -289,7 +289,6 @@ QCheckBox {
 QCheckBox::indicator {
   width: 16px;
   height: 16px;
-  background-color: {{ foreground }};
   border: 0px;
   padding: 1px;
   border-radius: 2px

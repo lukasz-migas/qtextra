@@ -3,7 +3,7 @@
 import typing as ty
 from copy import deepcopy
 
-from ionglow.config import get_settings
+# from ionglow.config import get_settings
 from ionglow.utils.color import colormap_to_hex
 from pydantic.color import Color
 from qtpy.QtCore import Slot
@@ -48,15 +48,20 @@ class QtColorListDialog(QtDialog):
         """Make panel."""
         self.info_label = hp.make_label(self, self.message)
 
-        color_layout, self.swatches = hp.make_swatch_grid(self, self.colors, self.on_update_color)
+        color_layout, self.swatches = hp.make_swatch_grid(self, self.colors, self.on_update_color, use_flow_layout=True)
 
         colormap = hp.make_label(self, "Colormap")
-        self.colormap = hp.make_combobox(self, get_settings().visuals.color_scheme_choices)
+        self.colormap = hp.make_combobox(
+            self,
+            ["custom", "viridis", "inferno", "magma", "plasma", "cividis", "twilight"],
+        )
         self.colormap.currentTextChanged.connect(self.on_set_colormap)
+        self.randomize_btn = hp.make_qta_btn(self, "shuffle", tooltip="Randomize colors", medium=False)
+
+        self.randomize_btn.clicked.connect(self.on_randomize)
         self.invert = hp.make_checkbox(self, "Invert", tooltip="Reverse colors")
         self.invert.stateChanged.connect(self.on_set_colormap)
-        self.randomize_btn = hp.make_qta_btn(self, "shuffle", tooltip="Randomize colors", medium=False)
-        self.randomize_btn.clicked.connect(self.on_randomize)
+        hp.disable_widgets(self.invert, disabled=self.colormap.currentText() == "custom")
 
         layout = QHBoxLayout()
         layout.addWidget(self.colormap, stretch=1)
@@ -97,6 +102,7 @@ class QtColorListDialog(QtDialog):
         import matplotlib.cm
 
         colormap = self.colormap.currentText()
+        hp.disable_widgets(self.invert, disabled=colormap == "custom")
         if colormap == "custom":
             colors = self.colors
         else:
@@ -118,7 +124,7 @@ class QtColorListDialog(QtDialog):
         return super().accept()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     def _main():  # type: ignore[no-untyped-def]
         import sys

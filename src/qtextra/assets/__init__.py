@@ -114,10 +114,14 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "priority_normal": "ph.equals-fill",
     "priority_low": "mdi6.chevron-triple-down",
     # viewer
+    "new_line": "msc.pulse",
+    "new_surface": "ei.star",
     "new_labels": "fa5s.tag",
     "new_points": "mdi.scatter-plot",
     "new_shapes": "fa5s.shapes",
-    "new_inf_line": "fa5s.grip-lines-vertical",
+    "new_inf_line": "mdi.infinity",
+    "new_centroids": "ri.bar-chart-fill",
+    "new_region": "ri.bar-chart-horizontal-fill",
     "ndisplay_off": "ph.square",
     "ndisplay_on": "ph.cube",
     "roll": "mdi6.rotate-right-variant",
@@ -148,6 +152,9 @@ QTA_MAPPING: ty.Dict[str, str] = {
 def update_icon_mapping(mapping: ty.Dict[str, str]) -> None:
     """Update icon mapping."""
     global QTA_MAPPING
+    for k in mapping:
+        if k in QTA_MAPPING:
+            logger.warning(f"Icon mapping already exists for '{k}'")
     QTA_MAPPING.update(mapping)
 
 

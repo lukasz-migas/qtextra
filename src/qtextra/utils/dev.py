@@ -104,6 +104,7 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
     if with_layout:
         if horz:
             ha = QtWidgets.QHBoxLayout()
+            ha.addWidget(theme_toggle_btn(frame))
         else:
             ha = QtWidgets.QVBoxLayout()
         if add_reload:
@@ -118,6 +119,8 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
 
 def apply_style(widget: QWidget) -> None:
     """Apply stylesheet(s) on the widget."""
+    import ionglow.assets
+
     from qtextra.config.theme import THEMES
 
     THEMES.set_theme_stylesheet(widget)
@@ -185,6 +188,7 @@ class MacApplication(QApplication):
         self._original_handlers = {}
 
     def event(self, event):
+        """Override event handler to catch file open events."""
         if event.type() == QEvent.FileOpen:
             fname = str(event.file())
             if sys.argv and sys.argv[0] == fname:

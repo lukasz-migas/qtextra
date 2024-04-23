@@ -13,22 +13,22 @@ QtImagePushButton {
     background-color: none;
 }
 
-QtImagePushButton::checked{
+QtImagePushButton:checked{
     border-radius: 5px;
     background-color: {{ foreground }};
 }
 
-QtImagePushButton::unchecked{
-    background-color: {{ canvas }};
+QtImagePushButton:unchecked{
+    background-color: {{ background }};
 }
 
-QtImagePushButton::pressed{
+QtImagePushButton:pressed{
     background-color: {{ foreground }};
 }
 
-QtImagePushButton::hover{
-    border-radius: 2px;
-    background-color: {{ darken(foreground, 10) }};
+QtImagePushButton:hover{
+    border-radius: 5px;
+    background-color: {{ primary }};
 }
 
 QtImagePushButton:disabled {
@@ -149,3 +149,7 @@ QtLockButton:hover, QtLockButton:hover{
     background: {{ primary }};
 }
 
+/* ----------------- QtPauseButton / QtLockButton ----------------- */
+QtColorSwatch:hover {
+    border: 2px solid {{ foreground }};
+}

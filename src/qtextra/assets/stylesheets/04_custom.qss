@@ -339,3 +339,7 @@ QtIndicator[state=warning] {
 QtIndicator[state=success] {
     color: {{ success }};
 }
+
+QtColorSwatch:hover {
+    border: 2px solid {{ foreground }};
+}

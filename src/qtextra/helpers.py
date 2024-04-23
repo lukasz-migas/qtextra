@@ -43,8 +43,25 @@ if ty.TYPE_CHECKING:
         Array = None
 
 
+# def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
+#     """Trim dialog size and retrieve new size."""
+#     win = None
+#     # win = cls.current()
+#     sh = dlg.sizeHint()
+#     cw, ch = sh.width(), sh.height()
+#     if win is None:
+#         return cw, ch
+#     win_size = win.size()
+#     mw, mh = win_size.width(), win_size.height()
+#     if cw > mw:
+#         cw = mw - 50
+#     if ch > mh:
+#         ch = mh - 50
+#     return cw, ch
+
+
 def make_form_layout(
-    widget: ty.Optional[Qw.QWidget] = None, *widgets: ty.Tuple, stretch_after: bool = False
+    widget: ty.Optional[Qw.QWidget] = None, *widgets: tuple, stretch_after: bool = False
 ) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
@@ -107,7 +124,7 @@ def insert_widget_in_form_layout(
 
 
 def make_hbox_layout(
-    widget: Qw.QWidget = None, spacing: int = 0, content_margins: ty.Optional[ty.Tuple[int, int, int, int]] = None
+    widget: Qw.QWidget = None, spacing: int = 0, content_margins: ty.Optional[tuple[int, int, int, int]] = None
 ):
     """Make horizontal box layout."""
     layout = Qw.QHBoxLayout(widget)
@@ -130,7 +147,7 @@ def set_layout_margin(layout: Qw.QLayout, margin: int):
         layout.setMargin(margin)
 
 
-def set_from_schema(widget: Qw.QWidget, schema: ty.Dict[str, ty.Any], **kwargs):
+def set_from_schema(widget: Qw.QWidget, schema: dict[str, ty.Any], **kwargs):
     """Set certain values on the model."""
     with qt_signals_blocked(widget):
         if "description" in schema:
@@ -176,12 +193,12 @@ def combobox_setter(
             widget.setCurrentText(set_item)
 
 
-def get_combobox_data_name_map(combobox: Qw.QComboBox):
+def get_combobox_data_name_map(combobox: Qw.QComboBox) -> dict[ty.Any, str]:
     """Return mapping of data to name for combobox."""
     return {combobox.itemData(index): combobox.itemText(index) for index in range(combobox.count())}
 
 
-def check_if_combobox_needs_update(combobox: Qw.QComboBox, new_data: ty.Dict[ty.Any, str]):
+def check_if_combobox_needs_update(combobox: Qw.QComboBox, new_data: dict[ty.Any, str]):
     """Check whether model data is equivalent to new data."""
     existing_data = get_combobox_data_name_map(combobox)
     return new_data != existing_data
@@ -703,10 +720,10 @@ def make_searchable_combobox(
 
 
 def set_combobox_data(
-    widget: Qw.QComboBox, data: ty.Union[ty.Dict, ty.OrderedDict, Enum], current_item: ty.Optional[str] = None
+    widget: Qw.QComboBox, data: ty.Union[dict, ty.OrderedDict, Enum], current_item: ty.Optional[str] = None
 ):
     """Set data/value on combobox."""
-    if not isinstance(data, (ty.Dict, ty.OrderedDict)):
+    if not isinstance(data, (dict, ty.OrderedDict)):
         data = {m: m.value for m in data}
 
     for index, (item, text) in enumerate(data.items()):
@@ -720,7 +737,7 @@ def set_combobox_data(
 
 
 def set_combobox_text_data(
-    widget: Qw.QComboBox, data: ty.Union[ty.List[str], ty.Dict[str, ty.Any]], current_item: ty.Optional[str] = None
+    widget: Qw.QComboBox, data: ty.Union[ty.List[str], dict[str, ty.Any]], current_item: ty.Optional[str] = None
 ):
     """Set data/value on combobox."""
     if isinstance(data, ty.List):
@@ -923,7 +940,7 @@ def make_qta_btn(
     average: bool = False,
     medium: bool = False,
     large: bool = False,
-    size: ty.Optional[ty.Tuple[int, int]] = None,
+    size: ty.Optional[tuple[int, int]] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     object_name: str = "",
     retain_size: bool = False,
@@ -978,7 +995,7 @@ def make_lock_btn(
     normal: bool = False,
     medium: bool = False,
     large: bool = False,
-    size: ty.Optional[ty.Tuple[int, int]] = None,
+    size: ty.Optional[tuple[int, int]] = None,
     func: ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]] = None,
     tooltip: ty.Optional[str] = None,
 ) -> QtLockButton:
@@ -1077,24 +1094,44 @@ def make_swatch(
     return widget
 
 
-def make_swatch_grid(parent: Qw.QWidget | None, colors: ty.Iterable[str], func: ty.Callable):
+def make_swatch_grid(
+    parent: Qw.QWidget | None,
+    colors: ty.Iterable[str],
+    func: ty.Callable,
+    size: tuple[int, int] = (32, 32),
+    use_flow_layout: bool = False,
+):
     """Make grid of swatches."""
     from koyo.utilities import chunks
 
-    _i = 0
-    layout, swatches = Qw.QVBoxLayout(), []
-    for _colors in chunks(colors, 10):
-        row_layout = Qw.QHBoxLayout()
-        row_layout.addSpacerItem(make_h_spacer())
-        for _i, color in enumerate(_colors):
+    from qtextra.widgets.qt_flow_layout import QtFlowLayout
+
+    swatches = []
+    if use_flow_layout:
+        layout = QtFlowLayout()
+        for i, color in enumerate(colors):
             swatch = make_swatch(parent, color, value=color)
-            swatch.setMinimumSize(32, 32)
-            swatch.evt_color_changed.connect(partial(func, _i))
-            row_layout.addWidget(swatch)
+            swatch.setMinimumSize(*size)
+            swatch.evt_color_changed.connect(partial(func, i))
+            layout.addWidget(swatch)
             swatches.append(swatch)
-            _i += 1
-        row_layout.addSpacerItem(make_h_spacer())
-        layout.addLayout(row_layout)
+    else:
+        _i = 0
+        layout = Qw.QVBoxLayout()
+        layout.setSpacing(4)
+        for _colors in chunks(colors, 10):
+            row_layout = Qw.QHBoxLayout()
+            row_layout.setSpacing(4)
+            row_layout.addSpacerItem(make_h_spacer())
+            for _i, color in enumerate(_colors):
+                swatch = make_swatch(parent, color, value=color)
+                swatch.setMinimumSize(*size)
+                swatch.evt_color_changed.connect(partial(func, _i))
+                row_layout.addWidget(swatch)
+                swatches.append(swatch)
+                _i += 1
+            row_layout.addSpacerItem(make_h_spacer())
+            layout.addLayout(row_layout)
     return layout, swatches
 
 
@@ -1110,8 +1147,8 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu):
 def make_bitmap_tool_btn(
     parent: Qw.QWidget | None,
     icon: QIcon,
-    min_size: ty.Optional[ty.Tuple[int]] = None,
-    max_size: ty.Optional[ty.Tuple[int]] = None,
+    min_size: ty.Optional[tuple[int]] = None,
+    max_size: ty.Optional[tuple[int]] = None,
     tooltip: ty.Optional[str] = None,
 ) -> QtToolButton:
     """Make bitmap button."""
@@ -1587,8 +1624,8 @@ def get_font(font_size: int, font_weight: int = QFont.Weight.Normal) -> QFont:
 
 def set_sizer_policy(
     widget: Qw.QWidget,
-    min_size: ty.Union[QSize, ty.Tuple[int]] = None,
-    max_size: ty.Union[QSize, ty.Tuple[int]] = None,
+    min_size: ty.Union[QSize, tuple[int]] = None,
+    max_size: ty.Union[QSize, tuple[int]] = None,
     h_stretch: bool = False,
     v_stretch: bool = False,
 ):
@@ -2250,7 +2287,7 @@ def remove_expand_animation(widget: Qw.QWidget):
     del widget._animation
 
 
-def make_loading_gif(parent: Qw.QWidget, which: str = "square", size=(20, 20)) -> ty.Tuple[Qw.QLabel, QMovie]:
+def make_loading_gif(parent: Qw.QWidget, which: str = "square", size=(20, 20)) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
     from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
 
@@ -2261,7 +2298,7 @@ def make_loading_gif(parent: Qw.QWidget, which: str = "square", size=(20, 20)) -
     return label, movie
 
 
-def make_gif_label(parent: Qw.QWidget, path: str, size=(20, 20), start: bool = True) -> ty.Tuple[Qw.QLabel, QMovie]:
+def make_gif_label(parent: Qw.QWidget, path: str, size=(20, 20), start: bool = True) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation and place it in the label."""
     label = Qw.QLabel("Loading...", parent=parent)
     label.setScaledContents(True)
@@ -2457,7 +2494,7 @@ def get_parent(parent: QObject | None) -> Qw.QWidget | None:
     return parent
 
 
-def trim_dialog_size(dlg) -> ty.Tuple[int, int]:
+def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
     """Trim dialog size and retrieve new size."""
     win = get_parent(None)
     sh = dlg.sizeHint()

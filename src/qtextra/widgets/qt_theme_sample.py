@@ -11,6 +11,7 @@ $ python -m napari._qt.theme_sample
 
 To generate a screenshot within python:
 """
+
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -86,7 +87,7 @@ class TabDemo(QTabWidget):
 class QtSampleWidget(QWidget):
     """Widget that showcases many types of Qt widgets."""
 
-    def __init__(self, emphasized=False):
+    def __init__(self, emphasized: bool = False):
         super().__init__()
         self.setProperty("emphasized", emphasized)
         lay = QVBoxLayout()

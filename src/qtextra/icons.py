@@ -1,4 +1,5 @@
 """Base icon functions."""
+
 import re
 import typing as ty
 from functools import lru_cache
@@ -120,7 +121,7 @@ def write_colorized_svgs(
     colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
     opacities: ty.Iterable[float] = (1.0,),
     theme_override: ty.Optional[ty.Dict[str, str]] = None,
-):
+) -> None:
     """Write colorized SVGs to a directory."""
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)

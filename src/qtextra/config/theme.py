@@ -37,8 +37,8 @@ DARK_THEME = {
     "console": "rgb(0, 0, 0)",
     "canvas": "rgb(0, 0, 0)",
     "standout": "rgb(255, 255, 0)",
-    "font_size": "14px",
-    "header_size": "18px",
+    "font_size": "14pt",
+    "header_size": "18pt",
 }
 LIGHT_THEME = {
     "name": "light",
@@ -59,8 +59,8 @@ LIGHT_THEME = {
     "console": "rgb(255, 255, 255)",
     "canvas": "rgb(255, 255, 255)",
     "standout": "rgb(255, 252, 0)",
-    "font_size": "14px",
-    "header_size": "18px",
+    "font_size": "14pt",
+    "header_size": "18pt",
 }
 
 
@@ -230,6 +230,11 @@ class Theme(EventedModel):
         Color used to highlight Qt widget.
     """
 
+    class Config:
+        """Pydantic config."""
+
+        validate_assignment = True
+
     name: str
     type: str
     syntax_style: str
@@ -248,8 +253,11 @@ class Theme(EventedModel):
     current: Color
     progress: Color
     standout: Color
-    font_size: str = "14px"
-    header_size: str = "18px"
+    font_size: str = "14pt"
+    header_size: str = "18pt"
+
+    def __getattr__(self, item: str) -> ty.Any:
+        return getattr(self, item)
 
     @validator(
         "canvas",
@@ -271,7 +279,6 @@ class Theme(EventedModel):
         allow_reuse=True,
     )
     def _validate_color(cls, value) -> Color:
-        # print("VALIDATING", value)
         if isinstance(value, np.ndarray):
             value = value.tolist()
         elif isinstance(value, str):
@@ -291,8 +298,9 @@ class Theme(EventedModel):
     def _ensure_font_size(value: ty.Union[int, str]) -> str:
         if isinstance(value, int):
             value = str(value)
-        if not value.endswith("px"):
-            return value + "px"
+        value = value.replace("px", "").replace("pt", "")
+        if not value.endswith("pt"):
+            return value + "pt"
         return value
 
     @property
@@ -300,7 +308,7 @@ class Theme(EventedModel):
         """Return theme id."""
         return self.name
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Export as dictionary."""
         data = {}
         for key, value in self:
@@ -309,9 +317,6 @@ class Theme(EventedModel):
             else:
                 data[key] = value
         return data
-
-    def __getattr__(self, item) -> ty.Any:
-        return getattr(self, item)
 
 
 class Themes(ConfigBase):
@@ -398,14 +403,14 @@ class Themes(ConfigBase):
             return "light"
         return "dark"
 
-    def synchronize_theme(self):
+    def synchronize_theme(self) -> None:
         """Synchronize theme."""
         if self.sync_with_time:
             theme = self.get_sync_theme()
             self.theme = theme
 
     @property
-    def sync_with_time(self):
+    def sync_with_time(self) -> bool:
         """Flag to indicate whether theme should be synchronized with time."""
         return self._sync_with_time
 
@@ -415,32 +420,32 @@ class Themes(ConfigBase):
         self.evt_update_timer.emit()
 
     @property
-    def light_start_time(self):
+    def light_start_time(self) -> str:
         """Get morning time."""
         return self._light_start_time
 
     @light_start_time.setter
-    def light_start_time(self, value):
+    def light_start_time(self, value: str) -> None:
         self._light_start_time = value
         self.synchronize_theme()
 
     @property
-    def light_end_time(self):
+    def light_end_time(self) -> str:
         """Get evening time."""
         return self._light_end_time
 
     @light_end_time.setter
-    def light_end_time(self, value):
+    def light_end_time(self, value: str) -> None:
         self._light_end_time = value
         self.synchronize_theme()
 
     @property
-    def theme(self):
+    def theme(self) -> str:
         """Get theme."""
         return self._theme
 
     @theme.setter
-    def theme(self, value: str):
+    def theme(self, value: str) -> None:
         """Set theme."""
         if self._theme == value:
             return
@@ -457,7 +462,7 @@ class Themes(ConfigBase):
         self.evt_theme_icon_changed.emit()
         logger.debug(f"Changed theme to '{value}'")
 
-    def update_palette(self):
+    def update_palette(self) -> None:
         """Get updated palette."""
         qapp = QApplication.instance()
         if qapp is None:
@@ -536,7 +541,7 @@ class Themes(ConfigBase):
         QDir.addSearchPath(f"theme_{name}", str(self.get_theme_path(name)))
         logger.debug(f"Added '{name}' theme to resources path")
 
-    def register_themes(self, names: ty.Optional[ty.List[str]] = None):
+    def register_themes(self, names: ty.Optional[ty.List[str]] = None) -> None:
         """Register themes."""
         from qtextra.icons import build_theme_svgs
 
@@ -550,14 +555,14 @@ class Themes(ConfigBase):
         """Get list of available themes."""
         return tuple(self.themes)
 
-    def get_theme_color(self, theme_name: ty.Optional[str] = None, key: str = "text"):
+    def get_theme_color(self, theme_name: ty.Optional[str] = None, key: str = "text") -> str:
         """Get text color appropriate for the theme."""
         if theme_name is None:
             theme_name = self.theme
         palette = self.themes[theme_name]
         return getattr(palette, key).as_hex()
 
-    def get_theme_stylesheet(self, theme_name: ty.Optional[str] = None):
+    def get_theme_stylesheet(self, theme_name: ty.Optional[str] = None) -> str:
         """Get stylesheet."""
         from qtextra.assets import get_stylesheet
         from qtextra.utils.template import template
@@ -569,7 +574,7 @@ class Themes(ConfigBase):
         stylesheet = template(stylesheet, **palette)
         return stylesheet
 
-    def set_theme_stylesheet(self, widget: QWidget, theme_name: ty.Optional[str] = None):
+    def set_theme_stylesheet(self, widget: QWidget, theme_name: ty.Optional[str] = None) -> None:
         """Set stylesheet on widget."""
         widget.setStyleSheet(self.get_theme_stylesheet(theme_name))
 
@@ -593,13 +598,13 @@ class Themes(ConfigBase):
         }
         return config
 
-    def _emit_icon_color_change(self, name: str):
+    def _emit_icon_color_change(self, name: str) -> None:
         """Emit icon color change event."""
         self.register_themes([name])
         self.evt_theme_icon_changed.emit()
         logger.debug(f"Updating icon color for '{name}'...")
 
-    def _set_config_parameters(self, config: ty.Dict):
+    def _set_config_parameters(self, config: ty.Dict) -> None:
         """Set extra configuration parameters."""
         for config_group_title in ("themes",):
             _config_group = config.get(config_group_title, {})
@@ -625,7 +630,7 @@ class Themes(ConfigBase):
                 except Exception:
                     logger.warning("Could not load theme data.")
 
-    def lighten(self, color, percentage: float = 10, as_hex: bool = False) -> str:
+    def lighten(self, color: str, percentage: float = 10, as_hex: bool = False) -> str:
         """Lighted color."""
         from qtextra.utils.template import lighten
 
@@ -634,7 +639,7 @@ class Themes(ConfigBase):
             color = Color(color).as_hex()
         return color
 
-    def darken(self, color, percentage: float = 10, as_hex: bool = False) -> str:
+    def darken(self, color: str, percentage: float = 10, as_hex: bool = False) -> str:
         """Lighted color."""
         from qtextra.utils.template import darken
 
