@@ -165,7 +165,17 @@ def get_module_path(module: str, filename: str) -> str:
     return path
 
 
-def connect(connectable, func: ty.Callable, state: bool = True, source: str = ""):
+class Connectable(ty.Protocol):
+    """Protocol for connectable objects."""
+
+    def connect(self, func: ty.Callable) -> ty.Any:
+        """Connect function."""
+
+    def disconnect(self, func: ty.Callable) -> ty.Any:
+        """Disconnect function."""
+
+
+def connect(connectable: Connectable, func: ty.Callable, state: bool = True, source: str = "") -> None:
     """Function that connects/disconnects."""
     try:
         connectable_func = connectable.connect if state else connectable.disconnect

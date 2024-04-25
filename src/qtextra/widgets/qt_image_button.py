@@ -101,8 +101,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
             x = self.rect().width() - width
             y = self.rect().height() - width
             paint = QPainter(self)
-            paint.setPen(QColor(THEMES.get_hex_color("secondary")))
-            paint.setBrush(QColor(THEMES.get_hex_color("secondary")))
+            paint.setPen(QColor(THEMES.get_hex_color("highlight")))
+            paint.setBrush(QColor(THEMES.get_hex_color("highlight")))
             paint.drawEllipse(QPointF(x, y), radius, radius)
 
 
@@ -452,7 +452,7 @@ class QtToolbarPushButton(QtImagePushButton):
 class QtPriorityButton(QtImagePushButton):
     """Play button with multiple states to indicate current state."""
 
-    PRIORITY_TO_ICON = {
+    PRIORITY_TO_ICON: ty.ClassVar[dict] = {
         "normal": "priority_normal",
         "high": "priority_high",
         "low": "priority_low",

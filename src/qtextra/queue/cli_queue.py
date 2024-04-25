@@ -1,4 +1,5 @@
 """Event queue handler."""
+
 import atexit
 import typing as ty
 from contextlib import suppress
@@ -6,7 +7,7 @@ from contextlib import suppress
 from loguru import logger
 from qtpy.QtCore import QObject, QProcess, Signal  # type: ignore[attr-defined]
 
-from qtextra.queue.qprocess import QProcessWrapper
+from qtextra.queue.cli_qprocess import QProcessWrapper
 from qtextra.queue.task import MasterTask
 from qtextra.typing import Callback, TaskState
 from qtextra.utils.utilities import running_under_pytest

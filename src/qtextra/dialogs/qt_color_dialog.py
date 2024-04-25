@@ -113,7 +113,6 @@ class QtColorListDialog(QtDialog):
             swatch.set_color(color)
             self.new_colors[color_idx] = color
 
-    @Slot(int, str)  # type: ignore[misc]
     def on_update_color(self, color_idx: int, color: str) -> None:
         """Update color."""
         self.new_colors[color_idx] = color

@@ -1,4 +1,5 @@
 """tqdm-based progress manager."""
+
 import typing as ty
 
 from tqdm import tqdm
@@ -65,8 +66,8 @@ class Progress(tqdm):
         desc: ty.Optional[str] = None,
         total: ty.Optional[int] = None,
         bar_format: str = "|{bar}| {n_fmt}/{total_fmt} [ETA: {remaining}/{elapsed} {rate_fmt}]",
-        *args,
-        **kwargs,
+        *args: ty.Any,
+        **kwargs: ty.Any,
     ) -> None:
         self.events = EmitterGroup(value=Event, description=Event, overflow=Event, eta=Event, close=Event)
         self.is_init = True
@@ -80,36 +81,36 @@ class Progress(tqdm):
         """Return description."""
         return self.desc
 
-    def display(self, msg: str = None, pos: int = None) -> None:
+    def display(self, msg: ty.Optional[str] = None, pos: ty.Optional[int] = None) -> None:
         """Update the display and emit eta event."""
         # just plain tqdm if we don't have gui
         if not self.gui and not self.is_init:
             super().display(msg, pos)
             return
         etas = ""
-        if self.total != 0:
+        if self.total != 0:  # type: ignore[has-type]
             etas = str(self).split("|")[-1]
         self.events.eta(value=etas)
 
-    def update(self, n):
+    def update(self, n: ty.Optional[float] = None) -> None:
         """Update progress value by n and emit value event."""
         super().update(n)
         self.events.value(value=self.n)
 
-    def increment_with_overflow(self):
+    def increment_with_overflow(self) -> None:
         """Update if not exceeding total, else set indeterminate range."""
-        if self.n == self.total:
+        if self.n == self.total:  # type: ignore[has-type]
             self.total = 0
             self.events.overflow()
         else:
             self.update(1)
 
-    def set_description(self, desc):
+    def set_description(self, desc: str) -> None:
         """Update progress description and emit description event."""
         super().set_description(desc, refresh=True)
         self.events.description(value=desc)
 
-    def close(self):
+    def close(self) -> None:
         """Close progress object and emit event."""
         if self.disable:
             return

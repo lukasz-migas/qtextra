@@ -1,14 +1,20 @@
 """Table view of numpy or pandas array."""
+
+from __future__ import annotations
+
 import typing as ty
 
 import numpy as np
 import pandas as pd
-from koyo.utilities import find_nearest_index_batch
-from qtpy.QtCore import QAbstractTableModel, QModelIndex, QRect, Qt, Signal
+from koyo.utilities import find_nearest_index_single
+from qtpy.QtCore import QAbstractTableModel, QModelIndex, QRect, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
 from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
 
 from qtextra.utils.color import get_text_color
+
+if ty.TYPE_CHECKING:
+    from matplotlib.colors import Normalize
 
 TEXT_COLOR: str = "#000000"
 N_COLORS = 256
@@ -24,6 +30,7 @@ class QtRotatedHeaderView(QHeaderView):
         self.setMinimumSectionSize(20)
 
     def paintSection(self, painter, rect, logicalIndex):
+        """Paint section."""
         painter.save()
         # translate the painter such that rotate will rotate around the correct point
         painter.translate(rect.x() + rect.width(), rect.y())
@@ -33,12 +40,14 @@ class QtRotatedHeaderView(QHeaderView):
         super().paintSection(painter, newrect, logicalIndex)
         painter.restore()
 
-    def minimumSizeHint(self):
+    def minimumSizeHint(self) -> Qt.SizeHint:
+        """Minimum size hint."""
         size = super().minimumSizeHint()
         size.transpose()
         return size
 
     def sectionSizeFromContents(self, logicalIndex):
+        """Section size from contents."""
         size = super().sectionSizeFromContents(logicalIndex)
         size.transpose()
         return size
@@ -49,7 +58,9 @@ class QtArrayTableModel(QAbstractTableModel):
 
     df: pd.DataFrame
     base_df: pd.DataFrame
-    colors, color_list, normalizer = None, None, None
+    colors: dict[int, QColor] | None = None
+    color_list: np.ndarray | None = None
+    normalizer: Normalize | None = None
     max_color: QColor = None
     n_total: int = 0
     n_loaded: int = 0
@@ -59,7 +70,7 @@ class QtArrayTableModel(QAbstractTableModel):
         super().__init__(parent)
         self.set_data(data)
 
-    def set_data(self, data: ty.Union[np.ndarray, pd.DataFrame]):
+    def set_data(self, data: ty.Union[np.ndarray, pd.DataFrame]) -> None:
         """Set data in model."""
         if isinstance(data, np.ndarray):
             data = pd.DataFrame(data)
@@ -72,11 +83,11 @@ class QtArrayTableModel(QAbstractTableModel):
         self.n_loaded = len(self.df)
         self.reset()
 
-    def set_formatting(self, fmt: str):
+    def set_formatting(self, fmt: str) -> None:
         """Text formatter."""
         self.fmt = fmt
 
-    def set_colormap(self, colormap: str, min_val: float = None, max_val: float = None):
+    def set_colormap(self, colormap: str, min_val: float | None = None, max_val: float | None = None) -> None:
         """Set colormap."""
         import matplotlib.cm
         import matplotlib.colors
@@ -103,56 +114,52 @@ class QtArrayTableModel(QAbstractTableModel):
         else:
             self.colors, self.color_list = None, None
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset model."""
         self.beginResetModel()
         self.endResetModel()
 
-    def reset_data(self):
+    def reset_data(self) -> None:
         """Reset data."""
         self.df = self.df.iloc[0:0]
         self.base_df = self.base_df.iloc[0:0]
         self.reset()
 
-    def data(self, index, role=None):
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
         """Parse data."""
         if not index.isValid():
             return None
         # background color
-        if role == Qt.BackgroundRole:
-            if self.colors:
-                color = self.colors.get(
-                    find_nearest_index_batch(
-                        self.color_list, self.normalizer(self.df.iloc[index.row(), index.column()])
-                    ),
-                    self.max_color,
-                )
+        if role == Qt.ItemDataRole.BackgroundRole:
+            if self.colors and self.normalizer:
+                value = self.normalizer(self.df.iloc[index.row(), index.column()])
+                index = find_nearest_index_single(self.color_list, value)
+                color = self.colors.get(index, self.max_color)
                 return QBrush(color)
             return QBrush()
         # text color
-        elif role == Qt.ForegroundRole:
-            if self.colors:
-                color = self.colors.get(
-                    find_nearest_index_batch(
-                        self.color_list, self.normalizer(self.df.iloc[index.row(), index.column()])
-                    ),
-                    self.max_color,
-                )
+        elif role == Qt.ItemDataRole.ForegroundRole:
+            if self.colors and self.normalizer:
+                value = self.normalizer(self.df.iloc[index.row(), index.column()])
+                index = find_nearest_index_single(self.color_list, value)
+                color = self.colors.get(index, self.max_color)
                 return QBrush(get_text_color(color))
             return QBrush(QColor(TEXT_COLOR))
         # display value
-        elif role == Qt.DisplayRole:
+        elif role == Qt.ItemDataRole.DisplayRole:
             value = self.df.iloc[index.row(), index.column()]
             return self.fmt.format(value)
         # check alignment role
-        elif role == Qt.TextAlignmentRole:
+        elif role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
 
-    def headerData(self, index, orientation, role=None):
+    def headerData(
+        self, index: QModelIndex, orientation: Qt.Orientation, role: Qt.ItemDataRole | None = None
+    ) -> str | None:
         """Get header data."""
-        if orientation == Qt.Orientation.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return str(self.df.columns[index])
-        if orientation == Qt.Orientation.Vertical and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Vertical and role == Qt.ItemDataRole.DisplayRole:
             return str(self.df.index[index])
         return None
 
@@ -160,15 +167,15 @@ class QtArrayTableModel(QAbstractTableModel):
         """Return number of rows."""
         return self.df.shape[0] if self.df is not None else 0
 
-    def columnCount(self, parent=None, **kwargs):
+    def columnCount(self, parent=None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
         return self.df.shape[1] if self.df is not None else 0
 
     def canFetchMore(self, parent=None) -> bool:
-        """Check whether can fetch more data."""
+        """Check whether you can fetch more data."""
         return self.n_total >= self.n_loaded
 
-    def fetchMore(self, index=QModelIndex()):
+    def fetchMore(self, index: QModelIndex) -> None:
         """Fetch more data."""
         reminder = self.n_total - self.n_loaded
         items_to_fetch = min(reminder, BATCH_SIZE)
@@ -177,10 +184,10 @@ class QtArrayTableModel(QAbstractTableModel):
         self.df = self.base_df.iloc[: self.n_loaded, :]
         self.endInsertRows()
 
-    def sort(self, column, order=...):
+    def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
         """Sort data."""
         self.beginResetModel()
-        self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.AscendingOrder)
+        self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.SortOrder.AscendingOrder)
         self.endResetModel()
 
 
@@ -201,7 +208,7 @@ class QtArrayTableView(QTableView):
         order = self.horizontalHeader().sortIndicatorOrder()
         return QTableView.sortByColumn(self, index, order)
 
-    def keyReleaseEvent(self, event):
+    def keyReleaseEvent(self, event) -> None:
         """Process key event press."""
         super().keyReleaseEvent(event)
         row = self.currentIndex().row()
@@ -214,9 +221,9 @@ class QtArrayTableView(QTableView):
         self,
         data: ty.Union[np.ndarray, pd.DataFrame],
         fmt: str = "{:d}",
-        colormap: str = None,
-        min_val: float = None,
-        max_val: float = None,
+        colormap: str | None = None,
+        min_val: float | None = None,
+        max_val: float | None = None,
     ) -> None:
         """Set data."""
         model = QtArrayTableModel(self, data)
@@ -226,7 +233,7 @@ class QtArrayTableView(QTableView):
         self.setModel(model)
         self.init()
 
-    def set_formatting(self, fmt: str):
+    def set_formatting(self, fmt: str) -> None:
         """Text formatter."""
         # let's perform simple test to make sure value can be rendered
         fmt.format(42.0)
@@ -237,9 +244,9 @@ class QtArrayTableView(QTableView):
             model.set_formatting(fmt)
             model.reset()
 
-    def set_colormap(self, colormap: str, min_val: float = None, max_val: float = None):
+    def set_colormap(self, colormap: str, min_val: float | None = None, max_val: float | None = None) -> None:
         """Set colormap."""
-        model = self.model()
+        model: QtArrayTableModel = self.model()
         if model:
             model.set_colormap(colormap, min_val, max_val)
             model.reset()
@@ -248,9 +255,11 @@ class QtArrayTableView(QTableView):
         """Initialize table to ensure correct visuals."""
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setDragEnabled(True)
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         # self.setHorizontalHeader(QtRotatedHeaderView(self))
 
-    def reset_data(self):
+    def reset_data(self) -> None:
         """Reset data."""
         model = self.model()
         if model:

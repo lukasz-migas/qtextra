@@ -1,4 +1,5 @@
 """Typing utilities."""
+
 import typing as ty
 from enum import Enum
 
@@ -18,3 +19,11 @@ class TaskState(str, Enum):
     FAILED = "failed"
     CANCELLING = "cancelling"
     CANCELLED = "cancelled"
+    LOCKED = "locked"
+
+
+class WorkerState(str, Enum):
+    """Worker state."""
+
+    FINISHED = "finished"
+    NOT_ENOUGH_SPACE = "not_enough_space"

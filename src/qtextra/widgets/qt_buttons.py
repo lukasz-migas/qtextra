@@ -1,4 +1,5 @@
 """Standard Qt button."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -52,7 +53,7 @@ class QtActivePushButton(QtPushButton):
         """Paint event/."""
         super().paintEvent(event)
         if self._pixmap is not None:
-            y = (self.height() - self._pixmap.height()) / 2
+            y = int((self.height() - self._pixmap.height()) / 2)
             painter = QPainter(self)
             painter.drawPixmap(5, y, self._pixmap)
 

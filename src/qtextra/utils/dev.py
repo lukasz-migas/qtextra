@@ -6,7 +6,7 @@ import typing as ty
 
 from loguru import logger
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
-from qtpy.QtWidgets import QApplication, QDockWidget, QMainWindow, QWidget
+from qtpy.QtWidgets import QApplication, QDockWidget, QLayout, QMainWindow, QWidget
 
 if ty.TYPE_CHECKING:
     from qtreload.qt_reload import QtReloadWidget
@@ -94,7 +94,9 @@ def qapplication(test_time: int = 3):
     return app
 
 
-def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True, set_style: bool = True):
+def qframe(
+    horz: bool = True, with_layout: bool = True, add_reload: bool = True, set_style: bool = True
+) -> tuple[QApplication, QWidget, QLayout]:
     """Create frame widget."""
     from qtpy import QtWidgets
 
@@ -119,8 +121,6 @@ def qframe(horz: bool = True, with_layout: bool = True, add_reload: bool = True,
 
 def apply_style(widget: QWidget) -> None:
     """Apply stylesheet(s) on the widget."""
-    import ionglow.assets
-
     from qtextra.config.theme import THEMES
 
     THEMES.set_theme_stylesheet(widget)
