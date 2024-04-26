@@ -1,7 +1,8 @@
 """Progress bar with label."""
 
-import typing as ty
+from __future__ import annotations
 
+from napari.utils.events import Event
 from qtpy import QtCore
 from qtpy.QtWidgets import QApplication, QHBoxLayout, QLabel, QProgressBar, QVBoxLayout, QWidget
 
@@ -11,7 +12,7 @@ from qtextra.utils.progress import Progress
 class QtLabeledProgressBar(QWidget):
     """QProgressBar with QLabels for description and ETA."""
 
-    def __init__(self, parent: ty.Optional[QWidget] = None, progress: ty.Optional[Progress] = None) -> None:
+    def __init__(self, parent: QWidget | None = None, progress: Progress | None = None) -> None:
         super().__init__(parent)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
 
@@ -33,36 +34,36 @@ class QtLabeledProgressBar(QWidget):
         self.setMinimum = self.qt_progress_bar.setMinimum
         self.setMaximum = self.qt_progress_bar.setMaximum
 
-    def setRange(self, min_value: int, max_value: int):
+    def setRange(self, min_value: int, max_value: int) -> None:
         """Set range."""
         self.qt_progress_bar.setRange(min_value, max_value)
 
-    def setValue(self, value):
+    def setValue(self, value: int) -> None:
         """Set value."""
         self.qt_progress_bar.setValue(value)
         QApplication.processEvents()
 
-    def setDescription(self, value):
+    def setDescription(self, value: str) -> None:
         """Set description."""
         self.description_label.setText(value)
         QApplication.processEvents()
 
-    def _set_value(self, event):
+    def _set_value(self, event: Event) -> None:
         self.setValue(event.value)
 
-    def _get_value(self):
+    def _get_value(self) -> int:
         return self.qt_progress_bar.value()
 
-    def _set_description(self, event):
+    def _set_description(self, event: Event) -> None:
         self.setDescription(event.value)
 
-    def _make_indeterminate(self, event):
+    def _make_indeterminate(self, event: Event) -> None:
         self.setRange(0, 0)
 
-    def _set_eta(self, event):
+    def _set_eta(self, event: Event) -> None:
         self.qt_progress_bar.setFormat(event.value)
 
-    def _on_clear(self, event):
+    def _on_clear(self, event: Event) -> None:
         self.description_label.setText("")
 
 

@@ -12,7 +12,7 @@ from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy
 class QtPushButton(QPushButton):
     """Standard Qt button. Here to enable easier styling."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
 
 

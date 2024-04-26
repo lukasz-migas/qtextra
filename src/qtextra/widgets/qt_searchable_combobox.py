@@ -1,12 +1,17 @@
 """Searchable combobox."""
+
+from __future__ import annotations
+
+import typing as ty
+
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QComboBox, QCompleter, QStyledItemDelegate
+from qtpy.QtWidgets import QComboBox, QCompleter, QStyledItemDelegate, QWidget
 
 
 class QtSearchableComboBox(QComboBox):
     """Searchable combobox."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setEditable(True)
         self.completer_object = QCompleter()
@@ -26,9 +31,9 @@ class QtSearchableComboBox(QComboBox):
         super().addItem(*args)
         self.completer_object.setModel(self.model())
 
-    def addItems(self, *args):
+    def addItems(self, items: ty.Sequence[str]):
         """Add items."""
-        super().addItems(*args)
+        super().addItems(items)
         self.completer_object.setModel(self.model())
 
     def removeItem(self, index: int):

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 import numpy as np
 from loguru import logger
 from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QCloseEvent, QCursor, QGuiApplication
+from qtpy.QtGui import QCloseEvent, QCursor, QGuiApplication, QKeyEvent, QResizeEvent
 from qtpy.QtWidgets import (
     QApplication,
     QDialog,
@@ -404,7 +404,7 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
     def connect_events(self, state: bool = True) -> None:
         """Connect events."""
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, event: QCloseEvent | None) -> None:
         """Hide rather than close."""
         self._on_teardown()
         self.connect_events(False)
@@ -499,10 +499,24 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):
             return False
         return True
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
         """Resize event."""
         self.evt_resized.emit()
         return super().resizeEvent(event)
+
+    def keyPressEvent(self, event: QKeyEvent):
+        """Close window on return, else pass event through to super class.
+
+        Parameters
+        ----------
+        event : qtpy.QtCore.QEvent
+            Event from the Qt context.
+        """
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.closeEvent(event)
+            event.ignore()
+        else:
+            super().keyPressEvent(event)
 
 
 class QtFramelessPopup(QtDialog, CloseMixin):
@@ -583,7 +597,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         self.evt_close.connect(lambda: hp.disable_widgets(*widgets, disabled=False))
         hp.disable_widgets(*widgets, disabled=True)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent | None = None) -> None:
         """Hide rather than close."""
         if self.HIDE_WHEN_CLOSE:
             self.hide()
@@ -638,21 +652,22 @@ class QtCollapsibleFramelessTool(QtFramelessTool):
         """Mouse press event."""
         event.ignore()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent | None) -> None:
         """Cannot close popup."""
-        event.ignore()
+        if event:
+            event.ignore()
 
     @property
     def is_expanded(self) -> bool:
         """Checks whether text is expanded."""
-        return self.property("expanded")
+        return bool(self.property("expanded"))
 
     def toggle_expansion(self):
         """Toggle the expanded state of the notification frame."""
         self.contract() if self.is_expanded else self.expand()
         self.timer.stop()
 
-    def expand(self):
+    def expand(self) -> None:
         """Expanded widget to maximum size."""
         sz = self.parent().size() - QSize(self.size().width(), self.parent().size().height())
         self.geom_anim.setDuration(self.GEOM_TIME)
@@ -666,7 +681,7 @@ class QtCollapsibleFramelessTool(QtFramelessTool):
                 size.height(),
             )
         )
-        self.geom_anim.setEasingCurve(QEasingCurve.OutQuad)
+        self.geom_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
         self.geom_anim.start()
         self.expand_btn.expanded = True
         self.setProperty("expanded", True)

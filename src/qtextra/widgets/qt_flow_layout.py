@@ -1,27 +1,29 @@
 """Qt flow layout."""
 
+from __future__ import annotations
+
 from qtpy.QtCore import QPoint, QRect, QSize, Qt
-from qtpy.QtWidgets import QLayout, QSizePolicy
+from qtpy.QtWidgets import QLayout, QLayoutItem, QSizePolicy, QWidget
 
 
 class QtFlowLayout(QLayout):
     """Implementation of flow layout where widgets are automatically moved around."""
 
-    def __init__(self, parent=None, margin=0, spacing=-1):
+    def __init__(self, parent: QWidget | None = None, margin: int = 0, spacing: int = -1):
         super().__init__(parent)
 
         if parent is not None:
             self.setContentsMargins(margin, margin, margin, margin)
         self.setSpacing(spacing)
 
-        self.items = []
+        self.items: list[QLayoutItem] = []
 
-    def __del__(self):
+    def __del__(self) -> None:
         item = self.takeAt(0)
         while item:
             item = self.takeAt(0)
 
-    def addItem(self, item):
+    def addItem(self, item: QLayoutItem) -> None:
         """Add item to the list."""
         self.items.append(item)
 
@@ -30,7 +32,7 @@ class QtFlowLayout(QLayout):
         return len(self.items)
 
     # noinspection PyPep8Naming
-    def insertWidget(self, index: int, widget):
+    def insertWidget(self, index: int, widget: QWidget) -> None:
         """Insert widget at specified position."""
         if index < 0:
             index = self.count()
@@ -39,19 +41,19 @@ class QtFlowLayout(QLayout):
         self.items.insert(index, item)
         self.invalidate()
 
-    def itemAt(self, index: int):
+    def itemAt(self, index: int) -> QLayoutItem | None:
         """Get item at index."""
         if 0 <= index < len(self.items):
             return self.items[index]
         return None
 
-    def takeAt(self, index: int):
+    def takeAt(self, index: int) -> QLayoutItem | None:
         """Take item from index."""
         if 0 <= index < len(self.items):
             return self.items.pop(index)
         return None
 
-    def expandingDirections(self):
+    def expandingDirections(self) -> Qt.Orientation:
         """Get expanding direction."""
         return Qt.Orientation(Qt.Orientation(0))
 
@@ -64,28 +66,25 @@ class QtFlowLayout(QLayout):
         height = self.update_layout(QRect(0, 0, width, 0), True)
         return height
 
-    def setGeometry(self, rect):
+    def setGeometry(self, rect: QRect) -> None:
         """Set geometry."""
         super().setGeometry(rect)
         self.update_layout(rect, False)
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         """Size hint."""
         return self.minimumSize()
 
-    def minimumSize(self):
+    def minimumSize(self) -> QSize:
         """Minimum size."""
         size = QSize()
-
         for item in self.items:
             size = size.expandedTo(item.minimumSize())
-
         margin, _, _, _ = self.getContentsMargins()
-
-        size += QSize(2 * margin, 2 * margin)
+        size += QSize(int(2 * margin), int(2 * margin))
         return size
 
-    def update_layout(self, rect, check_only: bool):
+    def update_layout(self, rect: QRect, check_only: bool) -> int:
         """Update layout."""
         x = rect.x()
         y = rect.y()
@@ -111,7 +110,7 @@ class QtFlowLayout(QLayout):
 
             x = x_next
             line_height = max(line_height, item.sizeHint().height())
-        return y + line_height - rect.y()
+        return int(y + line_height - rect.y())
 
 
 if __name__ == "__main__":  # pragma: no cover

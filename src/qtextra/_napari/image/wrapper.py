@@ -1,4 +1,5 @@
 """Add napari based viewer."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -247,7 +248,7 @@ class NapariImageView(ViewerBase):
         self.viewer.layers.selection.add(self.extract_layer)
         return self.extract_layer
 
-    def add_extract_shapes_layer(self):
+    def add_extract_shapes_layer(self) -> Shapes:
         """Add new (or reuse existing) layer to enable data extraction."""
         if self.shape_layer is None:
             self.viewer.add_shapes(

@@ -1,4 +1,5 @@
 """Common widget list interface."""
+
 from __future__ import annotations
 
 import time
@@ -148,25 +149,28 @@ class QtListWidget(QListWidget):
         for index in range(self.count()):
             yield self.itemWidget(self.item(index))
 
-    def item_iter(self, reverse: bool = False) -> ty.Iterator[_W]:
+    def item_iter(self, indices: ty.Sequence[int] | None = None, reverse: bool = False) -> ty.Iterator[_W]:
         """Iterate through list of widgets."""
-        iterator = range(self.count()) if not reverse else reversed(range(self.count()))
+        if indices is None:
+            indices = range(self.count())
+
+        iterator = indices if not reverse else reversed(indices)
         for index in iterator:
-            yield self.item(index)
+            yield self.item(index)  # type: ignore[misc]
 
     def item_model_widget_iter(self) -> ty.Iterator[ty.Tuple[QListWidgetItem, _M, _W]]:
         """Iterate through list of widgets."""
         for index in range(self.count()):
             item = self.item(index)
             widget = self.itemWidget(item)
-            yield item, item.item_model, widget
+            yield item, item.item_model, widget  # type: ignore[misc,union-attr]
 
-    def iter_model(self, indices: ty.Sequence[int] = None) -> ty.Iterator[_M]:
+    def model_iter(self, indices: ty.Sequence[int] | None = None) -> ty.Iterator[_M]:
         """Iterate through list of ions."""
         if indices is None:
             indices = range(self.count())
         for index in indices:
-            yield self.item(index).item_model
+            yield self.item(index).item_model  # type: ignore[misc,union-attr]
 
     def get_all_checked(self, *, reverse: bool = False) -> ty.List[int]:
         """Get list of checked items."""
@@ -191,7 +195,7 @@ class QtListWidget(QListWidget):
         hash_ids = []
         for item_id in indices:
             item = self.item(item_id)
-            hash_ids.append(item.item_model.name)
+            hash_ids.append(item.item_model.name)  # type: ignore[union-attr]
         return hash_ids
 
     def get_item_widget_for_index(self, index: int) -> ty.Tuple[QListWidgetItem, _W]:

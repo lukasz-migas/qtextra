@@ -56,7 +56,7 @@ class WrapTextDelegate(QStyledItemDelegate):
         document.setTextWidth(option.rect.width())  # Set text width to option's width
         document.setDefaultFont(option.font)
         document.setHtml(text)
-        return QSize(document.idealWidth(), document.size().height() / 4.5)
+        return QSize(document.idealWidth(), int(document.size().height() / 4.5))
 
 
 class MultiFilterMode(str, Enum):
@@ -563,7 +563,7 @@ class QtCheckableTableView(QTableView):
 
     def model(self) -> QtCheckableItemModel:
         """Return instance of model."""
-        model = super().model()
+        model: QtCheckableItemModel = super().model()
         if isinstance(model, FilterProxyModel):
             return model.sourceModel()
         return model
@@ -574,7 +574,7 @@ class QtCheckableTableView(QTableView):
 
     def proxy_or_model(self) -> QtCheckableItemModel | FilterProxyModel:
         """Return instance of model."""
-        model = super().model()
+        model: QtCheckableItemModel = super().model()
         if isinstance(model, FilterProxyModel):
             return model
         return model
@@ -680,7 +680,7 @@ class QtCheckableTableView(QTableView):
         html_columns: list[int] | None = None,
         icon_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
-        text_alignment: str | None = None,
+        text_alignment: Qt.AlignmentFlag | None = None,
     ) -> None:
         """Setup model in the table."""
         self.set_data(
@@ -708,7 +708,7 @@ class QtCheckableTableView(QTableView):
         icon_columns: list[int] | None = None,
         color_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
-        text_alignment: str | None = None,
+        text_alignment: Qt.AlignmentFlag | None = None,
         checkable: bool | str = "auto",
     ) -> None:
         """Set data."""
@@ -818,11 +818,11 @@ class QtCheckableTableView(QTableView):
         """Get initial index."""
         return self.model().get_initial_indices(indices)
 
-    def get_row_id(self, col_id: int, value: ty.Union[str, int, float]) -> int:
+    def get_row_id(self, col_id: int, value: ty.Any) -> int:
         """Get the id of a value."""
         return self.model().get_row_id(col_id, value)
 
-    def get_row_id_for_values(self, *column_and_values: ty.Tuple[int, ty.Union[str, int, float]]) -> int:
+    def get_row_id_for_values(self, *column_and_values: ty.Tuple[int, ty.Any]) -> int:
         """Get the id of a value."""
         return self.model().get_row_id_for_values(*column_and_values)
 
@@ -847,14 +847,14 @@ class QtCheckableTableView(QTableView):
             return False
         return bool(value)
 
-    def get_value(self, col_id: int, row_id: int) -> str:
+    def get_value(self, col_id: int, row_id: int) -> ty.Any:
         """Get data from model."""
         data = self.model().get_data()
         if row_id <= self.n_rows and col_id <= self.n_cols:
             data = data[row_id][col_id]
         return data
 
-    def set_value(self, col_id: int, row_id: int, value: ty.Union[str, int, float, bool]):
+    def set_value(self, col_id: int, row_id: int, value: ty.Any) -> None:
         """Set value in the data model."""
         self.model().update_value(row_id, col_id, value)
 
@@ -864,15 +864,13 @@ class QtCheckableTableView(QTableView):
             row = self.model().get_sort_index(row)
         self.selectRow(row)
 
-    def update_value(
-        self, row: int, col: int, value: ty.Union[str, int, float, bool], match_to_sort: bool = True
-    ) -> None:
+    def update_value(self, row: int, col: int, value: ty.Any, match_to_sort: bool = True) -> None:
         """Update value in the model."""
         if match_to_sort:
             row = self.model().get_sort_index(row)
         self.model().update_value(row, col, value)
 
-    def remove_row(self, row_id: int):
+    def remove_row(self, row_id: int) -> None:
         """Remove row from the model."""
         self.model().removeRow(row_id)
 
@@ -883,7 +881,7 @@ class QtCheckableTableView(QTableView):
         self.model().update_row(row, value)
 
     @contextmanager
-    def block_model(self):
+    def block_model(self) -> ty.Generator[None, None, None]:
         """Block model signals."""
         with qt_signals_blocked(self.model(), block_signals=True):
             yield
@@ -920,7 +918,7 @@ class QtCheckableTableView(QTableView):
         except ValueError:
             return -1
 
-    def find_indices_of(self, col_id: int, value: ty.Any):
+    def find_indices_of(self, col_id: int, value: ty.Any) -> list[int]:
         """Find index of value. Return -1 if not found."""
         col_data = self.get_col_data(col_id)
         indices = [i for i, x in enumerate(col_data) if x == value]

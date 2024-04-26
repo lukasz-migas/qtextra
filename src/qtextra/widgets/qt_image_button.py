@@ -183,12 +183,12 @@ class QtPauseButton(QtTogglePushButton):
 class QtLockButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._locked = False
         self.locked = False
 
-    def toggle_lock(self):
+    def toggle_lock(self) -> None:
         """Toggle lock."""
         self.locked = not self.locked
 
@@ -352,7 +352,7 @@ class QtToolbarPushButton(QtImagePushButton):
 
     # evt_hover = Signal(bool)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.setMouseTracking(True)
 
