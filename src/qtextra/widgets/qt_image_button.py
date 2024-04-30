@@ -101,8 +101,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
             x = self.rect().width() - width
             y = self.rect().height() - width
             paint = QPainter(self)
-            paint.setPen(QColor(THEMES.get_hex_color("highlight")))
-            paint.setBrush(QColor(THEMES.get_hex_color("highlight")))
+            paint.setPen(QColor(THEMES.get_hex_color("success")))
+            paint.setBrush(QColor(THEMES.get_hex_color("success")))
             paint.drawEllipse(QPointF(x, y), radius, radius)
 
 

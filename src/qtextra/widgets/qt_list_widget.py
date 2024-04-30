@@ -8,7 +8,7 @@ from contextlib import contextmanager
 
 from koyo.timer import report_time
 from loguru import logger
-from qtpy.QtCore import Signal, Slot
+from qtpy.QtCore import Signal, Slot  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QFrame, QListWidget, QListWidgetItem, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
@@ -158,7 +158,7 @@ class QtListWidget(QListWidget):
         for index in iterator:
             yield self.item(index)  # type: ignore[misc]
 
-    def item_model_widget_iter(self) -> ty.Iterator[ty.Tuple[QListWidgetItem, _M, _W]]:
+    def item_model_widget_iter(self) -> ty.Iterator[tuple[QListWidgetItem, _M, _W]]:
         """Iterate through list of widgets."""
         for index in range(self.count()):
             item = self.item(index)
@@ -172,25 +172,25 @@ class QtListWidget(QListWidget):
         for index in indices:
             yield self.item(index).item_model  # type: ignore[misc,union-attr]
 
-    def get_all_checked(self, *, reverse: bool = False) -> ty.List[int]:
+    def get_all_checked(self, *, reverse: bool = False) -> list[int]:
         """Get list of checked items."""
         checked = []
-        for index, widget in enumerate(self.widget_iter()):
+        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
             if widget.is_checked:
                 checked.append(index)
         if reverse:
             return list(reversed(checked))
         return checked
 
-    def get_all_unchecked(self) -> ty.List[int]:
+    def get_all_unchecked(self) -> list[int]:
         """Get list of checked items."""
         checked = []
-        for index, widget in enumerate(self.widget_iter()):
+        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
             if not widget.is_checked:
                 checked.append(index)
         return checked
 
-    def get_hash_ids(self, indices: ty.Iterator[int]):
+    def get_hash_ids(self, indices: ty.Iterator[int]) -> list[str]:
         """Get list of names."""
         hash_ids = []
         for item_id in indices:
@@ -198,14 +198,14 @@ class QtListWidget(QListWidget):
             hash_ids.append(item.item_model.name)  # type: ignore[union-attr]
         return hash_ids
 
-    def get_item_widget_for_index(self, index: int) -> ty.Tuple[QListWidgetItem, _W]:
+    def get_item_widget_for_index(self, index: int) -> tuple[QListWidgetItem, _W]:
         """Get widget for specified item."""
         item = self.item(index)
         return item, self.itemWidget(item)
 
     def get_index_for_hash_id(self, hash_id: str) -> int:
         """Get index of the item."""
-        for index, widget in enumerate(self.widget_iter()):
+        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
             if widget.hash_id == hash_id:
                 return index
         return -1
@@ -217,7 +217,7 @@ class QtListWidget(QListWidget):
 
     def get_item_for_item_model(self, item_model: _M) -> ty.Optional[QListWidgetItem]:
         """Get item by its model."""
-        for item, _item_model, _ in self.item_model_widget_iter():
+        for item, _item_model, _ in self.item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return item
         return None
@@ -231,7 +231,7 @@ class QtListWidget(QListWidget):
 
     def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
         """Get widget by its model."""
-        for _, _item_model, widget in self.item_model_widget_iter():
+        for _, _item_model, widget in self.item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return widget
         return None
@@ -289,7 +289,7 @@ class QtListWidget(QListWidget):
         """Reset data."""
         self.clear()
 
-    def append_item(self, item_model: _M) -> ty.Tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
+    def append_item(self, item_model: _M) -> tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
         """Append item."""
         if self._check_existing(item_model):
             return None, None
@@ -305,9 +305,7 @@ class QtListWidget(QListWidget):
         # self.adjustSize()  # disabled because it causes weird effect in e.g. PanelRGB
         return item, widget
 
-    def insert_item(
-        self, item_model: _M, index: int = 0
-    ) -> ty.Tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
+    def insert_item(self, item_model: _M, index: int = 0) -> tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
         """Insert item in the list."""
         if self._check_existing(item_model):
             return None, None

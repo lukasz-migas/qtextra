@@ -1,4 +1,5 @@
 """Qt widget that embeds the canvas."""
+
 from typing import Tuple
 from weakref import WeakSet
 
@@ -421,7 +422,7 @@ class QtViewerBase(QWidget):
 
         self.canvas.native.setCursor(q_cursor)
 
-    def on_open_controls_dialog(self, event=None):
+    def on_open_controls_dialog(self, event=None) -> None:
         """Open dialog responsible for layer settings."""
         raise NotImplementedError("Must implement method")
 

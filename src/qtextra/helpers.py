@@ -69,6 +69,7 @@ def make_form_layout(
 ) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
+    style_form_layout(layout)
     layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
     layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
     layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
@@ -332,7 +333,7 @@ def make_click_label(
     text: str = "",
     func: Callback | None = None,
     bold: bool = False,
-    elide: Qt.TextElideMode = Qt.ElideNone,
+    elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
     tooltip: str = "",
 ) -> QtClickableLabel:
     """Make clickable label."""
@@ -1483,7 +1484,7 @@ def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
 
 def make_v_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
+    stretch_id: int | tuple[int, ...] | None = None,
     spacing: int | None = None,
     margin: int | None = None,
     alignment: Qt.AlignmentFlag | None = None,
@@ -1494,6 +1495,8 @@ def make_v_layout(
     layout = Qw.QVBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
+    if margin is not None:
+        layout.setContentsMargins(margin, margin, margin, margin)
     return _set_in_layout(
         *widgets,
         layout=layout,
@@ -1506,7 +1509,7 @@ def make_v_layout(
 
 def make_h_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    stretch_id: ty.Optional[ty.Union[int, ty.Sequence[int]]] = None,
+    stretch_id: int | tuple[int, ...] | None = None,
     spacing: int | None = None,
     margin: int | None = None,
     alignment: Qt.AlignmentFlag | None = None,
@@ -1517,6 +1520,8 @@ def make_h_layout(
     layout = Qw.QHBoxLayout()
     if spacing is not None:
         layout.setSpacing(spacing)
+    if margin is not None:
+        layout.setContentsMargins(margin, margin, margin, margin)
     return _set_in_layout(
         *widgets,
         layout=layout,
@@ -1528,7 +1533,7 @@ def make_h_layout(
 
 
 def _set_in_layout(
-    *widgets,
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     layout: Qw.QVBoxLayout | Qw.QHBoxLayout,
     stretch_id: int | tuple[int, ...],
     alignment: Qt.AlignmentFlag | None = None,
@@ -1610,6 +1615,8 @@ def polish_widget(*widget: Qw.QWidget):
 
 def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options") -> QtCheckCollapsible:
     """Make collapsible widget."""
+    from qtextra.widgets.qt_collapsible import QtCheckCollapsible
+
     content = Qw.QWidget()
     content.setLayout(make_form_layout())
     advanced_widget = QtCheckCollapsible(title, parent)

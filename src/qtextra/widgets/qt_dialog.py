@@ -108,11 +108,11 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_below_mouse(self, show: bool = True):
+    def show_below_mouse(self, show: bool = True, y_offset: int = -14):
         """Show popup dialog above the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() / 2), -14)
+        pos -= QPoint(int(sz_hint.width() / 2), y_offset)
         self.move(pos)
         if show:
             self.show()
@@ -359,6 +359,7 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
     _views_1d: ty.List | None = None
     _views_2d: ty.List | None = None
 
+    DELAY_CONNECTION: ty.ClassVar[bool] = False
     setLayout: ty.Callable[[QLayout], None]
 
     def __init__(self, parent: QWidget | None = None, title: str = "", delay: bool = False):
@@ -378,7 +379,7 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
         # Update values
         self.on_set_from_config()
         # Connect signals
-        if not delay:
+        if not delay and not self.DELAY_CONNECTION:
             self.connect_events()
         self._is_init = True
 
@@ -513,7 +514,7 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):
             Event from the Qt context.
         """
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            self.closeEvent(event)
+            # self.closeEvent(event)
             event.ignore()
         else:
             super().keyPressEvent(event)

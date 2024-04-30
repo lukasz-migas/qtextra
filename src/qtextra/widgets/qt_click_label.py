@@ -24,19 +24,12 @@ class QtClickableLabel(QtW.QLabel):
         """The current Qt.TextElideMode."""
         return self._elide_mode
 
-    def setElideMode(self, mode: Qt.TextElideMode):
+    def setElideMode(self, mode: Qt.TextElideMode) -> None:
         """Set the elide mode to a Qt.TextElideMode."""
         self._elide_mode = Qt.TextElideMode(mode)
         super().setText(self._elidedText())
 
-    # def setText(self, text: str):
-    #     """Set the label text and resize the widget to fit the text."""
-    #     # fm = QtGui.QFontMetrics(self.font())
-    #     # width = fm.horizontalAdvance(text)
-    #     # self.setFixedWidth(width + 18)
-    #     return super().setText(text)
-
-    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
+    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:  # type: ignore[override]
         """Emit the clicked signal when the left mouse button is released."""
         if ev.button() == Qt.MouseButton.LeftButton:
             self.evt_clicked.emit()
