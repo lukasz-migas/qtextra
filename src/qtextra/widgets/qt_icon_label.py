@@ -1,11 +1,45 @@
 """QtIcon."""
+
+from __future__ import annotations
+
 import typing as ty
 
-from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]
-from qtpy.QtWidgets import QLabel, QToolTip
+from koyo.typing import PathLike
+from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+from qtpy.QtGui import QEnterEvent, QPixmap, QResizeEvent
+from qtpy.QtWidgets import QLabel, QToolTip, QWidget
+from superqt.utils import qdebounced
 
 from qtextra.config import THEMES
 from qtextra.widgets._qta_mixin import QtaMixin
+
+
+def make_png_label(icon_path: str, size: tuple[int, int] = (40, 40)) -> QLabel:
+    """Make svg icon."""
+    image = QKeepAspectLabel(None, icon_path)
+    image.setMinimumSize(*size)
+    return image
+
+
+class QKeepAspectLabel(QLabel):
+    """Keep aspect ratio label."""
+
+    def __init__(self, parent: QWidget | None, path: PathLike):
+        super().__init__(parent)
+        self.path = path
+        self._set_pixmap()
+
+    @qdebounced(timeout=100, leading=False)
+    def _set_pixmap(self) -> None:
+        img = QPixmap(self.path)
+        size = self.size()
+        pix = img.scaled(size, Qt.AspectRatioMode.KeepAspectRatio)
+        self.setPixmap(pix)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore[override]
+        """Resize event."""
+        self._set_pixmap()
+        return super().resizeEvent(event)
 
 
 class QtActiveIcon(QLabel):
@@ -64,12 +98,33 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
     _icon = None
 
     def __init__(
-        self, *args, small: bool = False, large: bool = False, xlarge: bool = False, xxlarge: bool = False, **kwargs
+        self,
+        *args,
+        xxsmall: bool = False,
+        xsmall: bool = False,
+        small: bool = False,
+        normal: bool = False,
+        average: bool = False,
+        medium: bool = False,
+        large: bool = False,
+        xlarge: bool = False,
+        xxlarge: bool = False,
+        **kwargs,
     ):
         super().__init__("", *args, **kwargs)
         self._size = QSize(28, 28)
         self.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
-        self.set_default_size(small, large, xlarge, xxlarge)
+        self.set_default_size(
+            xxsmall=xxsmall,
+            xsmall=xsmall,
+            small=small,
+            normal=normal,
+            average=average,
+            medium=medium,
+            large=large,
+            xlarge=xlarge,
+            xxlarge=xxlarge,
+        )
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
     def setIcon(self, _icon) -> None:
@@ -77,19 +132,12 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
         self._icon = _icon
         self.setPixmap(_icon.pixmap(self._size))
 
-    def setIconSize(self, size):
-        """
-        set icon size.
-
-        Parameters
-        ----------
-        size: QtCore.QSize
-            size of the icon
-        """
+    def setIconSize(self, size: QSize) -> None:
+        """Set icon size."""
         self._size = size
         self.update()
 
-    def update(self, *args, **kwargs):
+    def update(self, *args: ty.Any, **kwargs: ty.Any) -> None:
         """Update label."""
         if self._icon:
             self.setPixmap(self._icon.pixmap(self._size))
@@ -104,12 +152,11 @@ class QtQtaTooltipLabel(QtQtaLabel):
         self.set_qta("help")
         self.set_average()
 
-    def enterEvent(self, event):
+    def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
         if self.toolTip():
             pos = self.mapToGlobal(self.contentsRect().center())
             QToolTip.showText(pos, self.toolTip(), self)
-
         super().enterEvent(event)
 
 
@@ -130,7 +177,7 @@ class QtSeverityLabel(QtQtaLabel):
         return self._severity
 
     @severity.setter
-    def severity(self, severity: str):
+    def severity(self, severity: str) -> None:
         self._severity = severity
         self.set_qta(severity)
 
@@ -140,7 +187,7 @@ class QtStateLabel(QtQtaLabel):
 
     STATES = ("wait", "check", "cross", "active", "upgrade", "thread", "process", "cli")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._state: str = "wait"
         self.state = "wait"
@@ -151,7 +198,7 @@ class QtStateLabel(QtQtaLabel):
         return self._state
 
     @state.setter
-    def state(self, state: str):
+    def state(self, state: str) -> None:
         self._state = state
         self.set_qta(state)
 

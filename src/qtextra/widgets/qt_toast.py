@@ -1,8 +1,11 @@
 """Toast."""
 
+from __future__ import annotations
+
 from contextlib import suppress
 
 from qtpy.QtCore import Qt, QTimer
+from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -18,7 +21,7 @@ class QtToast(SubWindowBase):
     DISMISS_AFTER = 5000
     MAX_OPACITY = 1.0
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
         self.timer_dismiss = QTimer()
@@ -83,7 +86,7 @@ class QtToast(SubWindowBase):
     def show(self) -> None:
         """Show the message with a fade and slight slide in from the bottom."""
 
-        def _update_timer_indicator():
+        def _update_timer_indicator() -> None:
             with suppress(RuntimeError):
                 self._timer_indicator.setValue(int(self.timer_dismiss.remainingTime() / self.DISMISS_AFTER * 100))
 
@@ -101,7 +104,7 @@ class QtToast(SubWindowBase):
             self.timer_remaining.timeout.connect(_update_timer_indicator)
             self.timer_remaining.start()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent | None) -> None:  # type: ignore[override]
         """On hover, stop the self-destruct timer."""
         self.timer_dismiss.stop()
         self.timer_remaining.stop()
@@ -118,13 +121,13 @@ if __name__ == "__main__":  # pragma: no cover
         from qtextra.config import THEMES
         from qtextra.utils.dev import qframe, theme_toggle_btn
 
-        def _popup_notif():
+        def _popup_notif() -> None:
             pop = QtToast(frame)
             THEMES.set_theme_stylesheet(pop)
             # pop.show_message("Title", "Here is a message..")
             pop.show_message("Title", "Here is a message.\nA couple of lines long.\nAnother line")
 
-        def _popup_notif3():
+        def _popup_notif3() -> None:
             from qtextra.helpers import toast_alt
 
             pop = toast_alt(
@@ -134,7 +137,7 @@ if __name__ == "__main__":  # pragma: no cover
                 icon=choice(["info", "warning", "error", "success"]),
             )
 
-        def _popup_notif2():
+        def _popup_notif2() -> None:
             pop = QtToast(frame)
             THEMES.set_theme_stylesheet(pop)
             pop.show_message(

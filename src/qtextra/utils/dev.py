@@ -1,18 +1,20 @@
 """Utilities for QtExtra widgets."""
 
+from __future__ import annotations
+
 import os
 import sys
 import typing as ty
 
 from loguru import logger
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
-from qtpy.QtWidgets import QApplication, QDockWidget, QLayout, QMainWindow, QWidget
+from qtpy.QtWidgets import QApplication, QDialog, QDockWidget, QLayout, QMainWindow, QWidget
 
 if ty.TYPE_CHECKING:
     from qtreload.qt_reload import QtReloadWidget
 
 
-def disable_warnings():
+def disable_warnings() -> None:
     """Disable warnings."""
     import warnings
 
@@ -26,25 +28,31 @@ def disable_warnings():
     warnings.filterwarnings("ignore", category=ResourceWarning, module="sentry_sdk")
 
 
-def qdev(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> "QtReloadWidget":
+def qdev(
+    parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo"), log_func: ty.Callable[[str], None] | None = None
+) -> QtReloadWidget:
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
 
-    widget = QtReloadWidget(modules, parent=parent)
+    widget = QtReloadWidget(modules, parent=parent, log_func=log_func)
     return widget
 
 
-def qdev_dock(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> ty.Tuple["QtReloadWidget", QDockWidget]:
+def qdev_dock(
+    parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo"), log_func: ty.Callable[[str], None] | None = None
+) -> ty.Tuple[QtReloadWidget, QDockWidget]:
     """Create reload widget in dock."""
-    widget = qdev(parent, modules)
+    widget = qdev(parent, modules, log_func=log_func)
     dock = QDockWidget("Reload", widget)
     return widget, dock
 
 
-def qdev_popup(parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo")) -> ty.Tuple["QtReloadWidget", QWidget]:
+def qdev_popup(
+    parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo"), log_func: ty.Callable[[str], None] | None = None
+) -> ty.Tuple[QtReloadWidget, QWidget]:
     """Create reload widget in popup."""
-    widget = qdev(parent, modules)
-    popup = QWidget()
+    widget = qdev(parent, modules, log_func=log_func)
+    popup = QDialog()
     popup.setLayout(widget.layout())
     return widget, popup
 
@@ -108,7 +116,7 @@ def qframe(
             ha = QtWidgets.QHBoxLayout()
             ha.addWidget(theme_toggle_btn(frame))
         else:
-            ha = QtWidgets.QVBoxLayout()
+            ha = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
             w = qdev()
             w.setMaximumHeight(180)
@@ -119,11 +127,20 @@ def qframe(
     return app, frame, ha
 
 
+def _apply_style_on_widget(widget: QWidget) -> None:
+    """Apply stylesheet(s) on the widget."""
+    from qtextra.config.theme import THEMES
+
+    THEMES.set_theme_stylesheet(widget)
+    logger.info("Applying style on widget")
+
+
 def apply_style(widget: QWidget) -> None:
     """Apply stylesheet(s) on the widget."""
     from qtextra.config.theme import THEMES
 
     THEMES.set_theme_stylesheet(widget)
+    THEMES.evt_theme_changed.connect(lambda: _apply_style_on_widget(widget))
 
 
 def qmain(horz: bool = True, set_style: bool = True):

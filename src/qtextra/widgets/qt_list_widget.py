@@ -279,13 +279,13 @@ class QtListWidget(QListWidget):
         """Select item."""
         self.setCurrentIndex(self.indexFromItem(item))
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh widget UI."""
         for index in range(self.count()):
             widget = self.itemWidget(self.item(index))
             widget.refresh()
 
-    def reset_data(self):
+    def reset_data(self) -> None:
         """Reset data."""
         self.clear()
 

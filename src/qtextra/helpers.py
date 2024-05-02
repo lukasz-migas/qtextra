@@ -70,10 +70,10 @@ def make_form_layout(
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
     style_form_layout(layout)
-    layout.setFieldGrowthPolicy(Qw.QFormLayout.ExpandingFieldsGrow)
+    layout.setFieldGrowthPolicy(Qw.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
     layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
     layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-    layout.setRowWrapPolicy(Qw.QFormLayout.DontWrapRows)
+    layout.setRowWrapPolicy(Qw.QFormLayout.RowWrapPolicy.DontWrapRows)
     for widget_ in widgets:
         layout.addRow(*widget_)
     if stretch_after:
@@ -81,7 +81,7 @@ def make_form_layout(
     return layout
 
 
-def find_row_for_widget(layout: Qw.QFormLayout, widget: Qw.QWidget):
+def find_row_for_widget(layout: Qw.QFormLayout, widget: Qw.QWidget) -> int | None:
     """Find row for widget in form layout."""
     row = None
     for row in range(layout.rowCount()):
@@ -129,8 +129,8 @@ def insert_widget_in_form_layout(
 
 
 def make_hbox_layout(
-    widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: ty.Optional[tuple[int, int, int, int]] = None
-):
+    widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: tuple[int, int, int, int] | None = None
+) -> Qw.QHBoxLayout:
     """Make horizontal box layout."""
     layout = Qw.QHBoxLayout(widget)
     layout.setSpacing(spacing)
@@ -139,10 +139,14 @@ def make_hbox_layout(
     return layout
 
 
-def make_vbox_layout(widget: Qw.QWidget | None = None, spacing: int = 0) -> Qw.QVBoxLayout:
+def make_vbox_layout(
+    widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: tuple[int, int, int, int] | None = None
+) -> Qw.QVBoxLayout:
     """Make vertical box layout."""
     layout = Qw.QVBoxLayout(widget)
     layout.setSpacing(spacing)
+    if content_margins:
+        layout.setContentsMargins(*content_margins)
     return layout
 
 
@@ -232,6 +236,29 @@ def increment_combobox(
         increment_combobox(combobox, direction, reset_func, skip, skipped=len(skip) > count)
     else:
         combobox.setCurrentIndex(idx)
+
+
+def make_shortcut_str(sequence: str) -> str:
+    """Make shortcut string."""
+    from qtpy.QtGui import QKeySequence
+
+    return QKeySequence(sequence).toString(QKeySequence.SequenceFormat.NativeText)
+
+
+def get_key(key: str) -> str:
+    """Get keyboard key."""
+    from koyo.system import IS_WIN
+
+    key = key.lower()
+    if key in ["ctrl", "control"]:
+        return "Ctrl" if IS_WIN else "⌘"
+    elif key == "shift":
+        return "Shift" if IS_WIN else "⇧"
+    elif key == "alt":
+        return "Alt" if IS_WIN else "⌥"
+    elif key == "cmd":
+        return "Cmd" if IS_WIN else "⌘"
+    return key.capitalize()
 
 
 def make_label(
@@ -355,12 +382,15 @@ def make_qta_label(
     icon_name: str,
     alignment: Qt.AlignmentFlag | None = None,
     tooltip: str | None = None,
+    xxsmall: bool = False,
     xsmall: bool = False,
     small: bool = False,
     normal: bool = False,
     average: bool = False,
     medium: bool = False,
     large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
     retain_size: bool = False,
     **kwargs: ty.Any,
 ) -> QtQtaLabel:
@@ -369,18 +399,17 @@ def make_qta_label(
 
     widget = QtQtaLabel(parent=parent)
     widget.set_qta(icon_name, **kwargs)
-    if xsmall:
-        widget.set_xsmall()
-    if small:
-        widget.set_small()
-    elif normal:
-        widget.set_normal()
-    elif average:
-        widget.set_average()
-    elif medium:
-        widget.set_medium()
-    elif large:
-        widget.set_large()
+    widget.set_default_size(
+        xxsmall=xxsmall,
+        xsmall=xsmall,
+        small=small,
+        normal=normal,
+        average=average,
+        medium=medium,
+        large=large,
+        xlarge=xlarge,
+        xxlarge=xxlarge,
+    )
     if alignment is not None:
         widget.setAlignment(alignment)
     if tooltip:
@@ -1055,9 +1084,16 @@ def make_toolbar_btn(
     tooltip: str | None = None,
     flat: bool = False,
     checkable: bool = False,
+    xxsmall: bool = False,
+    xsmall: bool = False,
+    small: bool = False,
+    normal: bool = False,
+    average: bool = False,
     medium: bool = False,
     large: bool = False,
-    icon_kwargs=None,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    icon_kwargs: dict | None = None,
 ) -> QtToolbarPushButton:
     """Make button."""
     from qtextra.widgets.qt_image_button import QtToolbarPushButton
@@ -1068,10 +1104,17 @@ def make_toolbar_btn(
     widget = QtToolbarPushButton(parent=parent)
     widget.set_qta(name, **icon_kwargs)
     widget.setText(text)
-    if medium:
-        widget.set_medium()
-    if large:
-        widget.set_large()
+    widget.set_default_size(
+        xxsmall=xxsmall,
+        xsmall=xsmall,
+        small=small,
+        normal=normal,
+        average=average,
+        medium=medium,
+        large=large,
+        xlarge=xlarge,
+        xxlarge=xxlarge,
+    )
     if tooltip:
         widget.setToolTip(tooltip)
     if flat:
@@ -1112,7 +1155,7 @@ def make_swatch_grid(
 
     swatches = []
     if use_flow_layout:
-        layout = QtFlowLayout()
+        layout = QtFlowLayout()  # type: ignore[assignment]
         for i, color in enumerate(colors):
             swatch = make_swatch(parent, color, value=color)
             swatch.setMinimumSize(*size)
@@ -1121,7 +1164,7 @@ def make_swatch_grid(
             swatches.append(swatch)
     else:
         _i = 0
-        layout = Qw.QVBoxLayout()
+        layout = Qw.QVBoxLayout()  # type: ignore[assignment]
         layout.setSpacing(4)
         for _colors in chunks(colors, 10):
             row_layout = Qw.QHBoxLayout()
@@ -1139,7 +1182,7 @@ def make_swatch_grid(
     return layout, swatches
 
 
-def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu):
+def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
     """Set menu on bitmap button."""
     widget.setMenu(menu)
     if IS_MAC:
@@ -1515,7 +1558,7 @@ def make_h_layout(
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
-) -> Qw.QLayout:
+) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout()
     if spacing is not None:
@@ -2269,33 +2312,32 @@ def remove_flash_animation(widget: Qw.QWidget):
     del widget._flash_animation
 
 
-def expand_animation(stack: Qw.QStackedWidget, start_width: int, end_width: int, duration: int = 500):
+def expand_animation(
+    stack: Qw.QWidget | Qw.QStackedWidget, start_width: int, end_width: int, duration: int = 500
+) -> None:
     """Create expand animation."""
     animation = QPropertyAnimation(stack, b"maximumWidth")
     # animation = QPropertyAnimation(stack, b"minimumWidth")
-    stack._animation = animation
-    stack._animation.finished.connect(partial(remove_expand_animation, stack))
+    stack._animation = animation  # type: ignore[union-attr]
+    stack._animation.finished.connect(partial(remove_expand_animation, stack))  # type: ignore[union-attr]
     animation.setDuration(duration)
     animation.setLoopCount(1)
     animation.setStartValue(start_width)
     animation.setEndValue(end_width)
-    animation.setEasingCurve(QEasingCurve.InOutQuart)
+    animation.setEasingCurve(QEasingCurve.Type.InOutQuart)
     animation.start()
 
 
-def remove_expand_animation(widget: Qw.QWidget):
-    """Remove expand animation from widget.
-
-    Parameters
-    ----------
-    widget : QWidget
-        Any Qt widget.
-    """
+def remove_expand_animation(widget: Qw.QWidget) -> None:
+    """Remove expand animation from widget."""
     widget.setGraphicsEffect(None)
-    del widget._animation
+    if hasattr(widget, "_animation"):
+        del widget._animation
 
 
-def make_loading_gif(parent: Qw.QWidget, which: str = "square", size=(20, 20)) -> tuple[Qw.QLabel, QMovie]:
+def make_loading_gif(
+    parent: Qw.QWidget | None, which: str = "square", size: tuple[int, int] = (20, 20)
+) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
     from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
 
@@ -2306,7 +2348,9 @@ def make_loading_gif(parent: Qw.QWidget, which: str = "square", size=(20, 20)) -
     return label, movie
 
 
-def make_gif_label(parent: Qw.QWidget, path: str, size=(20, 20), start: bool = True) -> tuple[Qw.QLabel, QMovie]:
+def make_gif_label(
+    parent: Qw.QWidget | None, path: str, size: tuple[int, int] = (20, 20), start: bool = True
+) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation and place it in the label."""
     label = Qw.QLabel("Loading...", parent=parent)
     label.setScaledContents(True)
@@ -2320,7 +2364,7 @@ def make_gif_label(parent: Qw.QWidget, path: str, size=(20, 20), start: bool = T
     return label, movie
 
 
-def make_gif(which: str = "square", size=(20, 20), start: bool = True) -> QMovie:
+def make_gif(which: str = "square", size: tuple[int, int] = (20, 20), start: bool = True) -> QMovie:
     """Make movie."""
     from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
 
@@ -2581,10 +2625,10 @@ def show_below_widget(
 def copy_text_to_clipboard(text: str) -> None:
     """Helper function to easily copy text to clipboard while notifying the user."""
     cb = QGuiApplication.clipboard()
-    cb.setText(text)
+    cb.setText(text)  # type: ignore[union-attr]
 
 
 def copy_image_to_clipboard(image: QImage) -> None:
     """Helper function to easily copy image to clipboard while notifying the user."""
     cb = QGuiApplication.clipboard()
-    cb.setImage(image)
+    cb.setImage(image)  # type: ignore[union-attr]

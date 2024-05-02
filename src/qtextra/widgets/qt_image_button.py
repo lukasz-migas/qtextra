@@ -1,11 +1,22 @@
 """Custom image button class."""
 
+from __future__ import annotations
+
 import typing as ty
 
 import qtawesome
-from qtpy.QtCore import QEasingCurve, QEvent, QPoint, QPointF, QPropertyAnimation, Qt, Signal, Slot
+from qtpy.QtCore import (  # type: ignore[attr-defined]
+    QEasingCurve,
+    QEvent,
+    QPoint,
+    QPointF,
+    QPropertyAnimation,
+    Qt,
+    Signal,
+    Slot,
+)
 from qtpy.QtGui import QBrush, QColor, QPainter
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip, QVBoxLayout
+from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
@@ -29,7 +40,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         self.transparent = False
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
-    def setText(self, text: str) -> None:
+    def setText(self, text: str) -> None:  # type: ignore[override]
         """Override text."""
         self.setProperty("with_text", True)
         super().setText(text)
@@ -41,13 +52,13 @@ class QtImagePushButton(QPushButton, QtaMixin):
         self.transparent = transparent
         polish_widget(self)
 
-    def mousePressEvent(self, evt) -> None:
+    def mousePressEvent(self, evt: QEvent) -> None:  # type: ignore[override]
         """Mouse press event."""
-        if evt.button() == Qt.MouseButton.RightButton:
+        if evt.button() == Qt.MouseButton.RightButton:  # type: ignore[attr-defined]
             self.on_right_click()
-        elif evt.button() == Qt.MouseButton.LeftButton:
+        elif evt.button() == Qt.MouseButton.LeftButton:  # type: ignore[attr-defined]
             self.on_click()
-        super().mousePressEvent(evt)
+        super().mousePressEvent(evt)  # type: ignore[arg-type]
 
     def set_toggle_qta(self, name: str, checked_name: str, connect: bool = True, **kwargs: ty.Any) -> None:
         """Set changeable icon."""
@@ -66,7 +77,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         if connect:
             self.toggled.connect(self._on_toggle)
 
-    def _on_toggle(self):
+    def _on_toggle(self) -> None:
         """Update icons."""
         assert self._qta_data and self._checked_qta_data, "No qta data set."
         name = self._checked_qta_data[0] if self.isChecked() else self._qta_data[0]
@@ -80,7 +91,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         """Right click event."""
         self.evt_right_click.emit(self)
 
-    def connect_to_right_click(self, func) -> None:
+    def connect_to_right_click(self, func: ty.Callable) -> None:
         """Connect function right right-click.
 
         It is not possible to check whether a function is connected to a signal so its better to use this function to
@@ -91,7 +102,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         self.has_right_click = True
         hp.set_properties(self, {"right_click": True})
 
-    def paintEvent(self, *args) -> None:
+    def paintEvent(self, *args: ty.Any) -> None:
         """Paint event."""
         super().paintEvent(*args)
 
@@ -109,6 +120,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
 class QtTogglePushButton(QtImagePushButton):
     """Toggle button."""
 
+    evt_toggled = Signal(bool)
+
     def auto_connect(self) -> None:
         """Automatically connect."""
         self.evt_click.connect(self.toggle_state)
@@ -121,7 +134,7 @@ class QtTogglePushButton(QtImagePushButton):
 class QtAnimationPlayButton(QtTogglePushButton):
     """Play button with multiple states to indicate current state."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._reverse = False
         self.reverse = False
@@ -134,7 +147,7 @@ class QtAnimationPlayButton(QtTogglePushButton):
         return self._playing
 
     @playing.setter
-    def playing(self, state: bool):
+    def playing(self, state: bool) -> None:
         self._playing = state
         self.set_qta("stop" if state else "start")
 
@@ -144,7 +157,7 @@ class QtAnimationPlayButton(QtTogglePushButton):
         return self._reverse
 
     @reverse.setter
-    def reverse(self, state: bool):
+    def reverse(self, state: bool) -> None:
         from qtextra.helpers import polish_widget
 
         self._reverse = state
@@ -155,12 +168,13 @@ class QtAnimationPlayButton(QtTogglePushButton):
     def toggle_state(self) -> None:
         """Toggle state."""
         self.playing = not self.playing
+        self.evt_toggled.emit(self.playing)
 
 
 class QtPauseButton(QtTogglePushButton):
     """Play button with multiple states to indicate current state."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._paused = False
         self.paused = False
@@ -178,6 +192,7 @@ class QtPauseButton(QtTogglePushButton):
     def toggle_state(self) -> None:
         """Toggle state."""
         self.paused = not self.paused
+        self.evt_toggled.emit(self.paused)
 
 
 class QtLockButton(QtTogglePushButton):
@@ -198,13 +213,14 @@ class QtLockButton(QtTogglePushButton):
         return self._locked
 
     @locked.setter
-    def locked(self, state: bool):
+    def locked(self, state: bool) -> None:
         self._locked = state
         self.set_qta("lock_closed" if state else "lock_open")
 
     def toggle_state(self) -> None:
         """Toggle state."""
         self.locked = not self.locked
+        self.evt_toggled.emit(self.locked)
 
 
 class QtThemeButton(QtTogglePushButton):
@@ -232,12 +248,13 @@ class QtThemeButton(QtTogglePushButton):
     def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
         self.dark = not self.dark
+        self.evt_toggled.emit(self.dark)
 
 
 class QtExpandButton(QtTogglePushButton):
     """Button that has chevron point up or down."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._expanded = False
         self.expanded = False
@@ -248,24 +265,25 @@ class QtExpandButton(QtTogglePushButton):
         return self._expanded
 
     @expanded.setter
-    def expanded(self, state: bool):
+    def expanded(self, state: bool) -> None:
         self._expanded = state
         self.set_qta("chevron_up" if state else "chevron_down")
 
     def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
         self.expanded = not self.expanded
+        self.evt_toggled.emit(self.expanded)
 
 
 class QtToggleButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._toggled = False
         self.toggled = False
 
-    @property
+    @property  # type: ignore[override]
     def toggled(self) -> bool:
         """Get toggle state."""
         return self._toggled
@@ -278,12 +296,13 @@ class QtToggleButton(QtTogglePushButton):
     def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
         self.toggled = not self.toggled
+        self.evt_toggled.emit(self.toggled)
 
 
-class QtDirectionButton(QtTogglePushButton):
+class QtVerticalDirectionButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._is_up = False
         self.up = True
@@ -294,9 +313,9 @@ class QtDirectionButton(QtTogglePushButton):
         return self._is_up
 
     @up.setter
-    def up(self, state: bool):
+    def up(self, state: bool) -> None:
         self._is_up = state
-        self.set_qta("arrow_up" if state else "arrow_down")
+        self.set_qta("long_arrow_up" if state else "long_arrow_down")
 
     @property
     def down(self) -> bool:
@@ -306,6 +325,36 @@ class QtDirectionButton(QtTogglePushButton):
     def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
         self.up = not self.up
+        self.evt_toggled.emit(self.up)
+
+
+class QtHorizontalDirectionButton(QtTogglePushButton):
+    """Lock button with open/closed state to indicate current state."""
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self._is_right = False
+        self.right = True
+
+    @property
+    def right(self) -> bool:
+        """Get toggle state."""
+        return self._is_right
+
+    @right.setter
+    def right(self, state: bool) -> None:
+        self._is_right = state
+        self.set_qta("long_arrow_right" if state else "long_arrow_left")
+
+    @property
+    def left(self) -> bool:
+        """Get toggle state."""
+        return not self._is_right
+
+    def toggle_state(self) -> None:
+        """Toggle state between shown/hidden."""
+        self.right = not self.right
+        self.evt_toggled.emit(self.right)
 
 
 class QtVisibleButton(QtTogglePushButton):
@@ -334,6 +383,7 @@ class QtVisibleButton(QtTogglePushButton):
     def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
         self.visible = not self.visible
+        self.evt_toggled.emit(self.visible)
 
 
 class QtToolbarPushButton(QtImagePushButton):
@@ -345,10 +395,10 @@ class QtToolbarPushButton(QtImagePushButton):
     N_LOOPS = 5
 
     indicator: str = ""
+    _text: str = ""
 
-    _widget = None
-    _about_widget = None
-    _text = ""
+    panel_widget: QWidget | None = None
+    about_widget: QWidget | None = None
 
     # evt_hover = Signal(bool)
 
@@ -365,35 +415,35 @@ class QtToolbarPushButton(QtImagePushButton):
 
         self.evt_click.connect(self.stop_pulse)
 
-    def setToolTip(self, text: str):
+    def setToolTip(self, text: str) -> None:  # type: ignore[override]
         """Override tooltip."""
         self._text = text
 
-    def _get_position(self):
+    def _get_position(self) -> QPoint:
         rect = self.rect()
         pos = self.mapToGlobal(rect.topRight())
         pos -= QPoint(0, 22)
         return pos
 
-    def event(self, evt):
+    def event(self, evt: QEvent) -> bool:  # type: ignore[override]
         """Override event handler to quickly display/hide tooltip."""
-        if evt.type() == QEvent.Enter:
+        if evt.type() == QEvent.Type.Enter:
             QToolTip.showText(self._get_position(), self._text)
             evt.ignore()
-        elif evt.type() == QEvent.Leave:
+        elif evt.type() == QEvent.Type.Leave:
             QToolTip.hideText()
         return super().event(evt)
 
-    @Slot(int)
-    def _loop_update(self, loop: int):
+    @Slot(int)  # type: ignore[misc]
+    def _loop_update(self, loop: int) -> None:
         """Reverse pulse direction for nicer visual effect."""
         start, end = (self.START_OPACITY, self.END_OPACITY) if loop % 2 == 0 else (self.END_OPACITY, self.START_OPACITY)
         self.opacity_anim.setStartValue(start)
         self.opacity_anim.setEndValue(end)
 
-    @Slot(str)
-    @Slot(str, str)
-    def set_indicator(self, indicator_type: str, about: ty.Optional[str] = None):
+    @Slot(str)  # type: ignore[misc]
+    @Slot(str, str)  # type: ignore[misc]
+    def set_indicator(self, indicator_type: str, about: ty.Optional[str] = None) -> None:
         """Set indicator type."""
         assert indicator_type in [
             "",
@@ -414,15 +464,16 @@ class QtToolbarPushButton(QtImagePushButton):
     @property
     def edge_color(self) -> QColor:
         """Edge color."""
-        return QColor(THEMES.get_hex_color("background"))
+        return QColor(THEMES.get_hex_color(INDICATOR_TYPES[self.indicator]))
 
-    def paintEvent(self, *args):
+    def paintEvent(self, *args: ty.Any) -> None:
         """Paint event."""
         # default paint
         QPushButton.paintEvent(self, *args)
 
         if self.indicator and not self.isChecked():
             width = self.rect().width() / 6
+            radius = self.rect().width() / 10
             pos = QPoint(self.rect().width() - width, width)
 
             paint = QPainter(self)
@@ -431,19 +482,19 @@ class QtToolbarPushButton(QtImagePushButton):
             brush = QBrush(self.indicator_color)
             paint.setBrush(brush)
             paint.setPen(pen)
-            paint.drawEllipse(pos, width, width)
+            paint.drawEllipse(pos, radius, radius)
 
-    def start_pulse(self):
+    def start_pulse(self) -> None:
         """Start pulsating."""
         if self.indicator and not self.isChecked():
-            self.opacity_anim.setEasingCurve(QEasingCurve.Linear)
+            self.opacity_anim.setEasingCurve(QEasingCurve.Type.Linear)
             self.opacity_anim.setDuration(self.PULSE_RATE)
             self.opacity_anim.setStartValue(self.START_OPACITY)
             self.opacity_anim.setEndValue(self.END_OPACITY)
             self.opacity_anim.setLoopCount(self.N_LOOPS)
             self.opacity_anim.start()
 
-    def stop_pulse(self):
+    def stop_pulse(self) -> None:
         """Stop pulsating."""
         self.opacity_anim.stop()
         self.opacity.setOpacity(1.0)
@@ -458,7 +509,7 @@ class QtPriorityButton(QtImagePushButton):
         "low": "priority_low",
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.setMouseTracking(True)
         self._priority: str = "normal"
@@ -475,7 +526,7 @@ class QtPriorityButton(QtImagePushButton):
         self._priority = state
         self.set_qta(self.PRIORITY_TO_ICON[state])
 
-    def enterEvent(self, event):
+    def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
         menu = hp.make_menu(self)
         menu.addAction("Low", lambda: setattr(self, "priority", "low"))
@@ -483,11 +534,11 @@ class QtPriorityButton(QtImagePushButton):
         menu.addAction("High", lambda: setattr(self, "priority", "high"))
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)
-        super().enterEvent(event)
+        super().enterEvent(event)  # type: ignore[arg-type]
 
-    def leaveEvent(self, event):
+    def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
-        self._menu.close()
+        self._menu.close()  # type: ignore[union-attr]
         self._menu = None
         super().leaveEvent(event)
 
@@ -497,7 +548,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     val = True
 
-    def _main():  # type: ignore[no-untyped-def]
+    def _main() -> None:  # type: ignore[no-untyped-def]
         from qtextra.assets import QTA_MAPPING
         from qtextra.config.theme import THEMES
         from qtextra.utils.dev import qmain, theme_toggle_btn
@@ -525,21 +576,25 @@ if __name__ == "__main__":  # pragma: no cover
         lock_btn.clicked.connect(lock_btn.toggle_state)
         lay.addWidget(lock_btn)
 
-        btn = QtDirectionButton(parent=frame)
-        btn.clicked.connect(btn.toggle_state)
-        lay.addWidget(btn)
+        vert_btn = QtVerticalDirectionButton(parent=frame)
+        vert_btn.clicked.connect(vert_btn.toggle_state)
+        lay.addWidget(vert_btn)
 
-        btn = QtVisibleButton(parent=frame)
-        btn.clicked.connect(btn.toggle_state)
-        lay.addWidget(btn)
+        horz_btn = QtHorizontalDirectionButton(parent=frame)
+        horz_btn.clicked.connect(horz_btn.toggle_state)
+        lay.addWidget(horz_btn)
 
-        btn = QtToggleButton(parent=frame)
-        btn.clicked.connect(btn.toggle_state)
-        lay.addWidget(btn)
+        visible_btn = QtVisibleButton(parent=frame)
+        visible_btn.clicked.connect(visible_btn.toggle_state)
+        lay.addWidget(visible_btn)
 
-        btn = QtExpandButton(parent=frame)
-        btn.clicked.connect(btn.toggle_state)
-        lay.addWidget(btn)
+        toggle_btn = QtToggleButton(parent=frame)
+        toggle_btn.clicked.connect(toggle_btn.toggle_state)
+        lay.addWidget(toggle_btn)
+
+        expand_btn = QtExpandButton(parent=frame)
+        expand_btn.clicked.connect(expand_btn.toggle_state)
+        lay.addWidget(expand_btn)
 
         priority_btn = QtPriorityButton(parent=frame)
         lay.addWidget(priority_btn)

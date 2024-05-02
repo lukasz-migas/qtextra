@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 import numpy as np
+from napari.utils.events import Event
 from qtpy.QtWidgets import QWidget
 
 import qtextra.helpers as hp
@@ -13,7 +14,9 @@ if ty.TYPE_CHECKING:
     from napari.layers import Image
 
     from qtextra._napari.image.wrapper import NapariImageView
+    from qtextra._napari.image.wrapper import Viewer as ImageViewer
     from qtextra._napari.line.wrapper import NapariLineView
+    from qtextra._napari.line.wrapper import Viewer as LineViewer
 
 
 class ImageViewMixin:
@@ -22,17 +25,14 @@ class ImageViewMixin:
     view_image: NapariImageView
     image_layer: Image | None = None
 
-    def on_plot_image_outline(self, value: bool):
-        """Plot outline."""
-
     def _make_image_view(
         self,
         widget: QWidget,
-        disable_controls=False,
-        add_toolbars=True,
-        allow_extraction=True,
+        disable_controls: bool = False,
+        add_toolbars: bool = True,
+        allow_extraction: bool = True,
         disable_new_layers: bool = False,
-        **kwargs,
+        **kwargs: ty.Any,
     ) -> NapariImageView:
         """Make image view."""
         from qtextra._napari.image.wrapper import NapariImageView
@@ -47,9 +47,12 @@ class ImageViewMixin:
             **kwargs,
         )
 
+    def on_plot_image_outline(self, value: bool) -> None:
+        """Plot outline."""
+
     def _plot_image(
-        self, image: ty.Union[np.ndarray, ty.Dict[str, np.ndarray]], *, view_image: ty.Optional[NapariImageView] = None
-    ):
+        self, image: np.ndarray | dict[str, np.ndarray], *, view_image: NapariImageView | None = None
+    ) -> bool:
         """Update image or images."""
         from ionglow.config import ENV
 
@@ -85,14 +88,14 @@ class LineViewMixin:
     def _make_line_view(
         self,
         widget: QWidget,
-        disable_controls=False,
-        add_toolbars=True,
-        allow_extraction=True,
-        allow_tools=False,
+        disable_controls: bool = False,
+        add_toolbars: bool = True,
+        allow_extraction: bool = True,
+        allow_tools: bool = False,
         x_label: str = "",
         y_label: str = "",
         lock_to_bottom: bool = False,
-        **kwargs,
+        **kwargs: ty.Any,
     ) -> NapariLineView:
         """Make line view."""
         from qtextra._napari.line.wrapper import NapariLineView
@@ -110,13 +113,13 @@ class LineViewMixin:
             **kwargs,
         )
 
-    def on_yaxis_zoom(self, viewer, event):
+    def on_yaxis_zoom(self, viewer: LineViewer, event: Event) -> ty.Generator:
         """Zoom y-axis of the current tab."""
         yield  # ignore press event
         while event.type == "mouse_move":
             yield
         hp.call_later(self, viewer.reset_current_y_view, 50)
 
-    def on_yaxis_zoom_wheel(self, viewer, event):
+    def on_yaxis_zoom_wheel(self, viewer: LineViewer, event: Event) -> None:
         """Zoom y-axis of the current tab."""
         hp.call_later(self, viewer.reset_current_y_view, 200)

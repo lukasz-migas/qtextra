@@ -3,12 +3,22 @@
 from __future__ import annotations
 
 import typing as ty
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 import numpy as np
 from loguru import logger
-from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QCloseEvent, QCursor, QGuiApplication, QKeyEvent, QResizeEvent
+from qtpy.QtCore import (  # type: ignore[attr-defined]
+    QEasingCurve,
+    QObject,
+    QPoint,
+    QPropertyAnimation,
+    QRect,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
+)
+from qtpy.QtGui import QCloseEvent, QCursor, QGuiApplication, QKeyEvent, QMouseEvent, QResizeEvent
 from qtpy.QtWidgets import (
     QApplication,
     QDialog,
@@ -26,8 +36,9 @@ from qtextra.config import EVENTS
 from qtextra.mixins import CloseMixin, ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin
 
 if ty.TYPE_CHECKING:
+    from qtextra._napari.image.wrapper import NapariImageView
+    from qtextra._napari.line.wrapper import NapariLineView
     from qtextra.widgets.qt_image_button import QtExpandButton
-# FIXME: if the user has one screen, make sure the panel is on the correct screen
 
 
 class ScreenManager:
@@ -108,11 +119,11 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_below_mouse(self, show: bool = True, y_offset: int = -14):
+    def show_below_mouse(self, show: bool = True, y_offset: int = -14, x_offset: int = 0):
         """Show popup dialog above the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() / 2), y_offset)
+        pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)
         self.move(pos)
         if show:
             self.show()
@@ -356,8 +367,8 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
     _is_init = False
     _main_layout = None
     _title = ""
-    _views_1d: ty.List | None = None
-    _views_2d: ty.List | None = None
+    _views_1d: list[NapariLineView] | None = None
+    _views_2d: list[NapariImageView] | None = None
 
     DELAY_CONNECTION: ty.ClassVar[bool] = False
     setLayout: ty.Callable[[QLayout], None]
@@ -413,7 +424,7 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
             self.evt_close.emit()
         self.close()
 
-    def _register_views(self, views_1d: ty.List | None = None, views_2d: ty.List | None = None) -> None:
+    def _register_views(self, views_1d: list | None = None, views_2d: list | None = None) -> None:
         """Register views."""
         if self._views_1d is None:
             self._views_1d = []
@@ -431,22 +442,23 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
         is not visible.
         """
         if self._views_2d:
-            for view in self._views_2d:
-                view.widget.canvas.native.update()
+            for view_2d in self._views_2d:
+                view_2d.widget.canvas.native.update()
 
         # try to fix axes issues
         if self._views_1d:
-            for view in self._views_1d:
-                xmin, xmax, ymin, ymax = view.viewer.camera.rect
-                view.viewer.camera.rect = xmin + 1, xmax, ymin, ymax
-                view.viewer.camera.rect = xmin, xmax, ymin, ymax
+            for view_1d in self._views_1d:
+                view_1d.widget.canvas.native.update()
+                xmin, xmax, ymin, ymax = view_1d.viewer.camera.rect
+                view_1d.viewer.camera.rect = xmin + 1, xmax, ymin, ymax
+                view_1d.viewer.camera.rect = xmin, xmax, ymin, ymax
 
 
-class QtTab(QWidget, QtBase):
+class QtTab(QWidget, QtBase):  # type: ignore[misc]
     """Dialog base class."""
 
-    _description: ty.Dict | None = None
-    _tab_index: ty.Optional[ty.Dict] = None
+    _description: dict | None = None
+    _tab_index: dict | None = None
 
     def __init__(self, parent: QWidget | None, title: str = "Panel"):
         QWidget.__init__(self, parent)
@@ -457,12 +469,6 @@ class QtTab(QWidget, QtBase):
         if not self._description:
             return ""
         return f"<p style='white-space:pre'><h2>{self._description.get('title', 'Panel')}</h2></p>"
-        # return f"<p style''white-space:pre'><h2><b>{self._description.get('title', 'Panel')}</b></h2></p>"
-        # return f"""
-        # <h2><b>{self._description.get("title", "Panel")}</b></h2>
-        # <h3><b>Description</b></h3>
-        # {self._description.get("description", "")}
-        # """
 
     def _make_html_metadata(self) -> ty.Tuple[str, str, str]:
         """Make nicely formatted description that can be used to provide help information about widget."""
@@ -475,19 +481,19 @@ class QtTab(QWidget, QtBase):
         )
 
 
-class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):
+class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):  # type: ignore[misc]
     """Dialog base class."""
 
-    _main_layout = None
+    _main_layout: QLayout | None = None
 
     # events
     evt_resized = Signal()
     evt_hide = Signal()
     evt_close = Signal()
 
-    def __init__(self, parent=None, title: str = "Dialog", delay: bool = False):
+    def __init__(self, parent: QWidget | None = None, title: str = "Dialog", delay: bool = False):
         QDialog.__init__(self, parent)
-        self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         QtBase.__init__(self, parent, title, delay=delay)
 
         EVENTS.evt_force_exit.connect(self.close)
@@ -500,12 +506,12 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):
             return False
         return True
 
-    def resizeEvent(self, event: QResizeEvent):
+    def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore[override]
         """Resize event."""
         self.evt_resized.emit()
         return super().resizeEvent(event)
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # type: ignore[override]
         """Close window on return, else pass event through to super class.
 
         Parameters
@@ -520,19 +526,19 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):
             super().keyPressEvent(event)
 
 
-class QtFramelessPopup(QtDialog, CloseMixin):
+class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
     """Frameless dialog."""
 
     # attributes used to move windows around
     _title_label: QLabel
-    _old_window_pos, _move_handle = None, None
+    _old_window_pos, _title_layout, _move_handle = None, None, None
 
     def __init__(
         self,
         parent: ty.Optional[QWidget],
         title: str = "",
         position: ty.Any = None,
-        flags: ty.Any = Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowType.Popup,
+        flags: ty.Any = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Popup,
         delay: bool = False,
     ):
         super().__init__(parent, title, delay=delay)
@@ -562,7 +568,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         self._move_handle = hp.make_qta_label(
             self, "move_handle", tooltip="Click here and drag the mouse around to move the window.", normal=True
         )
-        self._move_handle.setCursor(Qt.PointingHandCursor)
+        self._move_handle.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = hp.make_hbox_layout(spacing=0)
         layout.addWidget(self._title_label)
@@ -571,29 +577,29 @@ class QtFramelessPopup(QtDialog, CloseMixin):
         self._title_layout = layout
         return layout
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Mouse press event."""
         super().mousePressEvent(event)
         # allow movement of the window when user uses right-click and the move handle button does not exist
-        if event.button() == Qt.RightButton:  # and self._move_handle is None:
+        if event.button() == Qt.MouseButton.RightButton:  # and self._move_handle is None:
             self._old_window_pos = event.x(), event.y()
         elif self._move_handle is None:
             self._old_window_pos = None
         elif self.childAt(event.pos()) == self._move_handle:
             self._old_window_pos = event.x(), event.y()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Mouse move event - ensures its possible to move the window to new location."""
         super().mouseMoveEvent(event)
         if self._old_window_pos is not None:
             self.move(event.globalX() - self._old_window_pos[0], event.globalY() - self._old_window_pos[1])
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Mouse release event."""
         super().mouseReleaseEvent(event)
         self._old_window_pos = None
 
-    def disable_while_open(self, *widgets):
+    def disable_while_open(self, *widgets: QWidget) -> None:
         """Disable widgets while the window is open."""
         self.evt_close.connect(lambda: hp.disable_widgets(*widgets, disabled=False))
         hp.disable_widgets(*widgets, disabled=True)
@@ -776,7 +782,7 @@ class QtTransparentPopup(QDialog, DialogMixin):
         event : qtpy.QtCore.QEvent
             Event from the Qt context.
         """
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             return self.close()
         super().keyPressEvent(event)
 
@@ -793,11 +799,11 @@ class SubWindowBase(QDialog):
     MAX_WIDTH = 350
     MIN_HEIGHT = 40
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setWindowFlags(Qt.SubWindow)
+        self.setWindowFlags(Qt.WindowType.SubWindow)
         self.setSizeGripEnabled(False)
         self.setModal(False)
         self.setMouseTracking(True)
@@ -824,7 +830,7 @@ class SubWindowBase(QDialog):
         elif location == "bottom_left":
             self.move_to_bottom_left()
 
-    def move_to_top_right(self, offset=(-10, 10)):
+    def move_to_top_right(self, offset=(-10, 10)) -> None:
         """Position widget at the top right edge of the parent."""
         if not self.parent():
             return
@@ -832,33 +838,33 @@ class SubWindowBase(QDialog):
         sz = psz - QSize(self.size().width(), psz.height()) + QSize(*offset)
         self.move(QPoint(sz.width(), sz.height()))
 
-    def move_to_bottom_right(self, offset=(8, 8)):
+    def move_to_bottom_right(self, offset=(8, 8)) -> None:
         """Position widget at the bottom right edge of the parent."""
         if not self.parent():
             return
         sz = self.parent().size() - self.size() - QSize(*offset)
         self.move(QPoint(sz.width(), sz.height()))
 
-    def move_to_top_left(self, offset=(8, 8)):
+    def move_to_top_left(self, offset=(8, 8)) -> None:
         """Position widget at the bottom right edge of the parent."""
         if not self.parent():
             return
         self.move(QPoint(*offset))
 
-    def move_to_bottom_left(self, offset=(8, 8)):
+    def move_to_bottom_left(self, offset=(8, 8)) -> None:
         """Position widget at the bottom right edge of the parent."""
         if not self.parent():
             return
         sz = self.parent().size() - self.size()
         self.move(QPoint(offset[0], sz.height() - offset[1]))
 
-    def slide_in(self):
+    def slide_in(self) -> None:
         """Run animation that fades in the dialog with a slight slide up."""
         geom = self.geometry()
         self.geom_anim.setDuration(self.FADE_IN_RATE)
         self.geom_anim.setStartValue(geom.translated(0, -20))
         self.geom_anim.setEndValue(geom)
-        self.geom_anim.setEasingCurve(QEasingCurve.OutQuad)
+        self.geom_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
         # fade in
         self.opacity_anim.setDuration(self.FADE_IN_RATE)
         self.opacity_anim.setStartValue(0)
@@ -866,23 +872,21 @@ class SubWindowBase(QDialog):
         self.geom_anim.start()
         self.opacity_anim.start()
 
-    def fade_in(self):
+    def fade_in(self) -> None:
         """Run animation that fades in the dialog."""
         self.opacity_anim.setDuration(self.FADE_IN_RATE)
         self.opacity_anim.setStartValue(0)
         self.opacity_anim.setEndValue(self.MAX_OPACITY)
         self.opacity_anim.start()
 
-    def fade_out(self):
+    def fade_out(self) -> None:
         """Run animation that fades out the dialog."""
         self.opacity_anim.setDuration(self.FADE_OUT_RATE)
         self.opacity_anim.setStartValue(self.MAX_OPACITY)
         self.opacity_anim.setEndValue(0)
         self.opacity_anim.start()
 
-    def close(self):
+    def close(self) -> None:  # type: ignore[override]
         """Fade out then close."""
-        try:
+        with suppress(RuntimeError, TypeError):
             super().close()
-        except (RuntimeError, TypeError):
-            pass

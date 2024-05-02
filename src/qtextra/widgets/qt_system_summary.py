@@ -1,3 +1,7 @@
+"""System summary widget."""
+
+from __future__ import annotations
+
 import os
 from contextlib import suppress
 
@@ -14,7 +18,7 @@ from qtextra.widgets.qt_dialog import QtFramelessPopup
 class SystemSummaryWidget(QWidget):
     """System information."""
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget | None):
         QWidget.__init__(self, parent)
 
         # CPU summary
@@ -32,11 +36,12 @@ class SystemSummaryWidget(QWidget):
         self.cpu_group_box_layout.addWidget(self.cpu_freq_stats_label)
 
         # Number of cores
-        self.nb_cores_label = QLabel(f"Number of CPU cores:       \t {os.cpu_count() // 2}", self)
+        n_cpu = os.cpu_count() or 1
+        self.nb_cores_label = QLabel(f"Number of CPU cores:       \t {n_cpu // 2}", self)
         self.cpu_group_box_layout.addWidget(self.nb_cores_label)
-        if (os.cpu_count() // 2) < 4:
+        if (n_cpu // 2) < 4:
             self.nb_cores_label.setStyleSheet("QLabel {color: red;}")
-        elif (os.cpu_count() // 2) <= 6:
+        elif (n_cpu // 2) <= 6:
             self.nb_cores_label.setStyleSheet("QLabel {color: orange;}")
         else:
             self.nb_cores_label.setStyleSheet("QLabel {color: green;}")
@@ -163,20 +168,20 @@ class SystemSummaryWidget(QWidget):
             else:
                 self.gpu_memory_free_label.setStyleSheet("QLabel {color: green;}")
 
-        self.layout = QVBoxLayout(self)
-        self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.cpu_group_box)
-        self.layout.addWidget(self.memory_group_box)
-        self.layout.addWidget(self.gpu_group_box)
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.cpu_group_box)
+        layout.addWidget(self.memory_group_box)
+        layout.addWidget(self.gpu_group_box)
 
 
 class SystemSummaryPopup(QtFramelessPopup):
     """Show summary of the system."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent=parent)
 
-    def make_panel(self):
+    def make_panel(self) -> QVBoxLayout:
         """Create widget."""
         layout = QVBoxLayout()
         layout.setSpacing(0)

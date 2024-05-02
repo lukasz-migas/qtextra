@@ -10,7 +10,7 @@ from enum import Enum
 import numpy as np
 from loguru import logger
 from natsort.natsort import index_natsorted, order_by_index
-from qtpy.QtCore import (
+from qtpy.QtCore import (  # type: ignore[attr-defined]
     QAbstractTableModel,
     QModelIndex,
     QSize,

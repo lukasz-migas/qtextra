@@ -1,9 +1,11 @@
 """Sentry monitoring service."""
 
-"""Init."""
+from __future__ import annotations
+
 import typing as ty
 
 import sentry_sdk
+from qtpy.QtWidgets import QWidget
 
 from qtextra.dialogs.sentry.feedback import FeedbackDialog
 from qtextra.dialogs.sentry.telemetry import TelemetryOptInDialog
@@ -31,7 +33,7 @@ class Settings(ty.Protocol):
     telemetry_with_locals: bool
 
 
-def ask_opt_in(settings: Settings, force=False, parent=None):
+def ask_opt_in(settings: Settings, force: bool = False, parent: QWidget | None = None) -> Settings:
     """Show the dialog asking the user to opt in.
 
     Parameters
@@ -50,11 +52,12 @@ def ask_opt_in(settings: Settings, force=False, parent=None):
         [description].
     """
     assert settings is not None, "Settings must be provided."
-    assert hasattr(settings, "telemetry_enabled"), "Settings must have telemetry_enabled attribute."
-    assert hasattr(settings, "telemetry_with_locals"), "Settings must have telemetry_with_locals attribute."
 
     enabled_attr = "enabled" if hasattr(settings, "enabled") else "telemetry_enabled"
     with_locals_attr = "with_locals" if hasattr(settings, "with_locals") else "telemetry_with_locals"
+
+    assert hasattr(settings, enabled_attr), f"Settings must have '{enabled_attr}' attribute."
+    assert hasattr(settings, with_locals_attr), f"Settings must have '{with_locals_attr}' attribute."
 
     if not force and getattr(settings, enabled_attr) is not None:
         return settings
@@ -72,7 +75,7 @@ def ask_opt_in(settings: Settings, force=False, parent=None):
     return settings
 
 
-def install_error_monitor(settings: Settings, **extra_kws):
+def install_error_monitor(settings: Settings, **extra_kws: ty.Any) -> None:
     """Initialize the error monitor with sentry.io."""
     global INSTALLED
     if INSTALLED:
@@ -95,7 +98,7 @@ def install_error_monitor(settings: Settings, **extra_kws):
     INSTALLED = True
 
 
-def set_extra_tags(**kwargs) -> None:
+def set_extra_tags(**kwargs: ty.Any) -> None:
     """Set extra tags."""
     for k, v in kwargs.items():
         sentry_sdk.set_tag(k, v)

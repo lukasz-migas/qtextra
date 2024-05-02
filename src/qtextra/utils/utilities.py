@@ -40,7 +40,7 @@ def check_url(url: str) -> bool:
     return all([final_url.scheme, final_url.netloc, final_url.path]) and len(final_url.netloc.split(".")) > 1
 
 
-def memory_usage():
+def memory_usage() -> float:
     """
     Return physical memory usage (float)
     Requires the cross-platform psutil (>=v0.3) library
@@ -57,7 +57,7 @@ def memory_usage():
     return percent
 
 
-def total_ram():
+def total_ram() -> int:
     """Retrieve total amount of RAM for the system."""
     import psutil
 
@@ -66,7 +66,7 @@ def total_ram():
 
 
 @lru_cache(maxsize=2)
-def get_system_info(as_html=False):
+def get_system_info(as_html=False) -> str:
     """Gathers relevant module versions for troubleshooting purposes.
 
     Parameters

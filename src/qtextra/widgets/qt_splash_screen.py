@@ -1,7 +1,7 @@
 """Splash screen."""
 
 from koyo.typing import PathLike
-from qtpy.QtCore import Qt, Slot
+from qtpy.QtCore import Qt, Slot  # type: ignore[attr-defined]
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import QSplashScreen
 
@@ -29,18 +29,7 @@ class QtSplashScreen(QSplashScreen):
         EVENTS.evt_splash_msg.connect(self.on_message)
         EVENTS.evt_splash_close.connect(self.close)
 
-    @Slot(str)
+    @Slot(str)  # type: ignore[misc]
     def on_message(self, msg: str):
         """Show message."""
         self.showMessage(msg, alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.GlobalColor.white)
-
-
-if __name__ == "__main__":  # pragma: no cover
-    import sys
-
-    from qtpy.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-
-    _ = QtSplashScreen()
-    sys.exit(app.exec_())

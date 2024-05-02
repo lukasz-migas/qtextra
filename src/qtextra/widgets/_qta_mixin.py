@@ -1,4 +1,7 @@
 """Mixin class for QtAwesome widgets."""
+
+from __future__ import annotations
+
 import typing as ty
 
 import qtawesome
@@ -11,9 +14,9 @@ from qtextra.config import THEMES
 class QtaMixin:
     """Mixin class for Qta widgets."""
 
-    _qta_data = None
-    _checked_qta_data = None
-    _icon_color = None
+    _qta_data: tuple | None = None
+    _checked_qta_data: tuple | None = None
+    _icon_color: str | None = None
 
     setIcon: ty.Callable
     setMinimumSize: ty.Callable
@@ -73,7 +76,7 @@ class QtaMixin:
 
     def set_size(self, size: ty.Tuple[int, int]) -> None:
         """Set maximum size of the icon."""
-        size = QSize(*size)
+        size = QSize(*size)  # type: ignore[assignment]
         self.setMinimumSize(size)
         self.setMaximumSize(size)
         self.setIconSize(size)

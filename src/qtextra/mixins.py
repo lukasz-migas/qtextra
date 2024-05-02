@@ -1,5 +1,7 @@
 """Various mixin classes that can be integrated into other widgets."""
 
+from __future__ import annotations
+
 import time
 import typing as ty
 from contextlib import contextmanager
@@ -8,8 +10,9 @@ from pathlib import Path
 
 from koyo.timer import report_time
 from loguru import logger
-from qtpy.QtCore import QTimer, Signal
-from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget
+from qtpy.QtCore import QObject, QTimer, Signal  # type: ignore[attr-defined]
+from qtpy.QtGui import QCloseEvent
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 import qtextra.helpers as hp
 from qtextra.config import EVENTS, get_settings
@@ -24,8 +27,10 @@ class DocumentationMixin:
 
     DOC_HTML_LINK: str = ""
 
+    parent: ty.Callable[..., QWidget]
+
     def _make_info_layout(
-        self, align_right: bool = True, html_link: str = "", parent: QWidget = None
+        self, align_right: bool = True, html_link: str = "", parent: QWidget | None = None
     ) -> ty.Tuple[QPushButton, QHBoxLayout]:
         """Make info button."""
         if not html_link:
@@ -34,7 +39,6 @@ class DocumentationMixin:
         info_btn = hp.make_qta_btn(
             parent if parent is not None else self.parent(),
             "help",
-            flat=True,
             tooltip="Click here to see more information about this panel...",
         )
         info_btn.clicked.connect(partial(self._open_info_link, html_link))
@@ -50,7 +54,7 @@ class DocumentationMixin:
         return info_btn, layout
 
     @staticmethod
-    def _open_info_link(html_link: str):
+    def _open_info_link(html_link: str) -> None:
         """Open link."""
         # local docs
         if html_link.startswith("docs/"):
@@ -65,11 +69,11 @@ class DocumentationMixin:
 class ConfigMixin:
     """Configuration mixin."""
 
-    _initialized = False
-    _is_setting_config = False
+    _initialized_config: bool = False
+    _is_setting_config: bool = False
 
     @contextmanager
-    def setting_config(self):
+    def setting_config(self) -> ty.Generator[None, None, None]:
         """Disable updates by temporarily setting the `_is_setting_config` flag."""
         self._is_setting_config = True
         yield
@@ -78,18 +82,19 @@ class ConfigMixin:
     def on_set_from_config(self) -> None:
         """Init from config."""
         with self.setting_config():
-            self._on_set_from_config(get_settings())
+            self._on_set_from_config(get_settings())  # type: ignore[no-untyped-call]
+        self._initialized_config = True
 
-    def _on_set_from_config(self, settings: ty.Optional = None):
+    def _on_set_from_config(self, settings: ty.Any | None = None) -> None:
         """Bind events."""
 
 
 class TimerMixin:
     """Timer mixin."""
 
-    def _add_periodic_timer(self, interval: int, fcn, start: bool = True):
+    def _add_periodic_timer(self, interval: int, fcn: ty.Callable | None, start: bool = True) -> QTimer:
         """Create timer to execute some action."""
-        timer = QTimer(self)
+        timer = QTimer(self)  # type: ignore[arg-type]
         timer.setInterval(interval)
         if fcn:
             timer.timeout.connect(fcn)
@@ -99,13 +104,15 @@ class TimerMixin:
         logger.debug(f"Added periodic timer event that runs every {interval/1000}s")
         return timer
 
-    def _add_single_shot_timer(self, delay: int, fcn) -> QTimer:
-        timer = QTimer(self)
+    def _add_single_shot_timer(self, delay: int, fcn: ty.Callable) -> QTimer:
+        timer = QTimer(self)  # type: ignore[arg-type]
         timer.singleShot(delay, fcn)
         return timer
 
-    @contextmanager
-    def measure_time(self, message: str = "Task took", func: ty.Callable = logger.trace):
+    @contextmanager  # type: ignore[arg-type]
+    def measure_time(
+        self, message: str = "Task took", func: ty.Callable = logger.trace
+    ) -> ty.Generator[None, None, None]:
         """Measure time."""
         t_start = time.time()
         yield
@@ -115,20 +122,28 @@ class TimerMixin:
 class MinimizeMixin:
     """Mixin class to enable hiding of popup."""
 
-    def _make_hide_handle(self):
-        hide_handle = hp.make_qta_btn(self, "minimise", tooltip="Click here to minimize the popup window")
-        hide_handle.clicked.connect(self.on_hide)
+    _make_move_handle: ty.Callable[..., ty.Any]
+    hide: ty.Callable[..., ty.Any]
+    clearFocus: ty.Callable[..., ty.Any]
 
-        handle_layout = self._make_move_handle()
-        handle_layout.insertWidget(2, hide_handle)
-        return hide_handle, handle_layout
+    def _make_hide_handle(self) -> tuple[QPushButton, QHBoxLayout]:
+        hide_btn = hp.make_qta_btn(
+            self,  # type: ignore[arg-type]
+            "minimise",
+            tooltip="Click here to minimize the popup window",
+        )
+        hide_btn.clicked.connect(self.on_hide)
 
-    def on_hide(self):
+        hide_layout = self._make_move_handle()
+        hide_layout.insertWidget(2, hide_btn)
+        return hide_btn, hide_layout
+
+    def on_hide(self) -> None:
         """Hide."""
         self.hide()
         self.clearFocus()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """Hide."""
         self.on_hide()
         event.ignore()
@@ -138,18 +153,27 @@ class MinimizeMixin:
 class CloseMixin:
     """Mixin class to enable closing of popup."""
 
-    HIDE_WHEN_CLOSE = False
+    HIDE_WHEN_CLOSE: bool = False
+    _title_label: QLabel
 
-    def _make_close_handle(self, title: str = ""):
-        close_btn = hp.make_qta_btn(self, "cross", tooltip="Click here to close the popup window", normal=True)
+    close: ty.Callable[..., ty.Any]
+    _make_move_handle: ty.Callable[..., ty.Any]
+
+    def _make_close_handle(self, title: str = "") -> tuple[QPushButton, QHBoxLayout]:
+        close_btn = hp.make_qta_btn(
+            self,  # type: ignore[arg-type]
+            "cross",
+            tooltip="Click here to close the popup window",
+            normal=True,
+        )
         close_btn.clicked.connect(self.close)
 
-        handle_layout = self._make_move_handle()
-        handle_layout.insertWidget(3, close_btn)
+        close_layout = self._make_move_handle()
+        close_layout.insertWidget(3, close_btn)
         self._title_label.setText(title)
-        return close_btn, handle_layout
+        return close_btn, close_layout
 
-    def _make_hide_handle(self, title: str = ""):
+    def _make_hide_handle(self, title: str = "") -> tuple[QPushButton, QHBoxLayout]:
         self.HIDE_WHEN_CLOSE = True
         return self._make_close_handle(title)
 
@@ -160,12 +184,12 @@ class IndicatorMixin:
     evt_indicate = Signal(str)
     evt_indicate_about = Signal(str, str)
 
-    def on_toast(self, title: str, message: str, func: ty.Callable = logger.info):
+    def on_toast(self, title: str, message: str, func: ty.Callable = logger.info) -> None:
         """Show notification."""
         from qtextra.widgets.qt_toast import QtToast
 
         func(message)
-        QtToast(self).show_message(title, message)
+        QtToast(self).show_message(title, message)  # type: ignore[arg-type]
 
     @staticmethod
     def on_notify_critical(msg: str, func: ty.Callable = logger.critical) -> None:

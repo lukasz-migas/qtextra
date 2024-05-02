@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import typing as ty
+from functools import partial
 
 from loguru import logger
-from qtpy.QtCore import Qt, QTimer, Slot
-from qtpy.QtWidgets import (
+from qtpy.QtCore import Qt, Slot  # type: ignore[attr-defined]
+from qtpy.QtWidgets import (  # type: ignore[attr-defined]
     QAction,
     QButtonGroup,
     QHBoxLayout,
@@ -19,13 +20,14 @@ from qtpy.QtWidgets import (
 )
 
 import qtextra.helpers as hp
+from qtextra.utils.utilities import connect
 from qtextra.widgets.qt_image_button import QtToolbarPushButton
 
 
 class QtAboutWidget(QWidget):
     """About widget."""
 
-    def __init__(self, title: str, description: str, docs_link: str = None, parent=None):
+    def __init__(self, title: str, description: str, docs_link: str | None = None, parent: QWidget | None = None):
         super().__init__(parent)
 
         self.title_label = hp.make_label(self, title, bold=True, wrap=True)
@@ -44,7 +46,7 @@ class QtAboutWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     @classmethod
-    def make_widget(cls, title: str, description: str, docs: str, parent=None):
+    def make_widget(cls, title: str, description: str, docs: str, parent: QWidget | None = None) -> QtAboutWidget:
         """Make widget."""
         return QtAboutWidget(title, description, docs, parent=parent)
 
@@ -69,7 +71,7 @@ class QtAboutWidget(QWidget):
 class QtPanelWidget(QWidget):
     """Stacked panel widget."""
 
-    def __init__(self, parent: QWidget = None, position: str = "left"):
+    def __init__(self, parent: QWidget | None = None, position: str = "left"):
         super().__init__(parent)
 
         self._about_stack = QWidget(self)
@@ -80,7 +82,10 @@ class QtPanelWidget(QWidget):
         self._about_stack.setVisible(False)
 
         self._stack = QStackedWidget(parent)
+        self._stack.setContentsMargins(0, 0, 0, 0)
+
         self._buttons = QToolBar(self)
+        self._buttons.setContentsMargins(0, 0, 0, 0)
 
         spacer = hp.make_spacer_widget()
         self._spacer = self._buttons.addWidget(spacer)
@@ -95,29 +100,46 @@ class QtPanelWidget(QWidget):
         self._group.buttonToggled.connect(self._toggle_widget)
 
         self._layout = QHBoxLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(0)
         self._layout.addWidget(self._buttons)
         if position == "left":
             self._layout.addWidget(self._about_stack)
         else:
             self._layout.addWidget(self._about_stack)
 
-        self._buttons.setContentsMargins(0, 0, 0, 0)
         self._about_stack.setContentsMargins(0, 0, 0, 0)
-        self._stack.setContentsMargins(0, 0, 0, 0)
-        self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.setSpacing(0)
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
 
     @property
-    def stack_widget(self):
+    def stack_widget(self) -> QStackedWidget:
         """Get stack widget."""
         return self._stack
 
+    def get_widget(self, name: str) -> QtToolbarPushButton | None:
+        """Get widget."""
+        for button in self._button_dict:
+            if button.objectName() == name:
+                return button
+        return None
+
+    def get_index(self, button: QtToolbarPushButton) -> int:
+        """Get index."""
+        for i, btn in enumerate(self._button_dict):
+            if btn == button:
+                return i
+        return -1
+
     def add_widget(
-        self, name: str, tooltip: ty.Optional[str] = None, widget: ty.Optional[QWidget] = None, location: str = "top"
-    ):
+        self,
+        name: str,
+        tooltip: str | None = None,
+        widget: QWidget | None = None,
+        location: str = "top",
+        func: ty.Callable | None = None,
+    ) -> QtToolbarPushButton:
         """Add widget to the stack.
 
         Parameters
@@ -132,71 +154,81 @@ class QtPanelWidget(QWidget):
         location : str
             location of the button - allowed values include `top` and `bottom`. Typically, buttons that go to the
             `bottom` will be simple click-buttons without widgets associated with them.
+        func : Optional[Callable]
+            function that will be connected to the button click event
         """
         assert location in ["top", "bottom"], "Incorrect location provided - use `top` or `bottom`"
+        if self.get_widget(name):
+            logger.warning(f"Button with name '{name}' already exists")
+
         button: QtToolbarPushButton = hp.make_toolbar_btn(
             self,
             name,
             checkable=widget is not None,
-            flat=True,
-            medium=True,
+            large=True,
             # icon_kwargs=dict(color_active=THEMES.get_hex_color("success")),
         )
+        button.setObjectName(name)
+        if tooltip:
+            button.setToolTip(tooltip)
+
+        # get action button
+        self._button_dict[button] = self._add_before(button) if location == "top" else self._add_after(button)
+        self._group.addButton(button)
+        if widget:
+            self.connect_widget(name, widget, tooltip)
+        elif func:
+            button.evt_click.connect(func)
+        return button
+
+    def connect_widget(self, name: str, widget: QWidget, tooltip: str | None = None) -> None:
+        """Connect widget."""
+        button = self.get_widget(name)
+        if not button:
+            logger.warning(f"Button with name '{name}' not found")
+            return
+        button.disconnect()
+        button.setCheckable(True)
+        index = self.get_index(button)
 
         # create custom tooltip if it's possible
         if hasattr(widget, "_make_html_description"):
-            tooltip = widget._make_html_description()
+            tooltip = widget._make_html_description()  # type: ignore[union-attr]
 
         # about_widget = None
         # if hasattr(widget, "_make_html_metadata"):
         #     about_widget = QtAboutWidget.make_widget(*widget._make_html_metadata(), parent=self._about_stack)
         # elif hasattr(widget, "_make_html_description"):
         #     tooltip = widget._make_html_description()
-        button.setToolTip(tooltip)
-        button._widget = widget
-        if widget:
-            widget._button = button
-
-        # about_widget = QtAboutPopup("TEST MESSAGE", button)
-        # button._about = about_widget
-        # button.evt_hover.connect(about_widget.on_show)
-
-        # if about_widget:
-        #     button._about_widget = about_widget
-        #     self._about_layout.addWidget(about_widget)
-
+        if tooltip:
+            button.setToolTip(tooltip)
+        button.panel_widget = widget
+        if hasattr(widget, "toggle_button"):
+            widget.toggle_button = button
         if hasattr(widget, "evt_indicate"):
-            widget.evt_indicate.connect(button.set_indicator)
+            connect(widget.evt_indicate, button.set_indicator)
         if hasattr(widget, "evt_indicate_about"):
-            widget.evt_indicate_about.connect(button.set_indicator)
+            connect(widget.evt_indicate_about, button.set_indicator)
+        self._stack.insertWidget(index, widget)
+        if self._stack.count() == 1:
+            self._toggle_widget(button, True)
+        button.evt_click.connect(partial(self._toggle_widget, button, True))
 
-        # get action button
-        action = self._add_before(button) if location == "top" else self._add_after(button)
-        self._button_dict[button] = action
-        self._group.addButton(button)
-        self._buttons.setVisible(True)
-        if widget:
-            widget._toggle = button
-            self._stack.addWidget(widget)
-            if self._stack.count() == 1:
-                self._toggle_widget(button, True)
-        return button
-
-    def _add_before(self, button) -> QAction:
+    def _add_before(self, button: QtToolbarPushButton) -> QAction:
         """Add button after."""
-        return self._buttons.insertWidget(self._spacer, button)
+        return self._buttons.insertWidget(self._spacer, button)  # type: ignore[return-value]
 
-    def _add_after(self, button) -> QAction:
-        return self._buttons.addWidget(button)
+    def _add_after(self, button: QtToolbarPushButton) -> QAction:
+        return self._buttons.addWidget(button)  # type: ignore[return-value]
 
-    def _show_another(self, button: QtToolbarPushButton):
+    def _show_another(self, button: QtToolbarPushButton) -> None:
         """Show another widget if current button is disabled or hidden."""
         for btn in self._button_dict:
             if btn != button:
                 btn.setChecked(True)
                 break
 
-    def _toggle_widget(self, button: QtToolbarPushButton, value: bool):
+    def _toggle_widget(self, button: QtToolbarPushButton, value: bool) -> None:
         """Toggle widget and show appropriate widget."""
         if button in self._hidden_dict:
             self._show_another(button)
@@ -210,25 +242,26 @@ class QtPanelWidget(QWidget):
         button.setChecked(value)
         button.repaint()
         button.set_indicator("")
-        widget = button._widget
+
+        widget = button.panel_widget
         if value and widget:
             self._stack.setCurrentWidget(widget)
-        if hasattr(button, "_about_widget") and button._about_widget:
-            self._about_layout.setCurrentWidget(button._about_widget)
+        if hasattr(button, "about_widget") and button.about_widget:
+            self._about_layout.setCurrentWidget(button.about_widget)
         self._stack.setVisible(value)
 
         # This is a bit of a hack but it's required to force-update vispy canvas after changing to view the panel
-        if value and hasattr(widget, "_update_after_activate"):
-            timer = QTimer(self)
-            timer.singleShot(50, widget._update_after_activate)
+        if value and widget and hasattr(widget, "update_after_activation"):
+            hp.call_later(self, widget.update_after_activation, 50)
 
-    def enable_widget(self, button: QtToolbarPushButton):
+    def enable_widget(self, button: QtToolbarPushButton) -> None:
         """Enable widget."""
         if button in self._hidden_dict:
             action = self._hidden_dict.pop(button, None)
-            action.setVisible(True)
+            if action:
+                action.setVisible(True)
 
-    def disable_widget(self, button: QtToolbarPushButton):
+    def disable_widget(self, button: QtToolbarPushButton) -> None:
         """Disable widget."""
         if button in self._hidden_dict:
             logger.debug("Button is already hidden")
@@ -237,12 +270,12 @@ class QtPanelWidget(QWidget):
         self._hidden_dict[button] = action
         action.setVisible(False)
 
-    def add_home_button(self):
+    def add_home_button(self) -> None:
         """Add home button."""
         button = self.add_widget("menu", "Show/hide information about the widgets.")
         button.evt_click.connect(self.show_about_stack)
 
-    def show_about_stack(self, _):
+    def show_about_stack(self, _: ty.Any) -> None:
         """Show about stack."""
         if self._about_stack.maximumWidth() == 0:
             start, end = 0, 250
@@ -254,7 +287,7 @@ class QtPanelWidget(QWidget):
 class QtPanelToolbar(QToolBar):
     """Toolbar."""
 
-    def __init__(self, parent=None, position: str = "left"):
+    def __init__(self, parent: QWidget | None = None, position: str = "left"):
         super().__init__(parent=parent)
 
         self._widget = QtPanelWidget(self, position=position)
@@ -267,60 +300,79 @@ class QtPanelToolbar(QToolBar):
         self.setContentsMargins(0, 0, 0, 0)
 
     @property
-    def stack_widget(self):
+    def stack_widget(self) -> QStackedWidget:
         """Get instance of the stack widget."""
         return self._widget._stack
 
     # noinspection PyMissingOrEmptyDocstring
-    def add_widget(self, name, tooltip: str = None, widget: QWidget = None, location="top") -> QtToolbarPushButton:
-        return self._widget.add_widget(name, tooltip, widget, location=location)
+    def add_widget(
+        self,
+        name: str,
+        tooltip: str | None = None,
+        widget: QWidget | None = None,
+        location: str = "top",
+        func: ty.Callable | None = None,
+    ) -> QtToolbarPushButton:
+        """Add widget to the toolbar."""
+        return self._widget.add_widget(name, tooltip, widget, location=location, func=func)
 
     add_widget.__doc__ = QtPanelWidget.__doc__
 
-    def set_disabled(self, button: QtToolbarPushButton, disable: bool):
+    def connect_widget(
+        self,
+        name: str,
+        widget: QWidget,
+        tooltip: str | None = None,
+    ) -> None:
+        """Add widget to the toolbar."""
+        self._widget.connect_widget(name, widget, tooltip)
+
+    def set_disabled(self, button: QtToolbarPushButton, disable: bool) -> None:
         """Set widget as disabled."""
         if disable:
             self.disable_widget(button)
         else:
             self.enable_widget(button)
 
-    def enable_widget(self, button: QtToolbarPushButton):
+    def enable_widget(self, button: QtToolbarPushButton) -> None:
         """Enable widget."""
         self._widget.enable_widget(button)
 
-    def disable_widget(self, button: QtToolbarPushButton):
+    def disable_widget(self, button: QtToolbarPushButton) -> None:
         """Disable widget."""
         self._widget.disable_widget(button)
 
-    @Slot()
-    def deactivate_all(self):
+    @Slot()  # type: ignore[misc]
+    def deactivate_all(self) -> None:
         """Deactivate all indicators."""
         for btn in self._widget._button_dict:
             btn.set_indicator("")
             btn.repaint()
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover fmt: off
 
     def _main():  # type: ignore[no-untyped-def]
         import sys
         from random import choice
 
+        from qtextra.assets import QTA_MAPPING
         from qtextra.helpers import make_btn
         from qtextra.utils.dev import qmain, theme_toggle_btn
         from qtextra.widgets.qt_dialog import QtTab
 
-        def _add_button():
-            name = choice(["help", "filter", "open", "edit", "mask"])
+        def _add_button() -> None:
+            name = choice(list(QTA_MAPPING.keys()))
+            indicator_type = choice(["warning", "", "success", "active"])
             pos = choice(["top", "bottom"])
             tooltip = "<p style='white-space:pre'><h1>This is a much longer line than the first</h1></p>"
             # """<p style''white-space:pre'><h2><b>MyList</b></h2></p>"""
             button = toolbar.add_widget(name, tooltip, QWidget() if pos == "top" else None, pos)
-            button.set_indicator(choice(["warning", "", "success", "active"]))
+            button.set_indicator(indicator_type)
 
-        def _add_widget():
+        def _add_widget() -> None:
             class Test(QtTab):
-                _description = {
+                _description: ty.ClassVar[dict] = {
                     "title": choice(
                         ["dimensionality reduction", "machine learning", "spatial", "spectral", "highlights"]
                     ),
@@ -332,7 +384,7 @@ if __name__ == "__main__":  # pragma: no cover
                     return QHBoxLayout()
 
             panel = Test(frame)
-            name = choice(["help", "filter", "open", "edit", "mask"])
+            name = choice(list(QTA_MAPPING.keys()))
             toolbar.add_widget(name, widget=panel)
 
         def _disable_btn():

@@ -2,12 +2,14 @@
 
 Taken and modified from spyder.widgets.status
 """
+
+from __future__ import annotations
+
 import typing as ty
 
-from qtpy import QtWidgets
-from qtpy.QtCore import QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QFont
-from qtpy.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QStatusBar, QWidget
+from qtpy.QtCore import QSize, Qt, QTimer, Signal  # type: ignore[attr-defined]
+from qtpy.QtGui import QFont, QIcon, QMouseEvent
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QSizePolicy, QStatusBar, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_icon_label import QtQtaLabel
@@ -28,7 +30,7 @@ __all__ = [
 class QtStatusbarLabel(QLabel):
     """Statusbar label."""
 
-    def __init__(self, parent, statusbar, text="", font_size: int = 7):
+    def __init__(self, parent: QWidget | None, statusbar: QStatusBar, text: str = "", font_size: int = 7):
         """Status bar progress bar."""
         super().__init__(parent)
 
@@ -42,7 +44,7 @@ class QtStatusbarLabel(QLabel):
 class QtStatusbarToolBtn(QtToolButton):
     """Status bar tool button base."""
 
-    def __init__(self, parent, statusbar, text="", icon=None):
+    def __init__(self, parent: QWidget | None, statusbar: QStatusBar, text: str = "", icon: QIcon | None = None):
         """Status bar widget base."""
         super().__init__(parent, text=text, icon=icon)
         self.setFont(hp.get_font(7))
@@ -56,12 +58,12 @@ class QtStatusbarToolBtn(QtToolButton):
 class QtStatusbarProgressbar(QProgressBar):
     """Statusbar progressbar."""
 
-    def __init__(self, parent, statusbar: QStatusBar):
+    def __init__(self, parent: QWidget | None, statusbar: QStatusBar):
         """Status bar progress bar."""
         super().__init__(parent)
 
         # Setup sizing policy
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        size_policy = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
         size_policy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
@@ -76,7 +78,7 @@ class QtStatusbarProgressbar(QProgressBar):
 class QtStatusbarSpinner(QWidget):
     """Statusbar spinner."""
 
-    def __init__(self, parent, statusbar: QStatusBar):
+    def __init__(self, parent: QWidget | None, statusbar: QStatusBar):
         super().__init__(parent)
 
         self.spinner, self.movie = hp.make_loading_gif(parent, size=(18, 18))
@@ -89,11 +91,11 @@ class QtStatusbarSpinner(QWidget):
 
         statusbar.addPermanentWidget(self)
 
-    def start(self):
+    def start(self) -> None:
         """Start spinner."""
         self.spinner.show()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop spinner."""
         self.spinner.hide()
 
@@ -104,7 +106,7 @@ class QtStatusbarIconWidget(QWidget):
     # Signals
     evt_clicked = Signal()
 
-    def __init__(self, parent, statusbar: QStatusBar, name: str = "", index: ty.Optional[int] = None):
+    def __init__(self, parent: QWidget | None, statusbar: QStatusBar, name: str = "", index: ty.Optional[int] = None):
         """Status bar widget base."""
         super().__init__(parent)
         self.setMouseTracking(True)
@@ -132,7 +134,7 @@ class QtStatusbarIconWidget(QWidget):
             statusbar.insertPermanentWidget(index, self)
         self.update_tooltip()
 
-    def update_tooltip(self):
+    def update_tooltip(self) -> None:
         """Update tooltip for widget."""
         tooltip = self.get_tooltip()
         if tooltip:
@@ -140,16 +142,16 @@ class QtStatusbarIconWidget(QWidget):
                 self.label_icon.setToolTip(tooltip)
             self.setToolTip(tooltip)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Override Qt method to allow for click signal."""
         super().mousePressEvent(event)
         self.evt_clicked.emit()
 
-    def get_tooltip(self):
+    def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
         return ""
 
-    def flash(self, duration: int = 500, color=(0.5, 0.5, 0.5, 0.5)):
+    def flash(self, duration: int = 500, color: tuple = (0.5, 0.5, 0.5, 0.5)) -> None:
         """Add simple flash animation to highlight an event."""
         hp.add_flash_animation(self, duration, color, 3)
 
@@ -160,19 +162,26 @@ class QtStatusbarWidget(QtStatusbarIconWidget):
     # Signals
     evt_clicked = Signal()
 
-    def __init__(self, parent, statusbar, name: str = "", example_text: str = None, hide_label: bool = False):
+    def __init__(
+        self,
+        parent: QWidget | None,
+        statusbar: QStatusBar,
+        name: str = "",
+        example_text: str | None = None,
+        hide_label: bool = False,
+    ):
         """Status bar widget base."""
         super().__init__(parent, statusbar, name=name)
         # Variables
-        self.value = None
+        self.value: str | None = None
         self.label_value = QLabel()
 
         # Layout setup
-        self.layout().addWidget(self.label_value)
+        self.layout().addWidget(self.label_value)  # type: ignore[union-attr]
 
         # See spyder-ide/spyder#9044.
         self.label_value.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.label_value.setFont(hp.get_font(7, QFont.Bold))
+        self.label_value.setFont(hp.get_font(7, QFont.Weight.Bold))
         if hide_label:
             self.label_value.setVisible(False)
 
@@ -192,7 +201,7 @@ class QtStatusbarWidget(QtStatusbarIconWidget):
         self.value = value
         self.label_value.setText(value)
 
-    def update_tooltip(self):
+    def update_tooltip(self) -> None:
         """Update tooltip for widget."""
         tooltip = self.get_tooltip()
         if tooltip and hasattr(self, "label_value"):
@@ -205,7 +214,7 @@ class QtStatusbarWidget(QtStatusbarIconWidget):
 class QtStatusbarTimerBase(QtStatusbarWidget):
     """Status bar widget base for widgets that update based on timers."""
 
-    def __init__(self, parent, statusbar, name: str = "", example_text: str = None):
+    def __init__(self, parent: QWidget | None, statusbar: QStatusBar, name: str = "", example_text: str | None = None):
         """Status bar widget base for widgets that update based on timers."""
         self.timer = None  # Needs to come before parent call
         super().__init__(parent, statusbar, name=name, example_text=example_text)
@@ -219,7 +228,7 @@ class QtStatusbarTimerBase(QtStatusbarWidget):
         else:
             self.hide()
 
-    def setVisible(self, value: bool):
+    def setVisible(self, value: bool) -> None:
         """Override Qt method to stops timers if widget is not visible."""
         if self.timer is not None:
             if value:
@@ -228,7 +237,7 @@ class QtStatusbarTimerBase(QtStatusbarWidget):
                 self.timer.stop()
         super().setVisible(value)
 
-    def is_supported(self):
+    def is_supported(self) -> bool:
         """Return True if feature is supported."""
         try:
             self.import_test()
@@ -236,22 +245,22 @@ class QtStatusbarTimerBase(QtStatusbarWidget):
         except ImportError:
             return False
 
-    def update_status(self):
+    def update_status(self) -> None:
         """Update status label widget, if widget is visible."""
         if self.isVisible():
             self.label_value.setText(self.get_value())
 
-    def set_interval(self, interval: int):
+    def set_interval(self, interval: int) -> None:
         """Set timer interval (ms)."""
         self._interval = interval
         if self.timer is not None:
             self.timer.setInterval(interval)
 
-    def import_test(self):
+    def import_test(self) -> None:
         """Raise ImportError if feature is not supported."""
         raise NotImplementedError
 
-    def get_value(self):
+    def get_value(self) -> str:
         """Return formatted text value."""
         raise NotImplementedError
 
@@ -259,20 +268,20 @@ class QtStatusbarTimerBase(QtStatusbarWidget):
 class QtStatusbarMemory(QtStatusbarTimerBase):
     """Status bar widget for system memory usage."""
 
-    def import_test(self):
+    def import_test(self) -> None:
         """Raise ImportError if feature is not supported."""
         from qtextra.utils.utilities import memory_usage
 
         del memory_usage
 
-    def get_value(self):
+    def get_value(self) -> str:
         """Return memory usage."""
         from qtextra.utils.utilities import memory_usage
 
         text = "%d%%" % memory_usage()
         return "Mem " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
 
-    def get_tooltip(self):
+    def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
         return "Memory usage"
 
@@ -280,16 +289,16 @@ class QtStatusbarMemory(QtStatusbarTimerBase):
 class QtStatusbarCPU(QtStatusbarTimerBase):
     """Status bar widget for system cpu usage."""
 
-    def import_test(self):
+    def import_test(self) -> None:
         """Raise ImportError if feature is not supported."""
 
-    def get_value(self):
+    def get_value(self) -> str:
         """Return CPU usage."""
         import psutil
 
         text = "%d%%" % psutil.cpu_percent(interval=0)
         return "CPU " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
 
-    def get_tooltip(self):
+    def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
         return "CPU usage"

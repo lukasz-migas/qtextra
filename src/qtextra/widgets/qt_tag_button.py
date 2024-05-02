@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Dict
+import typing as ty
 
 from koyo.secret import get_short_hash
-from qtpy.QtCore import QSize, Qt, Signal, Slot
+from qtpy.QtCore import QSize, Qt, Signal, Slot  # type: ignore[attr-defined]
+from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
@@ -20,14 +21,14 @@ from qtextra.widgets.qt_image_button import QtImagePushButton
 class QtLeftPillLabel(QLabel):
     """Left label."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
 
 
 class QtPillActionButton(QtImagePushButton):
     """Delete button."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self._mode = "delete"
         self.mode = "delete"
@@ -60,7 +61,7 @@ class QtTagButton(QFrame):
         self,
         label: str,
         hash_id: str,
-        parent=None,
+        parent: QWidget | None = None,
         allow_action: bool = True,
         action_type: str = "delete",
         allow_selected: bool = True,
@@ -112,7 +113,7 @@ class QtTagButton(QFrame):
         return self.label.text()
 
     @tag.setter
-    def tag(self, value: str):
+    def tag(self, value: str) -> None:
         self.label.setText(value)
         self.label.setVisible(len(value) > 0)
 
@@ -122,29 +123,29 @@ class QtTagButton(QFrame):
         return self._active
 
     @active.setter
-    def active(self, state: bool):
+    def active(self, state: bool) -> None:
         self.setProperty("active", str(state))
         self.selected.setVisible(state)
         hp.polish_widget(self)
         self._active = state
         self.evt_checked.emit(self.hash_id, state)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Process mouse press event."""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             if self._allow_selected:
                 self.active = not self._active
             else:
                 self.evt_clicked.emit()
         super().mousePressEvent(event)
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
         """Get size hint."""
         sh = self.selected.sizeHint() + self.label.sizeHint()
         sh += self.action_btn.sizeHint() if self.action_btn.isVisible() else QSize(0, 0)
         return sh
 
-    def _on_action(self):
+    def _on_action(self) -> None:
         """On delete."""
         self.evt_action.emit(self.hash_id)
 
@@ -156,18 +157,20 @@ class QtTagManager(QWidget):
     evt_plus_clicked = Signal()
     _action_btn = None
 
-    def __init__(self, parent=None, allow_action: bool = False):
+    def __init__(self, parent: QWidget | None = None, allow_action: bool = False):
         super().__init__(parent=parent)
         self.allow_action = allow_action
 
         self._layout = QtFlowLayout(self)
-        self.widgets: Dict[str, QtTagButton] = {}
+        self._layout.setSpacing(0)
+        self._layout.setContentsMargins(2, 2, 2, 2)
+        self.widgets: dict[str, QtTagButton] = {}
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def add_tag(
         self,
         text: str,
-        hash_id: str = None,
+        hash_id: str | None = None,
         allow_action: bool | None = None,
         active: bool = False,
         allow_selected: bool = True,
@@ -188,8 +191,8 @@ class QtTagManager(QWidget):
         self.widgets[hash_id] = widget
         return hash_id
 
-    @Slot(str)
-    def remove_tag(self, hash_id: str):
+    @Slot(str)  # type: ignore[misc]
+    def remove_tag(self, hash_id: str) -> None:
         """Remove tag."""
         widget = self.widgets.pop(hash_id, None)
         if widget:
@@ -198,36 +201,37 @@ class QtTagManager(QWidget):
             self._layout.removeWidget(widget)
             widget.deleteLater()
 
-    def update_label(self, hash_id: str, new_label: str):
+    def update_label(self, hash_id: str, new_label: str) -> None:
         """Update label of specified tag."""
         tag = self.widgets[hash_id]
         tag.tag = new_label
 
-    def add_button(self, object_type: str, tooltip: str = ""):
+    def add_button(self, object_type: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
         self._action_btn = hp.make_qta_btn(self, object_type, tooltip=tooltip)
         self._layout.addWidget(self._action_btn)
         return self._action_btn
 
-    def add_plus(self):
+    def add_plus(self) -> QtImagePushButton:
         """Add plus button."""
-        self.add_button("add")
-        self._action_btn.clicked.connect(self.on_add_click)
+        button = self.add_button("add")
+        button.clicked.connect(self.on_add_click)
+        return button
 
-    def on_add_click(self):
+    def on_add_click(self) -> None:
         """Handle add click."""
         text = hp.get_text(self, "Type-in new label.", "New label")
         if text:
             self.add_tag(text)
             self.evt_plus_clicked.emit()
 
-    @Slot(str, bool)
-    def _tag_changed(self, hash_id: str, state: bool):
+    @Slot(str, bool)  # type: ignore[misc]
+    def _tag_changed(self, hash_id: str, state: bool) -> None:
         """Tag was checked or unchecked."""
         self.evt_changed.emit(hash_id, state)
 
     @property
-    def selected(self):
+    def selected(self) -> list[str]:
         """Get list of selected tags."""
         selected = []
         for hash_id, tag in self.widgets.items():

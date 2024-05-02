@@ -50,6 +50,10 @@ QtImagePushButton[standout=true]:hover {
   background-color: {{ primary }};
 }
 
+QtImagePushButton[no_menu=true]:menu-indicator {
+    image: none;
+}
+
 /*QtImagePushButton[right_click=true] {*/
 /*  border: 2px solid {{ success }};*/
 /*}*/
@@ -127,8 +131,8 @@ QtToolbarPushButton{
 
 QtToolbarPushButton::checked{
     background-color: {{ foreground }};
-    border-radius: 0px;
-    border-left: 3px solid {{ success }};
+    border-radius: 10px;
+    border: 3px solid {{ success }};
 }
 
 QtToolbarPushButton::unchecked{
@@ -140,7 +144,6 @@ QtToolbarPushButton::pressed{
 }
 
 QtToolbarPushButton::hover{
-    border-radius: 0px;
     background-color: {{ primary }};
 }
 

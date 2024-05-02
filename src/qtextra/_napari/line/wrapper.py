@@ -6,6 +6,7 @@ import typing as ty
 
 import numpy as np
 from koyo.secret import get_short_hash
+from napari.utils.events import Event
 from napari_plot.layers import Centroids, InfLine, Line, Region, Scatter, Shapes
 from napari_plot.viewer import ViewerModel as Viewer
 from qtpy.QtCore import QMutex
@@ -58,7 +59,7 @@ class NapariLineView(ViewerBase):
         x_label: str = "",
         y_label: str = "",
         lock_to_bottom: bool = False,
-        **kwargs,
+        **kwargs: ty.Any,
     ):
         self.parent = parent
         self.main_parent = kwargs.pop("main_parent", None)
@@ -97,8 +98,8 @@ class NapariLineView(ViewerBase):
         self.widget.text_overlay.node.face = font
 
         # add few layers
-        self.line_layer = None
-        self.region_layer = None
+        self.line_layer: Line | None = None
+        self.region_layer: Region | None = None
 
         # connect events
         self.viewer.events.clear_canvas.connect(self._clear)
@@ -114,27 +115,27 @@ class NapariLineView(ViewerBase):
         self.viewer.camera.rect = xmin + 1, xmax, ymin, ymax
         self.viewer.camera.rect = xmin, xmax, ymin, ymax
 
-    def _on_remove_layer(self, _evt=None):
+    def _on_remove_layer(self, evt: Event) -> None:
         """Indicate if layer has been deleted."""
-        layer = _evt.value
+        layer = evt.value
         if self.line_layer is not None and layer.name == self.line_layer.name:
             self.line_layer = None
         if self.region_layer is not None and layer.name == self.region_layer.name:
             self.region_layer = None
 
-    def _clear(self, _evt=None):
+    def _clear(self, _evt: ty.Any = None) -> None:
         """Clear canvas."""
         self.line_layer, self.region_layer = None, None
 
     def plot(
         self,
-        x: ty.Union[ty.Iterable, np.ndarray],
-        y: ty.Union[ty.Iterable, np.ndarray],
+        x: ty.Iterable | np.ndarray,
+        y: ty.Iterable | np.ndarray,
         name: str = LINE_NAME,
         reset_y: bool = False,
         reset_x: bool = False,
-        **kwargs,
-    ):
+        **kwargs: ty.Any,
+    ) -> Line:
         """Update data."""
         layer = self.try_reuse(name, Line)
         color = kwargs.pop("color", CANVAS.as_array("line"))
@@ -150,12 +151,12 @@ class NapariLineView(ViewerBase):
 
     def add_histogram(
         self,
-        array,
+        array: np.ndarray,
         bins: int = 10,
         rel_width: float = 0.8,
-        name="Histogram",
+        name: str = "Histogram",
         orientation: str = "vertical",
-        face_color="red",
+        face_color: str = "red",
         **kwargs: ty.Any,
     ) -> Shapes:
         """Add histogram using Shapes layer."""
@@ -170,10 +171,10 @@ class NapariLineView(ViewerBase):
 
     def add_scatter(
         self,
-        x: ty.Union[ty.Iterable, np.ndarray] = None,
-        y: ty.Union[ty.Iterable, np.ndarray] = None,
+        x: ty.Iterable | np.ndarray | None = None,
+        y: ty.Iterable | np.ndarray | None = None,
         name: str = SCATTER_NAME,
-        xy: ty.Optional[np.ndarray] = None,
+        xy: np.ndarray | None = None,
         **kwargs: ty.Any,
     ) -> Scatter:
         """Add scatter points."""
@@ -202,7 +203,7 @@ class NapariLineView(ViewerBase):
         self,
         position: float,
         orientation: str = "vertical",
-        color=(1.0, 0.0, 0.0, 1.0),
+        color: tuple = (1.0, 0.0, 0.0, 1.0),
         name: str = "InfLine",
         **kwargs: ty.Any,
     ) -> InfLine:
@@ -256,7 +257,7 @@ class NapariLineView(ViewerBase):
 
     def add_regions(
         self, window: tuple[float | int, float | int], name: str = REGION_NAME, editable: bool = True, **kwargs: ty.Any
-    ):
+    ) -> Region:
         """Add region of interest."""
         # get currently selected layers
         layer = self.try_reuse(name, Region)
@@ -269,7 +270,7 @@ class NapariLineView(ViewerBase):
         layer.editable = editable
         return layer
 
-    def add_extract_region_layer(self):
+    def add_extract_region_layer(self) -> Region | None:
         """Add region of interest layer."""
         if self.region_layer is None:
             self.region_layer = self.viewer.add_region(
@@ -278,12 +279,12 @@ class NapariLineView(ViewerBase):
         self.select_one_layer(self.region_layer)
         return self.region_layer
 
-    def remove_region_layers(self):
+    def remove_region_layers(self) -> None:
         """Remove all region layers from the plot."""
         layers = self.get_layers_of_type(Region)
         self.remove_layers(layers)
 
-    def set_line_x(self, x: np.ndarray):
+    def set_line_x(self, x: np.ndarray) -> None:
         """Update x-axis data of all line layers where the dimension of `x` matches that of the currently
         present data
         .
@@ -305,7 +306,7 @@ if __name__ == "__main__":  # pragma: no cover
         from qtextra.helpers import make_btn
         from qtextra.utils.dev import qframe
 
-        def _on_btn():
+        def _on_btn() -> None:
             n_bins = np.random.randint(5, 100, 1)[0]
             rel_width = np.random.rand(1)
             viewer.add_histogram(a, n_bins, rel_width=rel_width)
@@ -334,4 +335,4 @@ if __name__ == "__main__":  # pragma: no cover
 
         sys.exit(app.exec_())
 
-    _main()
+    _main()  # type: ignore[no-untyped-call]

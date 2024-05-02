@@ -1,11 +1,17 @@
-from qtpy.QtCore import Qt, Signal
+"""Utility widgets for the application."""
+
+from __future__ import annotations
+
+import typing as ty
+
+from qtpy.QtCore import QEvent, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QColor, QPainter
 from qtpy.QtWidgets import QLabel, QStyle, QStyleOption, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 
 
-def get_text_color(background: QColor, light_color: QColor = None, dark_color: QColor = None):
+def get_text_color(background: QColor, light_color: QColor | None = None, dark_color: QColor | None = None) -> QColor:
     """Select color depending on whether the background is light or dark.
 
     Parameters
@@ -25,7 +31,7 @@ def get_text_color(background: QColor, light_color: QColor = None, dark_color: Q
     return dark_color if is_dark else light_color
 
 
-def is_dark_color(background: QColor):
+def is_dark_color(background: QColor) -> bool:
     """Check whether its a dark background."""
     a = 1 - (0.299 * background.redF() + 0.587 * background.greenF() + 0.114 * background.blueF())
     return background.alphaF() > 0 and a >= 0.3
@@ -52,25 +58,17 @@ class QtDragWidget(QWidget):
 
     evt_dropped = Signal("QEvent")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.setAutoFillBackground(True)
         self.setAcceptDrops(True)
 
-    def _update_property(self, prop, value):
-        """Update properties of widget to update style.
-
-        Parameters
-        ----------
-        prop : str
-            Property name to update.
-        value : bool
-            Property value to update.
-        """
+    def _update_property(self, prop: str, value: bool) -> None:
+        """Update properties of widget to update style."""
         self.setProperty(prop, value)
         hp.polish_widget(self)
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event: QEvent) -> None:
         """Override Qt method.
 
         Provide style updates on event.

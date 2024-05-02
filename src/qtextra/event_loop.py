@@ -149,9 +149,9 @@ def get_app(
     #     # Will patch based on config file.
     #     perf_config.patch_callables()
 
-    if not _ipython_has_eventloop():
-        NOTIFICATION_MANAGER.notification_ready.connect(QtNotification.show_notification)
-        # NOTIFICATION_MANAGER.notification_ready.connect(show_console_notification)
+    # if not _ipython_has_eventloop():
+    #     NOTIFICATION_MANAGER.notification_ready.connect(QtNotification.show_notification)
+    # NOTIFICATION_MANAGER.notification_ready.connect(show_console_notification)
 
     if app.windowIcon().isNull():
         app.setWindowIcon(QIcon(kwargs.get("icon")))

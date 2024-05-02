@@ -81,7 +81,7 @@ class QtFlowLayout(QLayout):
         for item in self.items:
             size = size.expandedTo(item.minimumSize())
         margin, _, _, _ = self.getContentsMargins()
-        size += QSize(int(2 * margin), int(2 * margin))
+        size += QSize(int(1.2 * margin), int(1.2 * margin))
         return size
 
     def update_layout(self, rect: QRect, check_only: bool) -> int:
@@ -118,7 +118,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     from qtpy.QtWidgets import QApplication, QPushButton, QWidget
 
-    class Window(QWidget):
+    class _Window(QWidget):
         def __init__(self):
             super().__init__()
 
@@ -132,6 +132,6 @@ if __name__ == "__main__":  # pragma: no cover
             self.setWindowTitle("Flow Layout")
 
     app = QApplication(sys.argv)
-    main_win = Window()
+    main_win = _Window()
     main_win.show()
     sys.exit(app.exec_())

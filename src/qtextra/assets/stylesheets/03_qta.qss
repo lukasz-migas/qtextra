@@ -11,7 +11,7 @@ QtQtaLabel#xsmall_icon, QtImagePushButton#xsmall_icon{
     min-height : 16px;
     max-height : 16px;
 }
-QtQtaLabel#small_icon, QtImagePushButton#small_icon{
+QtQtaLabel#small_icon, QtImagePushButton#small_icon, QtQtaLabel#normal_icon, QtImagePushButton#normal_icon{
     min-width : 20px;
     max-width : 20px;
     min-height : 20px;
