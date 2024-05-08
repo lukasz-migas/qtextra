@@ -99,6 +99,7 @@ class QtListWidget(QListWidget):
     evt_updated = Signal(int)
     evt_added = Signal(object)
     evt_remove = Signal(object)
+    evt_cleared = Signal()
 
     _is_setup = False
 
@@ -288,6 +289,7 @@ class QtListWidget(QListWidget):
     def reset_data(self) -> None:
         """Reset data."""
         self.clear()
+        self.evt_cleared.emit()
 
     def append_item(self, item_model: _M) -> tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
         """Append item."""

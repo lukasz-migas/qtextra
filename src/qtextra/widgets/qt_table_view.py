@@ -672,6 +672,22 @@ class QtCheckableTableView(QTableView):
             # }[self._config.text_alignment]
         self.setModel(model)
 
+    def setup_model_from_config(self, config: TableConfig):
+        """Setup model from config."""
+        self.setup_model(
+            config.header,
+            config.no_sort_columns,
+            config.hidden_columns,
+            config.html_columns,
+            config.icon_columns,
+            config.checkable_columns,
+            text_alignment={
+                "left": Qt.AlignmentFlag.AlignLeft,
+                "center": Qt.AlignmentFlag.AlignCenter,
+                "right": Qt.AlignmentFlag.AlignRight,
+            }[config.text_alignment],
+        )
+
     def setup_model(
         self,
         header: list[str],

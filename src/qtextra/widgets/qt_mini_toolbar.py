@@ -1,19 +1,26 @@
 """Mini toolbar."""
 
+from __future__ import annotations
+
 import typing as ty
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QFrame, QHBoxLayout, QLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
+
+if ty.TYPE_CHECKING:
+    from qtextra.widgets.qt_image_button import QtImagePushButton
 
 
 class QtMiniToolbar(QFrame):
     """Mini toolbar."""
 
-    def __init__(self, parent, orientation: Qt.Orientation = Qt.Orientation.Horizontal, add_spacer: bool = True):
+    def __init__(
+        self, parent: QWidget | None, orientation: Qt.Orientation = Qt.Orientation.Horizontal, add_spacer: bool = True
+    ):
         super().__init__(parent)
-        self._tools = {}
+        self._tools: dict[str, QtImagePushButton] = {}
         self.orientation = orientation
 
         self.layout_ = QHBoxLayout(self) if orientation == Qt.Orientation.Horizontal else QVBoxLayout(self)
@@ -31,7 +38,7 @@ class QtMiniToolbar(QFrame):
         return self.maximumHeight() if self.orientation == Qt.Orientation.Horizontal else self.maximumWidth()
 
     @max_size.setter
-    def max_size(self, value: int):
+    def max_size(self, value: int) -> None:
         self.setMaximumHeight(value) if self.orientation == Qt.Orientation.Horizontal else self.setMaximumWidth(value)
 
     @property
@@ -42,24 +49,28 @@ class QtMiniToolbar(QFrame):
     def _make_qta_button(
         self,
         name: str,
-        func: ty.Optional[ty.Callable] = None,
-        func_menu: ty.Optional[ty.Callable] = None,
-        tooltip: ty.Optional[str] = None,
+        func: ty.Callable | None = None,
+        func_menu: ty.Callable | None = None,
+        tooltip: str | None = None,
         checkable: bool = False,
         check: bool = False,
-        size: ty.Tuple[int, int] = (26, 26),
-        flat: bool = True,
+        size: tuple[int, int] | None = None,
+        flat: bool = False,
         small: bool = False,
+        medium: bool = False,
         average: bool = False,
-    ):
-        if small or average:
-            size = None
+        normal: bool = False,
+    ) -> QtImagePushButton:
+        if not any((small, average, medium, normal)):
+            size = (26, 26)
+        if name in self._tools:
+            raise ValueError(f"Tool '{name}' already exists.")
         btn = hp.make_qta_btn(
             self,
             name,
             tooltip=tooltip,
             flat=flat,
-            medium=False,
+            medium=medium,
             size=size,
             checkable=checkable,
             checked=check,
@@ -67,38 +78,37 @@ class QtMiniToolbar(QFrame):
             func_menu=func_menu,
             small=small,
             average=average,
-            properties={"wide_border": True},
+            normal=normal,
         )
         self._tools[name] = btn
         return btn
 
-    def add_button(self, button):
+    def add_button(self, button: QtImagePushButton) -> QtImagePushButton:
         """Add any button the toolbar."""
         self.layout_.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
         return button
 
-    def add_widget(self, widget):
+    def add_widget(self, widget: QWidget) -> QWidget:
         """Insert any widget at specified position."""
         self.layout_.addWidget(widget, alignment=Qt.AlignmentFlag.AlignCenter)
         return widget
 
-    def add_layout(self, layout):
+    def add_layout(self, layout: QLayout) -> QLayout:
         """Insert any layout at specified position."""
-        self.layout_.addWidget(layout)
+        self.layout_.addLayout(layout)
         return layout
 
     def add_qta_tool(
         self,
         name: str,
-        flat: bool = True,
-        func: ty.Optional[ty.Callable] = None,
-        tooltip: ty.Optional[str] = None,
+        func: ty.Callable | None = None,
+        tooltip: str | None = None,
         checkable: bool = False,
         check: bool = False,
-        size: ty.Tuple[int, int] = (26, 26),
+        size: tuple[int, int] | None = None,
         small: bool = False,
         average: bool = False,
-    ):
+    ) -> QtImagePushButton:
         """Insert tool."""
         btn = self._make_qta_button(
             name,
@@ -107,26 +117,25 @@ class QtMiniToolbar(QFrame):
             checkable=checkable,
             check=check,
             size=size,
-            flat=flat,
             small=small,
             average=average,
         )
         self.add_button(btn)
         return btn
 
-    def insert_button(self, button, index: int = 0, set_size: bool = True):
+    def insert_button(self, button: QtImagePushButton, index: int = 0, set_size: bool = True) -> QtImagePushButton:
         """Insert any button at specified position."""
         if hasattr(button, "set_size") and set_size:
             button.set_size((26, 26))
         self.layout_.insertWidget(index, button, alignment=Qt.AlignmentFlag.AlignCenter)
         return button
 
-    def insert_widget(self, widget, index: int = 0):
+    def insert_widget(self, widget: QWidget, index: int = 0) -> QWidget:
         """Insert any widget at specified position."""
         self.layout_.insertWidget(index, widget, alignment=Qt.AlignmentFlag.AlignCenter)
         return widget
 
-    def insert_layout(self, layout, index: int = 0):
+    def insert_layout(self, layout: QLayout, index: int = 0) -> QLayout:
         """Insert any layout at specified position."""
         self.layout_.insertLayout(index, layout)
         return layout
@@ -135,14 +144,17 @@ class QtMiniToolbar(QFrame):
         self,
         name: str,
         flat: bool = False,
-        func: ty.Optional[ty.Callable] = None,
-        func_menu: ty.Optional[ty.Callable] = None,
-        tooltip: ty.Optional[str] = None,
+        func: ty.Callable | None = None,
+        func_menu: ty.Callable | None = None,
+        tooltip: str | None = None,
         checkable: bool = False,
         check: bool = False,
-        size: ty.Tuple[int, int] = (26, 26),
+        size: tuple[int, int] | None = None,
+        small: bool = False,
+        average: bool = False,
+        normal: bool = False,
         hidden: bool = False,
-    ):
+    ) -> QtImagePushButton:
         """Insert tool."""
         btn = self._make_qta_button(
             name,
@@ -153,6 +165,9 @@ class QtMiniToolbar(QFrame):
             checkable=checkable,
             check=check,
             size=size,
+            small=small,
+            average=average,
+            normal=normal,
         )
         self.insert_button(btn)
         if hidden:
@@ -178,11 +193,11 @@ class QtMiniToolbar(QFrame):
         )  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
         self.layout_.insertWidget(self.layout_.count(), spacer, stretch=True)
 
-    def show_border(self):
+    def show_border(self) -> None:
         """Show border."""
-        self.setFrameShape(QFrame.Box)
+        self.setFrameShape(QFrame.Shape.Box)
 
-    def swap_orientation(self):
+    def swap_orientation(self) -> None:
         """Swap orientation."""
         self.orientation = (
             QHBoxLayout.Direction.LeftToRight
@@ -194,7 +209,7 @@ class QtMiniToolbar(QFrame):
         self.layout_.update()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import sys
 
     from qtpy.QtWidgets import QApplication

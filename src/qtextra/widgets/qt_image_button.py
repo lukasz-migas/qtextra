@@ -472,8 +472,8 @@ class QtToolbarPushButton(QtImagePushButton):
         QPushButton.paintEvent(self, *args)
 
         if self.indicator and not self.isChecked():
-            width = self.rect().width() / 6
-            radius = self.rect().width() / 10
+            width = int(self.rect().width() / 6)
+            radius = int(self.rect().width() / 10)
             pos = QPoint(self.rect().width() - width, width)
 
             paint = QPainter(self)

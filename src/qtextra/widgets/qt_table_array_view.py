@@ -9,7 +9,7 @@ import pandas as pd
 from koyo.utilities import find_nearest_index_single
 from qtpy.QtCore import QAbstractTableModel, QModelIndex, QRect, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
-from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView
+from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView, QWidget
 
 from qtextra.utils.color import get_text_color
 
@@ -163,15 +163,15 @@ class QtArrayTableModel(QAbstractTableModel):
             return str(self.df.index[index])
         return None
 
-    def rowCount(self, parent=None, **kwargs):
+    def rowCount(self, parent: QWidget | None = None, **kwargs: ty.Any) -> int:
         """Return number of rows."""
         return self.df.shape[0] if self.df is not None else 0
 
-    def columnCount(self, parent=None, **kwargs: ty.Any) -> int:
+    def columnCount(self, parent: QWidget | None = None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
         return self.df.shape[1] if self.df is not None else 0
 
-    def canFetchMore(self, parent=None) -> bool:
+    def canFetchMore(self, parent: QWidget | None = None) -> bool:
         """Check whether you can fetch more data."""
         return self.n_total >= self.n_loaded
 
@@ -196,7 +196,9 @@ class QtArrayTableView(QTableView):
 
     evt_key_release = Signal(QKeyEvent)
 
-    def __init__(self, *args, sortable: bool = False, **kwargs):
+    model: ty.Callable[[], QtArrayTableModel]
+
+    def __init__(self, *args: ty.Any, sortable: bool = False, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.sortable = sortable
         if self.sortable:
