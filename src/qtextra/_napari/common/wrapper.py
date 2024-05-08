@@ -57,13 +57,15 @@ class ViewerBase(ABC):
         except KeyError:
             return None
 
-    def remove_layer(self, name: str, silent: bool = True) -> None:
+    def remove_layer(self, name: str, silent: bool = True) -> bool:
         """Remove layer with `name`."""
         try:
             self.viewer.layers.remove(name)
+            return True
         except ValueError as err:
             if not silent:
                 print(f"Failed to remove layer `{name}`\n{err}")
+        return False
 
     def remove_layers(self, names: ty.Iterable[str]) -> None:
         """Remove multiple layers."""
