@@ -114,17 +114,13 @@ class QtNotification(SubWindowBase):
         self.expand_btn.setMinimumHeight(20)
         self.expand_btn.clicked.connect(self.toggle_expansion)
 
-        self.settings_btn = hp.make_qta_btn(
-            self.row1_widget, "gear", tooltip="Show notification settings.",  small=True
-        )
+        self.settings_btn = hp.make_qta_btn(self.row1_widget, "gear", tooltip="Show notification settings.", small=True)
         self.settings_btn.setCursor(Qt.PointingHandCursor)
         self.settings_btn.setMaximumWidth(20)
         self.settings_btn.setMinimumHeight(20)
         self.settings_btn.clicked.connect(self.settings)
 
-        self.dismiss_btn = hp.make_qta_btn(
-            self.row1_widget, "cross", tooltip="Dismiss this notification.",  small=True
-        )
+        self.dismiss_btn = hp.make_qta_btn(self.row1_widget, "cross", tooltip="Dismiss this notification.", small=True)
         self.dismiss_btn.setCursor(Qt.PointingHandCursor)
         self.dismiss_btn.setMaximumWidth(20)
         self.dismiss_btn.setMinimumHeight(20)
