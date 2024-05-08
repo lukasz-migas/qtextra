@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 import numpy as np
+from ionglow.gui_elements.mixins import ImageEditMixin
 from napari.utils.events import Event
 from qtpy.QtWidgets import QWidget
 
@@ -14,7 +15,6 @@ if ty.TYPE_CHECKING:
     from napari.layers import Image
 
     from qtextra._napari.image.wrapper import NapariImageView
-    from qtextra._napari.image.wrapper import Viewer as ImageViewer
     from qtextra._napari.line.wrapper import NapariLineView
     from qtextra._napari.line.wrapper import Viewer as LineViewer
 

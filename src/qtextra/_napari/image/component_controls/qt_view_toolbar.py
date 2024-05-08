@@ -1,22 +1,33 @@
 """Toolbar."""
 
-from napari.layers.shapes._shapes_constants import Mode as ShapesMode
+from __future__ import annotations
+
+import typing as ty
+
 from napari.utils.events.event import EmitterGroup, Event
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QWidget
+from qtpy.QtWidgets import QDialog, QWidget
 
-from qtextra.helpers import make_radio_btn_group
+from qtextra.helpers import make_radio_btn_group, qt_signals_blocked
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
+
+if ty.TYPE_CHECKING:
+    from qtextra._napari.image.extract import ImageLabelsROIExtractPopup, ImageShapesROIExtractPopup
 
 
 class QtViewToolbar(QWidget):
     """Qt toolbars."""
 
-    # dialogs
-    _dlg_labels, _dlg_shapes = None, None
-
     # layers
     _reg_image_layer = None
+
+    _dlg_labels: QDialog | None = None
+    _dlg_shapes: QDialog | None = None
+
+    # @property
+    # def view_image(self) -> NapariImageView:
+    #     """Napari image view."""
+    #     return self.qt_viewer
 
     def __init__(self, view, viewer, qt_viewer, **kwargs):
         super().__init__(parent=qt_viewer)
@@ -120,32 +131,32 @@ class QtViewToolbar(QWidget):
                     "new_labels",
                     tooltip="Paint region of interest using paint brush",
                     checkable=True,
-                    func=self.on_open_extract_labels_layer,
                 )
                 buttons.append(self.tools_new_labels_btn)
             if self.allow_shapes:
+                self.tools_lasso_btn = toolbar_left.insert_qta_tool(
+                    "lasso",
+                    tooltip="Use lasso region of interest",
+                    checkable=True,
+                )
                 self.tools_poly_btn = toolbar_left.insert_qta_tool(
                     "polygon",
                     tooltip="Use polygon region of interest",
                     checkable=True,
-                    func=lambda _: self.on_open_extract_shapes_layer(ShapesMode.ADD_POLYGON),
-                    # func=partial(self.on_open_extract_shapes_layer, ShapesMode.ADD_POLYGON),
                 )
                 self.tools_ellipse_btn = toolbar_left.insert_qta_tool(
                     "ellipse",
                     tooltip="Use circular region of interest",
                     checkable=True,
-                    func=lambda _: self.on_open_extract_shapes_layer(ShapesMode.ADD_ELLIPSE),
-                    # func=partial(self.on_open_extract_shapes_layer, ShapesMode.ADD_ELLIPSE),
                 )
                 self.tools_rectangle_btn = toolbar_left.insert_qta_tool(
                     "rectangle",
                     tooltip="Use rectangular region of interest",
                     checkable=True,
-                    func=lambda _: self.on_open_extract_shapes_layer(ShapesMode.ADD_RECTANGLE),
-                    # func=partial(self.on_open_extract_shapes_layer, ShapesMode.ADD_RECTANGLE),
                 )
-                buttons.extend([self.tools_poly_btn, self.tools_ellipse_btn, self.tools_rectangle_btn])
+                buttons.extend(
+                    [self.tools_lasso_btn, self.tools_poly_btn, self.tools_ellipse_btn, self.tools_rectangle_btn]
+                )
             self.tools_off_btn = toolbar_left.insert_qta_tool(
                 "none",
                 tooltip="Disable data extraction (default)",
@@ -162,7 +173,7 @@ class QtViewToolbar(QWidget):
 
             _radio_group = make_radio_btn_group(qt_viewer, buttons)
 
-    def connect_toolbar(self):
+    def connect_toolbar(self) -> None:
         """Connect events."""
         self.qt_viewer.viewer.scale_bar.events.visible.connect(
             lambda x: self.tools_scalebar_btn.setChecked(self.qt_viewer.viewer.scale_bar.visible)
@@ -195,43 +206,43 @@ class QtViewToolbar(QWidget):
                 lambda x: self.tools_cross_btn.setChecked(self.qt_viewer.viewer.cross_hair.visible)
             )
 
-    def _toggle_scale_bar_visible(self, state):
+    def _toggle_scale_bar_visible(self, state: bool) -> None:
         self.qt_viewer.viewer.scale_bar.visible = state
 
-    def _toggle_grid_lines_visible(self, state):
+    def _toggle_grid_lines_visible(self, state: bool) -> None:
         self.qt_viewer.viewer.grid_lines.visible = state
 
-    def _toggle_color_bar_visible(self, state):
+    def _toggle_color_bar_visible(self, state: bool) -> None:
         self.qt_viewer.viewer.color_bar.visible = state
 
-    def _toggle_text_visible(self, state):
+    def _toggle_text_visible(self, state: bool) -> None:
         self.qt_viewer.viewer.text_overlay.visible = state
 
-    def _toggle_crosshair_visible(self, state):
+    def _toggle_crosshair_visible(self, state: bool) -> None:
         self.qt_viewer.viewer.cross_hair.visible = state
 
-    def on_open_crosshair_config(self):
+    def on_open_crosshair_config(self) -> None:
         """Open text config."""
         from qtextra._napari.common.component_controls.qt_crosshair_controls import QtCrosshairControls
 
         dlg = QtCrosshairControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
 
-    def on_open_text_config(self):
+    def on_open_text_config(self) -> None:
         """Open text config."""
         from qtextra._napari.common.component_controls.qt_text_overlay_controls import QtTextOverlayControls
 
         dlg = QtTextOverlayControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
 
-    def on_open_scalebar_config(self):
+    def on_open_scalebar_config(self) -> None:
         """Open scalebar config."""
         from qtextra._napari.common.component_controls.qt_scalebar_controls import QtScaleBarControls
 
         dlg = QtScaleBarControls(self.viewer, self.qt_viewer)
         dlg.show_left_of_mouse()
 
-    def on_open_colorbar_config(self):
+    def on_open_colorbar_config(self) -> None:
         """Open colorbar config."""
         from qtextra._napari.common.component_controls.qt_colorbar_controls import QtColorBarControls
 

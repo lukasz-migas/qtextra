@@ -141,6 +141,7 @@ class DialogMixin:
     def show_right_of_mouse(self, show: bool = True):
         """Show popup dialog on the right hand side of the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
+        print(pos)
         sz_hint = self.sizeHint()
         pos -= QPoint(-14, int(sz_hint.height() / 4))
         self.move(pos)
@@ -537,7 +538,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
         self,
         parent: ty.Optional[QWidget],
         title: str = "",
-        position: ty.Any = None,
+        position: QPoint | None = None,
         flags: ty.Any = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Popup,
         delay: bool = False,
     ):
@@ -634,10 +635,10 @@ class QtFramelessTool(QtFramelessPopup):
 
     def __init__(
         self,
-        parent,
+        parent: QWidget | None,
         title: str = "",
-        position=None,
-        flags=Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool,
+        position: QPoint | None = None,
+        flags=Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool,
         delay: bool = False,
     ):
         super().__init__(parent, title, position, flags, delay=delay)
