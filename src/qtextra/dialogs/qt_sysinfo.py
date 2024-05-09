@@ -1,4 +1,5 @@
 """System info dialog."""
+
 from __future__ import annotations
 
 from koyo.path import open_directory_alt
@@ -35,13 +36,13 @@ class QtSystemInfo(QDialog):
         Layout widget for the entire 'About napari' dialog.
     """
 
-    def __init__(self, system_info: str, citation_info: str, parent: QWidget | None = None):
+    def __init__(self, system_info: str, citation_info: str, title: str = "", parent: QWidget | None = None):
         super().__init__(parent)
 
         self._layout = QVBoxLayout(self)
 
         # Description
-        title_label = QLabel("<b>ionglow: software for the analysis of IM-IMS datasets</b>")
+        title_label = QLabel(title)
         title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._layout.addWidget(title_label)
 
