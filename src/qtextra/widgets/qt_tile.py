@@ -95,6 +95,13 @@ if __name__ == "__main__":  # pragma: no cover
         ha.addWidget(widget)
         widget = QtTileWidget(frame, model)
         ha.addWidget(widget)
+        model = Tile(
+            title="One-vs-One",
+            description="Compare intensity of one ion to another.",
+            func=lambda: print("Hello"),
+            icon="mdi.chart-scatter-plot",
+            icon_kws={"color": "#ff0000"},
+        )
         widget = QtTileWidget(frame, model)
         ha.addWidget(widget)
         frame.show()

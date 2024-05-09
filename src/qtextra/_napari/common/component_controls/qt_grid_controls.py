@@ -1,4 +1,5 @@
 """Grid controls."""
+
 from __future__ import annotations
 
 from napari._qt.widgets.qt_spinbox import QtSpinBox
@@ -80,6 +81,7 @@ class QtGridControls(QtFramelessPopup):
 
         # layout
         layout = hp.make_form_layout()
+        layout.setContentsMargins(6, 6, 6, 6)
         layout.insertRow(0, QLabel("Grid stride:"), hp.make_h_layout(grid_stride, stride_help_symbol, stretch_id=0))
         layout.insertRow(1, QLabel("Grid width:"), hp.make_h_layout(grid_width, shape_help_symbol_width, stretch_id=0))
         layout.insertRow(

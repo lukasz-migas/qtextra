@@ -53,6 +53,7 @@ class QtScreenshotDialog(QtFramelessPopup):
 
         layout = hp.make_form_layout()
         hp.style_form_layout(layout)
+        layout.setContentsMargins(6, 6, 6, 6)
         layout.addRow(self._make_move_handle("Screenshot controls"))
         layout.addRow("Width", self.size_x)
         layout.addRow("Height", self.size_y)

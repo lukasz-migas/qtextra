@@ -1,4 +1,5 @@
 """Crosshair model controls."""
+
 from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from napari.utils.events import disconnect_events
 from qtpy.QtCore import Qt
@@ -58,7 +59,8 @@ class QtCrosshairControls(QtFramelessPopup):
         self.color_swatch.color_changed.connect(self.on_change_color)
 
         layout = hp.make_form_layout(self)
-        layout.addRow(self._make_move_handle())
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.addRow(self._make_move_handle("Crosshair controls"))
         layout.addRow(hp.make_label(self, "Visible"), self.visible_checkbox)
         layout.addRow(hp.make_label(self, "Auto-hide"), self.autohide_checkbox)
         layout.addRow(hp.make_label(self, "Position (x)"), self.position_x_spin)

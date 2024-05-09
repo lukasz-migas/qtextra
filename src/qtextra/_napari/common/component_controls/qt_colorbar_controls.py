@@ -1,4 +1,5 @@
 """ColorBar model controls."""
+
 from napari._qt.widgets.qt_color_swatch import QColorSwatchEdit
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFormLayout
@@ -54,7 +55,8 @@ class QtColorBarControls(QtFramelessPopup):
         )
 
         layout = hp.make_form_layout(self)
-        layout.addRow(self._make_move_handle())
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.addRow(self._make_move_handle("Colorbar controls"))
         layout.addRow(hp.make_label(self, "Visible"), self.visible_checkbox)
         layout.addRow(hp.make_label(self, "Colorbar position"), self.position_combobox)
         layout.addRow(hp.make_label(self, "Border color"), self.border_color_swatch)

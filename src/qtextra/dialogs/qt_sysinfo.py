@@ -82,7 +82,9 @@ class QtSystemInfo(QDialog):
         self.resize(600, 400)
 
     @staticmethod
-    def show_sys_info(system_info: str, citation_info: str, parent=None):
+    def show_sys_info(
+        system_info: str, citation_info: str, title: str = "System Information", parent: QWidget | None = None
+    ) -> None:
         """Display the 'About napari' dialog box.
 
         Parameters
@@ -91,14 +93,16 @@ class QtSystemInfo(QDialog):
             Text containing system information.
         citation_info : str
             Text containing citation information.
+        title : str
+            Title of the dialog.
         parent : QWidget, optional
             Parent of the dialog, to correctly inherit and apply theme.
             Default is None.
         """
-        d = QtSystemInfo(system_info, citation_info, parent)
+        d = QtSystemInfo(system_info, citation_info, title=title, parent=parent)
         d.setObjectName("DialogSystemInfo")
-        d.setWindowTitle("System Information")
-        d.setWindowModality(Qt.ApplicationModal)
+        d.setWindowTitle(title)
+        d.setWindowModality(Qt.WindowModality.ApplicationModal)
         d.exec_()
 
 

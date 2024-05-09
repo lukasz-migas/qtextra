@@ -52,7 +52,8 @@ class QtTextOverlayControls(QtFramelessPopup):
         )
 
         layout = hp.make_form_layout(self)
-        layout.addRow(self._make_move_handle("Text overlay"))
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.addRow(self._make_move_handle("Text overlay controls"))
         layout.addRow(hp.make_label(self, "Visible"), self.visible_checkbox)
         layout.addRow(hp.make_label(self, "Text"), self.text_edit)
         layout.addRow(hp.make_label(self, "Text position"), self.position_combobox)

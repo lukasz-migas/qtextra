@@ -188,8 +188,7 @@ class QtConsoleDialog(QtFramelessTool):
         layout.addLayout(header_layout)
         layout.addWidget(self._console)
         layout.setSpacing(2)
-        layout.setContentsMargins(0, 0, 0, 0)
-
+        layout.setContentsMargins(6, 6, 6, 6)
         return layout
 
     def push_variables(self, variables: ty.Dict[str, ty.Any]) -> None:
