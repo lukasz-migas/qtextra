@@ -11,6 +11,7 @@ FIXME: if/when tornado supports the defaults in asyncio,
 remove and bump tornado requirement for py38
 borrowed from ipykernel:  https://github.com/ipython/ipykernel/pull/456
 """
+
 import re
 import sys
 import typing as ty
@@ -23,9 +24,8 @@ from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QFormLayout, QWidget
+from qtpy.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
-import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
 
@@ -184,10 +184,12 @@ class QtConsoleDialog(QtFramelessTool):
 
         self._console = QtConsole()
 
-        layout = hp.make_form_layout(self)
-        hp.style_form_layout(layout)
-        layout.addRow(header_layout)
-        layout.addRow(self._console)
+        layout = QVBoxLayout()
+        layout.addLayout(header_layout)
+        layout.addWidget(self._console)
+        layout.setSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
+
         return layout
 
     def push_variables(self, variables: ty.Dict[str, ty.Any]) -> None:
