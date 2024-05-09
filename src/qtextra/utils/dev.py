@@ -132,7 +132,7 @@ def _apply_style_on_widget(widget: QWidget) -> None:
     from qtextra.config.theme import THEMES
 
     THEMES.set_theme_stylesheet(widget)
-    logger.info("Applying style on widget")
+    print("Applying style on widget")
 
 
 def apply_style(widget: QWidget) -> None:

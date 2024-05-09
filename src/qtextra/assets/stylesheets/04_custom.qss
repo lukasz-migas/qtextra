@@ -343,3 +343,23 @@ QtIndicator[state=success] {
 QtColorSwatch:hover {
     border: 2px solid {{ foreground }};
 }
+
+/* ------------ WorkflowWidget ------------ */
+QtTileWidget {
+    border: 2px solid {{ foreground }};
+    border-radius: 2px;
+}
+
+QtTileWidget:hover {
+    border: 5px solid {{ highlight }};
+    border-radius: 6px;
+}
+
+QtTileWidget QLabel#medium_text {
+    font-size: {{ increase(font_size, 2) }};
+}
+
+QtTileWidget QLabel#large_text {
+    font-size: {{ increase(font_size, 4) }};
+    font-weight: bold;
+}
