@@ -94,7 +94,7 @@ class TelemetryOptInDialog(QtDialog):
 
     def _update_example(self):
         self._send_locals = self.send_locals.isChecked()
-        event = get_sample_event(with_locals=self._send_locals)
+        event = get_sample_event(include_local_variables=self._send_locals)
 
         try:
             import yaml

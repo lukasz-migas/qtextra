@@ -1,4 +1,5 @@
 """sentry utilities."""
+
 import logging
 import os
 import platform
@@ -51,7 +52,7 @@ def strip_sensitive_data(event: dict, hint: dict):
             args[0] = args[0].split(os.sep)[-1]
     if DEBUG:  # pragma: no cover
         pprint(event)
-    logger.debug(f"Sending sentry event")
+    logger.debug("Sending sentry event")
     return event
 
 
@@ -153,7 +154,7 @@ def get_sample_event(**kwargs) -> dict:
                 another_variable = "my_string"  # noqa
                 1 / 0  # noqa
             except Exception:
-                with sentry_sdk.push_scope() as scope:
+                with sentry_sdk.new_scope() as scope:
                     for k, v in _get_tags().items():
                         scope.set_tag(k, v)
                     del v, k, scope
@@ -172,7 +173,6 @@ SENTRY_SETTINGS = {
     # When enabled, local variables are sent along with stackframes.
     # This can have a performance and PII impact.
     # Enabled by default on platforms where this is available.
-    "with_locals": SHOW_LOCALS,
     "include_local_variables": SHOW_LOCALS,
     # A number between 0 and 1, controlling the percentage chance
     # a given transaction will be sent to Sentry.
@@ -209,7 +209,7 @@ SENTRY_SETTINGS = {
     # http_proxy=None,
     # https_proxy=None,
     # ignore_errors=[],
-    # request_bodies="medium",
+    # max_request_body_size="medium",
     # before_breadcrumb=None,
     # attach_stacktrace=False,
     # ca_certs=None,
@@ -217,6 +217,8 @@ SENTRY_SETTINGS = {
     # traces_sampler=None,
     # auto_enabling_integrations=True,
     # auto_session_tracking=True,
+    "profiles_sample_rate": 1.0,
+    "profiler_mode": "thread",
     # "_experiments": {
     #     "profiles_sample_rate": 1.0,
     # },

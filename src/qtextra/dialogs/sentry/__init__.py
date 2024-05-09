@@ -89,7 +89,7 @@ def install_error_monitor(settings: Settings, **extra_kws: ty.Any) -> None:
         return
 
     _settings = SENTRY_SETTINGS.copy()
-    _settings["with_locals"] = getattr(settings, with_locals_attr)
+    _settings["include_local_variables"] = getattr(settings, with_locals_attr)
     sentry_sdk.init(**_settings)
     for k, v in _get_tags().items():
         sentry_sdk.set_tag(k, v)

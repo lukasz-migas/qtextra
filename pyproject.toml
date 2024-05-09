@@ -36,7 +36,7 @@ dependencies = [
     "appdirs",
     "qtawesome",
     "psygnal",
-    "sentry_sdk",
+    "sentry_sdk>2",
     "vispy",
     "pyqt-toast-notification",
     "qtconsole>=4.5.1,!=4.7.6,!=5.4.2",
