@@ -3,13 +3,12 @@
 import typing as ty
 from copy import deepcopy
 
-# from ionglow.config import get_settings
-from ionglow.utils.color import colormap_to_hex
 from pydantic.color import Color
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialogButtonBox, QHBoxLayout, QLayout, QWidget
 
 import qtextra.helpers as hp
+from qtextra.utils.color import colormap_to_hex
 from qtextra.widgets.qt_dialog import QtDialog
 
 

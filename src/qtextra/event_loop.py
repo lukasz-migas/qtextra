@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from typing import Optional
 from warnings import warn
 
-from ionglow.assets import ICON_PNG
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QApplication
@@ -34,7 +33,7 @@ def set_app_id(app_id):
 _defaults = {
     "app_name": APP_NAME,
     "app_version": __version__,
-    "icon": ICON_PNG,
+    # "icon": ICON_PNG,
     "org_name": APP_ORG_NAME,
     "org_domain": APP_ORG_DOMAIN,
     "app_id": APP_ID,
@@ -256,7 +255,7 @@ def run(*, force=False, max_loop_level=1, _func_name="run"):
         (To avoid confusion) if no widgets would be shown upon starting the
         event loop.
     """
-    from ionglow.utils.notifications import NOTIFICATION_MANAGER
+    # from ionglow.utils.notifications import NOTIFICATION_MANAGER
 
     from qtextra.dialogs.sentry import install_error_monitor
 
@@ -289,6 +288,6 @@ def run(*, force=False, max_loop_level=1, _func_name="run"):
             stacklevel=2,
         )
         return
-    with NOTIFICATION_MANAGER:
-        install_error_monitor()
-        app.exec_()
+    # with NOTIFICATION_MANAGER:
+    install_error_monitor()
+    app.exec_()

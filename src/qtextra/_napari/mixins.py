@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing as ty
 
 import numpy as np
-from ionglow.gui_elements.mixins import ImageEditMixin
 from napari.utils.events import Event
 from qtpy.QtWidgets import QWidget
 
