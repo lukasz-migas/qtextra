@@ -1835,13 +1835,14 @@ def toast(
     func: ty.Callable | None = None,
     position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
     icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
+    duration: int = 5000,
 ):
     """Show notification."""
     from qtextra.widgets.qt_toast import QtToast
 
     if callable(func):
         func(message)
-    QtToast(parent).show_message(title, message, position=position, icon=icon)
+    QtToast(parent).show_message(title, message, position=position, icon=icon, duration=duration)
 
 
 def toast_alt(

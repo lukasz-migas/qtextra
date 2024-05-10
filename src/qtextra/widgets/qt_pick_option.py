@@ -72,8 +72,10 @@ class QtScrollablePickOption(QtPickOptionBase):
 
     def __init__(self, parent: QWidget, text: str, options: ty.Dict[ty.Any, str]):
         super().__init__(parent, text, options)
-        min_height = min(400, 40 * len(options) + 70)
-        self.setMinimumSize(500, min_height)
+        size = self.sizeHint()
+        size.setWidth(max(size.width(), 500))
+        size.setHeight(min(400, 40 * len(options) + 70))
+        self.setMinimumSize(size)
 
     def _get_layout_widget(self) -> tuple[QWidget | None, QWidget | None]:
         """Get layout widget."""
