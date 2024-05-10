@@ -67,7 +67,7 @@ QtListView::item:selected:!active {
 QtListView QLineEdit {
   background-color: {{ darken(current, 20) }};
   selection-background-color: {{ lighten(current, 20) }};
-  font-size: 12px;
+  font-size: 12pt;
 }
 
 QtLayerList::item {
@@ -208,6 +208,15 @@ QLabel#title_label {
     font-size: {{ increase(font_size, 3) }};
 }
 
+QLabel#large_text {
+    font-size: {{ increase(font_size, 4) }};
+}
+
+QLabel#medium_text {
+    font-size: {{ increase(font_size, 2) }};
+}
+
+
 QWidget#error {
     border: 2px solid {{ lighten(error, 30) }};
     border-radius: 2px;
@@ -219,7 +228,7 @@ QWidget#warning {
 }
 
 QLabel#tip_label {
-    color: {{ highlight }};
+    color: {{ lighten(text, 30) }};
 }
 
 QLabel#watch_dir {
@@ -259,6 +268,9 @@ QComboBox#filter_combo {
 QtPushButton#pick_option_button {
     font-size: {{ increase(font_size, 4) }};
     font-weight: bold;
+}
+QLabel#pick_option_label {
+    font-size: {{ increase(font_size, 2) }};
 }
 
 QtConfirmCloseDialog QLabel {
@@ -310,7 +322,7 @@ QtTagButton > QtIconLabel, QtLeftPillLabel, QtPillActionButton, QtTagButton{
     background: none;
 }
 QtTagButton > QtLeftPillLabel{
-    font-size: 14px;
+    font-size: 14pt;
 }
 
 QtPillActionButton[mode=delete]::hover {
