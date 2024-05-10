@@ -27,7 +27,7 @@ class DialogLineControls(QtFramelessTool):
 
         va = QVBoxLayout()
         va.setSpacing(1)
-        va.setContentsMargins(2, 2, 2, 2)
+        va.setContentsMargins(6, 6, 6, 6)
         va.addLayout(self._make_hide_handle("Viewer Controls")[1])
         va.addWidget(qt_viewer.controls)
         va.addWidget(qt_viewer.layerButtons)

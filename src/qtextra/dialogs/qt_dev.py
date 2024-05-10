@@ -19,7 +19,7 @@ class QDevPopup(QtFramelessTool):
 
         _, hide_layout = self._make_hide_handle("Developer tools")
         layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(6,6,6,6)
         layout.addLayout(hide_layout)
         layout.addWidget(self.qdev, stretch=True)
         return layout

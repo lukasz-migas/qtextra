@@ -119,7 +119,7 @@ class ImageMaskROIExtractPopupBase(QtFramelessTool):
 
         layout = QVBoxLayout()
         layout.addSpacing(2)
-        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setContentsMargins(6, 6, 6, 6)
         layout.addLayout(self._make_close_handle("Edit mask")[1])
         layout.addWidget(layer_controls, stretch=True)
         layout.addWidget(hp.make_h_line(self))
