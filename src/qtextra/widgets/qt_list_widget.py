@@ -243,6 +243,7 @@ class QtListWidget(QListWidget):
         return item.name
 
     @Slot(QListWidgetItem)
+    @Slot(QListWidgetItem, bool)
     def remove_item(self, item: QListWidgetItem, force: bool = False):
         """Remove item from the list."""
         self.takeItem(self.indexFromItem(item).row())
