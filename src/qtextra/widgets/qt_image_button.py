@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 import qtawesome
+from PyQt6.QtWidgets import QLabel
 from qtpy.QtCore import (  # type: ignore[attr-defined]
     QEasingCurve,
     QEvent,
@@ -500,6 +501,29 @@ class QtToolbarPushButton(QtImagePushButton):
         self.opacity.setOpacity(1.0)
 
 
+class QtLabelledToolbarPushButton(QWidget):
+    """Push button with label."""
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+        self.image_btn = QtToolbarPushButton()
+        self.label = QLabel()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(2)
+        layout.addWidget(self.image_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def set_label(self, text: str) -> None:
+        """Set label."""
+        self.label.setText(text)
+
+    def set_qta(self, name: str, **kwargs: ty.Any) -> None:
+        """Set icon."""
+        self.image_btn.set_qta(name, **kwargs)
+
+
 class QtPriorityButton(QtImagePushButton):
     """Play button with multiple states to indicate current state."""
 
@@ -599,6 +623,8 @@ if __name__ == "__main__":  # pragma: no cover
         priority_btn = QtPriorityButton(parent=frame)
         lay.addWidget(priority_btn)
 
+        ha.addWidget(hp.make_v_line())
+
         lay = QVBoxLayout()
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
             btn = QtImagePushButton()
@@ -610,6 +636,7 @@ if __name__ == "__main__":  # pragma: no cover
             if i % 10 == 0:
                 ha.addLayout(lay)
                 lay = QVBoxLayout()
+        ha.addWidget(hp.make_v_line())
 
         lay = QVBoxLayout()
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
@@ -621,6 +648,18 @@ if __name__ == "__main__":  # pragma: no cover
             if i % 10 == 0:
                 ha.addLayout(lay)
                 lay = QVBoxLayout()
+        ha.addWidget(hp.make_v_line())
+
+        lay = QVBoxLayout()
+        for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
+            btn = QtLabelledToolbarPushButton()
+            btn.set_qta(qta_name)
+            btn.set_label(name)
+            btn.setToolTip(f"{name} :: {qta_name}")
+            lay.addWidget(btn)
+            if i == 10:
+                ha.addLayout(lay)
+                break
 
         frame.show()
         sys.exit(app.exec_())

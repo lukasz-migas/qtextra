@@ -34,7 +34,10 @@ def qdev(
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
 
+    from qtextra.config.theme import THEMES
+
     widget = QtReloadWidget(modules, parent=parent, log_func=log_func)
+    widget.evt_stylesheet.connect(THEMES.evt_qss_changed.emit)
     return widget
 
 
@@ -140,7 +143,7 @@ def apply_style(widget: QWidget) -> None:
     from qtextra.config.theme import THEMES
 
     THEMES.set_theme_stylesheet(widget)
-    THEMES.evt_theme_changed.connect(lambda: _apply_style_on_widget(widget))
+    THEMES.evt_qss_changed.connect(lambda: _apply_style_on_widget(widget))
 
 
 def qmain(horz: bool = True, set_style: bool = True):

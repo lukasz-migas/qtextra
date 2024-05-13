@@ -72,6 +72,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "false": "mdi6.close-circle-outline",
     "axes_label": "mdi.axis-arrow",
     "close": "fa5s.trash-alt",
+    "list": "mdi6.format-list-bulleted",
     # translate
     "rotate_left": "fa.rotate-left",
     "rotate_right": "fa.rotate-right",
