@@ -1931,7 +1931,7 @@ def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto
     if value is None:
         value = link
     if isinstance(link, Path):
-        return f"<a href='{link.as_uri()}'>{value}</a>"
+        return f"<a href='{link.resolve().as_uri()}'>{value}</a>"
     if prefix:
         return f"<a href='{prefix}:{link}'>{value}</a>"
     return f"<a href='{link}'>{value}</a>"
