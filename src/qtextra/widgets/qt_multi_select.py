@@ -1,4 +1,5 @@
 """Multi-selection widget."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -126,7 +127,7 @@ class QtMultiSelect(QWidget):
         self.text_edit.setClearButtonEnabled(False)
         self.text_edit.installEventFilter(self)
         self.select_btn = hp.make_qta_btn(
-            self, "select", func=self.on_select, tooltip="Click here to select one or more options..."
+            self, "list", func=self.on_select, tooltip="Click here to select one or more options..."
         )
 
         layout = hp.make_h_layout(self.text_edit, self.select_btn, stretch_id=0, spacing=0)

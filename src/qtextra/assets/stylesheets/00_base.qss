@@ -610,8 +610,8 @@ QToolTip {
 /* ----------------- QGroupBox ------------------ */
 
 QGroupBox {
-    background-color: {{ background }};
-    border: 1px solid {{ foreground }};
+    background-color: none;
+    border: 2px solid {{ secondary }};
     border-radius: 5px;
     margin-top: 1ex; /* leave space at the top for the title */
     font-size: {{ increase(font_size, 1) }};

@@ -4,14 +4,14 @@ QWidget#transparent {
 
 /* ------------- QtVertLine / QtHorzLine --------- */
 QtVertLine, QtHorzLine{
-    border: 1px solid {{ secondary }};
+    border: 2px solid {{ secondary }};
     background-color: {{ secondary }};
 }
 
 
 QtVertLine#thin, QtHorzLine#thin{
-    border: 0px solid {{ secondary }};
-    background-color: none;
+    border: 1px solid {{ secondary }};
+    border: 1px solid {{ secondary }};
 }
 
 /* ------------- Narrow scrollbar for qtlayer list --------- */
