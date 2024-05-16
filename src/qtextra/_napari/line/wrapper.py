@@ -187,8 +187,8 @@ class NapariLineView(ViewerBase):
             try:
                 layer.update_attributes(False, data=xy, color=color, **kwargs)
                 layer.visible = kwargs.get("visible", True)
-                self.remove_layer(layer)
             except Exception:
+                self.remove_layer(layer)
                 layer = None
         if layer is None:
             layer = self.viewer.add_scatter(
@@ -203,16 +203,16 @@ class NapariLineView(ViewerBase):
         self,
         position: float,
         orientation: str = "vertical",
-        color: tuple = (1.0, 0.0, 0.0, 1.0),
+        color: tuple | str = (1.0, 0.0, 0.0, 1.0),
         name: str = "InfLine",
         **kwargs: ty.Any,
     ) -> InfLine:
         """Add inf line."""
         layer = self.try_reuse(name, InfLine)
         if layer:
-            layer.update_attributes(False, data=(position, orientation), color=color, **kwargs)
+            layer.update_attributes(False, data=[position], color=color, **kwargs)
         else:
-            layer = self.viewer.add_inf_line((position, orientation), name=name, color=color, orientation=orientation)
+            layer = self.viewer.add_inf_line([position], name=name, color=color, orientation=orientation)
         return layer
 
     def add_centroids(self, x: np.ndarray, y: np.ndarray, name: str = CENTROID_NAME, **kwargs: ty.Any) -> Centroids:

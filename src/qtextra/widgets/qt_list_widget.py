@@ -78,8 +78,13 @@ class QtListItem(QFrame):
 
     def set_state(self, state: bool):
         """Check."""
+        state = bool(state)
         self._is_checked = state
-        self.check_label.setVisible(state)
+        if hasattr(self, "check_label"):
+            self.check_label.setVisible(state)
+        elif hasattr(self, "checkbox"):
+            with hp.qt_signals_blocked(self.checkbox):
+                self.checkbox.setChecked(state)
         self.mode = str(state)
         self._evt_checked.emit(self.item, self._is_checked)
 
