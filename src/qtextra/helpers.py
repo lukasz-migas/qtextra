@@ -1480,6 +1480,22 @@ def make_radio_btn_group(parent: Qw.QWidget | None, radio_buttons) -> Qw.QButton
     return widget
 
 
+def make_toggle_group(
+    parent: Qw.QWidget | None, *label: str, func: Callback | None = None
+) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
+    """Make toggle button."""
+    widget = Qw.QButtonGroup(parent)
+    layout = make_h_layout()
+    layout.setSpacing(2)
+    for btn_id, btn_label in enumerate(label):
+        radio_btn = make_btn(parent, btn_label, func=func, checkable=True)
+        widget.addButton(radio_btn, btn_id)
+        layout.addWidget(radio_btn)
+        # if func:
+        #     [radio_btn.clicked.connect(func_) for func_ in _validate_func(func)]
+    return layout, widget
+
+
 def make_h_line_with_text(label: str, parent: Qw.QWidget | None = None, bold: bool = False, **kwargs: ty.Any):
     """Make horizontal line with text."""
     return make_h_layout(

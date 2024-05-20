@@ -6,7 +6,9 @@ import typing as ty
 
 import numpy as np
 import pandas as pd
+from koyo.timer import MeasureTimer
 from koyo.utilities import find_nearest_index_single
+from loguru import logger
 from qtpy.QtCore import QAbstractTableModel, QModelIndex, QRect, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
 from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView, QWidget
@@ -18,7 +20,7 @@ if ty.TYPE_CHECKING:
 
 TEXT_COLOR: str = "#000000"
 N_COLORS = 256
-BATCH_SIZE = 25
+BATCH_SIZE = 50
 INITIAL_SIZE = 100
 
 
@@ -66,7 +68,7 @@ class QtArrayTableModel(QAbstractTableModel):
     n_loaded: int = 0
     fmt: str = "{}"
 
-    def __init__(self, parent, data: ty.Union[np.ndarray, pd.DataFrame]):
+    def __init__(self, parent: QWidget, data: ty.Union[np.ndarray, pd.DataFrame]):
         super().__init__(parent)
         self.set_data(data)
 
@@ -92,27 +94,29 @@ class QtArrayTableModel(QAbstractTableModel):
         import matplotlib.cm
         import matplotlib.colors
 
-        if colormap:
-            colormap = matplotlib.cm.get_cmap(colormap, lut=N_COLORS)
-            if min_val is None:
-                min_val = self.base_df.min().min()
-            if max_val is None:
-                max_val = self.base_df.max().max()
-            normalizer = matplotlib.colors.Normalize(min_val, max_val, clip=True)
+        with MeasureTimer() as timer:
+            if colormap:
+                colormap = matplotlib.cm.get_cmap(colormap, lut=N_COLORS)
+                if min_val is None:
+                    min_val = self.base_df.min().min()
+                if max_val is None:
+                    max_val = self.base_df.max().max()
+                normalizer = matplotlib.colors.Normalize(min_val, max_val, clip=True)
 
-            colors = {}
-            step_size = (abs(min_val) + abs(max_val)) / N_COLORS
-            value_list = np.arange(min_val, max_val + step_size, step_size)
-            # value_list = np.linspace(min_val, max_val, N_COLORS)
-            for i, value in enumerate(value_list):
-                color = np.asarray(colormap(normalizer(value)))
-                colors[i] = QColor(*(255 * color).astype("int"))
-            self.color_list = np.linspace(0, 1, N_COLORS)
-            self.max_color = colors[i]
-            self.colors = colors
-            self.normalizer = normalizer
-        else:
-            self.colors, self.color_list = None, None
+                colors = {}
+                step_size = (abs(min_val) + abs(max_val)) / N_COLORS
+                value_list = np.arange(min_val, max_val + step_size, step_size)
+                # value_list = np.linspace(min_val, max_val, N_COLORS)
+                for i, value in enumerate(value_list):
+                    color = np.asarray(colormap(normalizer(value)))
+                    colors[i] = QColor(*(255 * color).astype("int"))
+                self.color_list = np.linspace(0, 1, N_COLORS)
+                self.max_color = colors[i]
+                self.colors = colors
+                self.normalizer = normalizer
+            else:
+                self.colors, self.color_list = None, None
+        logger.trace(f"Set colormap in {timer()}.")
 
     def reset(self) -> None:
         """Reset model."""
@@ -121,9 +125,11 @@ class QtArrayTableModel(QAbstractTableModel):
 
     def reset_data(self) -> None:
         """Reset data."""
-        self.df = self.df.iloc[0:0]
-        self.base_df = self.base_df.iloc[0:0]
-        self.reset()
+        with MeasureTimer() as timer:
+            self.df = self.df.iloc[0:0]
+            self.base_df = self.base_df.iloc[0:0]
+            self.reset()
+        logger.trace(f"Reset data in {timer()}.")
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
         """Parse data."""
@@ -177,12 +183,14 @@ class QtArrayTableModel(QAbstractTableModel):
 
     def fetchMore(self, index: QModelIndex) -> None:
         """Fetch more data."""
-        reminder = self.n_total - self.n_loaded
-        items_to_fetch = min(reminder, BATCH_SIZE)
-        self.beginInsertRows(QModelIndex(), self.n_loaded, self.n_loaded + items_to_fetch - 1)
-        self.n_loaded += items_to_fetch
-        self.df = self.base_df.iloc[: self.n_loaded, :]
-        self.endInsertRows()
+        with MeasureTimer() as timer:
+            reminder = self.n_total - self.n_loaded
+            items_to_fetch = min(reminder, BATCH_SIZE)
+            self.beginInsertRows(QModelIndex(), self.n_loaded, self.n_loaded + items_to_fetch - 1)
+            self.n_loaded += items_to_fetch
+            self.df = self.base_df.iloc[: self.n_loaded, :]
+            self.endInsertRows()
+        logger.trace(f"Fetched {items_to_fetch} items in {timer()}.")
 
     def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
         """Sort data."""
