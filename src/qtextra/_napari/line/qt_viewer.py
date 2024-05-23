@@ -84,12 +84,13 @@ class QtViewer(QtViewerBase):
         # main_widget = QWidget()
         image_layout = QVBoxLayout()
         image_layout.addWidget(self.canvas.native, stretch=True)
+        image_layout.setContentsMargins(0, 2, 0, 2)
 
         # view widget
         main_layout = QHBoxLayout()
         main_layout.setSpacing(1)
         main_layout.addLayout(image_layout)
-
+        main_layout.setContentsMargins(2, 2, 2, 2)
         if add_toolbars:
             main_layout.insertWidget(0, self.viewer_left_toolbar)
             main_layout.addWidget(self.viewer_right_toolbar)
@@ -97,8 +98,6 @@ class QtViewer(QtViewerBase):
             self.viewer_left_toolbar.setVisible(False)
             self.viewer_right_toolbar.setVisible(False)
             main_layout.setSpacing(0)
-            main_layout.setContentsMargins(0, 0, 0, 0)
-
         self.setLayout(main_layout)
 
     def _create_canvas(self) -> None:

@@ -82,7 +82,7 @@ class ScreenManager:
 class DialogMixin:
     """Mixin class for dialogs."""
 
-    def show_in_center_of(self, widget: QWidget, show: bool = True):
+    def show_in_center_of(self, widget: QWidget, show: bool = True) -> None:
         """Show dialog in the center of the widget."""
         rect = widget.rect()
         pos = widget.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
@@ -90,17 +90,17 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_above_widget(self, widget: QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0):
+    def show_above_widget(self, widget: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the widget."""
         rect = widget.rect()
         pos = widget.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
         if show:
             self.show()
         sz_hint = self.size()
-        pos -= QPoint((int(sz_hint.width() / 2) + x_offset), int(sz_hint.height() + y_offset))
+        pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() - y_offset))
         self.move(pos)
 
-    def show_above_mouse(self, show: bool = True):
+    def show_above_mouse(self, show: bool = True) -> None:
         """Show popup dialog above the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         sz_hint = self.sizeHint()
@@ -109,17 +109,17 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_below_widget(self, widget: QWidget, show: bool = True, y_offset: int = 14):
+    def show_below_widget(self, widget: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the widget."""
         rect = widget.rect()
         pos = widget.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
         sz_hint = self.size()
-        pos -= QPoint(int(sz_hint.width() / 2), -y_offset)
+        pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)
         self.move(pos)
         if show:
             self.show()
 
-    def show_below_mouse(self, show: bool = True, y_offset: int = -14, x_offset: int = 0):
+    def show_below_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         sz_hint = self.sizeHint()
@@ -128,17 +128,17 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_right_of_widget(self, widget: QWidget, show: bool = True, x_offset: int = 14):
+    def show_right_of_widget(self, widget: QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
         rect = widget.rect()
         pos = widget.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
         sz_hint = self.size()
-        pos -= QPoint(-x_offset, int(sz_hint.height() / 4))
+        pos -= QPoint(x_offset, int(sz_hint.height() / 4) - y_offset)
         self.move(pos)
         if show:
             self.show()
 
-    def show_right_of_mouse(self, show: bool = True):
+    def show_right_of_mouse(self, show: bool = True) -> None:
         """Show popup dialog on the right hand side of the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         print(pos)
@@ -148,17 +148,19 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_left_of_widget(self, widget: QObject | None, show: bool = True, x_offset: int = 14):
+    def show_left_of_widget(
+        self, widget: QObject | None, show: bool = True, x_offset: int = 14, y_offset: int = 0
+    ) -> None:
         """Show popup dialog above the widget."""
         rect = widget.rect()
         pos = widget.mapToGlobal(QPoint(rect.left(), rect.top()))
         sz_hint = self.size()
-        pos -= QPoint(int(sz_hint.width() + x_offset), int(sz_hint.height() / 4))
+        pos -= QPoint(int(sz_hint.width() - x_offset), int(sz_hint.height() / 4) - y_offset)
         self.move(pos)
         if show:
             self.show()
 
-    def show_left_of_mouse(self, show: bool = True):
+    def show_left_of_mouse(self, show: bool = True) -> None:
         """Show popup dialog on the left hand side of the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         sz_hint = self.sizeHint()
@@ -167,7 +169,7 @@ class DialogMixin:
         if show:
             self.show()
 
-    def set_on_widget(self, widget: QWidget, x_mult: float = 2.5, y_mult: float = 0.0):
+    def set_on_widget(self, widget: QWidget, x_mult: float = 2.5, y_mult: float = 0.0) -> None:
         """Set position of the popup above the widget."""
         # calculate position information about the widget
         widget_rect = widget.rect()
@@ -184,7 +186,7 @@ class DialogMixin:
         pos = m.verify_position(pos, rect.width(), rect.height())
         self.move(pos)
 
-    def set_on_mouse(self, x_mult: float = 2.5, y_mult: float = 0.0):
+    def set_on_mouse(self, x_mult: float = 2.5, y_mult: float = 0.0) -> None:
         """Set on mouse position."""
         pos = QCursor.pos()
         rect = self.rect()
@@ -194,7 +196,7 @@ class DialogMixin:
         pos = m.verify_position(pos, rect.width(), rect.height())
         self.move(pos)
 
-    def center_on_screen(self, show: bool = False):
+    def center_on_screen(self, show: bool = False) -> None:
         """Center dialog on screen."""
         screen = QApplication.desktop().screenGeometry()
         x = (screen.width() - self.width()) / 2
@@ -203,7 +205,7 @@ class DialogMixin:
         if show:
             self.show()
 
-    def center_on_parent(self, show: bool = False):
+    def center_on_parent(self, show: bool = False) -> None:
         """Center on parent."""
         parent = self.parent()
         if not parent:
@@ -216,7 +218,7 @@ class DialogMixin:
         if show:
             self.show()
 
-    def move_to(self, position="top", *, win_ratio=0.9, min_length=0):
+    def move_to(self, position="top", *, win_ratio=0.9, min_length=0) -> None:
         """Move popup to a position relative to the QMainWindow.
 
         Parameters
@@ -291,7 +293,7 @@ class DialogMixin:
         top = max(min(screen_geometry.bottom() - height, top), screen_geometry.top())
         self.setGeometry(left, top, width, height)
 
-    def move_to_widget(self, widget: QWidget, position: str = "right"):
+    def move_to_widget(self, widget: QWidget, position: str = "right") -> None:
         """Move tutorial to specified widget."""
         x_pad, y_pad = 5, 5
         size = self.size()
