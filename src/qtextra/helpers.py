@@ -2075,6 +2075,18 @@ def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you su
     return bool(dlg.exec_())
 
 
+def choose(
+    parent: ty.Optional[QObject], options: dict[ty.Any, str], text: str = "Please choose from available options."
+) -> ty.Any:
+    """Chose from list."""
+    from qtextra.widgets.qt_pick_option import QtScrollablePickOption
+
+    dlg = QtScrollablePickOption(parent, text, options)
+    if dlg.exec_():
+        return dlg.option
+    return None
+
+
 def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog

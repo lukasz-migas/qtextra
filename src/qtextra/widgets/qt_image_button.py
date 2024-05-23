@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 import qtawesome
-from PyQt6.QtWidgets import QLabel
+from qtpy.QtWidgets import QLabel
 from qtpy.QtCore import (  # type: ignore[attr-defined]
     QEasingCurve,
     QEvent,

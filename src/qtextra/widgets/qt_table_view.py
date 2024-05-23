@@ -119,6 +119,20 @@ class FilterProxyModel(QSortFilterProxyModel):
         matched = any(results) if self.is_multi_or else all(results)
         return matched
 
+    def find_visible_rows(self) -> tuple[list[int], list[int]]:
+        """Find visible rows."""
+        visible_rows = []
+        hidden_rows = []
+        source_model = self.sourceModel()
+        for row in range(source_model.rowCount()):
+            source_index = source_model.index(row, 0)
+            proxy_index = self.mapFromSource(source_index)
+            if proxy_index.isValid():
+                visible_rows.append(row)
+            else:
+                hidden_rows.append(row)
+        return visible_rows, hidden_rows
+
 
 class QtCheckableItemModel(QAbstractTableModel):
     """Checkable item model."""
@@ -806,6 +820,9 @@ class QtCheckableTableView(QTableView):
     def get_all_shown(self) -> list[int]:
         """Get all checked."""
         model = self.model()
+        proxy = model.table_proxy
+        if proxy:
+            return proxy.find_visible_rows()[0]
         shown = []
         for index in range(model.rowCount()):
             if not self.isRowHidden(index):
