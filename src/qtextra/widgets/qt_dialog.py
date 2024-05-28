@@ -112,7 +112,7 @@ class DialogMixin:
     def show_below_widget(self, widget: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the widget."""
         rect = widget.rect()
-        pos = widget.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
+        pos = widget.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
         sz_hint = self.size()
         pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)
         self.move(pos)

@@ -2135,6 +2135,18 @@ def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you su
     return bool(dlg.exec_())
 
 
+def choose(
+    parent: ty.Optional[QObject], options: dict[ty.Any, str], text: str = "Please choose from available options."
+) -> ty.Any:
+    """Chose from list."""
+    from qtextra.widgets.qt_pick_option import QtScrollablePickOption
+
+    dlg = QtScrollablePickOption(parent, text, options)
+    if dlg.exec_():
+        return dlg.option
+    return None
+
+
 def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
@@ -2634,7 +2646,7 @@ def show_above_mouse(widget: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog above the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(sz_hint.width() / 2, sz_hint.height() + 14)  # type: ignore[call-overload]
+    pos -= QPoint(int(sz_hint.width() / 2), sz_hint.height() + 14)  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
@@ -2644,7 +2656,7 @@ def show_below_mouse(widget: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog below the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(sz_hint.width() / 2, -14)  # type: ignore[call-overload]
+    pos -= QPoint(int(sz_hint.width() / 2), -14)  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
@@ -2654,7 +2666,7 @@ def show_left_of_mouse(widget: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(sz_hint.width() + 14, sz_hint.height() / 4)  # type: ignore[call-overload]
+    pos -= QPoint(sz_hint.width() + 14, int(sz_hint.height() / 4))  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
@@ -2664,7 +2676,7 @@ def show_right_of_mouse(widget: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(-20, sz_hint.height() / 8)  # type: ignore[call-overload]
+    pos -= QPoint(-20, int(sz_hint.height() / 8))  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
@@ -2675,9 +2687,9 @@ def show_below_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))  # type: ignore[call-overload]
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))  # type: ignore[call-overload]
     sz_hint = widget.size()
-    pos -= QPoint((sz_hint.width() / 2) - x_offset, -y_offset)  # type: ignore[call-overload]
+    pos -= QPoint(int((sz_hint.width() / 2) - x_offset), -y_offset)  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
