@@ -630,6 +630,8 @@ class QtViewerBase(QWidget):
         event : qtpy.QtCore.QEvent
             Event from the Qt context.
         """
+        if hasattr(event, "native"):
+            event = event.native
         self.canvas._backend._keyEvent(self.canvas.events.key_press, event)
         event.accept()
 
@@ -641,6 +643,8 @@ class QtViewerBase(QWidget):
         event : qtpy.QtCore.QEvent
             Event from the Qt context.
         """
+        if hasattr(event, "native"):
+            event = event.native
         self.canvas._backend._keyEvent(self.canvas.events.key_release, event)
         event.accept()
 
