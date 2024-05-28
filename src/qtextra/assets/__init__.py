@@ -22,6 +22,9 @@ LOADING_CIRCLE_GIF = str(HERE / "loading-circle.gif")
 
 QTA_MAPPING: ty.Dict[str, str] = {
     "MISSING": "ri.error-warning-line",
+    "json": "mdi6.code-json",
+    "binary": "msc.file-binary",
+    "hdf5": "fa5s.file",
     "open": "fa5s.folder-open",
     "folder": "mdi.folder-move-outline",
     "cross": "fa5s.times",
@@ -33,6 +36,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "gear": "ph.gear-fill",
     "zoom_out": "fa5s.expand",
     "ruler": "ph.ruler",
+    "ipython": "mdi.console",
+    # "ruler": "fa5s.ruler-horizontal",
     "text": "mdi.format-text",
     "crosshair": "ph.crosshair-simple",
     "none": "mdi6.cancel",

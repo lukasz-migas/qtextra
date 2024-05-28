@@ -170,7 +170,6 @@ class QtViewToolbar(QWidget):
                 toolbar_left.setVisible(False)
             if toolbar_right.n_items == 0:
                 toolbar_right.setVisible(False)
-
             _radio_group = make_radio_btn_group(qt_viewer, buttons)
 
     def connect_toolbar(self) -> None:

@@ -310,7 +310,6 @@ class QtListWidget(QListWidget):
         self.setItemWidget(item, widget)
         self.evt_added.emit(item_model)
         self.evt_updated.emit(self.count())
-        # self.adjustSize()  # disabled because it causes weird effect in e.g. PanelRGB
         return item, widget
 
     def insert_item(self, item_model: _M, index: int = 0) -> tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:

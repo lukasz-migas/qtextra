@@ -29,11 +29,19 @@ class QtCheckCollapsible(QCollapsible):
 
         # create layout where the first item is checkbox
         layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
         layout.addWidget(self._checkbox)
         layout.addWidget(self._toggle_btn, stretch=True)
 
         # add widget to layout
         self.layout().addLayout(layout)
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+    def set_checkbox_visible(self, state: bool) -> None:
+        """Show or hide the checkbox."""
+        self._checkbox.setVisible(state)
 
     @property
     def is_checked(self) -> bool:
@@ -54,7 +62,7 @@ class QtCheckCollapsible(QCollapsible):
     def addRow(self, label, widget):
         """Add layout to the central content widget's layout."""
         if not hasattr(self._content.layout(), "addRow"):
-            raise ValueError("Layout does not havd `addRow` method.")
+            raise ValueError("Layout does not have `addRow` method.")
         self._content.layout().addRow(label, widget)
 
 

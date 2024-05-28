@@ -1,4 +1,5 @@
 """Scrollable label."""
+
 import typing as ty
 
 from koyo.typing import PathLike
@@ -28,6 +29,7 @@ class QtScrollableLabel(QScrollArea):
 
         self.setWidgetResizable(True)
         self.setWidget(self.label)
+        self.setContentsMargins(0, 0, 0, 0)
 
     def setText(self, text: str) -> None:
         """Set label text."""

@@ -310,6 +310,43 @@ def make_label(
     return widget
 
 
+def make_warning_label(
+    parent: Qw.QWidget | None,
+    text: str,
+    xxsmall: bool = False,
+    xsmall: bool = False,
+    small: bool = False,
+    normal: bool = False,
+    average: bool = False,
+    medium: bool = False,
+    large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    retain_size: bool = False,
+    **kwargs: ty.Any,
+) -> None:
+    """Create Qta icon with immediate tooltip."""
+    from qtextra.widgets.qt_icon_label import QtQtaTooltipLabel
+
+    widget = QtQtaTooltipLabel(parent=parent)
+    widget.set_qta("warning")
+    widget.set_default_size(
+        xxsmall=xxsmall,
+        xsmall=xsmall,
+        small=small,
+        normal=normal,
+        average=average,
+        medium=medium,
+        large=large,
+        xlarge=xlarge,
+        xxlarge=xxlarge,
+    )
+    widget.setToolTip(text)
+    if retain_size:
+        set_retain_hidden_size_policy(widget)
+    return widget
+
+
 def make_scrollable_label(
     parent: Qw.QWidget | None,
     text: str = "",
@@ -1580,7 +1617,9 @@ def make_h_layout(
     if spacing is not None:
         layout.setSpacing(spacing)
     if margin is not None:
-        layout.setContentsMargins(margin, margin, margin, margin)
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
     return _set_in_layout(
         *widgets,
         layout=layout,
@@ -1672,13 +1711,18 @@ def polish_widget(*widget: Qw.QWidget):
         widget_.style().polish(widget_)
 
 
-def make_advanced_collapsible(parent: Qw.QWidget, title: str = "Advanced options") -> QtCheckCollapsible:
+def make_advanced_collapsible(
+    parent: Qw.QWidget, title: str = "Advanced options", allow_checkbox: bool = True
+) -> QtCheckCollapsible:
     """Make collapsible widget."""
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
 
     content = Qw.QWidget()
-    content.setLayout(make_form_layout())
+    layout = make_form_layout()
+    layout.setContentsMargins(2, 2, 2, 2)
+    content.setLayout(layout)
     advanced_widget = QtCheckCollapsible(title, parent)
+    advanced_widget.set_checkbox_visible(allow_checkbox)
     advanced_widget.setContent(content)
     advanced_widget.collapse(False)
     return advanced_widget
@@ -2649,3 +2693,13 @@ def copy_image_to_clipboard(image: QImage) -> None:
     """Helper function to easily copy image to clipboard while notifying the user."""
     cb = QGuiApplication.clipboard()
     cb.setImage(image)  # type: ignore[union-attr]
+
+
+def set_object_name(*widget: Qw.QWidget, object_name: str) -> None:
+    """Set object name and polish."""
+    for widget_ in widget:
+        widget_.setObjectName(object_name)
+        if hasattr(widget_, "polish"):
+            widget_.polish()
+        else:
+            polish_widget(widget_)

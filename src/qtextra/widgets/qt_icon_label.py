@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 from koyo.typing import PathLike
-from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+from qtpy.QtCore import QPoint, QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
 from qtpy.QtGui import QEnterEvent, QPixmap, QResizeEvent
 from qtpy.QtWidgets import QLabel, QToolTip, QWidget
 from superqt.utils import qdebounced
@@ -155,7 +155,8 @@ class QtQtaTooltipLabel(QtQtaLabel):
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
         if self.toolTip():
-            pos = self.mapToGlobal(self.contentsRect().center())
+            sh = self.sizeHint()
+            pos = self.mapToGlobal(self.contentsRect().center()) - QPoint(-10, int(sh.height() * 1.5))
             QToolTip.showText(pos, self.toolTip(), self)
         super().enterEvent(event)
 
