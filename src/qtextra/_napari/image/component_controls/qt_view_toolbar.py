@@ -165,12 +165,12 @@ class QtViewToolbar(QWidget):
             )
             self.tools_off_btn.setChecked(True)
             buttons.append(self.tools_off_btn)
-
-            if toolbar_left.n_items == 0:
-                toolbar_left.setVisible(False)
-            if toolbar_right.n_items == 0:
-                toolbar_right.setVisible(False)
             _radio_group = make_radio_btn_group(qt_viewer, buttons)
+
+        if toolbar_left.n_items <= 1:  # exclude spacer from the count
+            toolbar_left.setVisible(False)
+        if toolbar_right.n_items <= 1:  # exclude spacer from the count
+            toolbar_right.setVisible(False)
 
     def connect_toolbar(self) -> None:
         """Connect events."""
