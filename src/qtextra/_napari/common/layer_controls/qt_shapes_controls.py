@@ -291,6 +291,8 @@ class QtShapesControls(QtLayerControls):
             [
                 self.select_button,
                 self.direct_button,
+                self.line_button,
+                self.path_button,
                 self.rectangle_button,
                 self.ellipse_button,
                 self.polygon_button,

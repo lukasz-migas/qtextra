@@ -1586,6 +1586,7 @@ def make_v_layout(
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
+    widget_alignment: Qt.AlignmentFlag | None = None,
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
     layout = Qw.QVBoxLayout()
@@ -1600,6 +1601,7 @@ def make_v_layout(
         alignment=alignment,
         stretch_before=stretch_before,
         stretch_after=stretch_after,
+        widget_alignment=widget_alignment,
     )
 
 
@@ -1637,6 +1639,7 @@ def _set_in_layout(
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
+    widget_alignment: Qt.AlignmentFlag | None = None,
 ) -> Qw.QVBoxLayout | Qw.QHBoxLayout:
     if stretch_before:
         layout.addStretch(True)
@@ -1646,7 +1649,10 @@ def _set_in_layout(
         elif isinstance(widget, Qw.QSpacerItem):
             layout.addSpacerItem(widget)
         else:
-            layout.addWidget(widget)
+            if widget_alignment:
+                layout.addWidget(widget, alignment=widget_alignment)
+            else:
+                layout.addWidget(widget)
     if stretch_id is not None:
         if isinstance(stretch_id, int):
             stretch_id = (stretch_id,)

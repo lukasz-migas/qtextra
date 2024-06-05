@@ -100,11 +100,11 @@ class DialogMixin:
         pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() - y_offset))
         self.move(pos)
 
-    def show_above_mouse(self, show: bool = True) -> None:
+    def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
         sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() / 2), int(sz_hint.height() + 14))
+        pos -= QPoint(int(sz_hint.width() / 2) - x_offset, int(sz_hint.height() - y_offset))
         self.move(pos)
         if show:
             self.show()

@@ -3,13 +3,15 @@
 import typing as ty
 
 from koyo.typing import PathLike
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import QLabel, QScrollArea, QWidget
 
 
 class QtScrollableLabel(QScrollArea):
     """Scrollable label."""
+
+    evt_clicked = Signal()
 
     def __init__(
         self,
@@ -44,6 +46,11 @@ class QtScrollableLabel(QScrollArea):
     def clear(self) -> None:
         """Clear label."""
         self.label.clear()
+
+    def mousePressEvent(self, event) -> None:
+        """Mouse press event."""
+        self.evt_clicked.emit()
+        return super().mousePressEvent(event)
 
 
 if __name__ == "__main__":

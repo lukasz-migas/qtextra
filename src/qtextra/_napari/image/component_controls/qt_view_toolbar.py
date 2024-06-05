@@ -8,6 +8,7 @@ from napari.utils.events.event import EmitterGroup, Event
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog, QWidget
 
+from qtextra._napari.image.components._viewer_key_bindings import toggle_grid
 from qtextra.helpers import make_radio_btn_group, qt_signals_blocked
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
 
@@ -111,10 +112,23 @@ class QtViewToolbar(QWidget):
                 func_menu=self.on_open_crosshair_config,
             )
         self.tools_grid_btn = toolbar_right.insert_qta_tool(
-            "grid",
-            tooltip="Show/hide grid",
+            "grid_off",
+            tooltip="Toggle grid view. Right-click on the button to change grid settings.",
             checkable=True,
+            checked_icon_name="grid_on",
+            func=lambda: toggle_grid(viewer),
+            func_menu=self.open_grid_popup,
         )
+        # make_qta_btn(
+        #     self,
+        #     "grid_off",
+        #     "Toggle grid view. Right-click on the button to change grid settings.",
+        #     checkable=True,
+        #     checked=viewer.grid.enabled,
+        #     checked_icon_name="grid_on",
+        #     func=lambda: toggle_grid(viewer),
+        #     func_menu=self.open_grid_popup,
+        # )
         self.layers_btn = toolbar_right.insert_qta_tool(
             "layers",
             tooltip="Display layer controls",
@@ -172,20 +186,30 @@ class QtViewToolbar(QWidget):
         if toolbar_right.n_items <= 1:  # exclude spacer from the count
             toolbar_right.setVisible(False)
 
+    def open_grid_popup(self) -> None:
+        """Open grid options pop up widget."""
+        from qtextra._napari.image.component_controls.qt_layer_buttons import make_grid_popup
+
+        make_grid_popup(self, self.viewer)
+
     def connect_toolbar(self) -> None:
         """Connect events."""
         self.qt_viewer.viewer.scale_bar.events.visible.connect(
             lambda x: self.tools_scalebar_btn.setChecked(self.qt_viewer.viewer.scale_bar.visible)
         )
 
-        try:
-            self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-            self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
-            self.qt_viewer.viewer.grid_lines.events.visible.connect(
-                lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
-            )
-        except KeyError:
-            pass
+        self.qt_viewer.viewer.grid.events.enabled.connect(
+            lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid.enabled)
+        )
+
+        # try:
+        #     self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
+        #     self.tools_grid_btn.clicked.connect(self._toggle_grid_lines_visible)
+        #     self.qt_viewer.viewer.grid_lines.events.visible.connect(
+        #         lambda x: self.tools_grid_btn.setChecked(self.qt_viewer.viewer.grid_lines.visible)
+        #     )
+        # except KeyError:
+        #     pass
 
         try:
             self.tools_colorbar_btn.setChecked(self.qt_viewer.viewer.color_bar.visible)

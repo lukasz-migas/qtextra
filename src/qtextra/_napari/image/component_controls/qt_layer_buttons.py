@@ -1,4 +1,5 @@
 """Layer buttons."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -8,7 +9,7 @@ from napari._qt.widgets.qt_dims_sorter import QtDimsSorter
 from napari._qt.widgets.qt_spinbox import QtSpinBox
 from napari._qt.widgets.qt_tooltip import QtToolTipLabel
 from qtpy.QtCore import QPoint, Qt
-from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout
+from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra._napari.image.components._viewer_key_bindings import toggle_grid, toggle_ndisplay
@@ -183,117 +184,101 @@ class QtViewerButtons(QFrame):
 
     def open_grid_popup(self):
         """Open grid options pop up widget."""
-        # widgets
-        popup = QtPopup(self)
-        grid_stride = QtSpinBox(popup)
-        grid_width = QtSpinBox(popup)
-        grid_height = QtSpinBox(popup)
-        shape_help_symbol = QtToolTipLabel(self)
-        stride_help_symbol = QtToolTipLabel(self)
-        blank = QLabel(self)  # helps with placing help symbols.
+        make_grid_popup(self, self.viewer)
 
-        shape_help_msg = (
-            "Number of rows and columns in the grid. A value of -1 for either or both of width and height will trigger"
-            " an auto calculation of the necessary grid shape to appropriately fill all the layers at the appropriate"
-            " stride. 0 is not a valid entry."
-        )
 
-        stride_help_msg = (
-            "Number of layers to place in each grid square before moving on to the next square. The default ordering"
-            " is to place the most visible layer in the top left corner of the grid. A negative stride will cause the"
-            " order in which the layers are placed in the grid to be reversed. 0 is not a valid entry."
-        )
+def make_grid_popup(parent: QWidget, viewer: ViewerModel) -> None:
+    """Make grid popup."""
 
-        # set up
-        stride_min = self.viewer.grid.__fields__["stride"].type_.ge
-        stride_max = self.viewer.grid.__fields__["stride"].type_.le
-        stride_not = self.viewer.grid.__fields__["stride"].type_.ne
-        grid_stride.setObjectName("gridStrideBox")
-        grid_stride.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid_stride.setRange(stride_min, stride_max)
-        grid_stride.setProhibitValue(stride_not)
-        grid_stride.setValue(self.viewer.grid.stride)
-        grid_stride.valueChanged.connect(self._update_grid_stride)
+    def _update_grid_width(value):
+        viewer.grid.shape = (viewer.grid.shape[0], value)
 
-        width_min = self.viewer.grid.__fields__["shape"].sub_fields[1].type_.ge
-        width_not = self.viewer.grid.__fields__["shape"].sub_fields[1].type_.ne
-        grid_width.setObjectName("gridWidthBox")
-        grid_width.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid_width.setMinimum(width_min)
-        grid_width.setProhibitValue(width_not)
-        grid_width.setValue(self.viewer.grid.shape[1])
-        grid_width.valueChanged.connect(self._update_grid_width)
+    def _update_grid_stride(value):
+        viewer.grid.stride = value
 
-        height_min = self.viewer.grid.__fields__["shape"].sub_fields[0].type_.ge
-        height_not = self.viewer.grid.__fields__["shape"].sub_fields[0].type_.ne
-        grid_height.setObjectName("gridStrideBox")
-        grid_height.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        grid_height.setMinimum(height_min)
-        grid_height.setProhibitValue(height_not)
-        grid_height.setValue(self.viewer.grid.shape[0])
-        grid_height.valueChanged.connect(self._update_grid_height)
+    def _update_grid_height(value):
+        viewer.grid.shape = (value, viewer.grid.shape[1])
 
-        shape_help_symbol.setObjectName("help_label")
-        shape_help_symbol.setToolTip(shape_help_msg)
+    popup = QtPopup(parent)
+    grid_stride = QtSpinBox(popup)
+    grid_width = QtSpinBox(popup)
+    grid_height = QtSpinBox(popup)
+    shape_help_symbol = QtToolTipLabel(parent)
+    stride_help_symbol = QtToolTipLabel(parent)
+    blank = QLabel(parent)  # helps with placing help symbols.
 
-        stride_help_symbol.setObjectName("help_label")
-        stride_help_symbol.setToolTip(stride_help_msg)
+    shape_help_msg = (
+        "Number of rows and columns in the grid. A value of -1 for either or both of width and height will trigger"
+        " an auto calculation of the necessary grid shape to appropriately fill all the layers at the appropriate"
+        " stride. 0 is not a valid entry."
+    )
 
-        # layout
-        form_layout = hp.make_form_layout()
-        form_layout.insertRow(0, QLabel("Grid stride:"), grid_stride)
-        form_layout.insertRow(1, QLabel("Grid width:"), grid_width)
-        form_layout.insertRow(2, QLabel("Grid height:"), grid_height)
+    stride_help_msg = (
+        "Number of layers to place in each grid square before moving on to the next square. The default ordering"
+        " is to place the most visible layer in the top left corner of the grid. A negative stride will cause the"
+        " order in which the layers are placed in the grid to be reversed. 0 is not a valid entry."
+    )
 
-        help_layout = QVBoxLayout()
-        help_layout.addWidget(stride_help_symbol)
-        help_layout.addWidget(blank)
-        help_layout.addWidget(shape_help_symbol)
+    # set up
+    stride_min = viewer.grid.__fields__["stride"].type_.ge
+    stride_max = viewer.grid.__fields__["stride"].type_.le
+    stride_not = viewer.grid.__fields__["stride"].type_.ne
+    grid_stride.setObjectName("gridStrideBox")
+    grid_stride.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    grid_stride.setRange(stride_min, stride_max)
+    grid_stride.setProhibitValue(stride_not)
+    grid_stride.setValue(viewer.grid.stride)
+    grid_stride.valueChanged.connect(_update_grid_stride)
 
-        layout = QHBoxLayout()
-        layout.addLayout(form_layout)
-        layout.addLayout(help_layout)
+    width_min = viewer.grid.__fields__["shape"].sub_fields[1].type_.ge
+    width_not = viewer.grid.__fields__["shape"].sub_fields[1].type_.ne
+    grid_width.setObjectName("gridWidthBox")
+    grid_width.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    grid_width.setMinimum(width_min)
+    grid_width.setProhibitValue(width_not)
+    grid_width.setValue(viewer.grid.shape[1])
+    grid_width.valueChanged.connect(_update_grid_width)
 
-        popup.frame.setLayout(layout)
+    height_min = viewer.grid.__fields__["shape"].sub_fields[0].type_.ge
+    height_not = viewer.grid.__fields__["shape"].sub_fields[0].type_.ne
+    grid_height.setObjectName("gridStrideBox")
+    grid_height.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    grid_height.setMinimum(height_min)
+    grid_height.setProhibitValue(height_not)
+    grid_height.setValue(viewer.grid.shape[0])
+    grid_height.valueChanged.connect(_update_grid_height)
 
-        popup.show_above_mouse()
+    shape_help_symbol.setObjectName("help_label")
+    shape_help_symbol.setToolTip(shape_help_msg)
 
-        # adjust placement of shape help symbol.  Must be done last
-        # in order for this movement to happen.
-        delta_x = 0
-        delta_y = -15
-        shape_pos = (
-            shape_help_symbol.x() + delta_x,
-            shape_help_symbol.y() + delta_y,
-        )
-        shape_help_symbol.move(QPoint(*shape_pos))
+    stride_help_symbol.setObjectName("help_label")
+    stride_help_symbol.setToolTip(stride_help_msg)
 
-    def _update_grid_width(self, value):
-        """Update the width value in grid shape.
+    # layout
+    form_layout = hp.make_form_layout()
+    form_layout.insertRow(0, QLabel("Grid stride:"), grid_stride)
+    form_layout.insertRow(1, QLabel("Grid width:"), grid_width)
+    form_layout.insertRow(2, QLabel("Grid height:"), grid_height)
 
-        Parameters
-        ----------
-        value : int
-            New grid width value.
-        """
-        self.viewer.grid.shape = (self.viewer.grid.shape[0], value)
+    help_layout = QVBoxLayout()
+    help_layout.addWidget(stride_help_symbol)
+    help_layout.addWidget(blank)
+    help_layout.addWidget(shape_help_symbol)
 
-    def _update_grid_stride(self, value):
-        """Update stride in grid settings.
+    layout = QHBoxLayout()
+    layout.addLayout(form_layout)
+    layout.addLayout(help_layout)
 
-        Parameters
-        ----------
-        value : int
-            New grid stride value.
-        """
-        self.viewer.grid.stride = value
+    popup.frame.setLayout(layout)
 
-    def _update_grid_height(self, value):
-        """Update height value in grid shape.
+    popup.show_above_mouse()
 
-        Parameters
-        ----------
-        value : int
-            New grid height value.
-        """
-        self.viewer.grid.shape = (value, self.viewer.grid.shape[1])
+    # adjust placement of shape help symbol.  Must be done last
+    # in order for this movement to happen.
+    delta_x = 0
+    delta_y = -15
+    shape_pos = (
+        shape_help_symbol.x() + delta_x,
+        shape_help_symbol.y() + delta_y,
+    )
+    shape_help_symbol.move(QPoint(*shape_pos))

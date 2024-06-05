@@ -60,6 +60,7 @@ class QtMiniToolbar(QFrame):
         medium: bool = False,
         average: bool = False,
         normal: bool = False,
+        checked_icon_name: str = None,
     ) -> QtImagePushButton:
         if not any((small, average, medium, normal)):
             size = (26, 26)
@@ -79,6 +80,7 @@ class QtMiniToolbar(QFrame):
             small=small,
             average=average,
             normal=normal,
+            checked_icon_name=checked_icon_name,
         )
         self._tools[name] = btn
         return btn
@@ -154,6 +156,7 @@ class QtMiniToolbar(QFrame):
         average: bool = False,
         normal: bool = False,
         hidden: bool = False,
+        checked_icon_name: str = None,
     ) -> QtImagePushButton:
         """Insert tool."""
         btn = self._make_qta_button(
@@ -168,6 +171,7 @@ class QtMiniToolbar(QFrame):
             small=small,
             average=average,
             normal=normal,
+            checked_icon_name=checked_icon_name,
         )
         self.insert_button(btn)
         if hidden:
