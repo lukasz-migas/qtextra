@@ -5,7 +5,48 @@ from contextlib import suppress
 from qtextra.typing import Callback
 
 if ty.TYPE_CHECKING:
-    from qtextra.queue.task import MasterTask
+    from qtextra.queue.task import Task
+
+COLORS = {
+    "error": "#ff121e",
+    "warning": "#ff693c",
+    "check_warning": "#ff693c",
+    "success": "#1ed75f",
+    "check": "#1ed75f",
+    "normal": "#777777",
+    "hint": "#00a6ff",
+}
+
+
+def get_icon_state(errors: list[str]) -> tuple[str, str]:
+    """Return icon state based on the error messages."""
+    state = "check"
+    if len([error for error in errors if 'class="warning"' in error]) > 0:
+        state = "check_warning"
+    if len([error for error in errors if 'class="error"' in error]) > 0:
+        state = "error"
+    return state, COLORS[state]
+
+
+def format_interval(t: float) -> str:
+    """
+    Formats a number of seconds as a clock time, [H:]MM:SS.
+
+    Parameters
+    ----------
+    t  : float
+        Number of seconds.
+
+    Returns
+    -------
+    out  : str
+        [H:]MM:SS
+    """
+    minutes, s = divmod(int(t), 60)
+    h, m = divmod(minutes, 60)
+    if h:
+        return f"{h:d}:{m:02d}:{s:02d}"
+    return f"{m:02d}:{s:02d}"
 
 
 def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty.Sequence[ty.Callable]:
@@ -17,9 +58,7 @@ def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty
     return [func]
 
 
-def _safe_call(
-    func: ty.Optional[ty.Sequence[ty.Callable]], task: ty.Optional["MasterTask"] = None, which: str = ""
-) -> None:
+def _safe_call(func: ty.Optional[ty.Sequence[ty.Callable]], task: ty.Optional["Task"] = None, which: str = "") -> None:
     if func is not None:
         try:
             for _func in func:

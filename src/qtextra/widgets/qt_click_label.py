@@ -5,6 +5,18 @@ from qtpy import QtWidgets as QtW
 from qtpy.QtCore import Qt, Signal
 
 
+class QtClickLabel(QtW.QLabel):
+    """Clickable label without highlight."""
+
+    evt_clicked = Signal()
+
+    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:  # type: ignore[override]
+        """Emit the clicked signal when the left mouse button is released."""
+        if ev.button() == Qt.MouseButton.LeftButton:
+            self.evt_clicked.emit()
+        return super().mouseReleaseEvent(ev)
+
+
 class QtClickableLabel(QtW.QLabel):
     """A label widget that behaves like a button."""
 

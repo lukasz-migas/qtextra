@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from time import time as time_
+
 from qtextra.typing import TaskState
 
 
@@ -26,6 +28,25 @@ class Task:
         self.task_name = task_name
         self.commands = commands
         self.state = state
+
+    @property
+    def pretty_info(self) -> str:
+        """Return pretty representation of the info."""
+        return f"{self._command_index + 1}/{len(self.commands)} commands"
+
+    @property
+    def duration(self) -> float:
+        """Return duration."""
+        if self.start_time == 0 or self.start_time is None or self.end_time == 0 or self.end_time is None:
+            return 0
+        return self.end_time - self.start_time
+
+    @property
+    def current_duration(self) -> float:
+        """Return duration at this moment in time."""
+        if self.start_time == 0 or self.start_time is None:
+            return 0
+        return time_() - self.start_time
 
     def summary(self) -> str:
         """Summary."""
@@ -56,6 +77,8 @@ class Task:
 
     def lock(self) -> None:
         """Lock task."""
+        if self.end_time is None:
+            self.end_time = time_()
         self.locked = False
 
     def set_command_index(self, index: int) -> None:

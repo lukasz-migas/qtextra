@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import time
+from time import time as time_
 import typing as ty
 from queue import Empty, SimpleQueue
 
@@ -212,7 +212,7 @@ class QProcessWrapper(QObject):
                 raise ValueError("Task not found.")
             # set start time
             if command_index == 0:
-                task.start_time = time.time()
+                task.start_time = time_()
             # activate master task
             # activate the current task
             if not task.is_active():

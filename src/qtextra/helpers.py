@@ -23,7 +23,7 @@ from qtextra.utils.utilities import IS_MAC, IS_WIN
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
     from qtextra.widgets.qt_buttons import QtActivePushButton, QtPushButton, QtRichTextButton
-    from qtextra.widgets.qt_click_label import QtClickableLabel
+    from qtextra.widgets.qt_click_label import QtClickableLabel, QtClickLabel
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
     from qtextra.widgets.qt_color_button import QtColorSwatch
     from qtextra.widgets.qt_eliding_label import QtElidingLabel
@@ -275,17 +275,19 @@ def make_label(
     visible: bool = True,
     disabled: bool = False,
     activated_func: Callback | None = None,
+    click_func: Callback | None = None,
     **kwargs: ty.Any,
-) -> Qw.QLabel:
+) -> QtClickLabel:
     """Make QLabel element."""
+    from qtextra.widgets.qt_click_label import QtClickLabel
+
     tooltip = kwargs.get("description", tooltip)
     text = kwargs.get("default", text)
 
-    widget = Qw.QLabel(parent)
+    widget = QtClickLabel(parent)
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
-
         widget.setTextFormat(Qt.RichText)  # type: ignore[attr-defined]
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)
         if not activated_func:
@@ -302,6 +304,8 @@ def make_label(
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse)
     if activated_func:
         [widget.linkActivated.connect(func) for func in _validate_func(activated_func)]
+    if click_func:
+        [widget.evt_clicked.connect(func) for func in _validate_func(click_func)]
     if disabled:
         widget.setProperty("disabled", True)
     widget.setWordWrap(wrap)

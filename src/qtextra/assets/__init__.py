@@ -123,7 +123,9 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "long_arrow_left": "fa5s.long-arrow-alt-left",
     "long_arrow_right": "fa5s.long-arrow-alt-right",
     # run/play
+    "run": "mdi6.run-fast",
     "start": "fa5s.play-circle",
+    "retry": "fa5s.redo-alt",
     "stop": "fa5s.stop-circle",
     "pause": "fa5s.pause-circle",
     # lock

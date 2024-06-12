@@ -1,0 +1,122 @@
+TaskWidget {
+  background-color: {{ background }};
+  border: 1px solid {{ foreground }};
+  border-radius: 2px;
+}
+
+TaskWidget > QLabel {
+    font-size: {{ increase(font_size, 3) }};
+}
+
+TaskWidget:hover {
+    border: 2px solid {{ highlight }};
+}
+
+QueueList {
+    border: 2px solid {{ foreground }};
+    border-radius: 2px;
+}
+
+/* Status labels
+queued = orange #00C851
+incomplete = dark-orange #ffbb33
+running = purple #8E24AA
+pausing = teal #1DE9B6
+paused = teal #e91e63
+finished = green #4285F4
+part-failed = orange #ff3d00
+failed = red #ff4444
+cancelling = light grey #546e7a
+cancelled = dark grey #263238
+blocked = yellow #e0115f
+*/
+
+QLabel#task_id {
+    font-size: {{ font_size }};
+    color: #666266;
+    min-height: 9px;
+    max-height: 10px;
+    padding: 0px 2px 0px 0px;
+    margin: 0px;
+}
+
+QLabel#task_info {
+    border-radius: 10px;
+}
+
+QLabel[text="required"] {
+    border: 3px solid #8E24AA;
+    background-color: #8E24AA;
+    color: #ffffff;
+}
+
+QLabel[text="optional"] {
+    border: 3px solid #00C851;
+    background-color: #00C851;
+    color: #ffffff;
+}
+
+
+QLabel[text="Queued"] {
+    border: 3px solid #00C851;
+    background-color: #00C851;
+    color: #ffffff;
+}
+
+QLabel[text="Running"] {
+    border: 3px solid #8E24AA;
+    background-color: #8E24AA;
+    color: #ffffff;
+}
+
+QLabel[text="Paused"] {
+    border: 3px solid #e91e63;
+    background-color: #e91e63;
+    color: #ffffff;
+}
+
+QLabel[text="Pausing"] {
+    border: 3px solid #1DE9B6;
+    background-color: #1DE9B6;
+    color: #000000;
+}
+
+QLabel[text="Finished"] {
+    border: 3px solid #4285F4;
+    background-color: #4285F4;
+    color: #ffffff;
+}
+
+QLabel[text="Incomplete"] {
+    border: 3px solid #ffbb33;
+    background-color: #ffbb33;
+    color: #000000;
+}
+
+QLabel[text="Part-failed"] {
+    border: 3px solid #ff3d00;
+    background-color: #ff3d00;
+    color: #ffffff;
+}
+QLabel[text="Failed"] {
+    border: 3px solid #ff4444;
+    background-color: #ff4444;
+    color: #ffffff;
+}
+
+QLabel[text="Cancelling"] {
+    border: 3px solid #546e7a;
+    background-color: #546e7a;
+    color: #FFFFFF;
+}
+
+QLabel[text="Cancelled"] {
+    border: 3px solid #263238;
+    background-color: #263238;
+    color: #FFFFFF;
+}
+QLabel[text="Locked"] {
+    border: 3px solid #e0115f;
+    background-color: #e0115f;
+    color: #ffffff;
+}

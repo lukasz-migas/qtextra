@@ -367,7 +367,8 @@ class CLIQueueHandler(QObject):
             if worker_obj:
                 task = worker_obj.task
                 logger.debug(f"Cancelled task '{task.summary()}'")
-                self._evt_cancel.emit(task)  # type: ignore[unused-ignore]
+                with suppress(RuntimeError):
+                    self._evt_cancel.emit(task)  # type: ignore[unused-ignore]
         self.pending_queue.clear()
         logger.trace("Queue > Cleared queue")
 
