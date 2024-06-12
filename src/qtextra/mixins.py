@@ -10,7 +10,7 @@ from pathlib import Path
 
 from koyo.timer import report_time
 from loguru import logger
-from qtpy.QtCore import QObject, QTimer, Signal  # type: ignore[attr-defined]
+from qtpy.QtCore import QTimer, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QCloseEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 

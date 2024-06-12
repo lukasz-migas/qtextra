@@ -364,7 +364,7 @@ class ScreenshotMixin:
         if dialog.exec_():
             pass
 
-    def screenshot(self, path: str = None):
+    def screenshot(self, path: ty.Optional[str] = None):
         """Take screenshot of the viewer."""
         from napari._qt.utils import QImg2array
 

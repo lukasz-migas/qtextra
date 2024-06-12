@@ -1,5 +1,7 @@
 """Event queue handler."""
 
+from __future__ import annotations
+
 import atexit
 import typing as ty
 from contextlib import suppress
@@ -8,7 +10,7 @@ from loguru import logger
 from qtpy.QtCore import QObject, QProcess, Signal  # type: ignore[attr-defined]
 
 from qtextra.queue.cli_qprocess import QProcessWrapper
-from qtextra.queue.task import MasterTask
+from qtextra.queue.task import Task
 from qtextra.typing import Callback, TaskState
 from qtextra.utils.utilities import running_under_pytest
 
@@ -25,25 +27,25 @@ class CLIQueueHandler(QObject):
     CAN_FORCE_START = True
 
     # internally used signal to cancel thread
-    _evt_cancel = Signal(MasterTask)
-    _evt_pause = Signal(MasterTask, bool)
+    _evt_cancel = Signal(Task)
+    _evt_pause = Signal(Task, bool)
     # signal to indicate when task had started
-    evt_queued = Signal(MasterTask)
+    evt_queued = Signal(Task)
     # signal to indicate when task had started
-    evt_started = Signal(MasterTask)
+    evt_started = Signal(Task)
     # signal to indicate when task had started
-    evt_next = Signal(MasterTask)
+    evt_next = Signal(Task)
     # signal to indicate when task had finished
-    evt_finished = Signal(MasterTask)
+    evt_finished = Signal(Task)
     # signal to indicate when task had been cancelled
-    evt_cancelled = Signal(MasterTask)
+    evt_cancelled = Signal(Task)
     # signal to indicate when task had crashed
-    evt_errored = Signal(MasterTask, object)
-    evt_part_errored = Signal(MasterTask, object)
+    evt_errored = Signal(Task, object)
+    evt_part_errored = Signal(Task, object)
     # signal to indicate when task had been paused
-    evt_paused = Signal(MasterTask, bool)
+    evt_paused = Signal(Task, bool)
     # signal each time there has been a progress update
-    evt_progress = Signal(MasterTask)
+    evt_progress = Signal(Task)
     # signal to indicate that the queue is closed
     evt_queue_closed = Signal()
     # signal to indicate that all process had been finished
@@ -62,27 +64,28 @@ class CLIQueueHandler(QObject):
         self.running_queue: ty.List[str] = []
         self._evt_cancel.connect(self._kill)  # type: ignore[unused-ignore]
 
+        atexit.register(self.close)
+
     @property
     def n_tasks(self) -> ty.Tuple[int, int]:
         """Return the number of tasks."""
         return len(self.running_queue), len(self.pending_queue)
 
-    # @Slot(Task)
-    def task_started(self, task: MasterTask) -> None:
+    def task_started(self, task: Task) -> None:
         """Triggered whenever function started processing."""
         task_id = task.task_id
         if task_id in self.pending_queue:
             self.pending_queue.remove(task_id)
-            if task_id not in self.running_queue:
-                self.running_queue.append(task_id)
-            worker_obj = self.active_tasks.get(task_id)
-            if worker_obj:
-                logger.trace(f"Task '{worker_obj.summary()}' started.")
-            self.evt_started.emit(task)  # type: ignore[unused-ignore]
-            self.run_queued()
 
-    # @Slot(Task)
-    def task_finished(self, task: MasterTask) -> None:
+        if task_id not in self.running_queue:
+            self.running_queue.append(task_id)
+        worker_obj = self.active_tasks.get(task_id)
+        if worker_obj:
+            logger.trace(f"Task '{worker_obj.summary()}' started.")
+        self.evt_started.emit(task)  # type: ignore[unused-ignore]
+        self.run_queued()
+
+    def task_finished(self, task: Task) -> None:
         """Triggered whenever function finished processing."""
         task_id = task.task_id
         worker_obj = self.active_tasks.pop(task_id, None)  # remove from threads
@@ -96,8 +99,7 @@ class CLIQueueHandler(QObject):
         self.evt_finished.emit(task)  # type: ignore[unused-ignore]
         self.run_queued()
 
-    # @Slot(str, TaskKind)
-    def task_cancelled(self, task: MasterTask) -> None:
+    def task_cancelled(self, task: Task) -> None:
         """Triggered whenever function finished processing."""
         task_id = task.task_id
         worker_obj = self.active_tasks.pop(task_id, None)  # remove from threads
@@ -115,15 +117,16 @@ class CLIQueueHandler(QObject):
         self.evt_cancelled.emit(task)  # type: ignore[unused-ignore]
         self.run_queued()
 
-    # @Slot(Task)
-    def task_errored(self, task: MasterTask) -> None:
+    def task_errored(self, task: Task) -> None:
         """Triggered whenever function finished processing."""
         task_id = task.task_id
         worker_obj = self.active_tasks.pop(task_id, None)  # remove from threads
         with suppress(ValueError):
             self.running_queue.remove(task_id)
+            logger.trace(f"Removed '{task_id}' from running tasks (errored).")
         with suppress(ValueError):
             self.pending_queue.remove(task_id)
+            logger.trace(f"Removed '{task_id}' from pending tasks (errored).")
         if worker_obj:
             logger.trace(f"Removed '{task_id}' from active tasks (errored).")
             logger.trace(f"Task '{worker_obj.summary()}' encountered an error")
@@ -133,8 +136,7 @@ class CLIQueueHandler(QObject):
             logger.warning(f"Failed to remove task '{task_id}' from active tasks (errored).")
         self.run_queued()
 
-    # @Slot(Task)
-    def task_part_errored(self, task: MasterTask) -> None:
+    def task_part_errored(self, task: Task) -> None:
         """Triggered whenever function finished processing."""
         task_id = task.task_id
         worker_obj = self.active_tasks.get(task_id, None)  # remove from threads
@@ -160,7 +162,7 @@ class CLIQueueHandler(QObject):
             logger.error("Task failed to start")
         self._on_finished(task_id, -1)
 
-    def _kill(self, task: MasterTask) -> None:
+    def _kill(self, task: Task) -> None:
         """Kill process."""
         try:
             worker_obj = self.active_tasks[task.task_id]
@@ -168,7 +170,7 @@ class CLIQueueHandler(QObject):
         except KeyError:
             logger.warning(f"Failed to cancel '{task.task_id}'")
 
-    def add_complete_task(self, task: MasterTask) -> None:
+    def add_complete_task(self, task: Task) -> None:
         """Emit the 'evt_task_queued' event WITHOUT adding task to the queue."""
         if task.state != TaskState.FINISHED:
             raise ValueError(f"Task '{task.summary()}' is not finished.")
@@ -176,7 +178,7 @@ class CLIQueueHandler(QObject):
 
     def add_task(
         self,
-        task: MasterTask,
+        task: Task,
         func_error: ty.Optional[Callback] = None,
         func_start: ty.Optional[Callback] = None,
         func_end: ty.Optional[Callback] = None,
@@ -213,27 +215,6 @@ class CLIQueueHandler(QObject):
         self.add_worker(worker_obj, add_delayed=add_delayed, emit_queued=emit_queued)
         return task.task_id
 
-    def make_process(
-        self,
-        task: MasterTask,
-        # task_kind: TaskKind = TaskKind.NONE,
-        func_error: ty.Optional[Callback] = None,
-        func_start: ty.Optional[Callback] = None,
-        func_end: ty.Optional[Callback] = None,
-        func_post: ty.Optional[Callback] = None,
-    ) -> QProcessWrapper:
-        """Make QProcess."""
-        worker_obj = QProcessWrapper(self, task, func_start, func_error, func_end, func_post)
-        worker_obj.evt_started.connect(self.task_started)
-        worker_obj.evt_ended.connect(self.task_finished)
-        worker_obj.evt_next.connect(self.evt_next.emit)  # type: ignore[unused-ignore]
-        worker_obj.evt_errored.connect(self.task_errored)
-        worker_obj.evt_part_errored.connect(self.task_part_errored)
-        worker_obj.evt_progress.connect(self.evt_progress.emit)  # type: ignore[unused-ignore]
-        worker_obj.evt_paused.connect(self.evt_paused.emit)  # type: ignore[unused-ignore]
-        worker_obj.evt_cancelled.connect(self.task_cancelled)  # type: ignore[unused-ignore]
-        return worker_obj
-
     def add_worker(self, worker_obj: QProcessWrapper, add_delayed: bool = True, emit_queued: bool = True) -> None:
         """Add call object to the queue.
 
@@ -262,11 +243,33 @@ class CLIQueueHandler(QObject):
         # Immediately run task if in pytest environment
         if running_under_pytest():
             worker_obj.run()
+            logger.info(f"Running task '{worker_obj.task_id}' in pytest environment")
         else:
             # don't start next task
             if add_delayed or self.is_available():
                 return
             worker_obj.run()
+
+    def make_process(
+        self,
+        task: Task,
+        # task_kind: TaskKind = TaskKind.NONE,
+        func_error: ty.Optional[Callback] = None,
+        func_start: ty.Optional[Callback] = None,
+        func_end: ty.Optional[Callback] = None,
+        func_post: ty.Optional[Callback] = None,
+    ) -> QProcessWrapper:
+        """Make QProcess."""
+        worker_obj = QProcessWrapper(self, task, func_start, func_error, func_end, func_post)
+        worker_obj.evt_started.connect(self.task_started)
+        worker_obj.evt_finished.connect(self.task_finished)
+        worker_obj.evt_next.connect(self.evt_next.emit)  # type: ignore[unused-ignore]
+        worker_obj.evt_errored.connect(self.task_errored)
+        worker_obj.evt_part_errored.connect(self.task_part_errored)
+        worker_obj.evt_progress.connect(self.evt_progress.emit)  # type: ignore[unused-ignore]
+        worker_obj.evt_paused.connect(self.evt_paused.emit)  # type: ignore[unused-ignore]
+        worker_obj.evt_cancelled.connect(self.task_cancelled)  # type: ignore[unused-ignore]
+        return worker_obj
 
     def run_queued(self) -> None:
         """Run another object."""
@@ -280,7 +283,7 @@ class CLIQueueHandler(QObject):
             worker_obj = self.active_tasks[task_id]  # get another worker that was queued previously
             worker_obj.run()
 
-    def run_force(self, task: MasterTask) -> None:
+    def run_force(self, task: Task) -> None:
         """Run specific task."""
         try:
             logger.trace(f"Manually starting '{task.summary()}'")
@@ -295,16 +298,16 @@ class CLIQueueHandler(QObject):
             logger.exception(f"Could not forcefully start specified task - '{task.summary()}'")
 
     @staticmethod
-    def can_cancel(_task: MasterTask) -> ty.Tuple[bool, bool]:
+    def can_cancel(_task: Task) -> ty.Tuple[bool, bool]:
         """Get information about thread."""
         return True, True
 
     @staticmethod
-    def can_pause(_task: MasterTask) -> bool:
+    def can_pause(_task: Task) -> bool:
         """Get information about thread."""
         return False
 
-    def requeue(self, task: MasterTask, remove: bool = False) -> None:
+    def requeue(self, task: Task, remove: bool = False) -> None:
         """Add task to the queue again."""
         if remove:
             self.remove(task)
@@ -317,11 +320,11 @@ class CLIQueueHandler(QObject):
             return
         self.add_task(task)
 
-    def check_if_in_active(self, task: MasterTask) -> bool:
+    def check_if_in_active(self, task: Task) -> bool:
         """Check whether task is in the active queue."""
         return task.task_id in self.active_tasks
 
-    def check(self, task: MasterTask) -> None:
+    def check(self, task: Task) -> None:
         """Check whether task is in the pending tasks."""
         if task.task_id in self.active_tasks:
             logger.trace(f"Task '{task.summary()}' is in the active tasks.")
@@ -329,7 +332,7 @@ class CLIQueueHandler(QObject):
         self.add_task(task, emit_queued=False)
         logger.trace(f"Task '{task.summary()}' is not in the queue.")
 
-    def remove(self, task: MasterTask) -> None:
+    def remove(self, task: Task) -> None:
         """Remove a task from the queue."""
         if task.task_id in self.active_tasks:
             self.active_tasks.pop(task.task_id)
@@ -338,11 +341,11 @@ class CLIQueueHandler(QObject):
             self.pending_queue.remove(task.task_id)
             logger.trace(f"Removed '{task.task_id}' from pending tasks (removed).")
 
-    def cancel(self, task: MasterTask) -> None:
+    def cancel(self, task: Task) -> None:
         """Cancel scheduled task."""
         self._evt_cancel.emit(task)  # type: ignore[unused-ignore]
 
-    def pause(self, task: MasterTask, state: bool) -> None:
+    def pause(self, task: Task, state: bool) -> None:
         """Pause task."""
         try:
             worker_obj = self.active_tasks[task.task_id]
@@ -390,14 +393,3 @@ class CLIQueueHandler(QObject):
         """Representation of the queue."""
         n_running, n_queued = self.n_tasks
         return f"Queue<queued={n_queued}; running={n_running}>"
-
-
-QUEUE: CLIQueueHandler = CLIQueueHandler()
-
-
-def clean_at_exit() -> None:
-    """Clean-up at exit."""
-    QUEUE.close()
-
-
-atexit.register(clean_at_exit)

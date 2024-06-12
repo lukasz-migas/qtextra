@@ -1,4 +1,3 @@
-# Local imports
 from qtextra.dialogs.qt_console import QtConsole
 
 

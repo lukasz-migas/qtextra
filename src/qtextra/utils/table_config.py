@@ -106,7 +106,7 @@ class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
 
     def get_column(self, tag: str) -> dict[str, ty.Any]:
         """Get column by tag."""
-        for col_id, col_info in self.items():
+        for _col_id, col_info in self.items():
             if col_info["tag"] == tag:
                 return col_info
         return None

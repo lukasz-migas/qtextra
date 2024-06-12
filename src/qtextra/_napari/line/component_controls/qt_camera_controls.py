@@ -13,7 +13,7 @@ if ty.TYPE_CHECKING:
 
 
 class QtCameraControls(QtFramelessPopup):
-    """Popup to control camera model"""
+    """Popup to control camera model."""
 
     def __init__(self, viewer: "ViewerModel", parent=None):
         self.ref_viewer = ref(viewer)
@@ -25,7 +25,7 @@ class QtCameraControls(QtFramelessPopup):
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
-        """Make panel"""
+        """Make panel."""
         widget = QtCameraWidget(self.ref_viewer(), self)
         layout = QFormLayout()
         layout.setSpacing(2)

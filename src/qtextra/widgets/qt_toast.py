@@ -130,7 +130,7 @@ if __name__ == "__main__":  # pragma: no cover
         def _popup_notif3() -> None:
             from qtextra.helpers import toast_alt
 
-            pop = toast_alt(
+            toast_alt(
                 frame,
                 "Title",
                 "Here is a message.\nA couple of lines long.\nAnother line",

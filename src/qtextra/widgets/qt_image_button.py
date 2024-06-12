@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing as ty
 
 import qtawesome
-from qtpy.QtWidgets import QLabel
 from qtpy.QtCore import (  # type: ignore[attr-defined]
     QEasingCurve,
     QEvent,
@@ -17,7 +16,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     Slot,
 )
 from qtpy.QtGui import QBrush, QColor, QPainter
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QPushButton, QToolTip, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QGraphicsOpacityEffect, QLabel, QPushButton, QToolTip, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
@@ -574,7 +573,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main() -> None:  # type: ignore[no-untyped-def]
         from qtextra.assets import QTA_MAPPING
-        from qtextra.config.theme import THEMES
         from qtextra.utils.dev import qmain, theme_toggle_btn
 
         app, frame, ha = qmain(True)

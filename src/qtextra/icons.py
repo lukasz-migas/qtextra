@@ -32,7 +32,7 @@ def get_raw_svg(path: str) -> str:
 
 
 @lru_cache
-def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: str = None, opacity=1) -> str:
+def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: ty.Optional[str] = None, opacity=1) -> str:
     """Return a colorized version of the SVG XML at ``path``.
 
     Raises

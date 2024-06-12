@@ -11,7 +11,7 @@ from loguru import logger
 from psygnal import EventedModel
 from pydantic import PrivateAttr, ValidationError, validator
 from pydantic.color import Color
-from qtpy.QtCore import QDateTime, Qt, QTime, Signal
+from qtpy.QtCore import QDateTime, QTime, Signal
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QApplication, QWidget
 

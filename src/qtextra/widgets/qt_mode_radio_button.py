@@ -31,7 +31,7 @@ class QtModeRadioButton(QRadioButton):
         The layer instance that this button controls.
     """
 
-    def __init__(self, layer: Layer, button_name: str, mode: Enum, *, tooltip: str = None, checked: bool = False):
+    def __init__(self, layer: Layer, button_name: str, mode: Enum, *, tooltip: ty.Optional[str] = None, checked: bool = False):
         super().__init__()
 
         self.layer = layer
@@ -77,7 +77,7 @@ class QtModePushButton(QPushButton):
         The layer instance that this button controls.
     """
 
-    def __init__(self, layer: Layer, button_name: str, *, slot: ty.Callable = None, tooltip: str = None):
+    def __init__(self, layer: Layer, button_name: str, *, slot: ty.Optional[ty.Callable] = None, tooltip: ty.Optional[str] = None):
         super().__init__()
 
         self.layer = layer

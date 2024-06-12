@@ -285,7 +285,6 @@ def make_label(
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
-        from qtextra.config import THEMES
 
         widget.setTextFormat(Qt.RichText)  # type: ignore[attr-defined]
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)

@@ -151,6 +151,8 @@ extend-ignore = [
 minversion = "6.0"
 testpaths = ["tests"]
 filterwarnings = ["error"]
+# options so that i can see the stdout and loguru logs
+addopts = ["-s", "-vv", "--log-cli-level=DEBUG", "--log-cli-format=%(asctime)s - %(levelname)s - %(message)s"]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]

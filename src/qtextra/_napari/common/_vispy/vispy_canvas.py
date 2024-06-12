@@ -80,7 +80,7 @@ class VispyCanvas(SceneCanvas):
 
     @property
     def central_widget(self):
-        """Overrides SceneCanvas.central_widget to make border_width=0"""
+        """Overrides SceneCanvas.central_widget to make border_width=0."""
         if self._central_widget is None:
             self._central_widget = Widget(size=self.size, parent=self.scene, border_width=0)
         return self._central_widget
@@ -97,7 +97,6 @@ class VispyCanvas(SceneCanvas):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtpy.QtCore import QTimer
     from qtpy.QtWidgets import QDialog, QVBoxLayout
 
     from qtextra.utils.dev import qapplication

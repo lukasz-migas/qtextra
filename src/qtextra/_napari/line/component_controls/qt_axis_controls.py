@@ -13,7 +13,7 @@ if ty.TYPE_CHECKING:
 
 
 class QtAxisControls(QtFramelessPopup):
-    """Popup to control x/y-axis visual"""
+    """Popup to control x/y-axis visual."""
 
     def __init__(self, viewer: "ViewerModel", parent=None):
         self.ref_viewer = ref(viewer)
@@ -25,7 +25,7 @@ class QtAxisControls(QtFramelessPopup):
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
-        """Make panel"""
+        """Make panel."""
         widget = QtAxisWidget(self.ref_viewer(), self)
         layout = QFormLayout()
         layout.setSpacing(2)

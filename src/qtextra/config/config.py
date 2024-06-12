@@ -37,7 +37,7 @@ class ConfigBase(QObject):
     def saved(self, value: bool):
         self._is_saved = value
 
-    def save_config(self, path: str = None):
+    def save_config(self, path: ty.Optional[str] = None):
         """Export configuration file to JSON file."""
         if path is None:
             path = self.output_path
@@ -54,7 +54,7 @@ class ConfigBase(QObject):
         """Get configuration parameters."""
         return config
 
-    def load_config(self, path: str = None, check_type: bool = True):
+    def load_config(self, path: ty.Optional[str] = None, check_type: bool = True):
         """Load configuration from JSON file."""
         from json.decoder import JSONDecodeError
 

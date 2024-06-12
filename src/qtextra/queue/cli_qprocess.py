@@ -4,17 +4,15 @@ from __future__ import annotations
 
 import time
 import typing as ty
-from contextlib import suppress
 from queue import Empty, SimpleQueue
 
-import psutil
 from koyo.system import IS_WIN
 from loguru import logger as logger_
 from qtpy.QtCore import QObject, QProcess, QTimer, Signal  # type: ignore[attr-defined]
 
 from qtextra.queue.task import Task
-from qtextra.queue.utilities import _safe_call, escape_ansi, iterable_callbacks
-from qtextra.typing import Callback, TaskState, WorkerState
+from qtextra.queue.utilities import _safe_call, iterable_callbacks
+from qtextra.typing import Callback, TaskState
 
 
 def decode(text: bytes) -> str:
@@ -62,7 +60,7 @@ class QProcessWrapper(QObject):
     # signals
     evt_started = Signal(Task)
     evt_next = Signal(Task)
-    evt_ended = Signal(Task)
+    evt_finished = Signal(Task)
     evt_errored = Signal(Task)
     evt_part_errored = Signal(Task)
     evt_progress = Signal(Task)
@@ -75,6 +73,7 @@ class QProcessWrapper(QObject):
     _master_started: bool = False
     _master_finished: bool = False
     _task_queue_populated: bool = False
+    _cancel_emitted: bool = False
     n_running: int = 0
 
     def __init__(
@@ -133,7 +132,7 @@ class QProcessWrapper(QObject):
 
     def is_running(self) -> bool:
         """Flag to indicate whether the task is running."""
-        return bool(self.process.state() == QProcess.Running)  # type: ignore[attr-defined]
+        return bool(self.process.state() == QProcess.ProcessState.Running)
 
     def summary(self) -> str:
         """Return task summary."""
@@ -192,60 +191,20 @@ class QProcessWrapper(QObject):
             if current_task_id is None:
                 self.logger.trace("There are no more tasks to execute. Finishing up...")
                 self.master_started = False
-
-                prev_task = self.task.get_task_for_id(self.current_task_id)
-                if prev_task:
-                    self.logger.trace(f"Retrieved '{prev_task.task_name}' as previous task (next).")
-                    if prev_task.state == TaskState.RUNNING:
-                        prev_task.set_state(TaskState.FINISHED)
-                        self.logger.trace(
-                            f"Changed state of '{prev_task.task_name}' to '{prev_task.state.value}' (next)"
-                        )
-                    prev_task.stats.end_time = time.time()
-                    prev_task.deactivate()
-                    prev_task.lock()
-                    task_index = self.task.get_index_for_task_id(prev_task.task_id)
-                    # if task_index is not None:
-                    #     self.task.set_task_index(task_index)
-                    self.finished_tasks.add(prev_task.task_id)
-                    self.logger.trace(f"Added '{prev_task.task_name}' to finished tasks (next).")
-                    self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
                 self.task.state = TaskState.FINISHED
                 self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
-                self.evt_ended.emit(self.task)  # type: ignore[unused-ignore]
+                self.evt_finished.emit(self.task)  # type: ignore[unused-ignore]
                 self.logger.debug("All tasks finished.")
             # otherwise, a new task was retrieved and more commands were added to the queue
             else:
-                # first, let's check if everything was finished for previous task
-                prev_task = None
-                if self.finished_tasks:
-                    prev_task = self.task.get_task_for_id(list(self.finished_tasks)[-1])
-                # else:
-                #     prev_task = self.task.get_previous_task_for_id(current_task_id)
-                if prev_task:
-                    self.logger.trace(f"Retrieved '{prev_task.task_name}' as previous task (finished).")
-                    if prev_task.state == TaskState.RUNNING:
-                        prev_task.set_state(TaskState.FINISHED)
-                        self.logger.trace(
-                            f"Changed state of '{prev_task.task_name}' to '{prev_task.state.value}' (finished)"
-                        )
-                    if prev_task.stats.end_time is None:
-                        prev_task.stats.end_time = time.time()
-                    # self.save_stdout(prev_task)
-                    # self.save_stats(prev_task)
-                    prev_task.deactivate()
-                    prev_task.lock()
-                    self.finished_tasks.add(prev_task.task_id)
-                    self.logger.trace(f"Added '{prev_task.task_name}' to finished tasks (finished).")
-                    self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
                 # execute the next command
                 self.on_execute_task()
 
     def on_execute_task(self) -> None:
         """Execute tasks in the queue."""
         try:
-            cmd = self.command_queue.get_nowait()
-            task = self.task.get_task_for_id(cmd.task_id)
+            cmd: QueueCommand = self.command_queue.get_nowait()
+            task: Task = self.task
             command_args = cmd.command_args
             command_index = cmd.command_index
             command = " ".join(command_args)
@@ -253,14 +212,14 @@ class QProcessWrapper(QObject):
                 raise ValueError("Task not found.")
             # set start time
             if command_index == 0:
-                task.stats.start_time = time.time()
+                task.start_time = time.time()
             # activate master task
             # activate the current task
             if not task.is_active():
                 task.activate()
             # update state so that it's running
             if task.state != TaskState.RUNNING:
-                task.set_state(TaskState.RUNNING)
+                task.state = TaskState.RUNNING
                 self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (execute)")
 
             # get program and commands
@@ -273,7 +232,6 @@ class QProcessWrapper(QObject):
                 self.process.setNativeArguments(" ".join(args))  # type: ignore[attr-defined]
             else:
                 self.process.setArguments(args)
-            # self.process.setStandardOutputFile(task.) # TODO: should we do this?
             # update task info
             task.set_command_index(command_index)
             self.logger.trace(f"Executing: {task.task_name} / {command_index} : {command}")
@@ -282,7 +240,6 @@ class QProcessWrapper(QObject):
             self.start()
         except Empty:
             self.logger.trace("The queue was empty. Going to try to get next task...")
-            self.on_next_task()
 
     def on_finished(self, exit_code: int, exit_status: QProcess.ExitStatus) -> None:
         """The process has finished."""
@@ -293,64 +250,45 @@ class QProcessWrapper(QObject):
             return
 
         # the task has finished
-        task = self.task.get_task_for_id(self.current_task_id)
+        task = self.task
         if task and self.master_started:
             # check if there are any other tasks in the queue
             if self.command_queue.empty():
                 if task.state == TaskState.RUNNING:
-                    task.set_state(TaskState.FINISHED)
+                    task.state = TaskState.FINISHED
                     self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (finished)")
-                # lock task
-                task.lock()
+                task.lock()  # lock task
                 self.finished_tasks.add(task.task_id)
-                self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
-            # update stats
-            # self.save_stdout(task)
-            # self.save_stats(task)
+                # self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
             self.logger.trace(f"Task finished successfully: '{task.task_name}' (finished)")
+            self.on_setup_task()
 
         # all tasks have finished
         if self.master_finished:
             if task:
                 # update stats
                 if task.state == TaskState.RUNNING:
-                    task.set_state(TaskState.FINISHED)
+                    task.state = TaskState.FINISHED
                     self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (all-finished)")
-                # self.save_stdout(task)
-                # self.save_stats(task)
-                # lock task
-                task.lock()
+                task.lock()  # lock task
                 self.finished_tasks.add(task.task_id)
                 self.logger.trace(f"Added '{task.task_name}' to finished tasks (all-finished).")
                 self.logger.debug("Task finished successfully.")
-        self.on_next_task()
 
     def on_error(self, _error: ty.Any) -> None:
         """Process has errored."""
         self.process.setProgram(None)  # type: ignore[arg-type]
         self.task.state = TaskState.FAILED
-        # update stdout
-        task = self.task.get_task_for_id(self.current_task_id)
+        task = self.task
         if task:
             if task.state != TaskState.FINISHED:
-                task.set_state(TaskState.FAILED)
+                task.state = TaskState.FAILED
                 self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (error)")
-                # self.save_stdout(task)
-                # self.save_stats(task)
-                # lock task
-                task.lock()
-                # if task was optional, move to the next ste[
-                if task.config.optional:
-                    self.command_queue.clear()  # type: ignore[attr-defined]
-                    self.task.state = TaskState.RUNNING  # optional tasks should not result in failed states...
-                    self.logger.warning(f"Task '{task.task_name}' failed but was optional. Moving to the next task...")
-                    self.evt_part_errored.emit(self.task)  # type: ignore[unused-ignore]
-                    return self.on_next_task()
-        # previous task was not optional
+                task.lock()  # lock task
         self.master_started = False
         if self._cancelled:
             self.task.state = TaskState.CANCELLED
-            self.evt_cancelled.emit(self.task)  # type: ignore[unused-ignore]
+            self._emit_cancel()
         else:
             self.evt_errored.emit(self.task)  # type: ignore[unused-ignore]
         _safe_call(self.func_error, self.task, "task_errored")
@@ -376,14 +314,14 @@ class QProcessWrapper(QObject):
 
         process_state = self.process.state()
         process_id = self.process.processId()
-        if (process_state == QProcess.NotRunning) and process_id == 0:  # type: ignore[unused-ignore, attr-defined]
+        if process_state == QProcess.ProcessState.NotRunning or process_id == 0:
             if self._paused:
                 self.task.state = TaskState.PAUSED
                 self.evt_paused.emit(self.task, self._paused)  # type: ignore[unused-ignore]
                 self.logger.trace(f"Task '{self.task.task_name}' was successfully paused")
             elif self._cancelled:
                 self.task.state = TaskState.CANCELLED
-                self.evt_cancelled.emit(self.task)  # type: ignore[unused-ignore]
+                self._emit_cancel()
             else:
                 self.logger.trace(
                     f"Starting task. state={process_state!s}; process_id={process_id!s}; paused={self._paused!s};"
@@ -403,10 +341,9 @@ class QProcessWrapper(QObject):
         self._cancelled = True
         self.task.state = TaskState.CANCELLING if self.is_running() else TaskState.CANCELLED
         try:
-            while self.task_queue.qsize() > 0:
-                task = self.task_queue.get_nowait().task
-                # task.set_state(TaskState.CANCELLED)
-                self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (cancel)")
+            while self.command_queue.qsize() > 0:
+                self.command_queue.get_nowait()
+            self.logger.trace(f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (cancel)")
         except Empty:
             pass
         if self.is_running():
@@ -414,6 +351,11 @@ class QProcessWrapper(QObject):
             kill_timer.singleShot(3000, self.process.kill)  # wait 3 second for process to be killed
             self.process.terminate()
         else:
-            self.evt_cancelled.emit(self.task)  # type: ignore[unused-ignore]
+            self._emit_cancel()
         self.master_started = False
         self.logger.debug(f"Cancelling '{self.task.task_name}'")
+
+    def _emit_cancel(self) -> None:
+        if not self._cancel_emitted:
+            self._cancel_emitted = True
+            self.evt_cancelled.emit(self.task)

@@ -92,8 +92,6 @@ def get_app(
     """
     from napari.utils.perf import perf_config
 
-    from qtextra.utils.notifications import NOTIFICATION_MANAGER
-    from qtextra.widgets.qt_notification import QtNotification
 
     # qtextra defaults are all-or nothing.  If any of the keywords are used
     # then they are all used.

@@ -1,5 +1,5 @@
-from qtpy.QtWidgets import QCheckBox
 from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QCheckBox
 
 
 class QtTriCheckBox(QCheckBox):

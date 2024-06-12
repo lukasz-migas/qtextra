@@ -1,9 +1,6 @@
-""" Test qt_table_view"""
+"""Test qt_table_view"""
 
-# Third-party imports
 import pytest
-
-# Local imports
 from qtextra.widgets.qt_table_view import QtCheckableTableView
 
 

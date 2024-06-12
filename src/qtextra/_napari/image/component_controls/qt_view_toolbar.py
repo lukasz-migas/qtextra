@@ -9,11 +9,11 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog, QWidget
 
 from qtextra._napari.image.components._viewer_key_bindings import toggle_grid
-from qtextra.helpers import make_radio_btn_group, qt_signals_blocked
+from qtextra.helpers import make_radio_btn_group
 from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
 
 if ty.TYPE_CHECKING:
-    from qtextra._napari.image.extract import ImageLabelsROIExtractPopup, ImageShapesROIExtractPopup
+    pass
 
 
 class QtViewToolbar(QWidget):

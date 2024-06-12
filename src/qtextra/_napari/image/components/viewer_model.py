@@ -211,7 +211,7 @@ class ViewerModel(ViewerModelBase):
     def _add_layer_from_data(
         self,
         data,
-        meta: ty.Dict[str, ty.Any] = None,
+        meta: ty.Optional[ty.Dict[str, ty.Any]] = None,
         layer_type: ty.Optional[str] = None,
     ) -> ty.List[n_layers.Layer]:
         """Add arbitrary layer data to the viewer.

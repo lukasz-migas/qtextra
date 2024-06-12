@@ -1,6 +1,6 @@
 """Slightly modified QToolButton with nicer interface."""
 
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QCursor, QIcon
@@ -23,7 +23,7 @@ class QtToolButton(QToolButton):
             self._icon_size = QSize(16, 16)
             self.set_icon(icon)
 
-    def set_menu(self, menu: QMenu, action: Callable = None, auto_pop: bool = True) -> None:
+    def set_menu(self, menu: QMenu, action: Optional[Callable] = None, auto_pop: bool = True) -> None:
         """Set tool button menu."""
         if not isinstance(menu, QMenu):
             raise ValueError("'menu' argument must be a QMenu instance")

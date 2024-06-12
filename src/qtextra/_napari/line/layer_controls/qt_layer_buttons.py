@@ -2,7 +2,6 @@
 
 import typing as ty
 
-from napari._qt.widgets.qt_viewer_buttons import QtViewerPushButton
 from qtpy.QtWidgets import QFrame, QHBoxLayout
 
 import qtextra.helpers as hp

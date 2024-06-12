@@ -780,7 +780,6 @@ class QtCheckableTableView(QTableView):
 
     def add_index(self, rows: list[str]):
         """Add vertical index."""
-        header = self.index
         # header.set
         # for i, row in enumerate(rows):
         #     header.setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)

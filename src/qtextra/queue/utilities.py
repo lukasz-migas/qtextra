@@ -3,6 +3,7 @@ import typing as ty
 from contextlib import suppress
 
 from qtextra.typing import Callback
+
 if ty.TYPE_CHECKING:
     from qtextra.queue.task import MasterTask
 
