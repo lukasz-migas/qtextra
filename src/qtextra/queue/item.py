@@ -10,9 +10,12 @@ from qtpy.QtWidgets import QFrame, QGridLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.queue.task import Task
-from qtextra.queue.utilities import format_interval
+from qtextra.queue.utilities import format_command, format_interval
 from qtextra.typing import TaskState
 from qtextra.widgets.qt_image_button import QtPauseButton
+
+if ty.TYPE_CHECKING:
+    from qtextra.queue.info import TaskInfoDialog
 
 logger = logger.bind(src="TaskWidget")
 
@@ -24,8 +27,6 @@ class TaskWidget(QFrame):
     evt_requeue_task = Signal(Task)
     evt_cancel_task = Signal(Task)
     evt_pause_task = Signal(Task, bool)
-    evt_remove_task = Signal(Task)
-    evt_check_task = Signal(Task)
     evt_console = Signal(object)
 
     task: Task | None
@@ -33,6 +34,8 @@ class TaskWidget(QFrame):
     can_pause: bool
     can_cancel_when_started: bool
     can_force_start: bool
+
+    dlg_info: TaskInfoDialog | None = None
 
     def __init__(self, parent: QWidget | None = None, toggled: bool = True):
         super().__init__(parent)
@@ -74,6 +77,14 @@ class TaskWidget(QFrame):
             func=self.on_open_menu,
         )
         self.options_btn.hide()  # disable for now
+
+        self.clipboard_btn = hp.make_qta_btn(
+            self,
+            "clipboard",
+            tooltip="Copy CLI commands to the clipboard.",
+            normal=True,
+            func=self.on_copy_to_clipboard,
+        )
         self.info_btn = hp.make_qta_btn(
             self,
             "info",
@@ -81,7 +92,7 @@ class TaskWidget(QFrame):
             normal=True,
             func=self.on_task_info,
         )
-        self.info_btn.hide()  # disable for now
+
         self.start_btn = hp.make_qta_btn(
             self,
             "run",
@@ -126,12 +137,14 @@ class TaskWidget(QFrame):
         layout.addLayout(
             hp.make_h_layout(
                 self.options_btn,
+                self.clipboard_btn,
                 self.info_btn,
                 self.start_btn,
                 self.retry_btn,
                 self.pause_btn,
                 self.cancel_btn,
                 stretch_before=True,
+                spacing=2,
             ),
             1,
             1,
@@ -168,7 +181,8 @@ class TaskWidget(QFrame):
             self.pause_btn,
             self.cancel_btn,
             # self.options_btn,
-            # self.info_btn,
+            self.info_btn,
+            self.clipboard_btn,
             hidden=self.toggled,
         )
 
@@ -211,8 +225,35 @@ class TaskWidget(QFrame):
         # self.errors_btn.setIcon(hp.make_qta_icon(state, color=color))  # type: ignore[no-untyped-call]
         # self.errors_btn.setToolTip(tooltip)
 
+    def on_copy_to_clipboard(self) -> None:
+        """Copy commands to clipboard."""
+        if self.task:
+            commands = list(self.task.command_iter())
+            commands = [" ".join(cmd) for cmd in commands]
+            hp.copy_text_to_clipboard(format_command(commands))
+            hp.add_flash_animation(self, duration=1000)
+
     def on_task_info(self) -> None:
-        """Show task information."""
+        """Show widget with information about the task."""
+        if self.task:
+            from qtextra.queue.info import TaskInfoDialog
+
+            try:
+                if self.dlg_info is None:
+                    self.dlg_info = TaskInfoDialog(self, self.task)
+                    self.dlg_info.evt_update.connect(self.on_update_timer)
+                self.dlg_info.show()
+            except RuntimeError:
+                self.dlg_info = None
+                self.on_task_info()
+
+    def update_progress(self) -> None:
+        """Update progress."""
+        try:
+            if self.dlg_info:
+                self.dlg_info.update_progress()
+        except (AttributeError, RuntimeError, Exception):
+            self.dlg_info = None
 
     def on_open_menu(self) -> None:
         """Open folder menu."""
@@ -236,10 +277,7 @@ class TaskWidget(QFrame):
             self.task_info.setText(self.task.pretty_info)
             self.task_state.setText(self.task.state.capitalize())
             hp.polish_widget(self.task_state)
-            try:
-                self.dlg_info.on_task_choice()  # type: ignore[union-attr]
-            except (AttributeError, RuntimeError, Exception):
-                self.dlg_info = None
+            self.update_progress()
 
     def started(self) -> None:
         """Start task."""

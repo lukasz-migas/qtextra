@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from time import time as time_
 import typing as ty
+from contextlib import suppress
 from queue import Empty, SimpleQueue
+from time import time as time_
 
 from koyo.system import IS_WIN
 from loguru import logger as logger_
 from qtpy.QtCore import QObject, QProcess, QTimer, Signal  # type: ignore[attr-defined]
 
 from qtextra.queue.task import Task
-from qtextra.queue.utilities import _safe_call, iterable_callbacks
+from qtextra.queue.utilities import _safe_call, escape_ansi, iterable_callbacks
 from qtextra.typing import Callback, TaskState
 
 
@@ -96,7 +97,7 @@ class QProcessWrapper(QObject):
         self.process.started.connect(self.on_started)
         self.process.finished.connect(self.on_finished)
         self.process.errorOccurred.connect(self.on_error)
-        # self.process.readyReadStandardOutput.connect(self.on_stdout)
+        self.process.readyReadStandardOutput.connect(self.on_stdout)
         # self.process.readyReadStandardError.connect(self.on_stderr)
 
         self.finished_tasks: ty.Set[str] = set()
@@ -108,6 +109,30 @@ class QProcessWrapper(QObject):
         self.func_error = iterable_callbacks(func_error)
         self.func_end = iterable_callbacks(func_end)
         self.func_post = iterable_callbacks(func_post)
+
+    def on_stdout(self) -> None:
+        """Record stdout emitted by the process."""
+        with suppress(KeyError, RuntimeError):
+            if self.task:
+                text = self.process.readAllStandardOutput().data()
+                try:
+                    text = decode(text)  # type: ignore[assignment]
+                    if text:
+                        self.task.append_output(escape_ansi(text))  # type: ignore[arg-type]
+                        self.evt_progress.emit(self.task)  # type: ignore[unused-ignore]
+                except UnicodeDecodeError as e:
+                    self.logger.trace(f"Could not decode stdout. {e} - {text}")  # type: ignore[str-bytes-safe]
+                    return
+
+    def on_stderr(self) -> None:
+        """Record stderr emitted by the process."""
+        with suppress(KeyError, RuntimeError):
+            if self.task:
+                text = self.process.readAllStandardError().data()
+                text = decode(text)  # type: ignore[assignment]
+                if text:
+                    self.task.append_output(escape_ansi(text))  # type: ignore[arg-type]
+                    self.evt_progress.emit(self.task)  # type: ignore[unused-ignore]
 
     @property
     def master_started(self) -> bool:
@@ -149,29 +174,30 @@ class QProcessWrapper(QObject):
         """Add commands to queue."""
         if not self._task_queue_populated:
             self._task_queue_populated = True
-            task = self.task
-            self.logger.trace(f"Populating CommandQueue for '{task.task_name}'...")
+            self.logger.trace(f"Populating CommandQueue for '{self.task.task_name}'...")
             # check whether the task was finished and locked
-            if task.state == TaskState.FINISHED:
-                self.logger.trace(f"Task '{task.task_name}' was locked and already finished. Moving on...")
+            if self.task.state == TaskState.FINISHED:
+                self.logger.trace(f"Task '{self.task.task_name}' was locked and already finished. Moving on...")
                 self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
             # check whether the task was cancelled
-            elif task.state == TaskState.CANCELLED:
-                self.logger.trace(f"Task '{task.task_name}' was cancelled. Moving to the next task...")
+            elif self.task.state == TaskState.CANCELLED:
+                self.logger.trace(f"Task '{self.task.task_name}' was cancelled. Moving to the next task...")
                 self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
             # check whether task is running or queued
-            elif task.state in [TaskState.RUNNING, TaskState.QUEUED]:
+            elif self.task.state in [TaskState.RUNNING, TaskState.QUEUED]:
                 # iterate over each command and execute it
-                for index, command_args in enumerate(task.command_args()):
-                    cmd = QueueCommand(task.task_id, index, command_args)
+                for index, command_args in enumerate(self.task.command_args()):
+                    cmd = QueueCommand(self.task.task_id, index, command_args)
                     self.command_queue.put(cmd)
                 self.logger.trace(f"Added {self.command_queue.qsize()} commands to CommandQueue.")
                 # all sub-commands have been previously executed so can move to the next task.
                 if self.command_queue.qsize() == 0:
-                    task.state = TaskState.FINISHED
-                    self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (populate)")
+                    self.task.state = TaskState.FINISHED
+                    self.logger.trace(
+                        f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (populate)"
+                    )
                     return self.populate_command_queue()
-                self.current_task_id = task.task_id
+                self.current_task_id = self.task.task_id
                 return self.current_task_id
         else:
             self.logger.trace(f"CommandQueue for '{self.task.task_id}' was empty. Nothing else to do...")
@@ -204,23 +230,22 @@ class QProcessWrapper(QObject):
         """Execute tasks in the queue."""
         try:
             cmd: QueueCommand = self.command_queue.get_nowait()
-            task: Task = self.task
             command_args = cmd.command_args
             command_index = cmd.command_index
             command = " ".join(command_args)
-            if not task:
+            if not self.task:
                 raise ValueError("Task not found.")
             # set start time
             if command_index == 0:
-                task.start_time = time_()
+                self.task.start_time = time_()
             # activate master task
             # activate the current task
-            if not task.is_active():
-                task.activate()
+            if not self.task.is_active():
+                self.task.activate()
             # update state so that it's running
-            if task.state != TaskState.RUNNING:
-                task.state = TaskState.RUNNING
-                self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (execute)")
+            if self.task.state != TaskState.RUNNING:
+                self.task.state = TaskState.RUNNING
+                self.logger.trace(f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (execute)")
 
             # get program and commands
             program, args = command_args[0], command_args[1:]
@@ -233,8 +258,8 @@ class QProcessWrapper(QObject):
             else:
                 self.process.setArguments(args)
             # update task info
-            task.set_command_index(command_index)
-            self.logger.trace(f"Executing: {task.task_name} / {command_index} : {command}")
+            self.task.set_command_index(command_index)
+            self.logger.trace(f"Executing: {self.task.task_name} / {command_index} : {command}")
             # start the next task
             self.evt_next.emit(self.task)  # type: ignore[unused-ignore]
             self.start()
@@ -270,6 +295,7 @@ class QProcessWrapper(QObject):
                 if task.state == TaskState.RUNNING:
                     task.state = TaskState.FINISHED
                     self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (all-finished)")
+                task.end_time = time_()
                 task.lock()  # lock task
                 self.finished_tasks.add(task.task_id)
                 self.logger.trace(f"Added '{task.task_name}' to finished tasks (all-finished).")
@@ -279,12 +305,11 @@ class QProcessWrapper(QObject):
         """Process has errored."""
         self.process.setProgram(None)  # type: ignore[arg-type]
         self.task.state = TaskState.FAILED
-        task = self.task
-        if task:
-            if task.state != TaskState.FINISHED:
-                task.state = TaskState.FAILED
-                self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (error)")
-                task.lock()  # lock task
+        if self.task.state != TaskState.FINISHED:
+            self.task.state = TaskState.FAILED
+            self.logger.trace(f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (error)")
+            self.task.lock()  # lock task
+        self.task.end_time = time_()
         self.master_started = False
         if self._cancelled:
             self.task.state = TaskState.CANCELLED

@@ -998,7 +998,7 @@ def make_scroll_area(
     scroll_widget.setWidgetResizable(True)
     scroll_widget.setVerticalScrollBarPolicy(vertical)
     scroll_widget.setHorizontalScrollBarPolicy(horizontal)
-    scroll_widget.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)  # type: ignore[attr-defined]
+    scroll_widget.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
     return scroll_area, scroll_widget
 
 
@@ -1169,6 +1169,7 @@ def make_swatch(
     default: ty.Union[str, np.ndarray],
     tooltip: str = "",
     value: ty.Optional[ty.Union[str, np.ndarray]] = None,
+    size: tuple[int, int] | None = None,
     **kwargs: ty.Any,
 ) -> QtColorSwatch:
     """Make color swatch."""
@@ -1178,6 +1179,8 @@ def make_swatch(
         value = default
     tooltip = kwargs.get("description", tooltip)
     widget = QtColorSwatch(parent, initial_color=value, tooltip=tooltip)
+    if size:
+        widget.setFixedSize(QSize(*size))
     return widget
 
 

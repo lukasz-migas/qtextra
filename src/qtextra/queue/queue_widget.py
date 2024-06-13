@@ -47,7 +47,7 @@ class QueueList(QScrollArea):
         QUEUE.evt_errored.connect(self.on_task_failed)
         QUEUE.evt_part_errored.connect(self.on_task_part_failed)
         QUEUE.evt_cancelled.connect(self.on_task_cancelled)
-        # QUEUE.evt_progress.connect(self.on_task_progress)
+        QUEUE.evt_progress.connect(self.on_task_progress)
 
         # setup UI
         scroll_widget = QWidget()  # type: ignore[unused-ignore]
@@ -221,8 +221,6 @@ class QueueList(QScrollArea):
         widget.evt_cancel_task.connect(self.on_cancel_task)
         widget.evt_pause_task.connect(self.on_pause_task)
         widget.evt_requeue_task.connect(self.on_requeue_task)
-        widget.evt_remove_task.connect(self.on_remove_task)
-        widget.evt_check_task.connect(self.on_check_task)
         widget.evt_console.connect(self.evt_console.emit)  # type: ignore[unused-ignore]
         self._layout.insertWidget(0, widget)
         # if the task is already finished, add it to the finished list
@@ -328,3 +326,9 @@ class QueueList(QScrollArea):
                 widget.cancelled()
             logger.warning(f"Could not find widget for task '{task.task_id}' (cancelled)")
         self.purge_finished()
+
+    def on_task_progress(self, task: Task) -> None:
+        """Task progressed."""
+        widget = self._find_widget(task)
+        if widget:
+            widget.update_progress()

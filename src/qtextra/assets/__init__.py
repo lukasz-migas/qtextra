@@ -128,6 +128,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "retry": "fa5s.redo-alt",
     "stop": "fa5s.stop-circle",
     "pause": "fa5s.pause-circle",
+    "queue": "ph.queue-fill",
     # lock
     "lock_closed": "fa5s.lock",
     "lock_open": "fa5s.lock-open",

@@ -9,15 +9,15 @@ import typing as ty
 from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QWidget
 from superqt import QCollapsible
 
+import qtextra.helpers as hp
+from qtextra.config import THEMES
+
 
 class QtCheckCollapsible(QCollapsible):
     """A collapsible widget to hide and unhide child widgets.
 
     Based on https://stackoverflow.com/a/68141638
     """
-
-    _EXPANDED = "▼  "
-    _COLLAPSED = "▲  "
 
     def __init__(self, title: str = "", parent: ty.Optional[QWidget] = None):
         super().__init__(title, parent)
@@ -38,6 +38,13 @@ class QtCheckCollapsible(QCollapsible):
         self.layout().addLayout(layout)
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)
+        self._set_icon()
+
+        THEMES.evt_theme_icon_changed.connect(self._set_icon)
+
+    def _set_icon(self):
+        self.setExpandedIcon(hp.make_qta_icon("chevron_down"))
+        self.setCollapsedIcon(hp.make_qta_icon("chevron_up"))
 
     def set_checkbox_visible(self, state: bool) -> None:
         """Show or hide the checkbox."""
@@ -78,6 +85,11 @@ if __name__ == "__main__":  # pragma: no cover
         ha.addWidget(theme_toggle_btn(frame))
 
         wdg = QtCheckCollapsible(parent=frame)
+        wdg.setText("Advanced options")
+        ha.addWidget(wdg)
+
+        wdg = QtCheckCollapsible(parent=frame)
+        wdg.set_checkbox_visible(False)
         wdg.setText("Advanced options")
         ha.addWidget(wdg)
 

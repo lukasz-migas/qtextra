@@ -243,12 +243,14 @@ class CLIQueueHandler(QObject):
         # Immediately run task if in pytest environment
         if running_under_pytest():
             worker_obj.run()
-            logger.info(f"Running task '{worker_obj.task_id}' in pytest environment")
+            logger.trace(f"Running task '{worker_obj.task_id}' in pytest environment")
         else:
             # don't start next task
-            if add_delayed or self.is_available():
+            if add_delayed or not self.is_available():
+                logger.trace("Added task to queue without running it.")
                 return
             worker_obj.run()
+            logger.trace(f"Running task '{worker_obj.task_id}' immediately.")
 
     def make_process(
         self,
@@ -389,6 +391,10 @@ class CLIQueueHandler(QObject):
     def is_available(self) -> bool:
         """Indicates whether the queue is busy."""
         return len(self.running_queue) < N_PARALLEL
+
+    def is_queued(self, task_id: str) -> bool:
+        """Check if task is queued."""
+        return task_id in self.pending_queue or task_id in self.running_queue
 
     def __repr__(self) -> str:
         """Representation of the queue."""

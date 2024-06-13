@@ -42,11 +42,22 @@ def format_interval(t: float) -> str:
     out  : str
         [H:]MM:SS
     """
+    if t is None:
+        return "N/A"
     minutes, s = divmod(int(t), 60)
     h, m = divmod(minutes, 60)
     if h:
         return f"{h:d}:{m:02d}:{s:02d}"
     return f"{m:02d}:{s:02d}"
+
+
+def format_timestamp(timestamp: float) -> str:
+    """Format timestamp so it returns a human-readable string."""
+    import datetime
+
+    if not timestamp:
+        return "N/A"
+    return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty.Sequence[ty.Callable]:
@@ -94,3 +105,10 @@ def escape_ansi(text: str) -> str:
         return ansi_escape.sub("", text)
     except Exception:
         return text
+
+
+def format_command(commands: list[str]) -> str:
+    """Format command."""
+    command = "; ".join(commands)
+    command = command.replace("--no_color --debug", "--dev")
+    return command

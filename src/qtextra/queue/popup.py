@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from qtpy.QtWidgets import QVBoxLayout, QWidget
 
-from qtextra.queue.queue_widget import QueueList
+import qtextra.helpers as hp
+from qtextra.queue.queue_widget import QUEUE, QueueList
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
 
@@ -20,12 +21,15 @@ class QueuePopup(QtFramelessTool):
     def make_panel(self) -> QVBoxLayout:
         """Make panel."""
         self.queue_list = QueueList(self)
-        # self.queue_list.evt_console.connect(self.on_show_console)  # type: ignore[unused-ignore]
+
+        self.clear_btn = hp.make_btn(self, "Clear", func=self.queue_list.on_clear_queue, tooltip="Clear all tasks")
 
         layout = QVBoxLayout()
-        layout.setSpacing(1)
+        layout.setSpacing(3)
         layout.setContentsMargins(6, 6, 6, 6)
         layout.addLayout(self._make_hide_handle("Task queue")[1])
+        layout.addLayout(hp.make_h_layout(self.clear_btn, stretch_after=True))
+        layout.addWidget(hp.make_h_line(self))
         layout.addWidget(self.queue_list, stretch=True)
         return layout
 
@@ -36,7 +40,6 @@ if __name__ == "__main__":  # pragma: no cover
         import sys
 
         from qtextra.config import THEMES
-        from qtextra.queue.queue_widget import QUEUE
         from qtextra.queue.task import Task
         from qtextra.utils.dev import qapplication
 

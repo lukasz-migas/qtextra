@@ -14,8 +14,10 @@ class Task:
     commands: list[list[str]]
     task_name: str
     state: TaskState
+    stdout_data: list[str]
+    stdout: str
 
-    _command_index: int = 0
+    command_index: int = 0
     active: bool = False
     locked: bool = False
     start_time: float | None = None
@@ -28,11 +30,13 @@ class Task:
         self.task_name = task_name
         self.commands = commands
         self.state = state
+        self.stdout = ""
+        self.stdout_data = []
 
     @property
     def pretty_info(self) -> str:
         """Return pretty representation of the info."""
-        return f"{self._command_index + 1}/{len(self.commands)} commands"
+        return f"{self.command_index + 1}/{len(self.commands)} commands"
 
     @property
     def duration(self) -> float:
@@ -83,4 +87,16 @@ class Task:
 
     def set_command_index(self, index: int) -> None:
         """Set command index."""
-        self._command_index = index
+        self.command_index = index
+
+    @property
+    def current_std_out(self) -> str:
+        """Return current stdout."""
+        if len(self.stdout_data) > 10:
+            return "\n".join(self.stdout_data[-10:])
+        return "\n".join(self.stdout_data)
+
+    def append_output(self, stdout: str | None = None) -> None:
+        """Append output."""
+        if stdout:
+            self.stdout_data.append(stdout)

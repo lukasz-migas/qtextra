@@ -11,12 +11,13 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QPoint,
     QPointF,
     QPropertyAnimation,
+    QRectF,
     Qt,
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QPainter
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QLabel, QPushButton, QToolTip, QVBoxLayout, QWidget
+from qtpy.QtGui import QBrush, QColor, QFont, QPainter
+from qtpy.QtWidgets import QGraphicsOpacityEffect, QHBoxLayout, QLabel, QPushButton, QToolTip, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
@@ -32,6 +33,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
     evt_click = Signal(QPushButton)
     evt_right_click = Signal(QPushButton)
     has_right_click: bool = False
+    count: int = 0
+    count_enabled: bool = False
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
@@ -39,6 +42,11 @@ class QtImagePushButton(QPushButton, QtaMixin):
         self.setProperty("transparent", False)
         self.transparent = False
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
+
+    def set_count(self, count: int, enabled: bool = True) -> None:
+        """Enable count indicator."""
+        self.count = count
+        self.count_enabled = enabled
 
     def setText(self, text: str) -> None:  # type: ignore[override]
         """Override text."""
@@ -105,16 +113,34 @@ class QtImagePushButton(QPushButton, QtaMixin):
     def paintEvent(self, *args: ty.Any) -> None:
         """Paint event."""
         super().paintEvent(*args)
-
+        paint = QPainter(self)
         if self.has_right_click:
             width = self.rect().width() / 6
             radius = self.rect().width() / 8
             x = self.rect().width() - width
             y = self.rect().height() - width
-            paint = QPainter(self)
-            paint.setPen(QColor(THEMES.get_hex_color("success")))
-            paint.setBrush(QColor(THEMES.get_hex_color("success")))
+            color = THEMES.get_hex_color("success")
+            paint.setPen(QColor(color))
+            paint.setBrush(QColor(color))
             paint.drawEllipse(QPointF(x, y), radius, radius)
+        if self.count_enabled:
+            width = self.rect().width() / 4
+            radius = self.rect().width() / 6
+            # x = self.rect().width() - radius * 1.5
+            x = self.rect().x()
+            y = self.rect().y() + radius
+            # add text
+            color = THEMES.get_hex_color("icon")
+            text = "9+" if self.count > 9 else str(self.count)
+            paint.setPen(QColor(color))
+            paint.setBrush(QColor(color))
+            # rect = QRectF(x - radius, y - radius, radius * 4, radius * 4)
+            rect = QRectF(x, y - radius, radius * 4, radius * 4)
+            font: QFont = paint.font()
+            font.setPointSize(12)
+            font.setBold(True)
+            paint.setFont(font)
+            paint.drawText(rect, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft, text)
 
 
 class QtTogglePushButton(QtImagePushButton):
@@ -573,10 +599,16 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main() -> None:  # type: ignore[no-untyped-def]
         from qtextra.assets import QTA_MAPPING
-        from qtextra.utils.dev import qmain, theme_toggle_btn
+        from qtextra.utils.dev import qdev, qmain, theme_toggle_btn
 
-        app, frame, ha = qmain(True)
+        app, frame, va = qmain(False)
         frame.setMinimumSize(600, 600)
+
+        dev = qdev(frame)
+        va.addWidget(dev)
+
+        ha = QHBoxLayout()
+        va.addLayout(ha)
         ha.addWidget(theme_toggle_btn(frame))
 
         lay = QVBoxLayout()
@@ -628,6 +660,8 @@ if __name__ == "__main__":  # pragma: no cover
             btn = QtImagePushButton()
             if i % 2 == 0:
                 btn.connect_to_right_click(lambda: print("Right click"))
+            if i % 3 == 0:
+                btn.set_count(i)
             btn.set_qta(qta_name, scale_factor=1)
             btn.setToolTip(f"{name} :: {qta_name}")
             lay.addWidget(btn)

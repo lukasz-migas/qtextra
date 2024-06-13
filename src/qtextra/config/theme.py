@@ -487,6 +487,14 @@ class Themes(ConfigBase):
         color: Color = getattr(self.active, name)
         return color.as_hex()
 
+    @staticmethod
+    def get_text_color_for_background(color: str) -> str:
+        """Get text color for background."""
+        from qtextra.utils.color import get_text_color, rgb_to_hex
+
+        color = QColor(color)
+        return rgb_to_hex(get_text_color(color).getRgb())
+
     def get_theme(
         self, theme_name: ty.Optional[str] = None, as_dict: bool = False
     ) -> ty.Union[Theme, ty.Dict[str, str]]:

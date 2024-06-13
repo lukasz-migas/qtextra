@@ -1,4 +1,5 @@
 """Color."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -11,7 +12,9 @@ if ty.TYPE_CHECKING:
     from matplotlib.colors import Colormap as MplColormap
 
 
-def get_text_color(background: QColor | str, light_color: QColor | None = None, dark_color: QColor | None = None):
+def get_text_color(
+    background: QColor | str, light_color: QColor | None = None, dark_color: QColor | None = None
+) -> QColor:
     """Select color depending on whether the background is light or dark.
 
     Parameters
