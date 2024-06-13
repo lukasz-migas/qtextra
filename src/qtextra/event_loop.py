@@ -92,7 +92,6 @@ def get_app(
     """
     from napari.utils.perf import perf_config
 
-
     # qtextra defaults are all-or nothing.  If any of the keywords are used
     # then they are all used.
     set_values = {k for k, v in locals().items() if v}
