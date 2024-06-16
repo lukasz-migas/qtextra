@@ -4,9 +4,11 @@ Taken from:
 https://github.dev/napari/superqt/blob/f4d9881b0c64c0419fa2da182a1c403a01bd084f/src/superqt/collapsible/_collapsible.py
 """
 
+from __future__ import annotations
+
 import typing as ty
 
-from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QWidget
+from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLayout, QWidget
 from superqt import QCollapsible
 
 import qtextra.helpers as hp
@@ -19,7 +21,7 @@ class QtCheckCollapsible(QCollapsible):
     Based on https://stackoverflow.com/a/68141638
     """
 
-    def __init__(self, title: str = "", parent: ty.Optional[QWidget] = None):
+    def __init__(self, title: str = "", parent: QWidget | None = None):
         super().__init__(title, parent)
         self._checkbox = QCheckBox()
         self._checkbox.stateChanged.connect(self._toggle_btn.setChecked)
@@ -62,15 +64,18 @@ class QtCheckCollapsible(QCollapsible):
     def _checked(self):
         self._toggle_btn.setChecked(self._checkbox.isChecked())
 
-    def addLayout(self, layout):
+    def addLayout(self, layout: QLayout):
         """Add layout to the central content widget's layout."""
         self._content.layout().addLayout(layout)
 
-    def addRow(self, label, widget):
+    def addRow(self, label: QWidget | QLayout, widget: QWidget | None = None):
         """Add layout to the central content widget's layout."""
         if not hasattr(self._content.layout(), "addRow"):
             raise ValueError("Layout does not have `addRow` method.")
-        self._content.layout().addRow(label, widget)
+        if widget:
+            self._content.layout().addRow(label, widget)
+        else:
+            self._content.layout().addRow(label)
 
 
 if __name__ == "__main__":  # pragma: no cover

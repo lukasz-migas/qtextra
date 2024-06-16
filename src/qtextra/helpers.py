@@ -1724,7 +1724,7 @@ def polish_widget(*widget: Qw.QWidget):
 
 
 def make_advanced_collapsible(
-    parent: Qw.QWidget, title: str = "Advanced options", allow_checkbox: bool = True
+    parent: Qw.QWidget, title: str = "Advanced options", allow_checkbox: bool = True, collapsed: bool = True
 ) -> QtCheckCollapsible:
     """Make collapsible widget."""
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
@@ -1736,13 +1736,14 @@ def make_advanced_collapsible(
     advanced_widget = QtCheckCollapsible(title, parent)
     advanced_widget.set_checkbox_visible(allow_checkbox)
     advanced_widget.setContent(content)
-    advanced_widget.collapse(False)
+    advanced_widget.collapse() if collapsed else advanced_widget.expand()
     return advanced_widget
 
 
 def get_font(font_size: int, font_weight: int = QFont.Weight.Normal) -> QFont:
     """Get font."""
-    font = QFont(QFont().defaultFamily(), weight=font_weight)
+    font = QFont(QFont().defaultFamily())
+    font.setWeight(font_weight)
     font.setPointSize(font_size if IS_WIN else font_size + 2)
     return font
 
@@ -1893,8 +1894,9 @@ def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning"):
     """Create a pop up dialog with a warning message."""
     from qtpy.QtWidgets import QMessageBox
 
-    dlg = QMessageBox(parent=parent, icon=QMessageBox.Warning)
-    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)
+    dlg = QMessageBox(parent=parent)
+    dlg.setIcon(QMessageBox.Icon.Warning)
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
     dlg.setWindowTitle(title)
     dlg.setText(message)
     dlg.exec_()
@@ -2394,7 +2396,8 @@ def remove_flash_animation(widget: Qw.QWidget):
         Any Qt widget.
     """
     widget.setGraphicsEffect(None)
-    del widget._flash_animation
+    if hasattr(widget, "_flash_animation"):
+        del widget._flash_animation
 
 
 def expand_animation(
