@@ -276,6 +276,7 @@ def make_label(
     disabled: bool = False,
     activated_func: Callback | None = None,
     click_func: Callback | None = None,
+    elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
     **kwargs: ty.Any,
 ) -> QtClickLabel:
     """Make QLabel element."""
@@ -308,6 +309,8 @@ def make_label(
         [widget.evt_clicked.connect(func) for func in _validate_func(click_func)]
     if disabled:
         widget.setProperty("disabled", True)
+    if hasattr(widget, "setElideMode"):
+        widget.setElideMode(elide_mode)
     widget.setWordWrap(wrap)
     widget.setVisible(visible)
     return widget
