@@ -432,12 +432,16 @@ def make_qta_label(
     xlarge: bool = False,
     xxlarge: bool = False,
     retain_size: bool = False,
+    hover: bool = False,
     **kwargs: ty.Any,
 ) -> QtQtaLabel:
     """Make QLabel element."""
-    from qtextra.widgets.qt_icon_label import QtQtaLabel
+    from qtextra.widgets.qt_icon_label import QtQtaLabel, QtQtaTooltipLabel
 
-    widget = QtQtaLabel(parent=parent)
+    if hover:
+        widget = QtQtaTooltipLabel(parent=parent)
+    else:
+        widget = QtQtaLabel(parent=parent)
     widget.set_qta(icon_name, **kwargs)
     widget.set_default_size(
         xxsmall=xxsmall,

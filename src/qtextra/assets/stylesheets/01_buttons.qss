@@ -156,3 +156,14 @@ QtLockButton:hover, QtLockButton:hover{
 QtColorSwatch:hover {
     border: 2px solid {{ foreground }};
 }
+
+QtPushButton[with_menu=true]::menu-indicator {
+    right: 5px;
+}
+QtPushButton[with_menu=true] QMenu::item {
+    font-size: {{ increase(font_size, 6) }};
+}
+QtPushButton[with_menu=true] QMenu::item:selected {
+    font-size: {{ increase(font_size, 6) }};
+    background: {{ highlight }};
+}

@@ -203,7 +203,7 @@ class TaskWidget(QFrame):
         self.can_force_start = can_force_start
 
         # update ui
-        self.task_name.setText(hp.hyper(task.task_name))
+        self.task_name.setText(task.task_name_repr or hp.hyper(task.task_name))
         self.task_info.setText(task.pretty_info)
         self.task_id.setText(f"Task ID: {task.task_id}")
         if task.state == TaskState.FINISHED:
