@@ -880,6 +880,7 @@ def make_btn(
     font_size: int | None = None,
     bold: bool = False,
     object_name: str = "",
+    check: bool = False,
     properties: dict[str, ty.Any] | None = None,
 ) -> QtPushButton:
     """Make button."""
@@ -888,6 +889,7 @@ def make_btn(
     widget = QtPushButton(parent=parent)
     widget.setText(text)
     widget.setCheckable(checkable)
+    widget.setChecked(check)
     if tooltip:
         widget.setToolTip(tooltip)
     if flat:
@@ -1031,10 +1033,10 @@ def make_qta_btn(
     widget = QtImagePushButton(parent=parent)
     widget.set_qta(icon_name, **kwargs)
     widget.set_default_size(small=small, normal=normal, average=average, medium=medium, large=large)
-    if size and len(size) == 2:
-        widget.set_size(size)
     if tooltip:
         widget.setToolTip(tooltip)
+    if size and len(size) == 2:
+        widget.set_size(size)
     if flat:
         widget.setFlat(flat)
         widget.setProperty("flat", True)
@@ -1524,14 +1526,20 @@ def make_radio_btn_group(parent: Qw.QWidget | None, radio_buttons) -> Qw.QButton
 
 
 def make_toggle_group(
-    parent: Qw.QWidget | None, *label: str, func: Callback | None = None
+    parent: Qw.QWidget | None,
+    *label: str,
+    func: Callback | None = None,
+    tooltip: str = "",
+    checked_label: str = "",
 ) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
     """Make toggle button."""
     widget = Qw.QButtonGroup(parent)
     layout = make_h_layout()
     layout.setSpacing(2)
     for btn_id, btn_label in enumerate(label):
-        radio_btn = make_btn(parent, btn_label, func=func, checkable=True)
+        radio_btn = make_btn(
+            parent, btn_label, func=func, checkable=True, tooltip=tooltip, check=checked_label == btn_label
+        )
         widget.addButton(radio_btn, btn_id)
         layout.addWidget(radio_btn)
         # if func:

@@ -47,3 +47,7 @@ QtQtaLabel#xxxlarge_icon, QtImagePushButton#xxxlarge_icon{
     min-height : 120px;
     max-height : 120px;
 }
+QtImagePushButton#normal_icon[with_count=true]{
+    min-width : 30px;
+    max-width : 30px;
+}

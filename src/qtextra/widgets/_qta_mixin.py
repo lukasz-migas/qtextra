@@ -80,6 +80,7 @@ class QtaMixin:
         self.setMinimumSize(size)
         self.setMaximumSize(size)
         self.setIconSize(size)
+        self.setObjectName("")
 
     def set_xxsmall(self) -> None:
         """Set large."""
@@ -135,4 +136,6 @@ class QtaMixin:
         """Update qta icon."""
         if self._qta_data:
             name, kwargs = self._qta_data
+            size = self.minimumSize()
             self.set_qta(name, **kwargs)
+            self.setMinimumSize(size)

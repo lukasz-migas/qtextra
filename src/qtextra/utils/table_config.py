@@ -96,7 +96,7 @@ class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
         }
         if is_color:
             self.color_columns.append(self.last_index)
-        if checkable or dtype == "bool":
+        if checkable and dtype == "bool":
             self.checkable_columns.append(self.last_index)
         if no_sort:
             self.no_sort_columns.append(self.last_index)
