@@ -8,11 +8,27 @@ from qtextra.typing import TaskState
 
 
 class Task:
-    """Task."""
+    """Task.
+
+    Parameters
+    ----------
+    task_id : str
+        Task ID.
+    commands : list[list[str]]
+        List of commands.
+    task_name : str, optional
+        Task name, by default "Task".
+    state : TaskState, optional
+        Task state, by default TaskState.QUEUED.
+    task_name_repr: : str, optional
+        Task title representation, by default None. If specified, it will be used in the UI as is instead of the 'hyper'
+        representation.
+    """
 
     task_id: str
     commands: list[list[str]]
     task_name: str
+    task_name_repr: str | None = None
     state: TaskState
     stdout_data: list[str]
     stdout: str
@@ -24,10 +40,16 @@ class Task:
     end_time: float | None = None
 
     def __init__(
-        self, task_id: str, commands: list[list[str]], task_name: str = "Task", state: TaskState = TaskState.QUEUED
+        self,
+        task_id: str,
+        commands: list[list[str]],
+        task_name: str = "Task",
+        state: TaskState = TaskState.QUEUED,
+        task_name_repr: str | None = None,
     ):
         self.task_id = task_id
         self.task_name = task_name
+        self.task_name_repr = task_name_repr
         self.commands = commands
         self.state = state
         self.stdout = ""

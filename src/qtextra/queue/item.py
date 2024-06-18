@@ -52,6 +52,7 @@ class TaskWidget(QFrame):
             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
             enable_url=True,
             click_func=self.on_toggle_visibility,
+            elide_mode=Qt.TextElideMode.ElideRight,
         )
         self.task_state = hp.make_label(
             self,
@@ -105,7 +106,7 @@ class TaskWidget(QFrame):
             self, "retry", tooltip="Retry running task if the task has failed.", normal=True, func=self._on_retry_task
         )
         self.pause_btn = QtPauseButton(self)  # type: ignore
-        self.pause_btn.set_medium()
+        self.pause_btn.set_normal()
         self.pause_btn.setToolTip("Pause running task.")
         self.pause_btn.clicked.connect(self._on_pause_task)  # type: ignore[unused-ignore]
         self.cancel_btn = hp.make_qta_btn(
@@ -203,7 +204,7 @@ class TaskWidget(QFrame):
         self.can_force_start = can_force_start
 
         # update ui
-        self.task_name.setText(hp.hyper(task.task_name))
+        self.task_name.setText(task.task_name_repr or hp.hyper(task.task_name))
         self.task_info.setText(task.pretty_info)
         self.task_id.setText(f"Task ID: {task.task_id}")
         if task.state == TaskState.FINISHED:
@@ -278,6 +279,7 @@ class TaskWidget(QFrame):
             self.task_state.setText(self.task.state.capitalize())
             hp.polish_widget(self.task_state)
             self.update_progress()
+            logger.trace(f"Updating task '{self.task.summary()}'...")
 
     def started(self) -> None:
         """Start task."""
