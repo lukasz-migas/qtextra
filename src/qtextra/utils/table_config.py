@@ -81,8 +81,10 @@ class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
         """Add an item to the configuration."""
         if dtype == "bool":
             sizing = "contents"
-
         self.last_index += 1
+        if self.last_index == 0 and dtype == "bool":
+            checkable = True
+
         self[self.last_index] = {
             "name": name,
             "tag": tag,
