@@ -141,7 +141,6 @@ class DialogMixin:
     def show_right_of_mouse(self, show: bool = True) -> None:
         """Show popup dialog on the right hand side of the mouse cursor position."""
         pos = QCursor().pos()  # mouse position
-        print(pos)
         sz_hint = self.sizeHint()
         pos -= QPoint(-14, int(sz_hint.height() / 4))
         self.move(pos)
@@ -554,7 +553,11 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
     def _make_title_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
         self._title_label = hp.make_label(
-            self, title, bold=True, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            self,
+            title,
+            bold=True,
+            alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            object_name="window_title",
         )
 
         layout = hp.make_hbox_layout(spacing=0)

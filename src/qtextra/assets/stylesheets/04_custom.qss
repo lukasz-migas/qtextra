@@ -273,6 +273,11 @@ QLabel#pick_option_label {
     font-size: {{ increase(font_size, 2) }};
 }
 
+QLabel#window_title {
+    font-size: {{ increase(font_size, 4) }};
+    font-weight: bold;
+}
+
 QtConfirmCloseDialog QLabel {
     font-size: {{ increase(font_size, 4) }};
 }

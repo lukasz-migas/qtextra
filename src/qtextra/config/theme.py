@@ -7,6 +7,7 @@ from itertools import product
 from pathlib import Path
 
 import numpy as np
+from koyo.timer import MeasureTimer
 from loguru import logger
 from psygnal import EventedModel
 from pydantic import PrivateAttr, ValidationError, validator
@@ -458,9 +459,10 @@ class Themes(ConfigBase):
                 _themes[name].icon = self.get_hex_color("icon")
         except ImportError:
             pass
-        self.evt_theme_changed.emit()
-        self.evt_theme_icon_changed.emit()
-        logger.debug(f"Changed theme to '{value}'")
+        with MeasureTimer() as timer:
+            self.evt_theme_changed.emit()
+            self.evt_theme_icon_changed.emit()
+        logger.debug(f"Changed theme to '{value}' in {timer()}")
 
     def update_palette(self) -> None:
         """Get updated palette."""

@@ -106,7 +106,11 @@ def qapplication(test_time: int = 3):
 
 
 def qframe(
-    horz: bool = True, with_layout: bool = True, add_reload: bool = True, set_style: bool = True
+    horz: bool = True,
+    with_layout: bool = True,
+    add_reload: bool = True,
+    set_style: bool = True,
+    modules: tuple[str, ...] = ("qtextra", "koyo"),
 ) -> tuple[QApplication, QWidget, QLayout]:
     """Create frame widget."""
     from qtpy import QtWidgets
@@ -121,7 +125,7 @@ def qframe(
         else:
             ha = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
-            w = qdev()
+            w = qdev(modules=modules)
             w.setMaximumHeight(180)
             ha.addWidget(w)
         frame.setLayout(ha)

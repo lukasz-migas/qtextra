@@ -195,7 +195,7 @@ class QtLoggerDialog(QtFramelessTool):
         layout.addLayout(header_layout)
         layout.addWidget(self._logger)
         layout.setSpacing(2)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(6, 6, 6, 6)
         return layout
 
 

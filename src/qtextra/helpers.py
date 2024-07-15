@@ -850,7 +850,7 @@ def make_icon(path: str) -> QIcon:
     return icon
 
 
-def make_qta_icon(name: str, color: str | None = None, **kwargs: ty.Any):
+def make_qta_icon(name: str, color: str | None = None, **kwargs: ty.Any) -> QIcon:
     """Make QTA label."""
     from qtextra.assets import get_icon
     from qtextra.config import THEMES
@@ -858,7 +858,19 @@ def make_qta_icon(name: str, color: str | None = None, **kwargs: ty.Any):
     name = get_icon(name)
     if color is None:
         color = THEMES.get_hex_color("icon")
-    return qta.icon(name, color=color, **kwargs)
+    qta_icon = qta.icon(name, color=color, **kwargs)
+    qta_icon.icon_name = name
+    return qta_icon
+
+
+def tree_iter(tree: Qw.QTreeWidget) -> ty.Generator[tuple[int, Qw.QTreeWidgetItem], None, None]:
+    """Iterate over tree."""
+    for i in range(tree.topLevelItemCount()):
+        item = tree.topLevelItem(i)
+        yield i, item
+        for j in range(item.childCount()):
+            child = item.child(j)
+            yield j, child
 
 
 def make_svg_label(parent: Qw.QWidget | None, object_name: str, tooltip: str | None = None) -> QtIconLabel:
@@ -2176,6 +2188,23 @@ def choose(
     return None
 
 
+def choose_from_list(
+    parent: QObject | None,
+    options: list[str],
+    selected: list[str] | None = None,
+    title: str = "Please choose from the list.",
+) -> list[str]:
+    """Choose from list."""
+    from qtextra.widgets.qt_multi_select import SelectionWidget
+
+    dlg = SelectionWidget(parent)
+    dlg.setWindowTitle(title)
+    dlg.set_options(options, selected)
+    if dlg.exec_() == Qw.QDialog.DialogCode.Accepted:
+        return dlg.options
+    return []
+
+
 def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
@@ -2278,7 +2307,10 @@ def event_hook_removed() -> None:
 
 
 def enable_with_opacity(
-    obj, widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]], enabled: bool, min_opacity: float = 0.5
+    obj,
+    widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]],
+    enabled: bool,
+    min_opacity: float = 0.75 if IS_MAC else 0.5,
 ):
     """Enable widgets."""
     disable_with_opacity(obj, widget_list, not enabled, min_opacity)
@@ -2288,7 +2320,7 @@ def disable_with_opacity(
     obj: Qw.QWidget,
     widget_list: ty.Union[ty.Iterable[str], ty.Iterable[Qw.QWidget]],
     disabled: bool,
-    min_opacity: float = 0.5,
+    min_opacity: float = 0.75 if IS_MAC else 0.5,
 ) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     for wdg in widget_list:
@@ -2302,7 +2334,7 @@ def disable_with_opacity(
         widget.setGraphicsEffect(op)
 
 
-def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.5) -> None:
+def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.75 if IS_MAC else 0.5) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     for wdg in objs:
         wdg.setEnabled(not disabled)
@@ -2321,7 +2353,7 @@ def hide_widgets(*objs: Qw.QWidget, hidden: bool) -> None:
         wdg.setVisible(not hidden)
 
 
-def set_opacity(widget, disabled: bool, min_opacity: float = 0.5) -> None:
+def set_opacity(widget, disabled: bool, min_opacity: float = 0.75 if IS_MAC else 0.5) -> None:
     """Set opacity on object."""
     op = Qw.QGraphicsOpacityEffect(widget)
     op.setOpacity(min_opacity if disabled else 1.0)

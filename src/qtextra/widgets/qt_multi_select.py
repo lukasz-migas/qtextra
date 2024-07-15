@@ -44,12 +44,15 @@ class SelectionWidget(QtFramelessTool):
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(500)
         self.setMinimumHeight(350)
         self.filter_by_option.setFocus()
 
-    def set_options(self, options: list[str], selected_options: list[str]) -> None:
+    def set_options(self, options: list[str], selected_options: list[str] | None = None) -> None:
         """Set options."""
+        if not selected_options:
+            selected_options = []
+
         data = []
         selected_options_ = []
         for option in options:
@@ -61,6 +64,9 @@ class SelectionWidget(QtFramelessTool):
         self.table.add_data(data)
         self.options = selected_options_
         self.original_options = selected_options
+        widths = [len(v) for v in options] or [50]
+        if widths:
+            self.setMinimumWidth(min([500, max(widths) * 10]))
 
     def accept(self) -> None:
         """Return state."""
@@ -187,9 +193,7 @@ class QtMultiSelect(QWidget):
 
     def polish(self) -> None:
         """Polish widget."""
-        hp.polish_widget(self)
-        hp.polish_widget(self.text_edit)
-        hp.polish_widget(self.select_btn)
+        hp.polish_widget(self, self.text_edit, self.select_btn)
 
     def setObjectName(self, name: str) -> None:  # type: ignore
         """Set object name."""
@@ -206,8 +210,10 @@ class QtMultiSelect(QWidget):
         self.selected_options = []
         self.options = []
 
-    def set_options(self, options: list[str], selected_options: list[str]) -> None:
+    def set_options(self, options: list[str], selected_options: list[str] | None = None) -> None:
         """List of options."""
+        if selected_options is None:
+            selected_options = []
         selected_options = filter_selected(selected_options, options)
         self.options = options
         self.selected_options = selected_options
