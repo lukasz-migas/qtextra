@@ -18,6 +18,7 @@ class Tile(BaseModel):
     icon: ty.Optional[str] = ""
     func: ty.Optional[ty.Callable] = None
     icon_kws: ty.Optional[ty.Dict[str, ty.Any]] = Field(default_factory=dict)
+    warning: str = ""
 
     class Config:
         """Pydantic config."""
@@ -57,6 +58,11 @@ class QtTileWidget(QFrame):
         self._description = hp.make_label(
             self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="medium_text"
         )
+        self._warning = hp.make_label(
+            self, self._tile.warning, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="small_text"
+        )
+        if not self._tile.warning:
+            self._warning.hide()
 
         layout = QVBoxLayout(self)
         layout.setSpacing(2)
@@ -64,6 +70,7 @@ class QtTileWidget(QFrame):
         layout.addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
         layout.addWidget(self._image, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._description, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
+        layout.addWidget(self._warning, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Handle mouse press event."""

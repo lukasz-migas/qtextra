@@ -6,8 +6,6 @@ https://github.dev/napari/superqt/blob/f4d9881b0c64c0419fa2da182a1c403a01bd084f/
 
 from __future__ import annotations
 
-import typing as ty
-
 from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLayout, QWidget
 from superqt import QCollapsible
 

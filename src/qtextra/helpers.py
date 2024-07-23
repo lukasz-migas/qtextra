@@ -28,7 +28,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_color_button import QtColorSwatch
     from qtextra.widgets.qt_eliding_label import QtElidingLabel
     from qtextra.widgets.qt_flow_layout import QtFlowLayout
-    from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel
+    from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
     from qtextra.widgets.qt_image_button import QtImagePushButton, QtLockButton, QtToolbarPushButton
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_multi_select import QtMultiSelect
@@ -330,7 +330,7 @@ def make_warning_label(
     xxlarge: bool = False,
     retain_size: bool = False,
     **kwargs: ty.Any,
-) -> None:
+) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
     from qtextra.widgets.qt_icon_label import QtQtaTooltipLabel
 
@@ -2471,7 +2471,7 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 
 def make_loading_gif(
-    parent: Qw.QWidget | None, which: str = "square", size: tuple[int, int] = (20, 20)
+    parent: Qw.QWidget | None, which: ty.Literal["square", "circle"] | str = "square", size: tuple[int, int] = (20, 20)
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
     from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
