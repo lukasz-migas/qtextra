@@ -42,7 +42,8 @@ class SelectionWidget(QtFramelessTool):
     options: list[str] | None = None
     original_options: list[str] | None = None
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget, title: str = "Select..."):
+        self.title = title
         super().__init__(parent)
         self.setMinimumWidth(500)
         self.setMinimumHeight(350)
@@ -88,7 +89,7 @@ class SelectionWidget(QtFramelessTool):
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
         """Make panel."""
-        _, header_layout = self._make_hide_handle("Select...")
+        _, header_layout = self._make_hide_handle(self.title)
 
         self.table = QtCheckableTableView(self, config=self.TABLE_CONFIG, enable_all_check=True, sortable=True)
         self.table.setCornerButtonEnabled(False)

@@ -552,11 +552,12 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
 
     def _make_title_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
-        self._title_label = hp.make_label(
+        self._title_label = hp.make_eliding_label2(
             self,
             title,
             bold=True,
             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            elide=Qt.TextElideMode.ElideRight,
             object_name="window_title",
         )
 
@@ -568,8 +569,13 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
 
     def _make_move_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
-        self._title_label = hp.make_label(
-            self, title, bold=True, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        self._title_label = hp.make_eliding_label2(
+            self,
+            title,
+            bold=True,
+            alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            elide=Qt.TextElideMode.ElideRight,
+            object_name="window_title",
         )
         self._move_handle = hp.make_qta_label(
             self, "move_handle", tooltip="Click here and drag the mouse around to move the window.", normal=True

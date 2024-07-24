@@ -1566,13 +1566,23 @@ def make_toggle_group(
     return layout, widget
 
 
-def make_h_line_with_text(label: str, parent: Qw.QWidget | None = None, bold: bool = False, **kwargs: ty.Any):
+def make_h_line_with_text(
+    label: str, parent: Qw.QWidget | None = None, bold: bool = False, position: str = "center", **kwargs: ty.Any
+):
     """Make horizontal line with text."""
+    label_widget = make_label(parent, label, bold=bold, **kwargs)
+    if position == "center":
+        widgets = (make_h_line(parent), label_widget, make_h_line(parent))
+        stretch_ids = (0, 2)
+    elif position == "left":
+        widgets = (label_widget, make_h_line(parent))
+        stretch_ids = (1,)
+    else:
+        widgets = (make_h_line(parent), label_widget)
+        stretch_ids = (0,)
     return make_h_layout(
-        make_h_line(parent),
-        make_label(parent, label, bold=bold, **kwargs),
-        make_h_line(parent),
-        stretch_id=(0, 2),
+        *widgets,
+        stretch_id=stretch_ids,
         spacing=2,
     )
 
