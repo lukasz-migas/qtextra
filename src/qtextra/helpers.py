@@ -2481,7 +2481,11 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 
 def make_loading_gif(
-    parent: Qw.QWidget | None, which: ty.Literal["square", "circle"] | str = "square", size: tuple[int, int] = (20, 20)
+    parent: Qw.QWidget | None,
+    which: ty.Literal["square", "circle"] | str = "square",
+    size: tuple[int, int] = (20, 20),
+    retain_size: bool = True,
+    hide: bool = False,
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
     from qtextra.assets import LOADING_GIFS
@@ -2491,7 +2495,10 @@ def make_loading_gif(
 
     path = str(LOADING_GIFS[which])
     label, movie = make_gif_label(parent, path, size=size)
-    set_retain_hidden_size_policy(label)
+    if retain_size:
+        set_retain_hidden_size_policy(label)
+    if hide:
+        label.hide()
     return label, movie
 
 
