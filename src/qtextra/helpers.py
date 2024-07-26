@@ -2484,10 +2484,12 @@ def make_loading_gif(
     parent: Qw.QWidget | None, which: ty.Literal["square", "circle"] | str = "square", size: tuple[int, int] = (20, 20)
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
-    from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
+    from qtextra.assets import LOADING_GIFS
 
-    assert which.lower() in ["square", "circle"], "Incorrect gif selected - please use either `circle` or `square`"
-    path = str(LOADING_CIRCLE_GIF if which == "circle" else LOADING_SQUARE_GIF)
+    opts = ", ".join(LOADING_GIFS.keys())
+    assert which.lower() in LOADING_GIFS, f"Incorrect gif selected - please select one of available options: '{opts}'"
+
+    path = str(LOADING_GIFS[which])
     label, movie = make_gif_label(parent, path, size=size)
     set_retain_hidden_size_policy(label)
     return label, movie
