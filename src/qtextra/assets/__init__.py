@@ -17,8 +17,21 @@ STYLE_PATH = HERE / "stylesheets"
 STYLE_PATH.mkdir(exist_ok=True)
 STYLES = {x.stem: str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
 
+# Some gifs were made using https://loading.io/
+# orange color = #ff4500
 LOADING_SQUARE_GIF = str(HERE / "loading-square.gif")
 LOADING_CIRCLE_GIF = str(HERE / "loading-circle.gif")
+LOADING_DOTS_GIF = str(HERE / "loading-dots.gif")
+LOADING_INFINITY_GIF = str(HERE / "loading-infinity.gif")
+LOADING_OVAL_GIF = str(HERE / "loading-oval.gif")
+
+LOADING_GIFS = {
+    "square": LOADING_SQUARE_GIF,
+    "circle": LOADING_CIRCLE_GIF,
+    "dots": LOADING_DOTS_GIF,
+    "infinity": LOADING_INFINITY_GIF,
+    "oval": LOADING_OVAL_GIF,
+}
 
 QTA_MAPPING: ty.Dict[str, str] = {
     "MISSING": "ri.error-warning-line",

@@ -1566,13 +1566,23 @@ def make_toggle_group(
     return layout, widget
 
 
-def make_h_line_with_text(label: str, parent: Qw.QWidget | None = None, bold: bool = False, **kwargs: ty.Any):
+def make_h_line_with_text(
+    label: str, parent: Qw.QWidget | None = None, bold: bool = False, position: str = "center", **kwargs: ty.Any
+):
     """Make horizontal line with text."""
+    label_widget = make_label(parent, label, bold=bold, **kwargs)
+    if position == "center":
+        widgets = (make_h_line(parent), label_widget, make_h_line(parent))
+        stretch_ids = (0, 2)
+    elif position == "left":
+        widgets = (label_widget, make_h_line(parent))
+        stretch_ids = (1,)
+    else:
+        widgets = (make_h_line(parent), label_widget)
+        stretch_ids = (0,)
     return make_h_layout(
-        make_h_line(parent),
-        make_label(parent, label, bold=bold, **kwargs),
-        make_h_line(parent),
-        stretch_id=(0, 2),
+        *widgets,
+        stretch_id=stretch_ids,
         spacing=2,
     )
 
@@ -2500,12 +2510,18 @@ def make_gif_label(
     return label, movie
 
 
-def make_gif(which: str = "square", size: tuple[int, int] = (20, 20), start: bool = True) -> QMovie:
+def make_gif(
+    which: str | ty.Literal["dots", "infinity", "oval", "square", "circle"] = "square",
+    size: tuple[int, int] = (20, 20),
+    start: bool = True,
+) -> QMovie:
     """Make movie."""
-    from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
+    from qtextra.assets import LOADING_GIFS
 
-    assert which.lower() in ["square", "circle"], "Incorrect gif selected - please use either `circle` or `square`"
-    path = str(LOADING_CIRCLE_GIF if which == "circle" else LOADING_SQUARE_GIF)
+    opts = ", ".join(LOADING_GIFS.keys())
+    assert which.lower() in LOADING_GIFS, f"Incorrect gif selected - please select one of available options: '{opts}'"
+
+    path = str(LOADING_GIFS[which])
     movie = QMovie(path)
     if size is not None:
         movie.setScaledSize(QSize(*size))
