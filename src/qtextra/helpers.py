@@ -2509,12 +2509,18 @@ def make_gif_label(
     return label, movie
 
 
-def make_gif(which: str = "square", size: tuple[int, int] = (20, 20), start: bool = True) -> QMovie:
+def make_gif(
+    which: str | ty.Literal["dots", "infinity", "oval", "square", "circle"] = "square",
+    size: tuple[int, int] = (20, 20),
+    start: bool = True,
+) -> QMovie:
     """Make movie."""
-    from qtextra.assets import LOADING_CIRCLE_GIF, LOADING_SQUARE_GIF
+    from qtextra.assets import LOADING_GIFS
 
-    assert which.lower() in ["square", "circle"], "Incorrect gif selected - please use either `circle` or `square`"
-    path = str(LOADING_CIRCLE_GIF if which == "circle" else LOADING_SQUARE_GIF)
+    opts = ", ".join(LOADING_GIFS.keys())
+    assert which.lower() in LOADING_GIFS, f"Incorrect gif selected - please select one of available options: '{opts}'"
+
+    path = str(LOADING_GIFS[which])
     movie = QMovie(path)
     if size is not None:
         movie.setScaledSize(QSize(*size))
