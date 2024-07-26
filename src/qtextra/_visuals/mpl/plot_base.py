@@ -6,7 +6,6 @@ import matplotlib
 import matplotlib.cm as cm
 import matplotlib.patches as mpatches
 import numpy as np
-import seaborn as sns
 from koyo.utilities import get_min_max
 from koyo.visuals import find_text_color, get_intensity_formatter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -17,6 +16,11 @@ from qtpy.QtWidgets import QApplication, QHBoxLayout, QSizePolicy, QWidget
 
 from qtextra._visuals.mpl.gids import PlotIds
 from qtextra._visuals.mpl.interaction import ImageMPLInteraction, MPLInteraction
+
+try:
+    import seaborn as sns
+except ImportError:
+    sns = None
 
 if ty.TYPE_CHECKING:
     import pandas as pd
@@ -175,6 +179,8 @@ class PlotBase(QWidget):
         **kwargs,
     ):
         """Plot confusion matrix."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
         ax = self.ax
         if which == "counts":
             sns.heatmap(data=matrix, ax=ax, square=True, annot=True, fmt="d", **kwargs)
@@ -211,6 +217,8 @@ class PlotBase(QWidget):
         **kwargs,
     ):
         """Plot ROC."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
         ax = self.ax
         i = 0
         colors = sns.color_palette(n_colors=len(fpr))
@@ -248,6 +256,8 @@ class PlotBase(QWidget):
         **kwargs,
     ):
         """Plot Precision-Recall."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
         ax = self.ax
         i = 0
         colors = sns.color_palette(n_colors=len(precision))
@@ -272,6 +282,9 @@ class PlotBase(QWidget):
 
     def plot_violin(self, df: "pd.DataFrame", **kwargs):
         """Plot violin plot."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
+
         sns.violinplot(data=df, ax=self.ax, **kwargs)
 
         extent = get_extent(self.ax)
@@ -280,6 +293,8 @@ class PlotBase(QWidget):
 
     def plot_boxplot(self, df: "pd.DataFrame", **kwargs):
         """Plot violin plot."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
         sns.boxplot(data=df, ax=self.ax, **kwargs)
 
         extent = get_extent(self.ax)
@@ -288,6 +303,9 @@ class PlotBase(QWidget):
 
     def plot_boxenplot(self, df: "pd.DataFrame", **kwargs):
         """Plot boxenplot plot."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
+
         sns.boxenplot(data=df, ax=self.ax, **kwargs)
         extent = get_extent(self.ax)
 
@@ -298,6 +316,8 @@ class PlotBase(QWidget):
 
     def plot_stripplot(self, df: "pd.DataFrame", **kwargs):
         """Plot stripplot plot."""
+        if not sns:
+            raise ImportError("Seaborn is required for this function")
         sns.stripplot(data=df, ax=self.ax, **kwargs)
         extent = get_extent(self.ax)
 

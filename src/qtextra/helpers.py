@@ -273,6 +273,7 @@ def make_label(
     tooltip: str | None = None,
     selectable: bool = False,
     visible: bool = True,
+    hide: bool = False,
     disabled: bool = False,
     activated_func: Callback | None = None,
     click_func: Callback | None = None,
@@ -313,6 +314,8 @@ def make_label(
         widget.setElideMode(elide_mode)
     widget.setWordWrap(wrap)
     widget.setVisible(visible)
+    if hide:
+        widget.hide()
     return widget
 
 
@@ -1599,13 +1602,15 @@ def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzL
     return widget
 
 
-def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtVertLine:
+def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool = False) -> QtVertLine:
     """Make horizontal line."""
     from qtextra.widgets.qt_line import QtVertLine
 
     widget = QtVertLine(parent)
     if thin:
         widget.setObjectName("thin")
+    if hide:
+        widget.hide()
     return widget
 
 

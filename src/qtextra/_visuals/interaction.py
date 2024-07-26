@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Union
 
 import numpy as np
-from imspy_core.reader import SingleReader
+
+# from imspy_core.reader import SingleReader
 from koyo.utilities import check_value_order
 from qtpy.QtCore import QObject, QPointF, Signal
 
@@ -197,70 +198,70 @@ class ExtractEvent:
             xmin, xmax, ymin, ymax = self.unpack(as_int)
         return xmin - pad, xmax + pad, ymin - pad, ymax + pad
 
-    def get_framelist(self, m_obj: SingleReader, flipud: bool = False) -> np.ndarray:
-        """Get list of frames based on the extraction parameters.
-
-        Parameters
-        ----------
-        m_obj : SingleReader
-            SingleReader object
-        flipud : bool
-            if ``True``, the original mask will be flipped
-
-        Returns
-        -------
-        framelist : np.ndarray
-            array of sorted frames that should be consumed by some extraction function
-        """
-        if self.is_point():
-            self.round_point()
-        if self._framelist is not None:
-            return self._framelist
-        if self.roi_shape == "rect":
-            framelist = m_obj.get_framelist_from_rect(*self.unpack(True), flipud=flipud)
-        elif self.roi_shape == "circle":
-            center, r_radius, c_radius = self.get_ellipse()
-            framelist = m_obj.get_framelist_from_circle(center, r_radius, c_radius, flipud=flipud)
-        elif self.roi_shape == "poly":
-            assert self.polygon is not None, "Missing polygon data"
-            polygons = self.polygon.get_polygon_mpl()
-            framelist = m_obj.get_framelist_from_poly(polygons, flipud=flipud)
-        else:
-            raise ValueError("Cannot parse this type of ROI yet")
-
-        self._framelist = np.sort(framelist)  # cache in cased its needed again
-        return self._framelist
-
-    def get_mask(self, m_obj: SingleReader, flipud: bool = False) -> np.ndarray:
-        """Get mask of the same shape as the default image.
-
-        Parameters
-        ----------
-        m_obj : SingleReader
-            SingleReader object
-        flipud : bool
-            if ``True``, the original mask will be flipped
-
-        Returns
-        -------
-        mask : np.ndarray
-            2d image mask for this particular event / roi
-        """
-        if self._mask is not None:
-            return self._mask
-        if self.roi_shape == "rect":
-            mask = m_obj.get_mask_from_rect(*self.unpack(True), flipud=flipud)
-        elif self.roi_shape == "circle":
-            center, r_radius, c_radius = self.get_ellipse()
-            mask = m_obj.get_mask_from_circle(center, r_radius, c_radius, flipud=flipud)
-        elif self.roi_shape == "poly":
-            assert self.polygon is not None, "Missing polygon data"
-            polygons = self.polygon.get_polygon_mpl()
-            mask = m_obj.get_mask_from_poly(polygons, flipud=flipud)
-        else:
-            raise ValueError("Cannot parse this type of ROI yet")
-        self._mask = mask
-        return mask
+    # def get_framelist(self, m_obj: SingleReader, flipud: bool = False) -> np.ndarray:
+    #     """Get list of frames based on the extraction parameters.
+    #
+    #     Parameters
+    #     ----------
+    #     m_obj : SingleReader
+    #         SingleReader object
+    #     flipud : bool
+    #         if ``True``, the original mask will be flipped
+    #
+    #     Returns
+    #     -------
+    #     framelist : np.ndarray
+    #         array of sorted frames that should be consumed by some extraction function
+    #     """
+    #     if self.is_point():
+    #         self.round_point()
+    #     if self._framelist is not None:
+    #         return self._framelist
+    #     if self.roi_shape == "rect":
+    #         framelist = m_obj.get_framelist_from_rect(*self.unpack(True), flipud=flipud)
+    #     elif self.roi_shape == "circle":
+    #         center, r_radius, c_radius = self.get_ellipse()
+    #         framelist = m_obj.get_framelist_from_circle(center, r_radius, c_radius, flipud=flipud)
+    #     elif self.roi_shape == "poly":
+    #         assert self.polygon is not None, "Missing polygon data"
+    #         polygons = self.polygon.get_polygon_mpl()
+    #         framelist = m_obj.get_framelist_from_poly(polygons, flipud=flipud)
+    #     else:
+    #         raise ValueError("Cannot parse this type of ROI yet")
+    #
+    #     self._framelist = np.sort(framelist)  # cache in cased its needed again
+    #     return self._framelist
+    #
+    # def get_mask(self, m_obj: SingleReader, flipud: bool = False) -> np.ndarray:
+    #     """Get mask of the same shape as the default image.
+    #
+    #     Parameters
+    #     ----------
+    #     m_obj : SingleReader
+    #         SingleReader object
+    #     flipud : bool
+    #         if ``True``, the original mask will be flipped
+    #
+    #     Returns
+    #     -------
+    #     mask : np.ndarray
+    #         2d image mask for this particular event / roi
+    #     """
+    #     if self._mask is not None:
+    #         return self._mask
+    #     if self.roi_shape == "rect":
+    #         mask = m_obj.get_mask_from_rect(*self.unpack(True), flipud=flipud)
+    #     elif self.roi_shape == "circle":
+    #         center, r_radius, c_radius = self.get_ellipse()
+    #         mask = m_obj.get_mask_from_circle(center, r_radius, c_radius, flipud=flipud)
+    #     elif self.roi_shape == "poly":
+    #         assert self.polygon is not None, "Missing polygon data"
+    #         polygons = self.polygon.get_polygon_mpl()
+    #         mask = m_obj.get_mask_from_poly(polygons, flipud=flipud)
+    #     else:
+    #         raise ValueError("Cannot parse this type of ROI yet")
+    #     self._mask = mask
+    #     return mask
 
     def get_line_mask(self, as_int: bool = True):
         """Get 1d mask that can be used to extract part of the data."""
