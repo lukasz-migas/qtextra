@@ -2488,6 +2488,7 @@ def make_gif_label(
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation and place it in the label."""
     label = Qw.QLabel("Loading...", parent=parent)
+    label.setObjectName("loading_gif")
     label.setScaledContents(True)
     movie = QMovie(path)
     if size is not None:

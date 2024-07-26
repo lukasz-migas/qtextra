@@ -37,6 +37,8 @@ class CLIQueueHandler(QObject):
     evt_next = Signal(Task)
     # signal to indicate when task had finished
     evt_finished = Signal(Task)
+    # signal to indicate when queue is empty
+    evt_empty = Signal()
     # signal to indicate when task had been cancelled
     evt_cancelled = Signal(Task)
     # signal to indicate when task had crashed
@@ -284,6 +286,9 @@ class CLIQueueHandler(QObject):
             task_id = self.pending_queue.pop(0)  # get the first item
             worker_obj = self.active_tasks[task_id]  # get another worker that was queued previously
             worker_obj.run()
+
+        if not self.pending_queue and not self.running_queue:
+            self.evt_empty.emit()
 
     def run_force(self, task: Task) -> None:
         """Run specific task."""
