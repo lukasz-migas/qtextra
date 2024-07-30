@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
+from qtextra.queue.cli_queue import N_PARALLEL
 from qtextra.queue.queue_widget import QUEUE, QueueList
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
@@ -18,19 +19,28 @@ class QueuePopup(QtFramelessTool):
         self.setMinimumSize(700, 600)
 
     # noinspection PyAttributeOutsideInit
-    def make_panel(self) -> QVBoxLayout:
+    def make_panel(self) -> QFormLayout:
         """Make panel."""
         self.queue_list = QueueList(self)
 
         self.clear_btn = hp.make_btn(self, "Clear", func=self.queue_list.on_clear_queue, tooltip="Clear all tasks")
+        self.n_tasks = hp.make_labelled_slider(
+            self,
+            minimum=1,
+            maximum=max(N_PARALLEL, 6),
+            value=N_PARALLEL,
+            tooltip="Maximum number of tasks to run simultaneously.",
+            func=QUEUE.set_max_parallel,
+        )
 
-        layout = QVBoxLayout()
+        layout = QFormLayout()
         layout.setSpacing(3)
         layout.setContentsMargins(6, 6, 6, 6)
-        layout.addLayout(self._make_hide_handle("Task queue")[1])
-        layout.addLayout(hp.make_h_layout(self.clear_btn, stretch_after=True))
-        layout.addWidget(hp.make_h_line(self))
-        layout.addWidget(self.queue_list, stretch=True)
+        layout.addRow(self._make_hide_handle("Task queue")[1])
+        layout.addRow("Number of tasks", self.n_tasks)
+        layout.addRow(self.clear_btn)
+        layout.addRow(hp.make_h_line(self))
+        layout.addRow(self.queue_list)
         return layout
 
 

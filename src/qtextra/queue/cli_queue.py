@@ -68,6 +68,12 @@ class CLIQueueHandler(QObject):
 
         atexit.register(self.close)
 
+    def set_max_parallel(self, n_parallel: int) -> None:
+        """Set maximum number of parallel tasks."""
+        global N_PARALLEL
+        N_PARALLEL = n_parallel
+        self.run_queued()
+
     @property
     def n_tasks(self) -> ty.Tuple[int, int]:
         """Return the number of tasks."""

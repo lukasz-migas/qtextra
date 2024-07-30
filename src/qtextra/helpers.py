@@ -1416,6 +1416,7 @@ def make_labelled_slider(
     default: float = 1,
     value: float | None = None,
     expand: bool = True,
+    func: Callback | None = None,
     **kwargs: ty.Any,
 ) -> QLabeledSlider:
     """Make QtLabelledSlider."""
@@ -1432,6 +1433,8 @@ def make_labelled_slider(
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1630,7 +1633,7 @@ def make_v_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: int | tuple[int, ...] | None = None,
     spacing: int | None = None,
-    margin: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
@@ -1657,7 +1660,7 @@ def make_h_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: int | tuple[int, ...] | None = None,
     spacing: int | None = None,
-    margin: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
