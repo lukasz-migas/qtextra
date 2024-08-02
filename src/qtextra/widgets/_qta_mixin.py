@@ -82,6 +82,29 @@ class QtaMixin:
         self.setIconSize(size)
         self.setObjectName("")
 
+    @classmethod
+    def get_icon_size_for_name(cls, name: str) -> tuple[str, tuple[int, int]]:
+        """Get icon size for name."""
+        if name == "xxsmall":
+            return "xxsmall_icon", (10, 10)
+        elif name in ("xsmall", "small"):
+            return "xsmall_icon", (16, 16)
+        elif name == "normal":
+            return "normal_icon", (20, 20)
+        elif name == "average":
+            return "average_icon", (24, 24)
+        elif name == "medium":
+            return "medium_icon", (28, 28)
+        elif name == "large":
+            return "large_icon", (32, 32)
+        elif name == "xlarge":
+            return "xlarge_icon", (60, 60)
+        elif name == "xxlarge":
+            return "xxlarge_icon", (80, 80)
+        elif name == "xxxlarge":
+            return "xxxlarge_icon", (120, 120)
+        return "average_icon", (24, 24)
+
     def set_xxsmall(self) -> None:
         """Set large."""
         self.setObjectName("xxsmall_icon")

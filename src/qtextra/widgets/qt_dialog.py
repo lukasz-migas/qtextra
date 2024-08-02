@@ -90,92 +90,43 @@ class DialogMixin:
         if show:
             self.show()
 
-    def show_above_widget(self, widget: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+    def show_above_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the widget."""
-        rect = widget.rect()
-        pos = widget.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
-        if show:
-            self.show()
-        sz_hint = self.size()
-        pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() - y_offset))
-        self.move(pos)
+        hp.show_above_widget(self, parent, show, x_offset, y_offset)
 
     def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the mouse cursor position."""
-        pos = QCursor().pos()  # mouse position
-        sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() / 2) - x_offset, int(sz_hint.height() - y_offset))
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_above_mouse(self, show, x_offset, y_offset)
 
-    def show_below_widget(self, widget: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+    def show_below_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the widget."""
-        rect = widget.rect()
-        pos = widget.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
-        sz_hint = self.size()
-        pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_below_widget(self, parent, show, x_offset, y_offset)
 
     def show_below_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the mouse cursor position."""
-        pos = QCursor().pos()  # mouse position
-        sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_below_mouse(self, show, x_offset, y_offset)
 
-    def show_right_of_widget(self, widget: QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0) -> None:
+    def show_right_of_widget(self, parent: QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
-        rect = widget.rect()
-        pos = widget.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
-        sz_hint = self.size()
-        pos -= QPoint(x_offset, int(sz_hint.height() / 4) - y_offset)
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_right_of_widget(self, parent, show, x_offset, y_offset)
 
     def show_on_mouse(self, show: bool = True) -> None:
         """Show popup dialog in the center of mouse cursor position."""
-        pos = QCursor().pos()
-        sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() / 2), int(sz_hint.height() / 4))
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_on_mouse(self, show)
 
     def show_right_of_mouse(self, show: bool = True) -> None:
         """Show popup dialog on the right hand side of the mouse cursor position."""
-        pos = QCursor().pos()  # mouse position
-        sz_hint = self.sizeHint()
-        pos -= QPoint(-14, int(sz_hint.height() / 4))
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_right_of_mouse(self, show)
 
     def show_left_of_widget(
-        self, widget: QObject | None, show: bool = True, x_offset: int = 14, y_offset: int = 0
+        self, parent: QObject | None, show: bool = True, x_offset: int = 14, y_offset: int = 0
     ) -> None:
         """Show popup dialog above the widget."""
-        rect = widget.rect()
-        pos = widget.mapToGlobal(QPoint(rect.left(), rect.top()))
-        sz_hint = self.size()
-        pos -= QPoint(int(sz_hint.width() - x_offset), int(sz_hint.height() / 4) - y_offset)
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_left_of_widget(self, parent, show, x_offset, y_offset)
 
     def show_left_of_mouse(self, show: bool = True) -> None:
         """Show popup dialog on the left hand side of the mouse cursor position."""
-        pos = QCursor().pos()  # mouse position
-        sz_hint = self.sizeHint()
-        pos -= QPoint(int(sz_hint.width() + 14), int(sz_hint.height() / 4))
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_left_of_mouse(self, show)
 
     def set_on_widget(self, widget: QWidget, x_mult: float = 2.5, y_mult: float = 0.0) -> None:
         """Set position of the popup above the widget."""

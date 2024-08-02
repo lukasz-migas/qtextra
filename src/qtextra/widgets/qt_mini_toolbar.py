@@ -8,16 +8,18 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-
-if ty.TYPE_CHECKING:
-    from qtextra.widgets.qt_image_button import QtImagePushButton
+from qtextra.widgets.qt_image_button import QtImagePushButton
 
 
 class QtMiniToolbar(QFrame):
     """Mini toolbar."""
 
     def __init__(
-        self, parent: QWidget | None, orientation: Qt.Orientation = Qt.Orientation.Horizontal, add_spacer: bool = True
+        self,
+        parent: QWidget | None,
+        orientation: Qt.Orientation = Qt.Orientation.Horizontal,
+        add_spacer: bool = True,
+        icon_size: ty.Literal["small", "average", "medium", "normal"] | str | None = None,
     ):
         super().__init__(parent)
         self._tools: dict[str, QtImagePushButton] = {}
@@ -31,6 +33,10 @@ class QtMiniToolbar(QFrame):
         self.layout_.setSpacing(0)
         self.layout_.setContentsMargins(0, 0, 0, 0)
         self.max_size = 28
+        self.icon_object_name, self.icon_size = (
+            QtImagePushButton.get_icon_size_for_name(icon_size) if icon_size else None,
+            None,
+        )
 
     @property
     def max_size(self) -> int:
@@ -61,8 +67,12 @@ class QtMiniToolbar(QFrame):
         average: bool = False,
         normal: bool = False,
         checked_icon_name: ty.Optional[str] = None,
+        object_name: str | None = None,
     ) -> QtImagePushButton:
-        if not any((small, average, medium, normal)):
+        if self.icon_size:
+            size = self.icon_size
+            object_name = self.icon_object_name
+        if not any((small, average, medium, normal)) and not size:
             size = (26, 26)
         if name in self._tools:
             raise ValueError(f"Tool '{name}' already exists.")
@@ -81,6 +91,7 @@ class QtMiniToolbar(QFrame):
             average=average,
             normal=normal,
             checked_icon_name=checked_icon_name,
+            object_name=object_name,
         )
         self._tools[name] = btn
         return btn

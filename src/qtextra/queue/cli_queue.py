@@ -52,6 +52,8 @@ class CLIQueueHandler(QObject):
     evt_queue_closed = Signal()
     # signal to indicate that all process had been finished
     evt_finished_all = Signal()
+    # signal to indicate that a task had been removed
+    evt_remove_task = Signal(str)
 
     def __init__(self, parent: ty.Optional[QObject] = None):
         super().__init__(parent=parent)
@@ -64,6 +66,8 @@ class CLIQueueHandler(QObject):
         self.pending_queue: ty.List[str] = []
         # running tasks are added to this queue
         self.running_queue: ty.List[str] = []
+        # finished tasks are added to this queue
+        self.finished_queue: ty.List[str] = []
         self._evt_cancel.connect(self._kill)  # type: ignore[unused-ignore]
 
         atexit.register(self.close)
@@ -104,6 +108,7 @@ class CLIQueueHandler(QObject):
             logger.trace(f"Task '{worker_obj.summary()}' ended.")
         else:
             logger.trace(f"Failed to remove '{task_id}' from active tasks (finished).")
+        self.finished_queue.append(task_id)
         self.evt_finished.emit(task)  # type: ignore[unused-ignore]
         self.run_queued()
 
@@ -122,6 +127,7 @@ class CLIQueueHandler(QObject):
             logger.trace(f"Task '{worker_obj.summary()}' was cancelled.")
         else:
             logger.trace(f"Failed to remove '{task_id}' from active tasks (cancelled).")
+        self.finished_queue.append(task_id)
         self.evt_cancelled.emit(task)  # type: ignore[unused-ignore]
         self.run_queued()
 
@@ -142,6 +148,7 @@ class CLIQueueHandler(QObject):
             self.evt_errored.emit(task, error_info)  # type: ignore[unused-ignore]
         else:
             logger.warning(f"Failed to remove task '{task_id}' from active tasks (errored).")
+        self.finished_queue.append(task_id)
         self.run_queued()
 
     def task_part_errored(self, task: Task) -> None:
@@ -345,14 +352,15 @@ class CLIQueueHandler(QObject):
         self.add_task(task, emit_queued=False)
         logger.trace(f"Task '{task.summary()}' is not in the queue.")
 
-    def remove(self, task: Task) -> None:
+    def remove(self, task: str | Task) -> None:
         """Remove a task from the queue."""
-        if task.task_id in self.active_tasks:
-            self.active_tasks.pop(task.task_id)
-            logger.trace(f"Removed '{task.task_id}' from active tasks (removed).")
-        if task.task_id in self.pending_queue:
-            self.pending_queue.remove(task.task_id)
-            logger.trace(f"Removed '{task.task_id}' from pending tasks (removed).")
+        task_id = task if isinstance(task, str) else task.task_id
+        if task_id in self.active_tasks:
+            self.active_tasks.pop(task_id)
+            logger.trace(f"Removed '{task_id}' from active tasks (removed).")
+        if task_id in self.pending_queue:
+            self.pending_queue.remove(task_id)
+            logger.trace(f"Removed '{task_id}' from pending tasks (removed).")
 
     def cancel(self, task: Task) -> None:
         """Cancel scheduled task."""
@@ -406,6 +414,26 @@ class CLIQueueHandler(QObject):
     def is_queued(self, task_id: str) -> bool:
         """Check if task is queued."""
         return task_id in self.pending_queue or task_id in self.running_queue
+
+    def is_finished(self, task_id: str) -> bool:
+        """Check if task is finished."""
+        return task_id in self.finished_queue
+
+    def remove_task(self, task_id: str) -> None:
+        """Remove task from queue."""
+
+        def _remove_if_many(queue: list[str]) -> None:
+            while task_id in queue:
+                queue.remove(task_id)
+
+        _remove_if_many(self.pending_queue)
+        _remove_if_many(self.running_queue)
+        _remove_if_many(self.finished_queue)
+        with suppress(KeyError):
+            worker_obj = self.active_tasks.pop(task_id)
+            worker_obj.cancel()
+            logger.trace(f"Removed '{task_id}' from active tasks (removed).")
+        self.evt_remove_task.emit(task_id)
 
     def __repr__(self) -> str:
         """Representation of the queue."""

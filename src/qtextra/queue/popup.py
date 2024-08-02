@@ -15,7 +15,6 @@ class QueuePopup(QtFramelessTool):
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent=parent)
-        self.queue_list = None
         self.setMinimumSize(700, 600)
 
     # noinspection PyAttributeOutsideInit

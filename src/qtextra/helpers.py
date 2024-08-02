@@ -2738,21 +2738,21 @@ def style_form_layout(layout: Qw.QFormLayout) -> None:
         layout.setVerticalSpacing(4)
 
 
-def show_above_mouse(widget: Qw.QWidget, show: bool = True) -> None:
+def show_above_mouse(widget: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
     """Show popup dialog above the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(int(sz_hint.width() / 2), sz_hint.height() + 14)  # type: ignore[call-overload]
+    pos -= QPoint(int(sz_hint.width() / 2) - x_offset, sz_hint.height() - y_offset)  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
 
 
-def show_below_mouse(widget: Qw.QWidget, show: bool = True) -> None:
+def show_below_mouse(widget: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
     """Show popup dialog below the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
-    pos -= QPoint(int(sz_hint.width() / 2), -14)  # type: ignore[call-overload]
+    pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)  # type: ignore[call-overload]
     widget.move(pos)
     if show:
         widget.show()
@@ -2773,6 +2773,55 @@ def show_right_of_mouse(widget: Qw.QWidget, show: bool = True) -> None:
     pos = QCursor().pos()  # mouse position
     sz_hint = widget.sizeHint()
     pos -= QPoint(-20, int(sz_hint.height() / 8))  # type: ignore[call-overload]
+    widget.move(pos)
+    if show:
+        widget.show()
+
+
+def show_on_mouse(widget: Qw.QWidget, show: bool = True) -> None:
+    """Show popup dialog in the center of mouse cursor position."""
+    pos = QCursor().pos()
+    sz_hint = widget.sizeHint()
+    pos -= QPoint(int(sz_hint.width() / 2), int(sz_hint.height() / 4))
+    widget.move(pos)
+    if show:
+        widget.show()
+
+
+def show_right_of_widget(
+    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0
+) -> None:
+    """Show popup dialog above the widget."""
+    rect = parent.rect()
+    pos = parent.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
+    sz_hint = widget.size()
+    pos -= QPoint(x_offset, int(sz_hint.height() / 4) - y_offset)
+    widget.move(pos)
+    if show:
+        widget.show()
+
+
+def show_left_of_widget(
+    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 14, y_offset: int = 0
+) -> None:
+    """Show popup dialog above the widget."""
+    rect = parent.rect()
+    pos = parent.mapToGlobal(QPoint(rect.left(), rect.top()))
+    sz_hint = widget.size()
+    pos -= QPoint(int(sz_hint.width() - x_offset), int(sz_hint.height() / 4) - y_offset)
+    widget.move(pos)
+    if show:
+        widget.show()
+
+
+def show_above_widget(
+    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
+) -> None:
+    """Show popup dialog above the widget."""
+    rect = parent.rect()
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
+    sz_hint = widget.size()
+    pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() - y_offset))
     widget.move(pos)
     if show:
         widget.show()

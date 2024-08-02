@@ -9,11 +9,14 @@ from qtpy.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 
+Orientation = ty.Literal["horizontal", "vertical"]
+
 
 class QtPickOptionBase(QDialog):
     """Select between options."""
 
     option: ty.Optional[str] = None
+    orientation: str | Orientation = "horizontal"
 
     def __init__(self, parent: QWidget, text: str, options: ty.Dict[str, str]):
         super().__init__(parent)
@@ -30,7 +33,7 @@ class QtPickOptionBase(QDialog):
 
     def _setup_ui(self) -> None:
         area, widget = self._get_layout_widget()
-        btn_layout = QHBoxLayout(area)
+        btn_layout = QHBoxLayout(area) if self.orientation == "horizontal" else QVBoxLayout(area)
         btn_layout.addStretch(1)
         for option, label in self.options.items():
             btn = hp.make_btn(
@@ -70,7 +73,14 @@ class QtPickOption(QtPickOptionBase):
 class QtScrollablePickOption(QtPickOptionBase):
     """Select between options."""
 
-    def __init__(self, parent: QWidget, text: str, options: ty.Dict[ty.Any, str]):
+    def __init__(
+        self,
+        parent: QWidget,
+        text: str,
+        options: dict[ty.Any, str],
+        orientation: str | Orientation = "horizontal",
+    ):
+        self.orientation = orientation
         super().__init__(parent, text, options)
         size = self.sizeHint()
         size.setWidth(max(size.width(), 500))

@@ -1,5 +1,7 @@
 """Queue widget."""
 
+from __future__ import annotations
+
 import typing as ty
 from contextlib import suppress
 
@@ -48,6 +50,7 @@ class QueueList(QScrollArea):
         QUEUE.evt_part_errored.connect(self.on_task_part_failed)
         QUEUE.evt_cancelled.connect(self.on_task_cancelled)
         QUEUE.evt_progress.connect(self.on_task_progress)
+        QUEUE.evt_remove_task.connect(self.on_remove_task)
 
         # setup UI
         scroll_widget = QWidget()  # type: ignore[unused-ignore]
@@ -139,7 +142,7 @@ class QueueList(QScrollArea):
         task.state = TaskState.QUEUED
         QUEUE.requeue(task, remove=True)
 
-    def on_remove_task(self, task: Task) -> None:
+    def on_remove_task(self, task: str | Task) -> None:
         """Remove task from the queue."""
         self._remove_widget(task)
         QUEUE.remove(task)
@@ -159,8 +162,9 @@ class QueueList(QScrollArea):
         """Cancel task."""
         QUEUE.pause(task, state)
 
-    def _remove_widget(self, task: Task) -> None:
+    def _remove_widget(self, task: str | Task) -> None:
         # remove widget from the UI
+        task_id = task.task_id if isinstance(task, Task) else task
         widget = self._find_widget(task)
         if widget:
             self._layout.removeWidget(widget)
@@ -172,22 +176,23 @@ class QueueList(QScrollArea):
                 del self.failed_widgets[self.failed_widgets.index(widget)]
             if widget in self.cancelled_widgets:
                 del self.cancelled_widgets[self.cancelled_widgets.index(widget)]
-            self.widgets.pop(task.task_id, None)
+            self.widgets.pop(task_id, None)
             del widget
-            logger.trace(f"Removed widget for '{task.summary()}'")
+            logger.trace(f"Removed widget for '{task_id}'")
 
-    def _find_widget(self, task: Task) -> ty.Optional[TaskWidget]:
+    def _find_widget(self, task: str | Task) -> ty.Optional[TaskWidget]:
         """Find widget by its task ID."""
-        if task.task_id in self.widgets:
-            return self.widgets[task.task_id]
+        task_id = task.task_id if isinstance(task, Task) else task
+        if task_id in self.widgets:
+            return self.widgets[task_id]
         for widget in self.finished_widgets:
-            if widget.task and widget.task.task_id == task.task_id:
+            if widget.task and widget.task.task_id == task_id:
                 return widget
         for widget in self.cancelled_widgets:
-            if widget.task and widget.task.task_id == task.task_id:
+            if widget.task and widget.task.task_id == task_id:
                 return widget
         for widget in self.failed_widgets:
-            if widget.task and widget.task.task_id == task.task_id:
+            if widget.task and widget.task.task_id == task_id:
                 return widget
         return None
 
