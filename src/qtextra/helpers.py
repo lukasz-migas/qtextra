@@ -2300,7 +2300,7 @@ def get_double(
 
 
 @contextmanager
-def qt_signals_blocked(*obj, block_signals: bool = True) -> None:
+def qt_signals_blocked(*obj: Qw.QWidget, block_signals: bool = True) -> None:
     """Context manager to temporarily block signals from `obj`."""
     if not block_signals:
         yield
@@ -2789,55 +2789,55 @@ def show_on_mouse(widget: Qw.QWidget, show: bool = True) -> None:
 
 
 def show_right_of_widget(
-    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
-    sz_hint = widget.size()
+    sz_hint = widget_to_show.size()
     pos -= QPoint(x_offset, int(sz_hint.height() / 4) - y_offset)
-    widget.move(pos)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
 def show_left_of_widget(
-    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 14, y_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 14, y_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(rect.left(), rect.top()))
-    sz_hint = widget.size()
+    sz_hint = widget_to_show.size()
     pos -= QPoint(int(sz_hint.width() - x_offset), int(sz_hint.height() / 4) - y_offset)
-    widget.move(pos)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
 def show_above_widget(
-    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
-    sz_hint = widget.size()
+    sz_hint = widget_to_show.size()
     pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() - y_offset))
-    widget.move(pos)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
 def show_below_widget(
-    widget: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))  # type: ignore[call-overload]
-    sz_hint = widget.size()
+    sz_hint = widget_to_show.size()
     pos -= QPoint(int((sz_hint.width() / 2) - x_offset), -y_offset)  # type: ignore[call-overload]
-    widget.move(pos)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
 def copy_text_to_clipboard(text: str) -> None:

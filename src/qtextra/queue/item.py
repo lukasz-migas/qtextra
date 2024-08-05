@@ -205,6 +205,7 @@ class TaskWidget(QFrame):
 
         # update ui
         self.task_name.setText(task.task_name_repr or hp.hyper(task.task_name))
+        self.task_name.setToolTip(task.task_name_tooltip or task.task_name)
         self.task_info.setText(task.pretty_info)
         self.task_id.setText(f"Task ID: {task.task_id}")
         if task.state == TaskState.FINISHED:
