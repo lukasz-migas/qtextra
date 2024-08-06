@@ -41,7 +41,7 @@ class QtTileWidget(QFrame):
     def __init__(self, parent: QWidget, tile: Tile):
         super().__init__(parent)
         self.setMouseTracking(True)
-        self.setFixedSize(250, 250)
+        self.setFixedSize(300, 300)
         self.setFrameShape(QFrame.Shape.Box)
 
         self._tile = tile
@@ -58,9 +58,11 @@ class QtTileWidget(QFrame):
         self._description = hp.make_label(
             self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="medium_text"
         )
+        hp.set_retain_hidden_size_policy(self._description)
         self._warning = hp.make_label(
             self, self._tile.warning, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="small_text"
         )
+        hp.set_retain_hidden_size_policy(self._warning)
         if not self._tile.warning:
             self._warning.hide()
 
@@ -104,10 +106,11 @@ if __name__ == "__main__":  # pragma: no cover
         ha.addWidget(widget)
         model = Tile(
             title="One-vs-One",
-            description="Compare intensity of one ion to another.",
+            description="Convert multi-scene CZI images or other formats to OME-TIFF.",
             func=lambda: print("Hello"),
             icon="mdi.chart-scatter-plot",
             icon_kws={"color": "#ff0000"},
+            warning="<i>Not available on Apple Silicon due to a bug I can't find...</i>",
         )
         widget = QtTileWidget(frame, model)
         ha.addWidget(widget)
