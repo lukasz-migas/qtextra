@@ -373,7 +373,7 @@ QtTileWidget:hover {
 }
 
 QtTileWidget QLabel#small_text {
-    font-size: {{ decrease(font_size, 2) }};
+    font-size: {{ decrease(font_size, 4) }};
     font-weight: bold;
 }
 

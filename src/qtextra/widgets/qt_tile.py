@@ -41,7 +41,7 @@ class QtTileWidget(QFrame):
     def __init__(self, parent: QWidget, tile: Tile):
         super().__init__(parent)
         self.setMouseTracking(True)
-        self.setFixedSize(250, 250)
+        self.setFixedSize(275, 275)
         self.setFrameShape(QFrame.Shape.Box)
 
         self._tile = tile
@@ -56,7 +56,7 @@ class QtTileWidget(QFrame):
         else:
             self._image = hp.make_label(self, "")  # type: ignore[assignment]
         self._description = hp.make_label(
-            self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="medium_text"
+            self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter
         )
         hp.set_retain_hidden_size_policy(self._description)
 
@@ -70,7 +70,10 @@ class QtTileWidget(QFrame):
         layout = QVBoxLayout(self)
         layout.setSpacing(2)
         layout.setContentsMargins(2, 2, 2, 2)
-        layout.addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
+        layout.addLayout(
+            hp.make_h_layout(self._title, spacing=0, stretch_id=0, alignment=Qt.AlignmentFlag.AlignHCenter),
+            stretch=1,
+        )
         layout.addWidget(self._image, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addLayout(
             hp.make_h_layout(self._description, spacing=0, stretch_id=0, alignment=Qt.AlignmentFlag.AlignHCenter),
