@@ -17,7 +17,7 @@ class Tile(BaseModel):
     description: str
     icon: ty.Optional[str] = ""
     func: ty.Optional[ty.Callable] = None
-    icon_kws: ty.Optional[ty.Dict[str, ty.Any]] = Field(default_factory=dict)
+    icon_kws: ty.Optional[ty.Dict[str, ty.Any]] = None
     warning: str = ""
 
     class Config:
@@ -51,7 +51,7 @@ class QtTileWidget(QFrame):
         )
         self._title.adjustSize()
         if self._tile.icon:
-            self._image = hp.make_qta_label(self, self._tile.icon, **self._tile.icon_kws)
+            self._image = hp.make_qta_label(self, self._tile.icon, **(self._tile.icon_kws or {}))
             self._image.set_xxxlarge()
         else:
             self._image = hp.make_label(self, "")  # type: ignore[assignment]

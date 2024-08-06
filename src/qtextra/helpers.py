@@ -1869,6 +1869,7 @@ def make_menu_item(
     checkable: bool = False,
     func: Callback | None = None,
     disabled: bool = False,
+    insert: bool = False,
 ) -> QtQtaAction:
     """Make menu item."""
     from qtextra.widgets.qt_action import QtQtaAction
@@ -1889,7 +1890,11 @@ def make_menu_item(
     if checkable:
         widget.setCheckable(checkable)
     if menu is not None:
-        menu.addAction(widget)
+        if insert and menu.actions():
+            before = menu.actions()[0]
+            menu.insertAction(before, widget)
+        else:
+            menu.addAction(widget)
     if func:
         [widget.triggered.connect(func_) for func_ in _validate_func(func)]
     if disabled:

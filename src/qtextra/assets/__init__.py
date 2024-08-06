@@ -50,6 +50,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "zoom_out": "fa5s.expand",
     "ruler": "ph.ruler",
     "ipython": "mdi.console",
+    "cli": "mdi6.console-line",
+    "log": "mdi6.file-document",
     # "ruler": "fa5s.ruler-horizontal",
     "text": "mdi.format-text",
     "crosshair": "ph.crosshair-simple",
