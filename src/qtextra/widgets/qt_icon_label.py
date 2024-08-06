@@ -45,7 +45,7 @@ class QKeepAspectLabel(QLabel):
 class QtActiveIcon(QLabel):
     """Active icon that shows activity."""
 
-    def __init__(self, which: str = "square", size: tuple[int, int] = (20, 20), start: bool = False):
+    def __init__(self, which: str = "oval", size: tuple[int, int] = (20, 20), start: bool = False):
         from qtextra.helpers import make_gif
 
         super().__init__()

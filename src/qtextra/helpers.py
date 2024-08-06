@@ -2195,12 +2195,15 @@ def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you su
 
 
 def choose(
-    parent: ty.Optional[QObject], options: dict[ty.Any, str], text: str = "Please choose from available options."
+    parent: ty.Optional[QObject],
+    options: dict[ty.Any, str],
+    text: str = "Please choose from available options.",
+    orientation: str | ty.Literal["horizontal", "vertical"] = "vertical",
 ) -> ty.Any:
     """Chose from list."""
     from qtextra.widgets.qt_pick_option import QtScrollablePickOption
 
-    dlg = QtScrollablePickOption(parent, text, options)
+    dlg = QtScrollablePickOption(parent, text, options, orientation=orientation)
     if dlg.exec_():
         return dlg.option
     return None
@@ -2490,7 +2493,7 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 def make_loading_gif(
     parent: Qw.QWidget | None,
-    which: ty.Literal["square", "circle"] | str = "square",
+    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "confirm_close",
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,
@@ -2528,7 +2531,7 @@ def make_gif_label(
 
 
 def make_gif(
-    which: str | ty.Literal["dots", "infinity", "oval", "square", "circle"] = "square",
+    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "confirm_close",
     size: tuple[int, int] = (20, 20),
     start: bool = True,
 ) -> QMovie:
@@ -2815,7 +2818,7 @@ def show_left_of_widget(
 
 
 def show_above_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 14
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
@@ -2828,7 +2831,7 @@ def show_above_widget(
 
 
 def show_below_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, y_offset: int = 14, x_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 14
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
