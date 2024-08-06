@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as ty
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QFrame, QVBoxLayout, QWidget
@@ -41,7 +41,7 @@ class QtTileWidget(QFrame):
     def __init__(self, parent: QWidget, tile: Tile):
         super().__init__(parent)
         self.setMouseTracking(True)
-        self.setFixedSize(300, 300)
+        self.setFixedSize(250, 250)
         self.setFrameShape(QFrame.Shape.Box)
 
         self._tile = tile
@@ -59,6 +59,7 @@ class QtTileWidget(QFrame):
             self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="medium_text"
         )
         hp.set_retain_hidden_size_policy(self._description)
+
         self._warning = hp.make_label(
             self, self._tile.warning, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="small_text"
         )
@@ -71,8 +72,14 @@ class QtTileWidget(QFrame):
         layout.setContentsMargins(2, 2, 2, 2)
         layout.addWidget(self._title, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
         layout.addWidget(self._image, stretch=2, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._description, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
-        layout.addWidget(self._warning, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
+        layout.addLayout(
+            hp.make_h_layout(self._description, spacing=0, stretch_id=0, alignment=Qt.AlignmentFlag.AlignHCenter),
+            stretch=1,
+        )
+        layout.addLayout(
+            hp.make_h_layout(self._warning, spacing=0, stretch_id=0, alignment=Qt.AlignmentFlag.AlignHCenter),
+        )
+        layout.addStretch(1)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Handle mouse press event."""

@@ -372,6 +372,11 @@ QtTileWidget:hover {
     border-radius: 6px;
 }
 
+QtTileWidget QLabel#small_text {
+    font-size: {{ decrease(font_size, 2) }};
+    font-weight: bold;
+}
+
 QtTileWidget QLabel#medium_text {
     font-size: {{ increase(font_size, 2) }};
 }
