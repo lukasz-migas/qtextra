@@ -11,7 +11,7 @@ from qtextra.widgets.qt_image_button import QtImagePushButton
 def make_qta_btn(parent, icon_name: str, tooltip: str, **kwargs: ty.Any) -> QtImagePushButton:
     """Make a button with an icon from QtAwesome."""
     btn = hp.make_qta_btn(parent=parent, icon_name=icon_name, tooltip=tooltip, **kwargs)
-    btn.set_medium()
+    btn.set_normal()
     btn.setProperty("layer_button", True)
     return btn
 

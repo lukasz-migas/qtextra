@@ -22,7 +22,7 @@ if ty.TYPE_CHECKING:
 def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
     """Make a button with an icon from QtAwesome."""
     btn = hp.make_qta_btn(*args, **kwargs)
-    btn.set_medium()
+    btn.set_average()
     btn.setProperty("layer_button", True)
     return btn
 
