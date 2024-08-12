@@ -18,6 +18,7 @@ from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, Q
 from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.typing import Callback
+from qtextra.utils.table_config import TableConfig
 from qtextra.utils.utilities import IS_MAC, IS_WIN
 
 if ty.TYPE_CHECKING:
@@ -1095,6 +1096,7 @@ def make_lock_btn(
     size: ty.Optional[tuple[int, int]] = None,
     func: Callback | None = None,
     tooltip: str | None = None,
+    standout: bool = False,
 ) -> QtLockButton:
     """Make lock button."""
     from qtextra.widgets.qt_image_button import QtLockButton
@@ -1115,6 +1117,8 @@ def make_lock_btn(
         widget.set_size(size)
     if tooltip:
         widget.setToolTip(tooltip)
+    if standout:
+        widget.setProperty("standout", True)
     return widget
 
 
@@ -1283,6 +1287,43 @@ def _validate_func(func: ty.Union[ty.Callable, ty.Sequence[ty.Callable]]) -> ty.
     if callable(func):
         func = [func]
     return [func for func in func if callable(func)]
+
+
+def make_table(
+    parent: Qw.QWidget, table_config: TableConfig, elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone
+) -> Qw.QTableWidget:
+    """Make table."""
+    # get columns
+    column_names = table_config.to_columns()
+    # crete table
+    table = Qw.QTableWidget(parent)
+    table.setColumnCount(len(column_names))
+    table.setHorizontalHeaderLabels(column_names)
+    table.setCornerButtonEnabled(False)
+    table.setTextElideMode(elide)
+
+    # set column width
+    header = table.horizontalHeader()
+    for column_index, column in table_config.column_iter():
+        header.setSectionResizeMode(column_index, get_table_stretch(column["sizing"]))
+    return table
+
+
+def clear_table(table: Qw.QTableWidget) -> None:
+    """Clear table."""
+    while table.rowCount() > 0:
+        table.removeRow(0)
+
+
+def get_table_stretch(sizing: str) -> Qw.QHeaderView.ResizeMode:
+    """Get table stretch."""
+    if sizing == "stretch":
+        return Qw.QHeaderView.ResizeMode.Stretch
+    elif sizing == "fixed":
+        return Qw.QHeaderView.ResizeMode.Fixed
+    elif sizing == "contents":
+        return Qw.QHeaderView.ResizeMode.ResizeToContents
+    return Qw.QHeaderView.ResizeMode.Interactive
 
 
 def make_checkbox(
@@ -2219,12 +2260,12 @@ def choose_from_list(
     options: list[str],
     selected: list[str] | None = None,
     title: str = "Please choose from the list.",
+    text: str = "",
 ) -> list[str]:
     """Choose from list."""
     from qtextra.widgets.qt_multi_select import SelectionWidget
 
-    dlg = SelectionWidget(parent)
-    dlg.setWindowTitle(title)
+    dlg = SelectionWidget(parent, title=title, text=text)
     dlg.set_options(options, selected)
     if dlg.exec_() == Qw.QDialog.DialogCode.Accepted:
         return dlg.options
@@ -2711,7 +2752,7 @@ def disconnect_event(widget: Qw.QWidget, evt_name, func):
         pass
 
 
-def get_parent(parent: QObject | None) -> Qw.QWidget | None:
+def get_parent(parent: QObject | None = None) -> Qw.QWidget | None:
     """Get top level parent."""
     if parent is None:
         app = Qw.QApplication.instance()

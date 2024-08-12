@@ -489,6 +489,11 @@ class Themes(ConfigBase):
         color: Color = getattr(self.active, name)
         return color.as_hex()
 
+    def get_qt_color(self, name: str) -> QColor:
+        """Get QColor."""
+        color = self.get_hex_color(name)
+        return QColor(color)
+
     @staticmethod
     def get_text_color_for_background(color: str) -> str:
         """Get text color for background."""

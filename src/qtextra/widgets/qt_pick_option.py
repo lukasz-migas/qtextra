@@ -45,11 +45,10 @@ class QtPickOptionBase(QDialog):
 
         layout = QVBoxLayout(self)
         layout.addWidget(hp.make_label(self, self.text, enable_url=True, wrap=True, object_name="pick_option_label"))
-        layout.addStretch(1)
         if widget:
-            layout.addWidget(widget)
+            layout.addWidget(widget, stretch=True)
         else:
-            layout.addLayout(btn_layout)
+            layout.addLayout(btn_layout, stretch=True)
 
     def on_accept(self, option: str):
         """Set accepted."""

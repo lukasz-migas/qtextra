@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import QEvent, QObject, Signal
+from qtpy.QtCore import QEvent, QObject, Qt, Signal
 from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
@@ -42,8 +42,9 @@ class SelectionWidget(QtFramelessTool):
     options: list[str] | None = None
     original_options: list[str] | None = None
 
-    def __init__(self, parent: QWidget, title: str = "Select..."):
+    def __init__(self, parent: QWidget, title: str = "Select...", text: str = ""):
         self.title = title
+        self.text = text
         super().__init__(parent)
         self.setMinimumWidth(500)
         self.setMinimumHeight(350)
@@ -111,6 +112,9 @@ class SelectionWidget(QtFramelessTool):
         layout = hp.make_form_layout(self)
         hp.style_form_layout(layout)
         layout.addRow(header_layout)
+        layout.addRow(
+            hp.make_label(self, self.text, alignment=Qt.AlignmentFlag.AlignHCenter, wrap=True, enable_url=True)
+        )
         layout.addRow(self.filter_by_option)
         layout.addRow(self.table)
         layout.addRow(

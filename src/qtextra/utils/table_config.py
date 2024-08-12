@@ -10,18 +10,33 @@ ColumnSizing = ty.Literal["stretch", "fixed", "contents"]
 Alignment = ty.Literal["left", "center", "right"]
 
 
-class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
+class Column(ty.TypedDict):
+    """Column data."""
+
+    name: str
+    tag: str
+    type: str
+    show: bool
+    width: int
+    order: int
+    hidden: bool
+    tooltip: str
+    sizing: ColumnSizing
+
+
+class TableConfig(MutableMapping[int, Column]):
     """Table configuration object."""
 
-    def __init__(self) -> None:
-        self._dict: dict[int, dict] = {}
+    def __init__(self, text_alignment: Alignment | str = "center") -> None:
+        super().__init__()
+        self._dict: dict[int, Column] = {}
         self.last_index = -1
         self.color_columns: list[int] = []
         self.no_sort_columns: list[int] = []
         self.checkable_columns: list[int] = []
         self.html_columns: list[int] = []
         self.icon_columns: list[int] = []
-        self.text_alignment = "center"
+        self.text_alignment: Alignment = text_alignment
 
     def __getitem__(self, tag: ty.Union[int, str]) -> ty.Any:
         """Get item id."""
@@ -60,9 +75,9 @@ class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
 
     def update_attribute(self, name: str, attr: str, value: ty.Any) -> None:
         """Update attribute value."""
-        for _name, _meta in self.items():
-            if _name == name:
-                _meta[attr] = value
+        for name_, meta_ in self.items():
+            if name == name_:
+                meta_[attr] = value
 
     def add(
         self,
@@ -106,7 +121,7 @@ class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
             self.icon_columns.append(self.last_index)
         return self
 
-    def get_column(self, tag: str) -> dict[str, ty.Any]:
+    def get_column(self, tag: str) -> Column | None:
         """Get column by tag."""
         for _col_id, col_info in self.items():
             if col_info["tag"] == tag:
@@ -131,3 +146,8 @@ class TableConfig(MutableMapping[int, dict[str, ty.Any]]):
         if include_check:
             return [v["name"] for v in self.values()]
         return [v["name"] for v in self.values() if v["tag"] != "check"]
+
+    def column_iter(self) -> ty.Iterator[tuple[int, Column]]:
+        """Return column iterator."""
+        for col_id in self:
+            yield col_id, self[col_id]
