@@ -20,7 +20,7 @@ class CheckableAbstractModel(QStandardItemModel):
             # self.evt_checked.emit(index.row(), not value)
             call_later(self, partial(self.evt_checked.emit, index.row(), not value), delay=50)
         elif role == Qt.DisplayRole:
-            print("???!!!")
+            pass
         return super().setData(index, value, role)
 
 

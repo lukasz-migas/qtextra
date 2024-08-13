@@ -1048,6 +1048,7 @@ def make_qta_btn(
     properties: dict[str, ty.Any] | None = None,
     label: str = "",
     standout: bool = False,
+    is_menu: bool = False,
     **kwargs: ty.Any,
 ) -> QtImagePushButton:
     """Make button with qtawesome icon."""
@@ -1076,6 +1077,8 @@ def make_qta_btn(
         widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         widget.customContextMenuRequested.connect(func_menu)
         widget.has_right_click = True
+    if func_menu:
+        widget.has_right_click = is_menu
     if retain_size:
         set_retain_hidden_size_policy(widget)
     set_properties(widget, properties)
