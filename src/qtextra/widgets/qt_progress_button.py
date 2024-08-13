@@ -1,4 +1,5 @@
 """Button with progress bar."""
+
 from __future__ import annotations
 
 from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
@@ -23,6 +24,7 @@ class QtActiveProgressBarButton(QWidget):
         self.progress_bar.setTextVisible(False)
 
         self.cancel_btn = hp.make_qta_btn(self, "cancel", average=True)
+        self.cancel_btn.setVisible(False)
         self.evt_cancel = self.cancel_btn.clicked
 
         button_layout = QHBoxLayout()
@@ -36,8 +38,6 @@ class QtActiveProgressBarButton(QWidget):
         layout.setSpacing(0)
         layout.addLayout(button_layout)
         layout.addWidget(self.progress_bar)
-        # layout.addStretch(1)
-
         self.active = False
 
     @property
@@ -48,6 +48,7 @@ class QtActiveProgressBarButton(QWidget):
     @active.setter
     def active(self, value: bool) -> None:
         self.active_btn.active = value
+        self.cancel_btn.setVisible(value)
         self.progress_bar.setValue(0)
         self.progress_bar.setRange(0, 0)
         self.progress_bar.setVisible(value)

@@ -1,4 +1,5 @@
 """Tutorial widget."""
+
 import typing as ty
 from enum import Enum
 
@@ -53,6 +54,7 @@ class TutorialStep(BaseModel):
     widget: QWidget
     position: Position = Position.RIGHT
     position_offset: tuple[int, int] = (0, 0)
+    func: ty.Optional[tuple[ty.Callable, ...]] = None
 
     class Config:
         """Configuration."""
@@ -149,7 +151,7 @@ class QtTutorial(QDialog):
         header_layout.addWidget(self._close_btn)
 
         self._title_label = hp.make_label(self, "", bold=True)
-        self._message_label = hp.make_label(self, "", wrap=True, selectable=True)
+        self._message_label = hp.make_label(self, "", wrap=True, selectable=True, enable_url=True)
 
         footer_widget = QWidget(self)
         footer_widget.setObjectName("tutorial_footer")
@@ -217,6 +219,9 @@ class QtTutorial(QDialog):
         self._title_label.setText(step.title)
         self._message_label.setText(step.message)
         self._step_label.setText(f"Step {index + 1}/{len(self.steps)}")
+        if step.func:
+            for func in step.func:
+                func()
 
         # enable/disable buttons
         hp.disable_widgets(self._prev_btn, disabled=index == 0)
@@ -320,5 +325,4 @@ def _popover(frame, widget):
             for position in Position
         ]
     )
-    pop.show()
     pop.show()

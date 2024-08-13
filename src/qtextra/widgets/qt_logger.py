@@ -90,6 +90,7 @@ class QtLogger(QWidget):
 
         # Lay out all the widgets
         layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.textedit, stretch=1)
         layout.addWidget(toolbar)
         layout.setSpacing(0)
@@ -193,7 +194,7 @@ class QtLoggerDialog(QtFramelessTool):
 
         layout = QVBoxLayout()
         layout.addLayout(header_layout)
-        layout.addWidget(self._logger)
+        layout.addWidget(self._logger, stretch=True)
         layout.setSpacing(2)
         layout.setContentsMargins(6, 6, 6, 6)
         return layout
