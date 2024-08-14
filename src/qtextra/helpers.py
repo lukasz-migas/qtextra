@@ -1310,6 +1310,8 @@ def make_table(
     header = table.horizontalHeader()
     for column_index, column in table_config.column_iter():
         header.setSectionResizeMode(column_index, get_table_stretch(column["sizing"]))
+        if column["hidden"]:
+            header.setSectionHidden(column_index, column["hidden"])
     return table
 
 
