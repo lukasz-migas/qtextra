@@ -90,7 +90,7 @@ class QtScaleBarControls(QtFramelessPopup):
 
         layout = hp.make_form_layout(self)
         layout.setContentsMargins(6, 6, 6, 6)
-        layout.addRow(self._make_move_handle(title="Scalebar controls"))
+        layout.addRow(self._make_move_handle("Scalebar controls"))
         layout.addRow(hp.make_label(self, "Visible"), self.visible_checkbox)
         layout.addRow(hp.make_label(self, "Colored"), self.colored_checkbox)
         layout.addRow(hp.make_label(self, "Color"), self.color_swatch)

@@ -357,6 +357,38 @@ def make_warning_label(
     return widget
 
 
+def make_url_btn(
+    parent: Qw.QWidget,
+    xxsmall: bool = False,
+    xsmall: bool = False,
+    small: bool = True,
+    normal: bool = False,
+    average: bool = False,
+    medium: bool = False,
+    large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    func: Callback | None = None,
+    tooltip: str = "Click here to find out more...",
+) -> QtImagePushButton:
+    """Make Qta button that looks like an URL."""
+    return make_qta_btn(
+        parent,
+        "help",
+        xxsmall=xxsmall,
+        xsmall=xsmall,
+        small=small,
+        normal=normal,
+        average=average,
+        medium=medium,
+        large=large,
+        xlarge=xlarge,
+        xxlarge=xxlarge,
+        func=func,
+        tooltip=tooltip,
+    )
+
+
 def make_scrollable_label(
     parent: Qw.QWidget | None,
     text: str = "",
@@ -2876,7 +2908,7 @@ def show_above_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
     sz_hint = widget_to_show.size()
-    pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() - y_offset))
+    pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() + y_offset))
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()

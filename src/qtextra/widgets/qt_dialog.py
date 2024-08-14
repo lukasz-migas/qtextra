@@ -544,12 +544,11 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
 
         layout = hp.make_hbox_layout(spacing=0)
         layout.addWidget(self._title_label, stretch=True)
-        layout.addStretch(1)
         layout.addWidget(self._move_handle)
         self._title_layout = layout
         return layout
 
-    def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """Mouse press event."""
         super().mousePressEvent(event)
         # allow movement of the window when user uses right-click and the move handle button does not exist
@@ -560,13 +559,13 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
         elif self.childAt(event.pos()) == self._move_handle:
             self._old_window_pos = event.x(), event.y()
 
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """Mouse move event - ensures its possible to move the window to new location."""
         super().mouseMoveEvent(event)
         if self._old_window_pos is not None:
             self.move(event.globalX() - self._old_window_pos[0], event.globalY() - self._old_window_pos[1])
 
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         """Mouse release event."""
         super().mouseReleaseEvent(event)
         self._old_window_pos = None

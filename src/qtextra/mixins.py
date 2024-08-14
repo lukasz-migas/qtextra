@@ -135,7 +135,7 @@ class MinimizeMixin:
         hide_btn.clicked.connect(self.on_hide)
 
         hide_layout = self._make_move_handle()
-        hide_layout.insertWidget(2, hide_btn)
+        hide_layout.addWidget(hide_btn)
         return hide_btn, hide_layout
 
     def on_hide(self) -> None:
@@ -161,7 +161,7 @@ class CloseMixin:
 
     def _make_close_handle(self, title: str = "") -> tuple[QPushButton, QHBoxLayout]:
         close_btn = hp.make_qta_btn(
-            self,  # type: ignore[arg-type]
+            self,
             "cross",
             tooltip="Click here to close the popup window",
             normal=True,
@@ -169,7 +169,7 @@ class CloseMixin:
         close_btn.clicked.connect(self.close)
 
         close_layout = self._make_move_handle()
-        close_layout.insertWidget(3, close_btn)
+        close_layout.addWidget(close_btn)
         self._title_label.setText(title)
         return close_btn, close_layout
 

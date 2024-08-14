@@ -87,7 +87,7 @@ class MinimizeMixin:
         hide_handle.clicked.connect(self.on_hide)
 
         handle_layout = self._make_move_handle()
-        handle_layout.insertWidget(2, hide_handle)
+        handle_layout.addWidget(hide_handle)
         return hide_handle, handle_layout
 
     def on_hide(self):
@@ -112,7 +112,7 @@ class CloseMixin:
         close_btn.clicked.connect(self.close)
 
         handle_layout = self._make_move_handle()
-        handle_layout.insertWidget(3, close_btn)
+        handle_layout.addWidget(close_btn)
         self._title_label.setText(title)
         return close_btn, handle_layout
 
