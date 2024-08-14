@@ -1077,7 +1077,8 @@ def make_qta_btn(
         widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         widget.customContextMenuRequested.connect(func_menu)
         widget.has_right_click = True
-    if func_menu:
+        is_menu = True
+    if is_menu:
         widget.has_right_click = is_menu
     if retain_size:
         set_retain_hidden_size_policy(widget)

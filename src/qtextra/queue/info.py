@@ -184,6 +184,14 @@ class TaskInfoDialog(QtDialog):
             hp.copy_text_to_clipboard(format_command(commands))
             logger.trace(f"Copied {len(commands)} commands to clipboard.")
 
+    def on_scroll_to_top(self) -> None:
+        """Scroll to end."""
+        self.stdout_edit.verticalScrollBar().setValue(self.stdout_edit.verticalScrollBar().minimum())
+
+    def on_scroll_to_end(self) -> None:
+        """Scroll to end."""
+        self.stdout_edit.verticalScrollBar().setValue(self.stdout_edit.verticalScrollBar().maximum())
+
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QVBoxLayout:
         """Make panel."""
@@ -243,7 +251,9 @@ class TaskInfoDialog(QtDialog):
         stdout_layout.addWidget(hp.make_h_line(self))
         stdout_layout.addLayout(
             hp.make_h_layout(
-                hp.make_btn(self, "Scroll to bottom", func=self.stdout_edit.ensureCursorVisible), stretch_after=True
+                hp.make_btn(self, "Scroll to top", func=self.on_scroll_to_top),
+                hp.make_btn(self, "Scroll to end", func=self.on_scroll_to_end),
+                stretch_after=True,
             )
         )
 
