@@ -10,6 +10,7 @@ class TaskState(str, Enum):
     """State of the task."""
 
     QUEUED = "queued"
+    RUN_NEXT = "run_next"
     RUNNING = "running"
     PAUSING = "pausing"
     PAUSED = "paused"
