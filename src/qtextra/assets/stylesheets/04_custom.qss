@@ -47,21 +47,21 @@ QtListView::item {
   border: 1px solid {{ foreground }};
 }
 
-QtListView::item:hover {
-  background-color: {{ lighten(foreground, 3) }};
-}
+/*QtListView::item:hover {*/
+/*  background-color: {{ lighten(foreground, 3) }};*/
+/*}*/
 
 /* in the QSS context "active" means the window is active */
 /* (as opposed to focused on another application) */
-QtListView::item:selected:active{
-  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ current }}, stop: 1 {{ darken(current, 15) }});
-}
+/*QtListView::item:selected:active{*/
+/*  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ current }}, stop: 1 {{ darken(current, 15) }});*/
+/*}*/
 
 
-QtListView::item:selected:!active {
-  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});
-  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});
-}
+/*QtListView::item:selected:!active {*/
+/*  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});*/
+/*  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});*/
+/*}*/
 
 
 QtListView QLineEdit {
