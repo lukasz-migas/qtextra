@@ -292,15 +292,16 @@ QCheckBox {
 }
 
 QCheckBox::indicator {
-  width: 16px;
-  height: 16px;
-  border: 0px;
-  padding: 1px;
-  border-radius: 2px
+    width: 16px;
+    height: 16px;
+    border: 0px;
+    padding: 1px;
+    border-radius: 2px;
+    /*background-color: {{ foreground }};*/
 }
 
 QCheckBox::indicator:hover {
-  background-color: {{ lighten(foreground, 5) }};
+  background-color: {{ darken(foreground, 10) }};
 }
 
 QCheckBox::indicator:unchecked {
@@ -637,7 +638,7 @@ QGroupBox::indicator {
   background-color: {{ foreground }};
   border: 0px;
   padding: 1px;
-  border-radius: 2px
+  border-radius: 2px;
 }
 
 QGroupBox::indicator:hover {
