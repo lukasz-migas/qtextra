@@ -7,6 +7,7 @@ https://github.dev/napari/superqt/blob/f4d9881b0c64c0419fa2da182a1c403a01bd084f/
 from __future__ import annotations
 
 from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLayout, QWidget
+from qtpy.QtCore import Qt
 from superqt import QCollapsible
 
 import qtextra.helpers as hp
@@ -19,20 +20,28 @@ class QtCheckCollapsible(QCollapsible):
     Based on https://stackoverflow.com/a/68141638
     """
 
-    def __init__(self, title: str = "", parent: QWidget | None = None):
+    def __init__(
+        self, title: str = "", parent: QWidget | None = None, icon: str = "info", warning_icon: str = "warning"
+    ):
         super().__init__(title, parent)
-        self._checkbox = QCheckBox()
-        self._checkbox.stateChanged.connect(self._toggle_btn.setChecked)
+        self.checkbox = QCheckBox()
+        self.checkbox.stateChanged.connect(self._toggle_btn.setChecked)
 
         # remove button item from the layout
         self.layout().takeAt(0)
+
+        self.icon_btn = hp.make_qta_btn(self, icon_name=icon, standout=True, average=True)
+
+        self.warning_label = hp.make_warning_label(self, "", icon_name=icon, normal=True)
 
         # create layout where the first item is checkbox
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(1)
-        layout.addWidget(self._checkbox)
+        layout.addWidget(self.checkbox)
         layout.addWidget(self._toggle_btn, stretch=True)
+        layout.addWidget(self.icon_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self.warning_label, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         # add widget to layout
         self.layout().addLayout(layout)
@@ -42,25 +51,33 @@ class QtCheckCollapsible(QCollapsible):
 
         THEMES.evt_theme_icon_changed.connect(self._set_icon)
 
-    def _set_icon(self):
+    def _set_icon(self) -> None:
         self.setExpandedIcon(hp.make_qta_icon("chevron_down"))
         self.setCollapsedIcon(hp.make_qta_icon("chevron_up"))
 
     def set_checkbox_visible(self, state: bool) -> None:
         """Show or hide the checkbox."""
-        self._checkbox.setVisible(state)
+        self.checkbox.setVisible(state)
+
+    def set_icon_visible(self, state: bool) -> None:
+        """Show or hide the checkbox."""
+        self.icon_btn.setVisible(state)
+
+    def set_warning_visible(self, state: bool) -> None:
+        """Show or hide the checkbox."""
+        self.warning_label.setVisible(state)
 
     @property
     def is_checked(self) -> bool:
         """Determine whether widget is checked."""
-        return self._checkbox.isChecked()
+        return self.checkbox.isChecked()
 
     def _toggle(self):
-        self._checkbox.setChecked(self._toggle_btn.isChecked())
+        self.checkbox.setChecked(self._toggle_btn.isChecked())
         super()._toggle()
 
     def _checked(self):
-        self._toggle_btn.setChecked(self._checkbox.isChecked())
+        self._toggle_btn.setChecked(self.checkbox.isChecked())
 
     def addLayout(self, layout: QLayout):
         """Add layout to the central content widget's layout."""

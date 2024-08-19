@@ -1848,7 +1848,15 @@ def polish_widget(*widget: Qw.QWidget):
 
 
 def make_advanced_collapsible(
-    parent: Qw.QWidget, title: str = "Advanced options", allow_checkbox: bool = True, collapsed: bool = True
+    parent: Qw.QWidget,
+    title: str = "Advanced options",
+    allow_checkbox: bool = True,
+    icon: str = "info",
+    allow_icon: bool = False,
+    icon_func: Callback | None = None,
+    allow_warning: bool = False,
+    warning_icon: str = "warning",
+    collapsed: bool = True,
 ) -> QtCheckCollapsible:
     """Make collapsible widget."""
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
@@ -1857,8 +1865,12 @@ def make_advanced_collapsible(
     layout = make_form_layout()
     layout.setContentsMargins(2, 2, 2, 2)
     content.setLayout(layout)
-    advanced_widget = QtCheckCollapsible(title, parent)
+    advanced_widget = QtCheckCollapsible(title, parent, icon=icon, warning_icon=warning_icon)
     advanced_widget.set_checkbox_visible(allow_checkbox)
+    advanced_widget.set_icon_visible(allow_icon)
+    advanced_widget.set_warning_visible(allow_warning)
+    if icon_func:
+        [advanced_widget.icon_btn.clicked.connect(func_) for func_ in _validate_func(icon_func)]
     advanced_widget.setContent(content)
     advanced_widget.collapse() if collapsed else advanced_widget.expand()
     return advanced_widget
