@@ -1,4 +1,5 @@
 """Viewer base."""
+
 import typing as ty
 from abc import ABC
 from contextlib import suppress
@@ -96,6 +97,15 @@ class ViewerBase(ABC):
         for layer in self.viewer.layers:
             if isinstance(layer, cls):
                 layers.append(layer)
+        return layers
+
+    def get_layers_of_type_with_attr_value(self, cls: Layer, attr: str, value: ty.Any) -> ty.List[Layer]:
+        """Get all layers of type."""
+        layers = []
+        for layer in self.viewer.layers:
+            if isinstance(layer, cls):
+                if getattr(layer, attr) == value:
+                    layers.append(layer)
         return layers
 
     def update_attribute(self, name: str, **kwargs: ty.Any) -> None:

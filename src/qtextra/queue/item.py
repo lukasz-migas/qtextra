@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import typing as ty
-
 from loguru import logger
 from qtpy.QtCore import Qt, QTimer, Signal  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QFrame, QGridLayout, QWidget
+import os
 
 import qtextra.helpers as hp
 from qtextra.queue.task import Task
@@ -18,6 +18,8 @@ if ty.TYPE_CHECKING:
     from qtextra.queue.info import TaskInfoDialog
 
 logger = logger.bind(src="TaskWidget")
+
+IS_DEV = os.environ.get("DEV_MODE", "0") == "1"
 
 
 class TaskWidget(QFrame):
@@ -39,12 +41,12 @@ class TaskWidget(QFrame):
 
     def __init__(self, parent: QWidget | None = None, toggled: bool = True):
         super().__init__(parent)
-        self.setFrameShape(QFrame.Box)  # type: ignore[attr-defined]
+        self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)
 
         self.poll_timer = QTimer(self)
         self.poll_timer.setInterval(1000)
-        self.poll_timer.timeout.connect(self.on_update_timer)  # type: ignore[attr-defined]
+        self.poll_timer.timeout.connect(self.on_update_timer)
 
         self.task_name = hp.make_label(
             self,
@@ -66,7 +68,7 @@ class TaskWidget(QFrame):
             self,
             "",
             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            enable_url=True,  # type: ignore[attr-defined]
+            enable_url=True,
         )
         self.time_info = hp.make_label(self, "", alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -105,7 +107,7 @@ class TaskWidget(QFrame):
         self.retry_btn = hp.make_qta_btn(
             self, "retry", tooltip="Retry running task if the task has failed.", normal=True, func=self._on_retry_task
         )
-        self.pause_btn = QtPauseButton(self)  # type: ignore
+        self.pause_btn = QtPauseButton(self)
         self.pause_btn.set_normal()
         self.pause_btn.setToolTip("Pause running task.")
         self.pause_btn.clicked.connect(self._on_pause_task)  # type: ignore[unused-ignore]
@@ -120,7 +122,7 @@ class TaskWidget(QFrame):
             self,
             "",
             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            object_name="task_id",  # type: ignore[attr-defined]
+            object_name="task_id",
         )
 
         layout = QGridLayout(self)
@@ -232,7 +234,7 @@ class TaskWidget(QFrame):
         if self.task:
             commands = list(self.task.command_iter())
             commands = [" ".join(cmd) for cmd in commands]
-            hp.copy_text_to_clipboard(format_command(commands))
+            hp.copy_text_to_clipboard(format_command(commands, IS_DEV))
             hp.add_flash_animation(self, duration=1000)
 
     def on_task_info(self) -> None:

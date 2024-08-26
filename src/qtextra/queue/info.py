@@ -1,7 +1,8 @@
 """Info widget."""
 
+from __future__ import annotations
 import typing as ty
-
+import os
 from koyo.timer import MeasureTimer
 from loguru import logger
 from qtpy.QtCore import Qt, Signal
@@ -21,9 +22,13 @@ from qtextra.queue.task import Task
 from qtextra.queue.utilities import format_command, format_interval, format_timestamp
 from qtextra.typing import TaskState
 from qtextra.widgets.qt_dialog import QtDialog
-from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView, TableConfig
+from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
+from qtextra.utils.table_config import TableConfig
 
 logger = logger.bind(src="TaskInfo")
+
+IS_DEV = os.environ.get("DEV_MODE", "0") == "1"
+
 STATE_TO_ICON = {
     TaskState.QUEUED: "queue",
     TaskState.RUNNING: "run",
@@ -50,7 +55,7 @@ STATE_TO_COLOR = {
 }
 
 TABLE_CONFIG = (
-    TableConfig()  # type: ignore[no-untyped-call]
+    TableConfig()
     .add("", "check", "bool", 0, no_sort=True, hidden=True)
     .add("Index", "index", "int", 45, sizing="fixed")
     .add("Command", "command", "str", 150, sizing="stretch")
@@ -181,7 +186,7 @@ class TaskInfoDialog(QtDialog):
             indices = [self.table_proxy.mapToSource(index) for index in indices]
             indices = [index.row() for index in indices]
             commands = [self.command_table.get_value(TABLE_CONFIG.command, index) for index in indices]
-            hp.copy_text_to_clipboard(format_command(commands))
+            hp.copy_text_to_clipboard(format_command(commands, IS_DEV))
             logger.trace(f"Copied {len(commands)} commands to clipboard.")
 
     def on_scroll_to_top(self) -> None:
@@ -274,7 +279,7 @@ class TaskInfoDialog(QtDialog):
 
         main_layout = hp.make_v_layout()
         self.setWindowTitle(f"{self.task.task_name} :: {self.task.task_id}")
-        layout2: QHBoxLayout = hp.make_h_layout()  # type: ignore[assignment]
+        layout2: QHBoxLayout = hp.make_h_layout()
         layout2.addLayout(layout, stretch=True)
         main_layout.addLayout(layout2)
         return main_layout

@@ -107,8 +107,11 @@ def escape_ansi(text: str) -> str:
         return text
 
 
-def format_command(commands: list[str]) -> str:
+def format_command(commands: list[str], is_dev: bool = True) -> str:
     """Format command."""
     command = "; ".join(commands)
-    command = command.replace("--no_color --debug", "--dev")
+    if is_dev:
+        command = command.replace("--no_color --debug", "--dev")
+    else:
+        command = command.replace("--no_color --debug", "--debug")
     return command
