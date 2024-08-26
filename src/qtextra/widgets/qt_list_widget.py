@@ -103,6 +103,7 @@ class QtListWidget(QListWidget):
 
     evt_updated = Signal(int)
     evt_added = Signal(object)
+    evt_pre_remove = Signal(object)
     evt_remove = Signal(object)
     evt_cleared = Signal()
 
@@ -251,6 +252,7 @@ class QtListWidget(QListWidget):
     @Slot(QListWidgetItem, bool)
     def remove_item(self, item: QListWidgetItem, force: bool = False):
         """Remove item from the list."""
+        self.evt_pre_remove.emit(item)
         self.takeItem(self.indexFromItem(item).row())
         self.evt_remove.emit(item.item_model)
         super().removeItemWidget(item)

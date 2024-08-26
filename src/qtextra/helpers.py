@@ -13,8 +13,8 @@ import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
-from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QSize, Qt, QTimer
-from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
+from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QSize, Qt, QTimer, QUrl
+from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap, QDesktopServices
 from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.typing import Callback
@@ -2959,3 +2959,13 @@ def set_object_name(*widget: Qw.QWidget, object_name: str) -> None:
             widget_.polish()
         else:
             polish_widget(widget_)
+
+
+def open_file(path: PathLike) -> None:
+    """Open file using default system application."""
+    from qtpy.QtCore import QUrl
+    from qtpy.QtGui import QDesktopServices
+
+    path = Path(path)
+    if path.exists():
+        QDesktopServices.openUrl(QUrl(path.as_uri()))  # type: ignore[attr-defined]
