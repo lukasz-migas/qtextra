@@ -14,7 +14,7 @@ import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
 from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QSize, Qt, QTimer, QUrl
-from qtpy.QtGui import QColor, QCursor, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap, QDesktopServices
+from qtpy.QtGui import QColor, QCursor, QDesktopServices, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.typing import Callback
@@ -1958,6 +1958,7 @@ def make_menu_item(
     status_tip: str | None = None,
     tooltip: str | None = None,
     checkable: bool = False,
+    checked: bool = False,
     func: Callback | None = None,
     disabled: bool = False,
     insert: bool = False,
@@ -1980,6 +1981,7 @@ def make_menu_item(
         widget.setStatusTip(status_tip)
     if checkable:
         widget.setCheckable(checkable)
+        widget.setChecked(checked)
     if menu is not None:
         if insert and menu.actions():
             before = menu.actions()[0]
@@ -2963,9 +2965,6 @@ def set_object_name(*widget: Qw.QWidget, object_name: str) -> None:
 
 def open_file(path: PathLike) -> None:
     """Open file using default system application."""
-    from qtpy.QtCore import QUrl
-    from qtpy.QtGui import QDesktopServices
-
     path = Path(path)
     if path.exists():
         QDesktopServices.openUrl(QUrl(path.as_uri()))  # type: ignore[attr-defined]
