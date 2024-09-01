@@ -1723,7 +1723,9 @@ def make_v_layout(
     if spacing is not None:
         layout.setSpacing(spacing)
     if margin is not None:
-        layout.setContentsMargins(margin, margin, margin, margin)
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
     return _set_in_layout(
         *widgets,
         layout=layout,
