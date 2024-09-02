@@ -63,7 +63,7 @@ class ViewerBase(ABC):
         try:
             self.viewer.layers.remove(name)
             return True
-        except ValueError as err:
+        except (ValueError, KeyError) as err:
             if not silent:
                 print(f"Failed to remove layer `{name}`\n{err}")
         return False

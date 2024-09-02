@@ -5,7 +5,6 @@ from __future__ import annotations
 from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.queue.cli_queue import N_PARALLEL
 from qtextra.queue.queue_widget import QUEUE, QueueList
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
@@ -26,8 +25,8 @@ class QueuePopup(QtFramelessTool):
         self.n_tasks = hp.make_labelled_slider(
             self,
             minimum=1,
-            maximum=max(N_PARALLEL, 6),
-            value=N_PARALLEL,
+            maximum=max(QUEUE.n_parallel, 6),
+            value=QUEUE.n_parallel,
             tooltip="Maximum number of tasks to run simultaneously.",
             func=QUEUE.set_max_parallel,
         )
