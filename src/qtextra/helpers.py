@@ -2296,12 +2296,15 @@ def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you su
 
 def choose(
     parent: ty.Optional[QObject],
-    options: dict[ty.Any, str],
+    options: dict[ty.Any, str] | list[str],
     text: str = "Please choose from available options.",
     orientation: str | ty.Literal["horizontal", "vertical"] = "vertical",
 ) -> ty.Any:
     """Chose from list."""
     from qtextra.widgets.qt_pick_option import QtScrollablePickOption
+
+    if isinstance(options, list):
+        options = {opt: opt for opt in options}
 
     dlg = QtScrollablePickOption(parent, text, options, orientation=orientation)
     if dlg.exec_():
@@ -2326,7 +2329,7 @@ def choose_from_list(
     return []
 
 
-def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Are you sure?") -> bool:
+def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Warning") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
 

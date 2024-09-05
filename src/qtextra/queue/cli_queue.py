@@ -17,10 +17,6 @@ from qtextra.utils.utilities import running_under_pytest
 logger = logger.bind(src="Queue")
 
 
-AUTO_RUN = True
-N_PARALLEL = 4
-
-
 class CLIQueueHandler(QObject):
     """Simple Queue handler that executes code as its being added to the queue."""
 
@@ -55,8 +51,11 @@ class CLIQueueHandler(QObject):
     # signal to indicate that a task had been removed
     evt_remove_task = Signal(str)
 
-    def __init__(self, parent: ty.Optional[QObject] = None):
+    def __init__(self, parent: ty.Optional[QObject] = None, n_parallel: int = 1, auto_run: bool = True):
         super().__init__(parent=parent)
+        self.auto_run = auto_run
+        self.n_parallel = n_parallel
+
         # flag to close queueing
         self.queue_closed: bool = False
 
@@ -74,8 +73,7 @@ class CLIQueueHandler(QObject):
 
     def set_max_parallel(self, n_parallel: int) -> None:
         """Set maximum number of parallel tasks."""
-        global N_PARALLEL
-        N_PARALLEL = n_parallel
+        self.n_parallel = n_parallel
         self.run_queued()
 
     @property
@@ -295,7 +293,7 @@ class CLIQueueHandler(QObject):
             return
 
         # start another task
-        if AUTO_RUN and self.is_available() and self.pending_queue:
+        if self.auto_run and self.is_available() and self.pending_queue:
             task_id = self.pending_queue.pop(0)  # get the first item
             worker_obj = self.active_tasks[task_id]  # get another worker that was queued previously
             worker_obj.run()
@@ -409,7 +407,7 @@ class CLIQueueHandler(QObject):
 
     def is_available(self) -> bool:
         """Indicates whether the queue is busy."""
-        return len(self.running_queue) < N_PARALLEL
+        return len(self.running_queue) < self.n_parallel
 
     def is_queued(self, task_id: str) -> bool:
         """Check if task is queued."""
