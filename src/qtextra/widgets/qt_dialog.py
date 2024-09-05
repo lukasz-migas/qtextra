@@ -594,6 +594,8 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
         """Hide dialog rather than delete it."""
         if self.HIDE_WHEN_CLOSE:
             self.hide()
+            if hasattr(self, "evt_hide"):
+                self.evt_hide.emit()
             self.clearFocus()
             return False
         else:
