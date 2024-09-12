@@ -68,7 +68,7 @@ class QtImageControls(QtBaseImageControls):
         self.iso_threshold_slider = sld
 
         self.attenuation_label = hp.make_label(self, "Attenuation")
-        sld = hp.make_slider_with_text(self, 0, 100, value=self.layer.attenuation * 200)
+        sld = hp.make_slider_with_text(self, 0, 100, value=int(self.layer.attenuation * 200))
         sld.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         sld.valueChanged.connect(self.on_change_attenuation)
         self.attenuation_slider = sld

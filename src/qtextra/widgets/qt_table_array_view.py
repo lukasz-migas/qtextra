@@ -195,7 +195,10 @@ class QtArrayTableModel(QAbstractTableModel):
     def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
         """Sort data."""
         self.beginResetModel()
-        self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.SortOrder.AscendingOrder)
+        try:
+            self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.SortOrder.AscendingOrder)
+        except TypeError:
+            pass
         self.endResetModel()
 
 
