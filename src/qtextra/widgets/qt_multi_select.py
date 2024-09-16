@@ -74,7 +74,7 @@ class SelectionWidget(QtFramelessTool):
         """Return state."""
         indices = self.table.get_all_checked()
         self.options = [self.table.get_value(self.TABLE_CONFIG.option, index) for index in indices]
-        return super().accept()
+        super().accept()
 
     def reject(self) -> None:
         """Return state."""

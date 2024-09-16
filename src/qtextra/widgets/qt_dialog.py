@@ -599,7 +599,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
             self.clearFocus()
             return False
         else:
-            super().close()
+            return super().close()
 
 
 class QtFramelessTool(QtFramelessPopup):
@@ -610,7 +610,9 @@ class QtFramelessTool(QtFramelessPopup):
         parent: QWidget | None,
         title: str = "",
         position: QPoint | None = None,
-        flags=Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool,
+        flags: Qt.WindowType = Qt.WindowType.FramelessWindowHint
+        | Qt.WindowType.WindowStaysOnTopHint
+        | Qt.WindowType.Tool,
         delay: bool = False,
     ):
         super().__init__(parent, title, position, flags, delay=delay)

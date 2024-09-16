@@ -24,7 +24,7 @@ class QtPickOptionBase(QDialog):
 
         self.text = text
         self.options = options
-        self.responses = {}
+        self.responses: dict[str, str] = {}
         self._setup_ui()
 
     def _get_layout_widget(self) -> tuple[QWidget | None, QWidget | None]:
@@ -50,15 +50,15 @@ class QtPickOptionBase(QDialog):
         else:
             layout.addLayout(btn_layout, stretch=True)
 
-    def on_accept(self, option: str):
+    def on_accept(self, option: str) -> None:
         """Set accepted."""
         self.option = option
-        self.accept()
+        return self.accept()
 
-    def reject(self):
+    def reject(self) -> None:
         """Set rejected."""
         self.option = None
-        super().reject()
+        return super().reject()
 
 
 class QtPickOption(QtPickOptionBase):

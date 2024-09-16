@@ -119,7 +119,7 @@ class QtColorListDialog(QtDialog):
     def accept(self) -> None:
         """Accept changes."""
         self.colors = self.new_colors
-        return super().accept()
+        super().accept()
 
 
 if __name__ == "__main__":  # pragma: no cover
