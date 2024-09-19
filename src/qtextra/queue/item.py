@@ -247,8 +247,10 @@ class TaskWidget(QFrame):
                     self.dlg_info = TaskInfoDialog(self, self.task)
                     self.dlg_info.evt_update.connect(self.on_update_timer)
                 self.dlg_info.show()
+                self.dlg_info.raise_()
             except RuntimeError:
                 self.dlg_info = None
+                logger.error("Failed to show task info dialog.")
                 self.on_task_info()
 
     def update_progress(self) -> None:
