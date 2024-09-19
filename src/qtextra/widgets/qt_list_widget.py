@@ -303,7 +303,10 @@ class QtListWidget(QListWidget):
         """Append item."""
         if self._check_existing(item_model):
             return None, None
-        item = QListWidgetItem(parent=self)
+        try:
+            item = QListWidgetItem(parent=self)
+        except AttributeError:
+            item = QListWidgetItem()
         item.item_model = item_model
         widget = self._make_widget(item)
         widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
