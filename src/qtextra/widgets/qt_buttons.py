@@ -6,7 +6,7 @@ import typing as ty
 
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QMovie, QPainter
-from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
 
 
 class QtPushButton(QPushButton):
@@ -25,7 +25,7 @@ class QtActivePushButton(QtPushButton):
         super().__init__(*args, **kwargs)
         from qtextra.helpers import make_gif
 
-        self.loading_movie = make_gif("square")
+        self.loading_movie = make_gif("infinity")
         self.loading_movie.frameChanged.connect(self._update_icon)
         self.active = False
 
@@ -36,10 +36,10 @@ class QtActivePushButton(QtPushButton):
     @property
     def active(self) -> bool:
         """Update the state of the loading label."""
-        return self.loading_movie.state() == QMovie.MovieState.Running
+        return self.loading_movie.state() == QMovie.MovieState.Running  # type: ignore[no-any-return]
 
     @active.setter
-    def active(self, value: bool):
+    def active(self, value: bool) -> None:
         self.loading_movie.start() if value else self.loading_movie.stop()
         if not value:
             self.setIcon(None)
@@ -61,7 +61,7 @@ class QtActivePushButton(QtPushButton):
 class QtRichTextButton(QtPushButton):
     """Rich-text button."""
 
-    def __init__(self, parent=None, text=None):
+    def __init__(self, parent: QWidget | None = None, text: str | None = None):
         super().__init__(parent)
         self._label = QLabel(self)
         if text is not None:
@@ -71,11 +71,11 @@ class QtRichTextButton(QtPushButton):
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
         self.setLayout(self._layout)
-        self._label.setAttribute(Qt.WA_TranslucentBackground)
-        self._label.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._label.setAttribute(Qt.WindowState.WA_TranslucentBackground)
+        self._label.setAttribute(Qt.WindowState.WA_TransparentForMouseEvents)
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
         self._label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self._label.setTextFormat(Qt.RichText)
+        self._label.setTextFormat(Qt.TextFormat.RichText)
         self._label.setWordWrap(True)
         self._layout.addWidget(self._label)
         return
