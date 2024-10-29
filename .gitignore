@@ -106,4 +106,4 @@ ENV/
 
 _version.py
 *.iml
-.idea/workspace.xml
+.idea/
