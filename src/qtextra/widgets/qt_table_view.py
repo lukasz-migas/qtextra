@@ -770,6 +770,10 @@ class QtCheckableTableView(QTableView):
         """ADd row to the data."""
         self.add_data([data])
 
+    def append_data(self, data: list) -> None:
+        """Append data."""
+        self.add_data(data)
+
     def add_data(self, data: list[list]) -> None:
         """Add data."""
         n_items = self.n_rows
@@ -905,6 +909,12 @@ class QtCheckableTableView(QTableView):
     def remove_row(self, row_id: int) -> None:
         """Remove row from the model."""
         self.model().removeRow(row_id)
+
+    def remove_rows(self, rows: list[int]) -> None:
+        """Remove rows from the model."""
+        rows = sorted(rows, reverse=True)
+        for row in rows:
+            self.remove_row(row)
 
     def update_row(self, row: int, value: list, match_to_sort: bool = True) -> None:
         """Update entire row."""
