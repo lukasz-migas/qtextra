@@ -26,11 +26,19 @@ class QtScreenshotDialog(QtFramelessPopup):
     def make_panel(self) -> QLayout:
         """Make layout."""
         size = self.wrapper.widget.canvas.size
-        self.size_x = hp.make_int_spin_box(self, 50, 10000, 50, default=size[0], tooltip="Width of the screenshot.")
-        self.size_y = hp.make_int_spin_box(self, 50, 10000, 50, default=size[1], tooltip="Height of the screenshot.")
+        self.size_x = hp.make_int_spin_box(self, 50, 8000, 50, default=size[0], tooltip="Width of the screenshot.")
+        self.size_y = hp.make_int_spin_box(self, 50, 8000, 50, default=size[1], tooltip="Height of the screenshot.")
 
         self.scale = hp.make_double_spin_box(
-            self, 0.1, 100, 0.5, n_decimals=2, default=1, tooltip="Scale of the screenshot."
+            self,
+            0.1,
+            5,
+            0.5,
+            n_decimals=2,
+            default=1,
+            tooltip="Increase the resolution of the screenshot. Value of 1.0 means that the screenshot will have the"
+            " same resolution as the canvas, whereas, values >1 will increase the resolution by the specified ratio."
+            " The higher this value is, the longer it will take to generate the screenshot.",
         )
         self.canvas_only = hp.make_checkbox(
             self,
@@ -57,7 +65,7 @@ class QtScreenshotDialog(QtFramelessPopup):
         layout.addRow(self._make_move_handle("Screenshot controls"))
         layout.addRow("Width", self.size_x)
         layout.addRow("Height", self.size_y)
-        layout.addRow("Scale", self.scale)
+        layout.addRow("Up-sample", self.scale)
         layout.addRow("Canvas only", self.canvas_only)
         layout.addRow(self.clipboard_btn)
         layout.addRow(self.save_btn)

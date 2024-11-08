@@ -19,10 +19,10 @@ if ty.TYPE_CHECKING:
     from qtextra._napari.image.components.viewer_model import ViewerModel
 
 
-def make_qta_btn(*args: ty.Any, **kwargs: ty.Any) -> QtImagePushButton:
+def make_qta_btn(parent, icon_name: str, tooltip: str, **kwargs: ty.Any) -> QtImagePushButton:
     """Make a button with an icon from QtAwesome."""
-    btn = hp.make_qta_btn(*args, **kwargs)
-    btn.set_average()
+    btn = hp.make_qta_btn(parent=parent, icon_name=icon_name, tooltip=tooltip, **kwargs)
+    btn.set_normal()
     btn.setProperty("layer_button", True)
     return btn
 

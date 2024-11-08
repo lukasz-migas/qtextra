@@ -1081,6 +1081,7 @@ def make_qta_btn(
     label: str = "",
     standout: bool = False,
     is_menu: bool = False,
+    hide: bool = False,
     **kwargs: ty.Any,
 ) -> QtImagePushButton:
     """Make button with qtawesome icon."""
@@ -1120,6 +1121,8 @@ def make_qta_btn(
         widget.setProperty("with_text", True)
     if standout:
         widget.setProperty("standout", True)
+    if hide:
+        widget.hide()
     return widget
 
 
@@ -2807,6 +2810,16 @@ def disconnect_event(widget: Qw.QWidget, evt_name, func):
         getattr(widget, evt_name).disconnect(func)
     except RuntimeError:
         pass
+
+
+def get_main_window() -> Qw.QMainWindow | None:
+    """Get main window."""
+    app = Qw.QApplication.instance()
+    if app:
+        for i in app.topLevelWidgets():
+            if isinstance(i, Qw.QMainWindow):  # pragma: no cover
+                return i
+    return None
 
 
 def get_parent(parent: QObject | None = None) -> Qw.QWidget | None:
