@@ -78,11 +78,13 @@ class QtSelectionList(QWidget):
         allow_buttons: bool = True,
         allow_sort: bool = True,
         allow_filter: bool = True,
+        enable_single_click: bool = False,
     ):
         super().__init__(parent)
         self.allow_buttons = allow_buttons
         self.allow_sort = allow_sort
         self.allow_filter = allow_filter
+        self.enable_single_click = enable_single_click
         self.init_ui()
 
     def init_ui(self) -> None:
@@ -111,11 +113,12 @@ class QtSelectionList(QWidget):
         self.list_widget = QListWidget(self)
         # self.list_widget.setItemDelegate(HTMLDelegate(self))
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.list_widget.itemClicked.connect(
-            lambda item: item.setCheckState(
-                Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+        if self.enable_single_click:
+            self.list_widget.itemClicked.connect(
+                lambda item: item.setCheckState(
+                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+                )
             )
-        )
         # self.list_widget.setAlternatingRowColors(True)
         self._layout.addRow(self.list_widget)
 
@@ -190,6 +193,13 @@ class QtSelectionList(QWidget):
             for i in range(self.list_widget.count())
             if self.list_widget.item(i).checkState() == Qt.CheckState.Checked
         ]
+
+    def set_checked(self, checked: list[str]) -> None:
+        """Set checked items."""
+        for i in range(self.list_widget.count()):
+            item = self.list_widget.item(i)
+            current_state = item.checkState()
+            item.setCheckState(Qt.CheckState.Checked if item.text() in checked else current_state)
 
 
 if __name__ == "__main__":

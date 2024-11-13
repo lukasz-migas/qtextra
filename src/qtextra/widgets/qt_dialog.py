@@ -796,14 +796,17 @@ class SubWindowBase(QDialog):
 
     def move_to(self, location: str) -> None:
         """Move to location."""
-        if location == "top_right":
-            self.move_to_top_right()
-        elif location == "top_left":
-            self.move_to_top_left()
-        elif location == "bottom_right":
-            self.move_to_bottom_right()
-        elif location == "bottom_left":
-            self.move_to_bottom_left()
+        try:
+            if location == "top_right":
+                self.move_to_top_right()
+            elif location == "top_left":
+                self.move_to_top_left()
+            elif location == "bottom_right":
+                self.move_to_bottom_right()
+            elif location == "bottom_left":
+                self.move_to_bottom_left()
+        except RuntimeError:
+            pass
 
     def move_to_top_right(self, offset=(-10, 10)) -> None:
         """Position widget at the top right edge of the parent."""
