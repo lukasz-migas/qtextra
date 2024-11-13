@@ -102,9 +102,13 @@ class QtMiniToolbar(QFrame):
         self.layout_.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
         return button
 
-    def add_widget(self, widget: QWidget) -> QWidget:
+    def add_widget(self, widget: QWidget, stretch: bool = False) -> QWidget:
         """Insert any widget at specified position."""
-        self.layout_.addWidget(widget, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.layout_.addWidget(
+            widget,
+            alignment=Qt.AlignmentFlag.AlignCenter if not stretch else Qt.AlignmentFlag.AlignLeft,
+            stretch=stretch,
+        )
         return widget
 
     def add_layout(self, layout: QLayout) -> QLayout:

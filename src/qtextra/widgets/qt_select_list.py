@@ -9,6 +9,7 @@ from qtpy.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QFormLayout,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QStyle,
@@ -69,25 +70,43 @@ class QtSelectionList(QWidget):
     _layout: QFormLayout
     list_widget: QListWidget
     toolbar: QtMiniToolbar
+    filter_by: QLineEdit
 
-    def __init__(self, parent: QWidget | None = None, allow_buttons: bool = True, allow_sort: bool = True):
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        allow_buttons: bool = True,
+        allow_sort: bool = True,
+        allow_filter: bool = True,
+    ):
         super().__init__(parent)
         self.allow_buttons = allow_buttons
         self.allow_sort = allow_sort
+        self.allow_filter = allow_filter
         self.init_ui()
 
     def init_ui(self) -> None:
         """Initialize the user interface."""
         self._layout = hp.make_form_layout(self)
 
+        self.filter_by = hp.make_line_edit(
+            self, placeholder="Type in name or path to filter...", func_changed=self.on_filter
+        )
+        self.filter_by.setMinimumWidth(200)
+        hp.set_expanding_sizer_policy(self.filter_by, horz=True)
+        if not self.allow_filter:
+            self.filter_by.hide()
+
         self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2)
         self.toolbar.add_widget(hp.make_btn(self, "Select all", func=self.on_select_all))
         self.toolbar.add_widget(hp.make_btn(self, "Deselect all", func=self.on_deselect_all))
         self.toolbar.add_widget(hp.make_btn(self, "Invert selection", func=self.on_invert_selection))
-        self.toolbar.append_spacer()
-        self._layout.addRow(self.toolbar)
+        self.toolbar.add_widget(self.filter_by, stretch=True)
+        if not self.allow_filter:
+            self.toolbar.append_spacer()
         if not self.allow_buttons:
             self.toolbar.hide()
+        self._layout.addRow(self.toolbar)
 
         self.list_widget = QListWidget(self)
         # self.list_widget.setItemDelegate(HTMLDelegate(self))
@@ -119,6 +138,13 @@ class QtSelectionList(QWidget):
             item.setCheckState(Qt.CheckState.Unchecked if not checked else Qt.CheckState.Checked)
             self.list_widget.addItem(item)
 
+    def on_filter(self) -> None:
+        """Filter list of items in the table."""
+        text = self.filter_by.text().lower()
+        for index in range(self.list_widget.count()):
+            item = self.list_widget.item(index)
+            item.setHidden(text not in item.text().lower())
+
     def add_items(self, items: list[str]) -> None:
         """Add multiple items to the list."""
         for item in items:
@@ -134,17 +160,25 @@ class QtSelectionList(QWidget):
     def on_select_all(self) -> None:
         """Select all items in the list."""
         for i in range(self.list_widget.count()):
-            self.list_widget.item(i).setCheckState(Qt.CheckState.Checked)
+            item = self.list_widget.item(i)
+            if item.isHidden():
+                continue
+            item.setCheckState(Qt.CheckState.Checked)
 
     def on_deselect_all(self) -> None:
         """Deselect all items in the list."""
         for i in range(self.list_widget.count()):
-            self.list_widget.item(i).setCheckState(Qt.CheckState.Unchecked)
+            item = self.list_widget.item(i)
+            if item.isHidden():
+                continue
+            item.setCheckState(Qt.CheckState.Unchecked)
 
     def on_invert_selection(self) -> None:
         """Invert the selection of all items."""
         for i in range(self.list_widget.count()):
             item = self.list_widget.item(i)
+            if item.isHidden():
+                continue
             item.setCheckState(
                 Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
             )
