@@ -2,6 +2,8 @@ import re
 import typing as ty
 from contextlib import suppress
 
+from koyo.system import IS_WIN
+
 from qtextra.typing import Callback
 
 if ty.TYPE_CHECKING:
@@ -16,6 +18,32 @@ COLORS = {
     "normal": "#777777",
     "hint": "#00a6ff",
 }
+
+
+def listify_multiple(
+    *values: str,
+    key: str,
+    pad: bool = True,
+    join: bool = False,
+    spacer: str = "",
+    suffix: str = "",
+) -> ty.List[str]:
+    """Parse multiple inputs into single string."""
+    ret = []
+    for value in values:
+        value = pad_str(value, suffix) if pad else f"{value!s}{suffix}"
+        if join:
+            ret.append(f"{key}{value}")
+        else:
+            ret.extend([key, value])
+    return ret
+
+
+def pad_str(value: ty.Any, suffix: str = "") -> str:
+    """Pad string with quotes around out."""
+    if IS_WIN:
+        return f'"{value!s}{suffix}"'
+    return f"{value!s}{suffix}"
 
 
 def get_icon_state(errors: list[str]) -> tuple[str, str]:

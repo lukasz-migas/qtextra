@@ -16,6 +16,27 @@ from qtextra.queue.utilities import _safe_call, escape_ansi, iterable_callbacks
 from qtextra.typing import Callback, TaskState
 
 
+def run_command(command: list[str]) -> None:
+    """Execute command using the QProcess wrapper."""
+    from qtextra.helpers import get_main_window
+
+    program, args = command[0], command[1:]
+    logger_.trace(f"Running command: {program} {' '.join(args)}")
+
+    process = QProcess(get_main_window())
+    process.finished.connect(process.deleteLater)
+    process.finished.connect(lambda exit_code, exit_status: logger_.trace(f"Command finished with {exit_code}"))
+    process.setProgram(program)
+    # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments
+    # incorrect. It's safer to simply join the arguments  together and set them as one long string. The
+    # assumption is that the arguments were properly setup in the first place!
+    if IS_WIN:
+        process.setNativeArguments(" ".join(args))  # type: ignore[attr-defined]
+    else:
+        process.setArguments(args)
+    process.start()
+
+
 def decode(text: bytes) -> str:
     """Decode text."""
     try:

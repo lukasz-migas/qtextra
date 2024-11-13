@@ -80,7 +80,7 @@ class QtSelectionList(QWidget):
         """Initialize the user interface."""
         self._layout = hp.make_form_layout(self)
 
-        self.toolbar = QtMiniToolbar(self, add_spacer=False)
+        self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2)
         self.toolbar.add_widget(hp.make_btn(self, "Select all", func=self.on_select_all))
         self.toolbar.add_widget(hp.make_btn(self, "Deselect all", func=self.on_deselect_all))
         self.toolbar.add_widget(hp.make_btn(self, "Invert selection", func=self.on_invert_selection))

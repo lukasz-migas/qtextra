@@ -20,6 +20,7 @@ class QtMiniToolbar(QFrame):
         orientation: Qt.Orientation = Qt.Orientation.Horizontal,
         add_spacer: bool = True,
         icon_size: ty.Literal["small", "average", "medium", "normal"] | str | None = None,
+        spacing: int = 0,
     ):
         super().__init__(parent)
         self._tools: dict[str, QtImagePushButton] = {}
@@ -30,7 +31,7 @@ class QtMiniToolbar(QFrame):
             self.layout_.addSpacerItem(
                 hp.make_h_spacer() if orientation == Qt.Orientation.Horizontal else hp.make_v_spacer()
             )
-        self.layout_.setSpacing(0)
+        self.layout_.setSpacing(spacing)
         self.layout_.setContentsMargins(0, 0, 0, 0)
         self.max_size = 28
         self.icon_object_name, self.icon_size = (
