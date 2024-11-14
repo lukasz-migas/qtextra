@@ -206,6 +206,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "rectangle": "ph.rectangle-bold",
     "ellipse": "mdi6.ellipse-outline",
     "polygon": "mdi.pentagon-outline",
+    # selection
+    "invert_selection": "fa5s.exchange-alt",
 }
 
 

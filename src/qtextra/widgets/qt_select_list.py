@@ -75,13 +75,13 @@ class QtSelectionList(QWidget):
     def __init__(
         self,
         parent: QWidget | None = None,
-        allow_buttons: bool = True,
+        allow_toolbar: bool = True,
         allow_sort: bool = True,
         allow_filter: bool = True,
         enable_single_click: bool = False,
     ):
         super().__init__(parent)
-        self.allow_buttons = allow_buttons
+        self.allow_toolbar = allow_toolbar
         self.allow_sort = allow_sort
         self.allow_filter = allow_filter
         self.enable_single_click = enable_single_click
@@ -101,21 +101,25 @@ class QtSelectionList(QWidget):
 
         self.info_label = hp.make_label(self, "")
 
-        self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2)
-        self.toolbar.add_widget(hp.make_btn(self, "Select all", func=self.on_select_all))
-        self.toolbar.add_widget(hp.make_btn(self, "Deselect all", func=self.on_deselect_all))
-        self.toolbar.add_widget(hp.make_btn(self, "Invert selection", func=self.on_invert_selection))
+        self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2, icon_size="average")
+        self.toolbar.add_widget(hp.make_qta_btn(self, "toggle_on", "Select all", func=self.on_select_all, average=True))
+        self.toolbar.add_widget(
+            hp.make_qta_btn(self, "toggle_off", "Deselect all", func=self.on_deselect_all, average=True)
+        )
+        self.toolbar.add_widget(
+            hp.make_qta_btn(self, "invert_selection", "Invert selection", func=self.on_invert_selection, average=True)
+        )
         self.toolbar.add_widget(self.filter_by, stretch=True)
         self.toolbar.add_widget(self.info_label)
         if not self.allow_filter:
             self.toolbar.append_spacer()
-        if not self.allow_buttons:
+        if not self.allow_toolbar:
             self.toolbar.hide()
         self._layout.addRow(self.toolbar)
 
         self.list_widget = QListWidget(self)
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.list_widget.selectionChanged.connect(self.on_selection_changed)
+        self.list_widget.itemChanged.connect(self.on_selection_changed)
         self.list_widget.itemDoubleClicked.connect(
             lambda item: item.setCheckState(
                 Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
@@ -132,9 +136,10 @@ class QtSelectionList(QWidget):
 
     def on_selection_changed(self) -> None:
         """Update selection changed information."""
-        selected = self.get_checked()
-        count = self.list_widget.count()
-        self.info_label.setText(f"{len(selected)}/{count}")
+        if self.allow_toolbar:
+            selected = self.get_checked()
+            count = self.list_widget.count()
+            self.info_label.setText(f"{len(selected)}/{count}")
 
     def add_item(self, item_text: str) -> None:
         """Add an item to the list in alphabetical order."""
@@ -154,6 +159,7 @@ class QtSelectionList(QWidget):
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Unchecked if not checked else Qt.CheckState.Checked)
             self.list_widget.addItem(item)
+        self.on_selection_changed()
 
     def on_filter(self) -> None:
         """Filter list of items in the table."""
@@ -161,6 +167,19 @@ class QtSelectionList(QWidget):
         for index in range(self.list_widget.count()):
             item = self.list_widget.item(index)
             item.setHidden(text not in item.text().lower())
+
+    def on_hide_deselected(self) -> None:
+        """Hide deselected items."""
+        for i in range(self.list_widget.count()):
+            item = self.list_widget.item(i)
+            if item.checkState() == Qt.CheckState.Unchecked:
+                item.setHidden(True)
+
+    def on_show_all(self) -> None:
+        """Show all items."""
+        self.filter_by.setText("")
+        for i in range(self.list_widget.count()):
+            self.list_widget.item(i).setHidden(False)
 
     def add_items(self, items: list[str]) -> None:
         """Add multiple items to the list."""
