@@ -99,11 +99,14 @@ class QtSelectionList(QWidget):
         if not self.allow_filter:
             self.filter_by.hide()
 
+        self.info_label = hp.make_label(self, "")
+
         self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2)
         self.toolbar.add_widget(hp.make_btn(self, "Select all", func=self.on_select_all))
         self.toolbar.add_widget(hp.make_btn(self, "Deselect all", func=self.on_deselect_all))
         self.toolbar.add_widget(hp.make_btn(self, "Invert selection", func=self.on_invert_selection))
         self.toolbar.add_widget(self.filter_by, stretch=True)
+        self.toolbar.add_widget(self.info_label)
         if not self.allow_filter:
             self.toolbar.append_spacer()
         if not self.allow_buttons:
@@ -111,8 +114,13 @@ class QtSelectionList(QWidget):
         self._layout.addRow(self.toolbar)
 
         self.list_widget = QListWidget(self)
-        # self.list_widget.setItemDelegate(HTMLDelegate(self))
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.list_widget.selectionChanged.connect(self.on_selection_changed)
+        self.list_widget.itemDoubleClicked.connect(
+            lambda item: item.setCheckState(
+                Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+            )
+        )
         if self.enable_single_click:
             self.list_widget.itemClicked.connect(
                 lambda item: item.setCheckState(
@@ -121,6 +129,12 @@ class QtSelectionList(QWidget):
             )
         # self.list_widget.setAlternatingRowColors(True)
         self._layout.addRow(self.list_widget)
+
+    def on_selection_changed(self) -> None:
+        """Update selection changed information."""
+        selected = self.get_checked()
+        count = self.list_widget.count()
+        self.info_label.setText(f"{len(selected)}/{count}")
 
     def add_item(self, item_text: str) -> None:
         """Add an item to the list in alphabetical order."""
