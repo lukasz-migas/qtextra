@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from natsort import index_natsorted, order_by_index
-from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import QSize, Qt, Signal
 from qtpy.QtGui import QAbstractTextDocumentLayout, QPalette, QTextDocument
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -67,6 +67,8 @@ class QtSelectionList(QWidget):
     It also provides an easy to use interface to add items to the list, select all, deselect all and invert selection.
     """
 
+    evt_selection_changed = Signal()
+
     _layout: QFormLayout
     list_widget: QListWidget
     toolbar: QtMiniToolbar
@@ -91,9 +93,7 @@ class QtSelectionList(QWidget):
         """Initialize the user interface."""
         self._layout = hp.make_form_layout(self)
 
-        self.filter_by = hp.make_line_edit(
-            self, placeholder="Type in name or path to filter...", func_changed=self.on_filter
-        )
+        self.filter_by = hp.make_line_edit(self, placeholder="Type in text to filter...", func_changed=self.on_filter)
         self.filter_by.setMinimumWidth(200)
         hp.set_expanding_sizer_policy(self.filter_by, horz=True)
         if not self.allow_filter:
@@ -136,6 +136,7 @@ class QtSelectionList(QWidget):
 
     def on_selection_changed(self) -> None:
         """Update selection changed information."""
+        self.evt_selection_changed.emit()
         if self.allow_toolbar:
             selected = self.get_checked()
             count = self.list_widget.count()
@@ -181,8 +182,10 @@ class QtSelectionList(QWidget):
         for i in range(self.list_widget.count()):
             self.list_widget.item(i).setHidden(False)
 
-    def add_items(self, items: list[str]) -> None:
+    def add_items(self, items: list[str], clear: bool = False) -> None:
         """Add multiple items to the list."""
+        if clear:
+            self.list_widget.clear()
         for item in items:
             self.add_item(item)
 
