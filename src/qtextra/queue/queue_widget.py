@@ -24,7 +24,8 @@ QUEUE = CLIQueueHandler()
 class QueueList(QScrollArea):
     """Manager object."""
 
-    MAX_TASKS = 500
+    MAX_TASKS: int = 500
+    AUTO_EXPAND: bool = False
 
     evt_console = Signal(object)
 
@@ -220,7 +221,7 @@ class QueueList(QScrollArea):
             can_pause=can_pause,
             can_cancel_when_started=can_cancel_when_started,
             can_force_start=QUEUE.CAN_FORCE_START,
-            auto_expand=False,
+            auto_expand=self.AUTO_EXPAND,
         )
         widget.evt_start_task.connect(self.on_start_task)
         widget.evt_cancel_task.connect(self.on_cancel_task)

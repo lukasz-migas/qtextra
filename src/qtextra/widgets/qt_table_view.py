@@ -157,7 +157,7 @@ class QtCheckableItemModel(QAbstractTableModel):
     ):
         QAbstractTableModel.__init__(self, parent)
         self._table: list[list[ty.Any]] = data
-        self.state = False
+        self.state = None
         self.original_index = list(range(len(self._table)))
         self.header = header or []
         self.no_sort_columns = no_sort_columns or []
@@ -351,6 +351,8 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def check_all_rows(self) -> None:
         """Check all rows in the table."""
+        if self.state is None:
+            self.state = self.n_checked == self.rowCount()
         self.state = not self.state
         for row, __ in enumerate(self._table):
             if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):

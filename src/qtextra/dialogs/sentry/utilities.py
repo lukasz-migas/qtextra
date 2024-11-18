@@ -179,6 +179,7 @@ SENTRY_SETTINGS = {
     # (0 represents 0% while 1 represents 100%.)
     # Applies equally to all transactions created in the app.
     # Either this or traces_sampler must be defined to enable tracing.
+    "enable_tracing": True,
     "traces_sample_rate": 1.0,
     # When provided, the name of the server is sent along and persisted
     # in the event. For many integrations the server name actually

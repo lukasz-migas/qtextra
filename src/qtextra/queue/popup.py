@@ -20,6 +20,7 @@ class QueuePopup(QtFramelessTool):
     def make_panel(self) -> QFormLayout:
         """Make panel."""
         self.queue_list = QueueList(self)
+        self.queue_list.AUTO_EXPAND = True
 
         self.clear_btn = hp.make_btn(self, "Clear", func=self.queue_list.on_clear_queue, tooltip="Clear all tasks")
         self.n_tasks = hp.make_labelled_slider(
