@@ -1720,9 +1720,10 @@ def make_v_layout(
     stretch_before: bool = False,
     stretch_after: bool = False,
     widget_alignment: Qt.AlignmentFlag | None = None,
+    parent: Qw.QWidget | None = None,
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
-    layout = Qw.QVBoxLayout()
+    layout = Qw.QVBoxLayout(parent)
     if spacing is not None:
         layout.setSpacing(spacing)
     if margin is not None:
@@ -1748,9 +1749,10 @@ def make_h_layout(
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
+    parent: Qw.QWidget | None = None,
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
-    layout = Qw.QHBoxLayout()
+    layout = Qw.QHBoxLayout(parent)
     if spacing is not None:
         layout.setSpacing(spacing)
     if margin is not None:
@@ -2986,3 +2988,10 @@ def open_file(path: PathLike) -> None:
     path = Path(path)
     if path.exists():
         QDesktopServices.openUrl(QUrl(path.as_uri()))  # type: ignore[attr-defined]
+
+
+def show_image(widget: Qw.QLabel, path: PathLike) -> None:
+    """Show image as QPixmap in a QLabel."""
+    pixmap = QPixmap(str(path))
+    widget.setPixmap(pixmap)
+    widget.setScaledContents(True)

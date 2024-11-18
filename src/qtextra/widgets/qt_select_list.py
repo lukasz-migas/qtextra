@@ -81,12 +81,14 @@ class QtSelectionList(QWidget):
         allow_sort: bool = True,
         allow_filter: bool = True,
         enable_single_click: bool = False,
+        double_click_to_select: bool = True,
     ):
         super().__init__(parent)
         self.allow_toolbar = allow_toolbar
         self.allow_sort = allow_sort
         self.allow_filter = allow_filter
         self.enable_single_click = enable_single_click
+        self.double_click_to_select = double_click_to_select
         self.init_ui()
 
     def init_ui(self) -> None:
@@ -120,11 +122,12 @@ class QtSelectionList(QWidget):
         self.list_widget = QListWidget(self)
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
         self.list_widget.itemChanged.connect(self.on_selection_changed)
-        self.list_widget.itemDoubleClicked.connect(
-            lambda item: item.setCheckState(
-                Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+        if self.double_click_to_select:
+            self.list_widget.itemDoubleClicked.connect(
+                lambda item: item.setCheckState(
+                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+                )
             )
-        )
         if self.enable_single_click:
             self.list_widget.itemClicked.connect(
                 lambda item: item.setCheckState(
