@@ -2993,5 +2993,8 @@ def open_file(path: PathLike) -> None:
 def show_image(widget: Qw.QLabel, path: PathLike) -> None:
     """Show image as QPixmap in a QLabel."""
     pixmap = QPixmap(str(path))
+    width = widget.width()
+    height = widget.height()
+    pixmap = pixmap.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
     widget.setPixmap(pixmap)
-    widget.setScaledContents(True)
+    # widget.setScaledContents(False)
