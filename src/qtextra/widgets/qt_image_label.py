@@ -132,7 +132,7 @@ class ImageViewer(QGraphicsView):
         self.scale(factor, factor)
         new_center = center_point
         offset = new_center - old_center
-        self.centerOn(self.mapToScene(self.viewport().rect().center()) + offset), factor)
+        self.centerOn(self.mapToScene(self.viewport().rect().center()) + offset)
 
     def reset_zoom(self):
         """
