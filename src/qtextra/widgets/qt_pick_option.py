@@ -90,3 +90,33 @@ class QtScrollablePickOption(QtPickOptionBase):
         """Get layout widget."""
         scroll_area, scroll_widget = hp.make_scroll_area(self)
         return scroll_area, scroll_widget
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+    from functools import partial
+
+    from qtextra.utils.dev import apply_style, qapplication
+
+    app = qapplication(False)
+    frame = QtScrollablePickOption(
+        None,
+        "Select an option",
+        {
+            "option1": "Option 1",
+            "option2": "Option 2",
+            "option3": "Option 3",
+            "option4": "Option 4",
+            "option5": "Option 5",
+            "option6": "Option 6",
+            "option7": "Option 7",
+            "option8": "Option 8",
+            "option9": "Option 9",
+            "option10": "Option 10",
+        },
+        orientation="vertical",
+    )
+    apply_style(frame)
+
+    frame.show()
+    sys.exit(app.exec_())

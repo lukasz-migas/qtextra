@@ -1045,18 +1045,19 @@ def make_active_progress_btn(
 
 def make_scroll_area(
     parent: Qw.QWidget | None,
-    vertical=Qt.ScrollBarPolicy.ScrollBarAsNeeded,
-    horizontal=Qt.ScrollBarPolicy.ScrollBarAsNeeded,
-):
+    vertical: Qt.ScrollBarPolicy = Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+    horizontal: Qt.ScrollBarPolicy = Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+) -> tuple[Qw.QWidget, Qw.QScrollArea]:
     """Make scroll area."""
-    scroll_area = Qw.QWidget(parent)
-    scroll_widget = Qw.QScrollArea(parent)
-    scroll_widget.setWidget(scroll_area)
-    scroll_widget.setWidgetResizable(True)
-    scroll_widget.setVerticalScrollBarPolicy(vertical)
-    scroll_widget.setHorizontalScrollBarPolicy(horizontal)
-    scroll_widget.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
-    return scroll_area, scroll_widget
+    scroll = Qw.QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setVerticalScrollBarPolicy(vertical)
+    scroll.setHorizontalScrollBarPolicy(horizontal)
+    scroll.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
+
+    inner = Qw.QWidget(scroll)
+    scroll.setWidget(inner)
+    return inner, scroll
 
 
 def make_qta_btn(
@@ -2988,6 +2989,11 @@ def open_file(path: PathLike) -> None:
     path = Path(path)
     if path.exists():
         QDesktopServices.openUrl(QUrl(path.as_uri()))  # type: ignore[attr-defined]
+
+
+def open_link(link: str) -> None:
+    """Open URL link in the default browser."""
+    QDesktopServices.openUrl(QUrl(link))  # type: ignore[attr-defined]
 
 
 def show_image(widget: Qw.QLabel, path: PathLike) -> None:
