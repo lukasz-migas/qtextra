@@ -53,7 +53,7 @@ class QtScrollableLabel(QScrollArea):
         return super().mousePressEvent(event)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import sys
 
     from qtextra.utils.dev import qmain

@@ -510,6 +510,16 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
         if position is not None:
             self.move(position)
 
+    def toggle_persist(self) -> None:
+        """Enable persist."""
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
+
+    def toggle_popup(self) -> None:
+        """Toggle popup to be temporary."""
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Popup
+        )
+
     def _make_title_handle(self, title: str = "") -> QHBoxLayout:
         """Make handle button that helps move the window around."""
         self._title_label = hp.make_eliding_label2(

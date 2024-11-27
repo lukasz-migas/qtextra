@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing as ty
-from functools import partial
 
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
 

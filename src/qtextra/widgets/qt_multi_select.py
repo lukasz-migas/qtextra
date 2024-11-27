@@ -5,11 +5,12 @@ from __future__ import annotations
 import typing as ty
 
 from qtpy.QtCore import QEvent, QObject, Qt, Signal
+from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.utils.table_config import TableConfig
-from qtextra.widgets.qt_dialog import QtFramelessTool
+from qtextra.widgets.qt_dialog import QtFramelessPopup
 from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
 
 
@@ -28,7 +29,7 @@ def unformat_options(options: str) -> list[str]:
     return [option.strip() for option in options.split(";") if option.strip()]
 
 
-class SelectionWidget(QtFramelessTool):
+class SelectionWidget(QtFramelessPopup):
     """Selection widget."""
 
     evt_changed = Signal(list)
@@ -110,6 +111,7 @@ class SelectionWidget(QtFramelessTool):
         )
 
         layout = hp.make_form_layout(self)
+        layout.setContentsMargins(6, 6, 6, 6)
         hp.style_form_layout(layout)
         layout.addRow(header_layout)
         layout.addRow(
@@ -128,20 +130,27 @@ class QtMultiSelect(QWidget):
 
     editingFinished = Signal()
     textChanged = Signal(str)
+    evt_selection_changed = Signal(list)
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget, allow_clear: bool = False):
         super().__init__(parent)
         self.options: list[str] = []
         self.selected_options: list[str] = []
         self.text_edit = hp.make_line_edit(self, placeholder="Select...")
         self.text_edit.setReadOnly(True)
-        self.text_edit.setClearButtonEnabled(False)
-        self.text_edit.installEventFilter(self)
-        self.select_btn = hp.make_qta_btn(
-            self, "list", func=self.on_select, tooltip="Click here to select one or more options..."
+        self.text_edit.setClearButtonEnabled(allow_clear)
+        clear_action = self.text_edit.findChild(QAction)
+        if clear_action:
+            clear_action.setEnabled(True)
+            clear_action.triggered.connect(self.clear_current)
+        self.text_edit.addAction(
+            hp.make_action(self, "list", func=self.on_select, tooltip="Click here to select one or more options"),
+            self.text_edit.ActionPosition.TrailingPosition,
         )
 
-        layout = hp.make_h_layout(self.text_edit, self.select_btn, stretch_id=0, spacing=0)
+        self.text_edit.installEventFilter(self)
+
+        layout = hp.make_h_layout(self.text_edit, stretch_id=0, spacing=0)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
@@ -167,7 +176,6 @@ class QtMultiSelect(QWidget):
         func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
         func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
         items: dict[str, ty.Any] | None = None,
-        show_btn: bool = True,
         **_kwargs: ty.Any,
     ) -> QtMultiSelect:
         """Init."""
@@ -181,6 +189,7 @@ class QtMultiSelect(QWidget):
             values = value.split(";") if value else []
         else:
             values = value
+
         obj = cls(parent)
         obj.text_edit.setPlaceholderText(placeholder)
         obj.options = options or []
@@ -188,8 +197,6 @@ class QtMultiSelect(QWidget):
         obj.text_edit.setText(format_options(obj.selected_options))
         obj.setToolTip(description)
         obj.text_edit.setToolTip(description)
-        if not show_btn:
-            obj.select_btn.hide()
         if func:
             [obj.editingFinished.connect(func_) for func_ in hp._validate_func(func)]
         if func_changed:
@@ -198,7 +205,7 @@ class QtMultiSelect(QWidget):
 
     def polish(self) -> None:
         """Polish widget."""
-        hp.polish_widget(self, self.text_edit, self.select_btn)
+        hp.polish_widget(self, self.text_edit)
 
     def setObjectName(self, name: str) -> None:  # type: ignore
         """Set object name."""
@@ -208,6 +215,11 @@ class QtMultiSelect(QWidget):
     def currenOptions(self) -> list[str]:
         """Return current options."""
         return self.options
+
+    def clear_current(self) -> None:
+        """Clear selection."""
+        self.text_edit.setText("")
+        self.selected_options = []
 
     def clear(self) -> None:
         """Clear selection."""
@@ -253,7 +265,27 @@ class QtMultiSelect(QWidget):
             # trigger update events
             self.textChanged.emit(format_options(selected_options))
             self.editingFinished.emit()
+            self.evt_selection_changed.emit(selected_options)
 
     def get_checked(self) -> list[str]:
         """Return list of checked values."""
         return self.selected_options
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.utils.dev import qmain
+
+    app, frame, ha = qmain(False)
+    # frame.setMinimumSize(600, 600)
+
+    wdg = QtMultiSelect(frame)
+    wdg.set_options(["option1", "option2", "option3"], ["option1", "option3"])
+    ha.addWidget(wdg)
+    wdg = QtMultiSelect(frame, allow_clear=True)
+    wdg.set_options(["option1", "option2", "option3"], ["option1", "option3"])
+    ha.addWidget(wdg)
+
+    frame.show()
+    sys.exit(app.exec_())

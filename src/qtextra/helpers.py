@@ -2011,6 +2011,18 @@ def make_menu_group(parent: Qw.QWidget, *actions):
     return group
 
 
+def make_action(parent: Qw.QWidget, icon_name: str, tooltip: str, func: Callback) -> Qw.QAction:
+    """Make action."""
+    from qtextra.widgets.qt_action import QtQtaAction
+
+    widget = QtQtaAction(parent)
+    widget.set_qta(icon_name)
+    widget.setToolTip(tooltip)
+    if func:
+        [widget.triggered.connect(func_) for func_ in _validate_func(func)]
+    return widget
+
+
 def make_overlay_message(
     parent: Qw.QWidget | None,
     widget: Qw.QWidget,
