@@ -7,6 +7,7 @@ from loguru import logger
 from qtpy.QtCore import Qt, QTimer, Signal  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QFrame, QGridLayout, QWidget
 import os
+from koyo.timer import MeasureTimer
 
 import qtextra.helpers as hp
 from qtextra.queue.task import Task
@@ -199,25 +200,26 @@ class TaskWidget(QFrame):
         auto_expand: bool = True,
     ) -> None:
         """Setup UI for task."""
-        self.task = task
-        self.can_cancel = can_cancel
-        self.can_cancel_when_started = can_cancel_when_started
-        self.can_pause = can_pause
-        self.can_force_start = can_force_start
+        with MeasureTimer() as timer:
+            self.task = task
+            self.can_cancel = can_cancel
+            self.can_cancel_when_started = can_cancel_when_started
+            self.can_pause = can_pause
+            self.can_force_start = can_force_start
 
-        # update ui
-        self.task_name.setText(task.task_name_repr or hp.hyper(task.task_name))
-        self.task_name.setToolTip(task.task_name_tooltip or task.task_name)
-        self.task_info.setText(task.pretty_info)
-        self.task_id.setText(f"Task ID: {task.task_id}")
-        if task.state == TaskState.FINISHED:
-            self.stop()
-        else:
-            hp.disable_widgets(self.start_btn, self.cancel_btn, disabled=False)
-        self._update_state()
-        self._update_warnings()
-        self.toggled = not auto_expand
-        logger.trace(f"Added task '{self.task.summary()}'")
+            # update ui
+            self.task_name.setText(task.task_name_repr or hp.hyper(task.task_name))
+            self.task_name.setToolTip(task.task_name_tooltip or task.task_name)
+            self.task_info.setText(task.pretty_info)
+            self.task_id.setText(f"Task ID: {task.task_id}")
+            if task.state == TaskState.FINISHED:
+                self.stop()
+            else:
+                hp.disable_widgets(self.start_btn, self.cancel_btn, disabled=False)
+            self._update_state()
+            self._update_warnings()
+            self.toggled = not auto_expand
+        logger.trace(f"Added task '{self.task.summary()}' in {timer()}")
 
     def _update_warnings(self) -> None:
         """Generate warnings for task."""

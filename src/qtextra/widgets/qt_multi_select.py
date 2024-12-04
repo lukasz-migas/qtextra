@@ -212,7 +212,7 @@ class QtMultiSelect(QWidget):
         self.text_edit.setObjectName(name)
         super().setObjectName(name)
 
-    def currenOptions(self) -> list[str]:
+    def currentOptions(self) -> list[str]:
         """Return current options."""
         return self.options
 
