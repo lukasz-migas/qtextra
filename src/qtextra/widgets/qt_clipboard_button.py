@@ -1,4 +1,5 @@
 """Button that copies contents of QTextEdit to the clipboard."""
+
 from qtpy.QtGui import QGuiApplication, QImage
 from qtpy.QtWidgets import QTextEdit
 
@@ -42,7 +43,7 @@ class QtCopyToClipboardButton(QtImagePushButton):
         self.set_qta("copy_to_clipboard")
         self.clicked.connect(self.copy_to_clipboard)
 
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
         """Copy text to the clipboard."""
         from qtextra.helpers import add_flash_animation
 

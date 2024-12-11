@@ -32,14 +32,18 @@ def unformat_options(options: str) -> list[str]:
 class SelectionWidget(QtFramelessPopup):
     """Selection widget."""
 
-    evt_changed = Signal(list)
-    evt_temp_changed = Signal(list)
     TABLE_CONFIG = (
         TableConfig()  # type: ignore[no-untyped-call]
         .add("", "check", "bool", 25, no_sort=True, hidden=False, sizing="fixed")
         .add("option", "option", "str", 100, sizing="stretch")
     )
 
+    # Signals
+    evt_update = Signal(list)
+    evt_changed = Signal(list)
+    evt_temp_changed = Signal(list)
+
+    cancel_clicked = False
     options: list[str] | None = None
     original_options: list[str] | None = None
 
@@ -71,16 +75,32 @@ class SelectionWidget(QtFramelessPopup):
         if widths:
             self.setMinimumWidth(min([500, max(widths) * 10]))
 
-    def accept(self) -> None:
-        """Return state."""
+    @property
+    def selected_options(self) -> list[str]:
+        """Return selected options."""
         indices = self.table.get_all_checked()
         self.options = [self.table.get_value(self.TABLE_CONFIG.option, index) for index in indices]
+        return self.options
+
+    def accept(self) -> None:
+        """Return state."""
+        # self.evt_changed.emit(self.selected_options)
+        self.evt_update.emit(self.selected_options)
         super().accept()
+
+    def on_cancel(self) -> None:
+        """Return state."""
+        self.cancel_clicked = True
+        self.reject()
 
     def reject(self) -> None:
         """Return state."""
-        self.evt_changed.emit(self.original_options)
-        return super().reject()
+        if self.cancel_clicked:
+            options = self.original_options
+        else:
+            options = self.selected_options
+        self.evt_update.emit(options)
+        super().reject()
 
     def on_check(self, _index: int, _state: bool) -> None:
         """Check."""
@@ -91,8 +111,6 @@ class SelectionWidget(QtFramelessPopup):
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
         """Make panel."""
-        _, header_layout = self._make_hide_handle(self.title)
-
         self.table = QtCheckableTableView(self, config=self.TABLE_CONFIG, enable_all_check=True, sortable=True)
         self.table.setCornerButtonEnabled(False)
         self.table.evt_checked.connect(self.on_check)
@@ -113,14 +131,18 @@ class SelectionWidget(QtFramelessPopup):
         layout = hp.make_form_layout(self)
         layout.setContentsMargins(6, 6, 6, 6)
         hp.style_form_layout(layout)
-        layout.addRow(header_layout)
+
+        # _, header_layout = self._make_hide_handle(self.title)
+        # layout.addRow(header_layout)
         layout.addRow(
             hp.make_label(self, self.text, alignment=Qt.AlignmentFlag.AlignHCenter, wrap=True, enable_url=True)
         )
         layout.addRow(self.filter_by_option)
         layout.addRow(self.table)
         layout.addRow(
-            hp.make_h_layout(hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.reject))
+            hp.make_h_layout(
+                hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.on_cancel)
+            )
         )
         return layout
 
@@ -139,12 +161,15 @@ class QtMultiSelect(QWidget):
         self.text_edit = hp.make_line_edit(self, placeholder="Select...")
         self.text_edit.setReadOnly(True)
         self.text_edit.setClearButtonEnabled(allow_clear)
-        clear_action = self.text_edit.findChild(QAction)
-        if clear_action:
-            clear_action.setEnabled(True)
-            clear_action.triggered.connect(self.clear_current)
+        self._clear_action = self.text_edit.findChild(QAction)
+        if self._clear_action:
+            self._clear_action.setEnabled(True)
+            self._clear_action.triggered.connect(self.clear_current)
+        self._list_action = hp.make_action(
+            self, "list", func=self.on_select, tooltip="Click here to select one or more options"
+        )
         self.text_edit.addAction(
-            hp.make_action(self, "list", func=self.on_select, tooltip="Click here to select one or more options"),
+            self._list_action,
             self.text_edit.ActionPosition.TrailingPosition,
         )
 
@@ -227,6 +252,13 @@ class QtMultiSelect(QWidget):
         self.selected_options = []
         self.options = []
 
+    def toggle_clear_action(self) -> None:
+        """Toggle visibility of clear action."""
+        if not self.text_edit.isClearButtonEnabled():
+            return
+        text = self.text_edit.text()
+        self._clear_action.setVisible(text != "")
+
     def set_options(self, options: list[str], selected_options: list[str] | None = None) -> None:
         """List of options."""
         if selected_options is None:
@@ -244,28 +276,33 @@ class QtMultiSelect(QWidget):
             selected_options = filter_selected(selected_options, self.options)
         self.selected_options = selected_options
         self.text_edit.setText(format_options(selected_options))
+        self.toggle_clear_action()
+
+    def _set_selected_options(self, selected_options: list[str]) -> None:
+        """List of options."""
+        if not selected_options:
+            selected_options = []
+        self.selected_options = selected_options
+        self.text_edit.setText(format_options(selected_options))
+        # trigger update events
+        self.textChanged.emit(format_options(selected_options))
+        self.editingFinished.emit()
+        self.evt_selection_changed.emit(selected_options)
+        self.toggle_clear_action()
 
     def set_selected_options_temp(self, selected_options: list[str]) -> None:
         """List of options."""
         with hp.qt_signals_blocked(self.text_edit):
             self.set_selected_options(selected_options)
+            self.toggle_clear_action()
 
     def on_select(self) -> None:
         """Select."""
         dlg = SelectionWidget(self)
         dlg.set_options(self.options, self.selected_options)
-        dlg.evt_changed.connect(self.set_selected_options)
         dlg.evt_temp_changed.connect(self.set_selected_options_temp)
-        if bool(dlg.exec()):
-            selected_options = dlg.options
-            if not selected_options:
-                selected_options = []
-            self.selected_options = selected_options
-            self.text_edit.setText(format_options(selected_options))
-            # trigger update events
-            self.textChanged.emit(format_options(selected_options))
-            self.editingFinished.emit()
-            self.evt_selection_changed.emit(selected_options)
+        dlg.evt_update.connect(self._set_selected_options)
+        dlg.show_below_widget(self, x_offset=0, y_offset=0)
 
     def get_checked(self) -> list[str]:
         """Return list of checked values."""
@@ -275,10 +312,10 @@ class QtMultiSelect(QWidget):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.utils.dev import qmain
+    from qtextra.utils.dev import qframe
 
-    app, frame, ha = qmain(False)
-    # frame.setMinimumSize(600, 600)
+    app, frame, ha = qframe(False)
+    frame.setLayout(ha)
 
     wdg = QtMultiSelect(frame)
     wdg.set_options(["option1", "option2", "option3"], ["option1", "option3"])

@@ -1,4 +1,5 @@
 """Color button."""
+
 import typing as ty
 
 import numpy as np
@@ -66,7 +67,7 @@ class QtColorButton(QPushButton):
 
         if self._color:
             self.setStyleSheet(
-                "QPushButton#color_btn {border: none; margin: 0px; padding: 0px; background-color: %s;}" % self._color
+                f"QPushButton#color_btn {{border: none; margin: 0px; padding: 0px; background-color: {self._color};}}"
             )
         else:
             self.setStyleSheet("QPushButton#color_btn {border: none; margin: 0px; padding: 0px;}")
@@ -83,7 +84,7 @@ class QtColorButton(QPushButton):
 
     def mousePressEvent(self, e):
         """On mouse press."""
-        if e.button() == Qt.RightButton:
+        if e.button() == Qt.MouseButton.RightButton:
             self.setColor(None)
 
         return super().mousePressEvent(e)
@@ -122,7 +123,7 @@ class QtColorSwatch(QFrame):
         super().__init__(parent)
         self.setObjectName("colorSwatch")
         self.setToolTip(tooltip or "Click to set color")
-        self.setCursor(Qt.PointingHandCursor)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self._initial_color = initial_color
         self._color: np.ndarray = TRANSPARENT
@@ -151,7 +152,7 @@ class QtColorSwatch(QFrame):
 
     def mouseReleaseEvent(self, event: QEvent):
         """Show QColorPopup picker when the user clicks on the swatch."""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             from qtextra.helpers import get_color
 
             initial = QColor(*(255 * self._color).astype("int"))
@@ -187,27 +188,22 @@ class QtColorSwatch(QFrame):
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import sys
 
-    def _main():  # type: ignore[no-untyped-def]
-        import sys
+    from qtextra.utils.dev import qframe
 
-        from qtpy import QtWidgets
+    app, frame, ha = qframe(False)
+    frame.setLayout(ha)
+    frame.setMinimumSize(400, 400)
 
-        app = QtWidgets.QApplication(sys.argv)
-        frame = QtWidgets.QWidget()
-        ha = QtWidgets.QHBoxLayout()
-        frame.setLayout(ha)
+    w = QtColorButton(size=(64, 64), color="#FF00FF")
+    ha.addWidget(w)
+    ww = QtColorSwatch(initial_color="#FF0000")
+    ha.addWidget(ww)
+    ww = QtColorSwatch(initial_color="#FFFF00")
+    ha.addWidget(ww)
+    ww = QtColorSwatch(initial_color=(255, 123, 32))
+    ha.addWidget(ww)
 
-        w = QtColorButton(size=(64, 64), color="#FF00FF")
-        ha.addWidget(w)
-        ww = QtColorSwatch(initial_color="#FF0000")
-        ha.addWidget(ww)
-        ww = QtColorSwatch(initial_color="#FFFF00")
-        ha.addWidget(ww)
-        ww = QtColorSwatch(initial_color=(255, 123, 32))
-        ha.addWidget(ww)
-
-        frame.show()
-        sys.exit(app.exec_())
-
-    _main()
+    frame.show()
+    sys.exit(app.exec_())

@@ -9,7 +9,7 @@ from qtpy import QtGui
 # https://pygments.org/docs/formatterdevelopment/#html-3-2-formatter
 
 
-def get_text_char_format(style):
+def get_text_char_format(style: dict[str, str]) -> QtGui.QTextCharFormat:
     """
     Return a QTextCharFormat with the given attributes.
 
@@ -39,6 +39,8 @@ def get_text_char_format(style):
 
 
 class QFormatter(Formatter):
+    """Formatter."""
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.data = []

@@ -1,6 +1,6 @@
 import pytest
 from loguru import logger
-from qtextra.widgets.qt_logger import QtLoggerDialog
+from qtextra.dialogs.qt_logger import QtLoggerDialog
 
 
 @pytest.fixture

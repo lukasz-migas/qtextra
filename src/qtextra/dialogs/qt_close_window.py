@@ -1,4 +1,5 @@
 """Close dialog with option to not ask again."""
+
 from __future__ import annotations
 
 import typing as ty
@@ -84,7 +85,7 @@ class QtConfirmCloseDialog(QDialog):
         if self.do_not_ask.isChecked():
             if self.config and self.attr is not None:
                 setattr(self.config, self.attr, False)
-        super().accept()
+        return super().accept()
 
 
 if __name__ == "__main__":  # pragma: no cover

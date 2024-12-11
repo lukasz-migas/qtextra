@@ -82,13 +82,13 @@ class ScreenManager:
 class DialogMixin:
     """Mixin class for dialogs."""
 
-    def show_in_center_of(self, widget: QWidget, show: bool = True) -> None:
+    def show_in_center_of_screen(self, show: bool = True) -> None:
         """Show dialog in the center of the widget."""
-        rect = widget.rect()
-        pos = widget.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
-        self.move(pos)
-        if show:
-            self.show()
+        hp.show_in_center_of_screen(self, show)
+
+    def show_in_center_of_widget(self, widget: QWidget, show: bool = True) -> None:
+        """Show dialog in the center of the widget."""
+        hp.show_in_center_of_widget(self, widget, show)
 
     def show_above_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
         """Show popup dialog above the widget."""
@@ -127,55 +127,6 @@ class DialogMixin:
     def show_left_of_mouse(self, show: bool = True) -> None:
         """Show popup dialog on the left hand side of the mouse cursor position."""
         hp.show_left_of_mouse(self, show)
-
-    def set_on_widget(self, widget: QWidget, x_mult: float = 2.5, y_mult: float = 0.0) -> None:
-        """Set position of the popup above the widget."""
-        # calculate position information about the widget
-        widget_rect = widget.rect()
-        widget_pos = widget.mapToGlobal(QPoint(widget_rect.left(), widget_rect.top()))
-        widget_width = widget.width()
-
-        # calculate sizing of the window
-        rect = self.rect()
-        x_pos = widget_pos.x() + widget_width + rect.width() * x_mult
-        y_pos = widget_pos.y() + rect.height() * y_mult
-        pos = QPoint(int(x_pos), int(y_pos))
-
-        m = ScreenManager()
-        pos = m.verify_position(pos, rect.width(), rect.height())
-        self.move(pos)
-
-    def set_on_mouse(self, x_mult: float = 2.5, y_mult: float = 0.0) -> None:
-        """Set on mouse position."""
-        pos = QCursor.pos()
-        rect = self.rect()
-        pos = QPoint(pos.x() - rect.width() * x_mult, pos.y() - rect.height() * y_mult)
-
-        m = ScreenManager()
-        pos = m.verify_position(pos, rect.width(), rect.height())
-        self.move(pos)
-
-    def center_on_screen(self, show: bool = False) -> None:
-        """Center dialog on screen."""
-        screen = QApplication.desktop().screenGeometry()
-        x = (screen.width() - self.width()) / 2
-        y = (screen.height() - self.height()) / 2
-        self.move(x, y)
-        if show:
-            self.show()
-
-    def center_on_parent(self, show: bool = False) -> None:
-        """Center on parent."""
-        parent = self.parent()
-        if not parent:
-            self.center_on_screen()
-        else:
-            screen = parent.geometry()
-            x = (screen.width() - self.width()) / 2
-            y = (screen.height() - self.height()) / 2
-            self.move(x, y)
-        if show:
-            self.show()
 
     def move_to(self, position="top", *, win_ratio=0.9, min_length=0) -> None:
         """Move popup to a position relative to the QMainWindow.

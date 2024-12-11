@@ -264,6 +264,7 @@ class QtTutorial(QDialog):
         else:
             raise ValueError(f"Invalid position '{position}'.")
         pos = widget.mapToGlobal(QPoint(int(x), int(y)))
+        pos = hp.check_if_outside_for_mouse(pos, popup_size)
         self.move(pos)
 
     def set_chevron(self, position: Position) -> None:

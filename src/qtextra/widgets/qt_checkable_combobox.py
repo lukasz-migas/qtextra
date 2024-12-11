@@ -1,4 +1,5 @@
 """Checkable combobox."""
+
 import typing as ty
 from functools import partial
 
@@ -16,10 +17,10 @@ class CheckableAbstractModel(QStandardItemModel):
 
     def setData(self, index: QModelIndex, value: ty.Any, role: int = ...) -> bool:
         """Set data."""
-        if role == Qt.CheckStateRole:
+        if role == Qt.ItemDataRole.CheckStateRole:
             # self.evt_checked.emit(index.row(), not value)
             call_later(self, partial(self.evt_checked.emit, index.row(), not value), delay=50)
-        elif role == Qt.DisplayRole:
+        elif role == Qt.ItemDataRole.DisplayRole:
             pass
         return super().setData(index, value, role)
 
@@ -36,8 +37,8 @@ class QtCheckableComboBox(QComboBox):
         """Add item."""
         super().addItem(item, data)
         item = self.model().item(self.count() - 1, 0)
-        item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-        item.setCheckState(Qt.Unchecked)
+        item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+        item.setCheckState(Qt.CheckState.Unchecked)
 
     def addItems(self, texts: ty.Sequence[str]) -> None:
         """Add items."""
@@ -45,18 +46,18 @@ class QtCheckableComboBox(QComboBox):
         super().addItems(texts)
         for index in range(current, self.count()):
             item = self.model().item(index, 0)
-            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            item.setCheckState(Qt.Unchecked)
+            item.setFlags(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEnabled)
+            item.setCheckState(Qt.CheckState.Unchecked)
 
     def itemChecked(self, index):
         """Item is checked."""
         item = self.model().item(index, 0)
-        return item.checkState() == Qt.Checked
+        return item.checkState() == Qt.CheckState.Checked
 
     def setItemChecked(self, index: int, checked: bool) -> bool:
         """Set item checked."""
         item = self.model().item(index, 0)
-        item.setCheckState(Qt.Checked if checked else Qt.Unchecked)
+        item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
 
     def get_checked(self) -> ty.List[int]:
         """Get all checked items."""

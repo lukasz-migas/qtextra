@@ -3,6 +3,7 @@ Defines the DataFrameViewer class to display DataFrames as a table. The DataFram
 QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView widgets for the column and index
  headers.
 """
+
 import numpy as np
 import pandas as pd
 import qtpy.QtCore as Qc
@@ -547,11 +548,12 @@ class HeaderView(Qw.QTableView):
                 higher_levels = Qc.QItemSelection(
                     self.model().index(0, 0), self.model().index(last_row_ix - 1, last_col_ix)
                 )
-                selection.merge(higher_levels, Qc.QItemSelectionModel.Deselect)
+                selection.merge(higher_levels, Qc.QItemSelectionModel.SelectionFlag.Deselect)
 
                 # Select the cells in the data view
                 dataView.selectionModel().select(
-                    selection, Qc.QItemSelectionModel.Columns | Qc.QItemSelectionModel.ClearAndSelect
+                    selection,
+                    Qc.QItemSelectionModel.SelectionFlag.Columns | Qc.QItemSelectionModel.SelectionFlag.ClearAndSelect,
                 )
             if self.orientation == Qt.Orientation.Vertical:
                 selection = self.selectionModel().selection()
@@ -561,10 +563,11 @@ class HeaderView(Qw.QTableView):
                 higher_levels = Qc.QItemSelection(
                     self.model().index(0, 0), self.model().index(last_row_ix, last_col_ix - 1)
                 )
-                selection.merge(higher_levels, Qc.QItemSelectionModel.Deselect)
+                selection.merge(higher_levels, Qc.QItemSelectionModel.SelectionFlag.Deselect)
 
                 dataView.selectionModel().select(
-                    selection, Qc.QItemSelectionModel.Rows | Qc.QItemSelectionModel.ClearAndSelect
+                    selection,
+                    Qc.QItemSelectionModel.SelectionFlag.Rows | Qc.QItemSelectionModel.SelectionFlag.ClearAndSelect,
                 )
 
         self.selectAbove()
@@ -585,12 +588,12 @@ class HeaderView(Qw.QTableView):
                 # Loop over the rows above this one
                 for row in range(ix.row()):
                     ix2 = self.model().index(row, ix.column())
-                    self.setSelection(self.visualRect(ix2), Qc.QItemSelectionModel.Select)
+                    self.setSelection(self.visualRect(ix2), Qc.QItemSelectionModel.SelectionFlag.Select)
             else:
                 # Loop over the columns left of this one
                 for col in range(ix.column()):
                     ix2 = self.model().index(ix.row(), col)
-                    self.setSelection(self.visualRect(ix2), Qc.QItemSelectionModel.Select)
+                    self.setSelection(self.visualRect(ix2), Qc.QItemSelectionModel.SelectionFlag.Select)
 
     # Fits columns to contents but with a minimum width and added padding
     def initSize(self):
@@ -723,7 +726,7 @@ class HeaderView(Qw.QTableView):
     def eventFilter(self, object: Qc.QObject, event: Qc.QEvent):
         """Event filter."""
         # If mouse is on an edge, start the drag resize process
-        if event.type() == Qc.QEvent.MouseButtonPress:
+        if event.type() == Qc.QEvent.Type.MouseButtonPress:
             if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
             elif self.orientation == Qt.Orientation.Vertical:
@@ -741,11 +744,11 @@ class HeaderView(Qw.QTableView):
                 self.header_being_resized = None
 
         # End the drag process
-        if event.type() == Qc.QEvent.MouseButtonRelease:
+        if event.type() == Qc.QEvent.Type.MouseButtonRelease:
             self.header_being_resized = None
 
         # Auto size the column that was double clicked
-        if event.type() == Qc.QEvent.MouseButtonDblClick:
+        if event.type() == Qc.QEvent.Type.MouseButtonDblClick:
             if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
             elif self.orientation == Qt.Orientation.Vertical:
@@ -761,7 +764,7 @@ class HeaderView(Qw.QTableView):
                 return True
 
         # Handle active drag resizing
-        if event.type() == Qc.QEvent.MouseMove:
+        if event.type() == Qc.QEvent.Type.MouseMove:
             if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
             elif self.orientation == Qt.Orientation.Vertical:
@@ -785,11 +788,11 @@ class HeaderView(Qw.QTableView):
             # Set the cursor shape
             if self.over_header_edge(mouse_position) is not None:
                 if self.orientation == Qt.Orientation.Horizontal:
-                    self.viewport().setCursor(Qg.QCursor(Qt.SplitHCursor))
+                    self.viewport().setCursor(Qg.QCursor(Qt.CursorShape.SplitHCursor))
                 elif self.orientation == Qt.Orientation.Vertical:
-                    self.viewport().setCursor(Qg.QCursor(Qt.SplitVCursor))
+                    self.viewport().setCursor(Qg.QCursor(Qt.CursorShape.SplitVCursor))
             else:
-                self.viewport().setCursor(Qg.QCursor(Qt.ArrowCursor))
+                self.viewport().setCursor(Qg.QCursor(Qt.CursorShape.ArrowCursor))
 
         return False
 
@@ -863,7 +866,7 @@ if __name__ == "__main__":  # pragma: no cover
             ("b", "b"): {("A", "D"): 9, ("A", "B"): 10},
         }
     )
-    widget = QtDataFrameWidget(array)
+    widget = QtDataFrameWidget(None, array)
     va.addWidget(widget, stretch=True)
     btn = Qw.QPushButton("Press me to change data")
     btn.clicked.connect(lambda: widget.set_data(pd.DataFrame(np.random.randint(-255, 255, (10, 10)) / 255)))

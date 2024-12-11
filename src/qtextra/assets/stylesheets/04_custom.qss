@@ -361,6 +361,7 @@ QtColorSwatch:hover {
     border: 2px solid {{ foreground }};
 }
 
+
 /* ------------ WorkflowWidget ------------ */
 QtTileWidget {
     border: 2px solid {{ foreground }};

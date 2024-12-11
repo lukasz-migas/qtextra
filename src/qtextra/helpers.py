@@ -13,7 +13,7 @@ import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
-from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QSize, Qt, QTimer, QUrl
+from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, QUrl
 from qtpy.QtGui import QColor, QCursor, QDesktopServices, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
 
@@ -2370,7 +2370,7 @@ def confirm_with_text(
     title: str = "Please confirm...",
 ) -> bool:
     """Confirm action."""
-    from qtextra.widgets.qt_confirm import ConfirmWithTextDialog
+    from qtextra.dialogs.qt_confirm import ConfirmWithTextDialog
 
     if request not in message:
         if "<b>confirm</b>" not in message:
@@ -2872,54 +2872,116 @@ def style_form_layout(layout: Qw.QFormLayout) -> None:
         layout.setVerticalSpacing(4)
 
 
-def show_above_mouse(widget: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+def show_above_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
     """Show popup dialog above the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
-    sz_hint = widget.sizeHint()
+    sz_hint = widget_to_show.sizeHint()
     pos -= QPoint(int(sz_hint.width() / 2) - x_offset, sz_hint.height() - y_offset)  # type: ignore[call-overload]
-    widget.move(pos)
+    pos = check_if_outside_for_mouse(pos, sz_hint)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
-def show_below_mouse(widget: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+def show_below_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
     """Show popup dialog below the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
-    sz_hint = widget.sizeHint()
+    sz_hint = widget_to_show.sizeHint()
     pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)  # type: ignore[call-overload]
-    widget.move(pos)
+    pos = check_if_outside_for_mouse(pos, sz_hint)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
-def show_left_of_mouse(widget: Qw.QWidget, show: bool = True) -> None:
+def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
-    sz_hint = widget.sizeHint()
+    sz_hint = widget_to_show.sizeHint()
     pos -= QPoint(sz_hint.width() + 14, int(sz_hint.height() / 4))  # type: ignore[call-overload]
-    widget.move(pos)
+    pos = check_if_outside_for_mouse(pos, sz_hint)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
-def show_right_of_mouse(widget: Qw.QWidget, show: bool = True) -> None:
+def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
-    sz_hint = widget.sizeHint()
+    sz_hint = widget_to_show.sizeHint()
     pos -= QPoint(-20, int(sz_hint.height() / 8))  # type: ignore[call-overload]
-    widget.move(pos)
+    pos = check_if_outside_for_mouse(pos, sz_hint)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
 
 
-def show_on_mouse(widget: Qw.QWidget, show: bool = True) -> None:
+def show_on_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog in the center of mouse cursor position."""
     pos = QCursor().pos()
-    sz_hint = widget.sizeHint()
+    sz_hint = widget_to_show.sizeHint()
     pos -= QPoint(int(sz_hint.width() / 2), int(sz_hint.height() / 4))
-    widget.move(pos)
+    pos = check_if_outside_for_mouse(pos, sz_hint)
+    widget_to_show.move(pos)
     if show:
-        widget.show()
+        widget_to_show.show()
+
+
+def check_if_outside_for_mouse(pos: QPoint, sz_hint: QSize) -> QPoint:
+    """Show popup dialog centered near the mouse cursor, ensuring it stays on-screen."""
+    # Determine the screen at the current mouse position
+    screen = Qw.QApplication.screenAt(QCursor().pos())
+    if not screen:
+        screen = Qw.QApplication.primaryScreen()
+    available_geo = screen.availableGeometry()
+
+    # Calculate the intended geometry of the widget
+    widget_rect = QRect(pos, sz_hint)
+
+    # Adjust horizontally if going out of screen bounds
+    if widget_rect.right() > available_geo.right():
+        pos.setX(pos.x() - (widget_rect.right() - available_geo.right()))
+    if pos.x() < available_geo.left():
+        pos.setX(available_geo.left())
+
+    # Update widget_rect after horizontal adjustment
+    widget_rect = QRect(pos, sz_hint)
+
+    # Adjust vertically if going out of screen bounds
+    if widget_rect.bottom() > available_geo.bottom():
+        pos.setY(pos.y() - (widget_rect.bottom() - available_geo.bottom()))
+    if pos.y() < available_geo.top():
+        pos.setY(available_geo.top())
+    return pos
+
+
+def show_in_center_of_screen(widget_to_show: Qw.QWidget, show: bool = True) -> None:
+    """Show popup dialog in the center of the screen."""
+    screen = Qw.QApplication.screenAt(QCursor().pos())
+    if not screen:
+        screen = Qw.QApplication.primaryScreen()
+    available_geo = screen.availableGeometry()
+    pos = QPoint(available_geo.center())
+    sz_hint = widget_to_show.sizeHint()
+    pos -= QPoint(int(sz_hint.width() / 2), int(sz_hint.height()))
+    pos = check_if_outside_for_mouse(pos, sz_hint)
+    widget_to_show.move(pos)
+    if show:
+        widget_to_show.show()
+
+
+def show_in_center_of_widget(
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
+) -> None:
+    """Show popup dialog above the widget."""
+    rect = parent.rect()
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
+    sz_hint = widget_to_show.size()
+    pos -= QPoint(int(sz_hint.width() / 4 - x_offset), int(sz_hint.height() / 2 - y_offset))
+    pos = check_if_outside_for_widget(parent, pos, sz_hint)
+    widget_to_show.move(pos)
+    if show:
+        widget_to_show.show()
 
 
 def show_right_of_widget(
@@ -2927,9 +2989,10 @@ def show_right_of_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(rect.left() + rect.width() / 2, rect.top()))
+    pos = parent.mapToGlobal(QPoint(rect.right(), (rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.size()
-    pos -= QPoint(x_offset, int(sz_hint.height() / 4) - y_offset)
+    pos -= QPoint(int(x_offset), int(sz_hint.height() / 2 - y_offset))
+    pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
@@ -2940,9 +3003,10 @@ def show_left_of_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(rect.left(), rect.top()))
+    pos = parent.mapToGlobal(QPoint(rect.left(), (rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.size()
-    pos -= QPoint(int(sz_hint.width() - x_offset), int(sz_hint.height() / 4) - y_offset)
+    pos -= QPoint(int(sz_hint.width() / 2 + x_offset), int(sz_hint.height() / 2 - y_offset))
+    pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
@@ -2955,7 +3019,8 @@ def show_above_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
     sz_hint = widget_to_show.size()
-    pos -= QPoint((int(sz_hint.width() / 2) - x_offset), int(sz_hint.height() + y_offset))
+    pos -= QPoint(int(sz_hint.width() / 4 - x_offset), int(sz_hint.height() + y_offset))
+    pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
@@ -2966,12 +3031,43 @@ def show_below_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))  # type: ignore[call-overload]
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))  # type: ignore[call-overload]
     sz_hint = widget_to_show.size()
-    pos -= QPoint(int((sz_hint.width() / 2) - x_offset), -y_offset)  # type: ignore[call-overload]
+    pos -= QPoint(int(sz_hint.width() / 4 - x_offset), -y_offset)  # type: ignore[call-overload]
+    pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
+
+
+def check_if_outside_for_widget(parent: Qw.QWidget, pos: QPoint, sz_hint: QSize) -> QPoint:
+    """Check if widget is outside the screen."""
+    # Determine which screen the parent is on and get its available geometry
+    screen = parent.windowHandle().screen() if parent.windowHandle() else Qw.QApplication.primaryScreen()
+    available_geo = screen.availableGeometry()
+
+    # Calculate the widget's intended geometry
+    widget_rect = QRect(pos, sz_hint)
+
+    # Adjust horizontally if going out of screen bounds
+    if widget_rect.right() > available_geo.right():
+        # Move left so the widget fits within the screen on the right side
+        pos.setX(pos.x() - (widget_rect.right() - available_geo.right()))
+    if pos.x() < available_geo.left():
+        # Move right if the widget starts too far left
+        pos.setX(available_geo.left())
+
+    # Update widget_rect after horizontal adjustment
+    widget_rect = QRect(pos, sz_hint)
+
+    # Adjust vertically if going out of screen bounds
+    if widget_rect.bottom() > available_geo.bottom():
+        # Move up so the widget fits within the screen on the bottom side
+        pos.setY(pos.y() - (widget_rect.bottom() - available_geo.bottom()))
+    if pos.y() < available_geo.top():
+        # Move down if the widget starts too far up
+        pos.setY(available_geo.top())
+    return pos
 
 
 def copy_text_to_clipboard(text: str) -> None:
