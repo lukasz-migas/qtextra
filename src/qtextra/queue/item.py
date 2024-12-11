@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import os
 import typing as ty
+
+from koyo.timer import MeasureTimer
 from loguru import logger
 from qtpy.QtCore import Qt, QTimer, Signal  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QFrame, QGridLayout, QWidget
-import os
-from koyo.timer import MeasureTimer
 
 import qtextra.helpers as hp
 from qtextra.queue.task import Task
