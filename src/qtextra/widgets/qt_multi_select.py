@@ -154,7 +154,8 @@ class QtMultiSelect(QWidget):
     textChanged = Signal(str)
     evt_selection_changed = Signal(list)
 
-    def __init__(self, parent: QWidget, allow_clear: bool = False):
+    def __init__(self, parent: QWidget, allow_clear: bool = False, instant_set: bool = False):
+        self.instant_set = instant_set
         super().__init__(parent)
         self.options: list[str] = []
         self.selected_options: list[str] = []
@@ -300,7 +301,7 @@ class QtMultiSelect(QWidget):
         """Select."""
         dlg = SelectionWidget(self)
         dlg.set_options(self.options, self.selected_options)
-        dlg.evt_temp_changed.connect(self.set_selected_options_temp)
+        dlg.evt_temp_changed.connect(self._set_selected_options if self.instant_set else self.set_selected_options_temp)
         dlg.evt_update.connect(self._set_selected_options)
         dlg.show_below_widget(self, x_offset=0, y_offset=0)
 

@@ -151,7 +151,7 @@ class QtLogger(QWidget):
         self.THEME = theme
 
         # update background color
-        self.textedit.setStyleSheet("QPlainTextEdit {background-color: %s}" % self.COLORS["BACKGROUND"])
+        self.textedit.setStyleSheet("QPlainTextEdit {{background-color: {}}}".format(self.COLORS["BACKGROUND"]))
         self.recolor_old_text()
 
     def recolor_old_text(self):

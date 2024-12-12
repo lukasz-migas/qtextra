@@ -1,4 +1,5 @@
 """Confirm action by typing requested text."""
+
 import typing as ty
 
 from qtpy.QtCore import Qt
