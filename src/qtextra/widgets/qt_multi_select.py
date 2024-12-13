@@ -244,8 +244,9 @@ class QtMultiSelect(QWidget):
 
     def clear_current(self) -> None:
         """Clear selection."""
-        self.text_edit.setText("")
         self.selected_options = []
+        self.text_edit.setText("")
+        self.evt_selection_changed.emit(self.selected_options)
 
     def clear(self) -> None:
         """Clear selection."""
@@ -301,6 +302,7 @@ class QtMultiSelect(QWidget):
         """Select."""
         dlg = SelectionWidget(self)
         dlg.set_options(self.options, self.selected_options)
+        dlg.filter_by_option.setFocus()
         dlg.evt_temp_changed.connect(self._set_selected_options if self.instant_set else self.set_selected_options_temp)
         dlg.evt_update.connect(self._set_selected_options)
         dlg.show_below_widget(self, x_offset=0, y_offset=0)
