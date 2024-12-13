@@ -90,23 +90,23 @@ class DialogMixin:
         """Show dialog in the center of the widget."""
         hp.show_in_center_of_widget(self, widget, show)
 
-    def show_above_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+    def show_above_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
         hp.show_above_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+    def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the mouse cursor position."""
         hp.show_above_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_below_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+    def show_below_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
         hp.show_below_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_below_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+    def show_below_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -0) -> None:
         """Show popup dialog above the mouse cursor position."""
         hp.show_below_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_right_of_widget(self, parent: QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0) -> None:
+    def show_right_of_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
         hp.show_right_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 

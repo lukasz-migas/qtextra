@@ -2855,7 +2855,7 @@ def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
     sh = dlg.sizeHint()
     cw, ch = sh.width(), sh.height()
     if win:
-        win_size = win.size()
+        win_size = win.sizeHint()
         mw, mh = win_size.width(), win_size.height()
         if cw > mw:
             cw = mw - 50
@@ -2976,8 +2976,10 @@ def show_in_center_of_widget(
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
-    sz_hint = widget_to_show.size()
-    pos -= QPoint(int(sz_hint.width() / 4 - x_offset), int(sz_hint.height() / 2 - y_offset))
+    sz_hint = widget_to_show.sizeHint()
+    widget_width = sz_hint.width() / 2
+    widget_height = sz_hint.height() / 2
+    pos -= QPoint(int(widget_width - x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
@@ -2985,13 +2987,14 @@ def show_in_center_of_widget(
 
 
 def show_right_of_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = -14, y_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(rect.right(), (rect.top() - rect.height() / 2)))
-    sz_hint = widget_to_show.size()
-    pos -= QPoint(int(x_offset), int(sz_hint.height() / 2 - y_offset))
+    sz_hint = widget_to_show.sizeHint()
+    widget_height = sz_hint.height() / 2
+    pos -= QPoint(int(x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
@@ -2999,13 +3002,15 @@ def show_right_of_widget(
 
 
 def show_left_of_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 14, y_offset: int = 0
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(rect.left(), (rect.top() - rect.height() / 2)))
-    sz_hint = widget_to_show.size()
-    pos -= QPoint(int(sz_hint.width() / 2 + x_offset), int(sz_hint.height() / 2 - y_offset))
+    sz_hint = widget_to_show.sizeHint()
+    widget_width = sz_hint.width()
+    widget_height = sz_hint.height() / 2
+    pos -= QPoint(int(widget_width + x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
@@ -3013,13 +3018,15 @@ def show_left_of_widget(
 
 
 def show_above_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 14
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
-    sz_hint = widget_to_show.size()
-    pos -= QPoint(int(sz_hint.width() / 4 - x_offset), int(sz_hint.height() + y_offset))
+    sz_hint = widget_to_show.sizeHint()
+    widget_width = sz_hint.width() / 2
+    widget_height = sz_hint.height()
+    pos -= QPoint(int(widget_width - x_offset), int(widget_height + y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
@@ -3027,13 +3034,14 @@ def show_above_widget(
 
 
 def show_below_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 14
+    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))  # type: ignore[call-overload]
-    sz_hint = widget_to_show.size()
-    pos -= QPoint(int(sz_hint.width() / 4 - x_offset), -y_offset)  # type: ignore[call-overload]
+    sz_hint = widget_to_show.sizeHint()
+    widget_width = sz_hint.width() / 2
+    pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
     if show:
