@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import typing as ty
-from functools import partial
 
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
 
@@ -32,6 +31,8 @@ class QtPickOptionBase(QDialog):
         raise NotImplementedError("Must implement method")
 
     def _setup_ui(self) -> None:
+        from functools import partial
+
         area, widget = self._get_layout_widget()
         btn_layout = QHBoxLayout(area) if self.orientation == "horizontal" else QVBoxLayout(area)
         btn_layout.addStretch(1)
@@ -78,11 +79,12 @@ class QtScrollablePickOption(QtPickOptionBase):
         text: str,
         options: dict[ty.Any, str],
         orientation: str | Orientation = "horizontal",
+        max_width: int = 500,
     ):
         self.orientation = orientation
         super().__init__(parent, text, options)
         size = self.sizeHint()
-        size.setWidth(max(size.width(), 500))
+        size.setWidth(max(size.width(), max_width))
         size.setHeight(min(400, 40 * len(options) + 70))
         self.setMinimumSize(size)
 

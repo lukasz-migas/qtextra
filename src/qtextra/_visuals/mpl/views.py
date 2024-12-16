@@ -51,6 +51,12 @@ class ViewMplLine(ViewBase):
                 # set data
                 self._data.update(x=x, y=y)
 
+    def scatter(self, x: np.ndarray, y: np.ndarray, repaint: bool = True):
+        """Simple scatter plot."""
+        with QMutexLocker(MUTEX):
+            self.figure.plot_scatter(x, y, x_label=self.x_label, y_label=self.y_label, callbacks=self._callbacks)
+            self.figure.repaint(repaint)
+
     def update(self, x: np.ndarray, y: np.ndarray, repaint: bool = True, **kwargs: ty.Any) -> None:
         """Update plot without having to clear it."""
         #         t_start = time.time()

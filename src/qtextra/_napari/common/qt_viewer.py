@@ -356,14 +356,14 @@ class QtViewerBase(QWidget):
         """
         from skimage.io import imsave
 
-        img = QImg2array(self._screenshot(size, scale, flash, canvas_only))
+        img = QImg2array(self._screenshot(size=size, scale=scale, flash=flash, canvas_only=canvas_only))
         if path is not None:
             imsave(path, img)  # scikit-image imsave method
         return img
 
-    def clipboard(self, size=None, scale=None, flash=True, canvas_only=False):
+    def clipboard(self, size=None, scale=None, flash=True, canvas_only=True):
         """Take a screenshot of the currently displayed viewer and copy the image to the clipboard."""
-        img = self._screenshot(size, scale, flash, canvas_only)
+        img = self._screenshot(size=size, scale=scale, flash=flash, canvas_only=canvas_only)
 
         cb = QGuiApplication.clipboard()
         cb.setImage(img)

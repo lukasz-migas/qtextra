@@ -3051,7 +3051,7 @@ def show_below_widget(
 def check_if_outside_for_widget(parent: Qw.QWidget, pos: QPoint, sz_hint: QSize) -> QPoint:
     """Check if widget is outside the screen."""
     # Determine which screen the parent is on and get its available geometry
-    screen = parent.windowHandle().screen() if parent.windowHandle() else Qw.QApplication.primaryScreen()
+    screen = parent.window().screen() if parent.window() else Qw.QApplication.primaryScreen()
     available_geo = screen.availableGeometry()
 
     # Calculate the widget's intended geometry

@@ -122,7 +122,7 @@ class QProcessWrapper(QObject):
         # self.process.readyReadStandardError.connect(self.on_stderr)
 
         self.finished_tasks: ty.Set[str] = set()
-        self.command_queue: SimpleQueue[QueueCommand] = Queue()
+        self.command_queue: SimpleQueue = Queue()
         self.current_task_id: ty.Optional[str] = None
 
         # setup functions
@@ -330,6 +330,7 @@ class QProcessWrapper(QObject):
             self.task.state = TaskState.FAILED
             self.logger.trace(f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (error)")
             self.task.lock()  # lock task
+        self.command_queue.clear()
         self.task.end_time = time_()
         self.master_started = False
         if self._cancelled:

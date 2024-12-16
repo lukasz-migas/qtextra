@@ -1,8 +1,10 @@
 """Info widget."""
 
 from __future__ import annotations
-import typing as ty
+
 import os
+import typing as ty
+
 from koyo.timer import MeasureTimer
 from loguru import logger
 from qtpy.QtCore import Qt, Signal
@@ -21,9 +23,9 @@ import qtextra.helpers as hp
 from qtextra.queue.task import Task
 from qtextra.queue.utilities import format_command, format_interval, format_timestamp
 from qtextra.typing import TaskState
+from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtDialog
 from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
-from qtextra.utils.table_config import TableConfig
 
 logger = logger.bind(src="TaskInfo")
 
@@ -97,8 +99,7 @@ class TaskInfoDialog(QtDialog):
     def update_progress(self) -> None:
         """Update progress."""
         task = self.task
-        stdout = task.current_std_out
-        self.stdout_edit.appendPlainText(stdout)
+        self.stdout_edit.appendPlainText(task.current_std_out)
         if task.start_time:
             self.started_label.setText(format_timestamp(task.start_time))
             self.duration_label.setText(format_interval(task.current_duration))
@@ -108,6 +109,11 @@ class TaskInfoDialog(QtDialog):
         if state != self.task_state.text():
             self.task_state.setText(state)
             hp.polish_widget(self.task_state)
+        cmd_txt = self.command_label.text()
+        if cmd_txt:
+            _, total = cmd_txt.split("/")
+            total = total.strip(" ")
+            self.command_label.setText(f"{task.command_index + 1} / {total}")
 
     @staticmethod
     def _on_get_task_choice_data(task: Task) -> TaskMetadata:
@@ -130,11 +136,11 @@ class TaskInfoDialog(QtDialog):
                         cmds.append(" ".join(command))
                 except Exception as e:
                     logger.exception(f"Failed to retrieve commands: {e}")
-                    # logger.warning(f"Failed to retrieve commands: {e}")
                 start = format_timestamp(task.start_time)  # type: ignore
                 end = format_timestamp(task.end_time)  # type: ignore
                 dur = format_interval(task.duration)
-        return task, cmd_idx, state, start, end, dur, stdout, cmds, timer()
+                cmd = f"{cmd_idx + 1} / {len(cmds)}" if cmds else "0 / 0"
+        return task, cmd_idx, state, start, end, dur, cmd, stdout, cmds, timer()
 
     def _on_set_task_choice_failed(self, res: Exception) -> None:
         """Set task choice failed."""
@@ -146,6 +152,7 @@ class TaskInfoDialog(QtDialog):
         self.started_label.setText("<Failed to retrieve>")
         self.finished_label.setText("<Failed to retrieve>")
         self.duration_label.setText("<Failed to retrieve>")
+        self.command_label.setText("<Failed to retrieve>")
         self.stdout_edit.clear()
         self.stdout_edit.setPlainText("<Failed to retrieve>")
         self.stdout_edit.verticalScrollBar().setValue(self.stdout_edit.verticalScrollBar().maximum())
@@ -155,7 +162,7 @@ class TaskInfoDialog(QtDialog):
     def _on_set_task_choice(self, res: TaskMetadata) -> None:
         """Set task choice."""
         try:
-            task, cmd_idx, state, start, end, dur, stdout, cmds, ret_time = res
+            task, cmd_idx, state, start, end, dur, cmd, stdout, cmds, ret_time = res
             with MeasureTimer() as update_time:
                 self.task_id.setText(task.task_id)
                 self.task_title.setText(task.task_name)
@@ -164,6 +171,7 @@ class TaskInfoDialog(QtDialog):
                 self.started_label.setText(start)
                 self.finished_label.setText(end)
                 self.duration_label.setText(dur)
+                self.command_label.setText(cmd)
                 self.stdout_edit.clear()
                 self.stdout_edit.setPlainText(stdout or "No stdout/stderr available.")
                 self.stdout_edit.verticalScrollBar().setValue(self.stdout_edit.verticalScrollBar().maximum())
@@ -207,6 +215,7 @@ class TaskInfoDialog(QtDialog):
         self.started_label = hp.make_label(self, "")
         self.finished_label = hp.make_label(self, "")
         self.duration_label = hp.make_label(self, "")
+        self.command_label = hp.make_label(self, "")
 
         # commands view
         self.command_table = QtCheckableTableView(self, config=TABLE_CONFIG, enable_all_check=True, sortable=True)
@@ -275,6 +284,7 @@ class TaskInfoDialog(QtDialog):
         layout.addRow(hp.make_label(self, "Started on", bold=True), self.started_label)
         layout.addRow(hp.make_label(self, "Finished on", bold=True), self.finished_label)
         layout.addRow(hp.make_label(self, "Duration", bold=True), self.duration_label)
+        layout.addRow(hp.make_label(self, "Command", bold=True), self.command_label)
         layout.addRow(tabs)
 
         main_layout = hp.make_v_layout()

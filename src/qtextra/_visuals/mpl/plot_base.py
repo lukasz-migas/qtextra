@@ -633,7 +633,7 @@ class PlotBase(QWidget):
         ymax: float = 1,
         color: str = "k",
         alpha: float = 0.7,
-        gid: str = "hline",
+        gid: str = "vline",
     ):
         """Add vertical line to the axes."""
         line = self.ax.axvline(xpos, ymin, ymax, color=color, alpha=alpha, gid=gid)
