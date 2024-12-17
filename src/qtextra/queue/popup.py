@@ -32,11 +32,10 @@ class QueuePopup(QtFramelessTool):
             func=QUEUE.set_max_parallel,
         )
 
-        layout = QFormLayout()
-        layout.setSpacing(3)
+        layout = hp.make_form_layout()
         layout.setContentsMargins(6, 6, 6, 6)
         layout.addRow(self._make_hide_handle("Task queue")[1])
-        layout.addRow("Number of tasks", self.n_tasks)
+        layout.addRow("Number of parallel tasks", self.n_tasks)
         layout.addRow(self.clear_btn)
         layout.addRow(hp.make_h_line(self))
         layout.addRow(self.queue_list)

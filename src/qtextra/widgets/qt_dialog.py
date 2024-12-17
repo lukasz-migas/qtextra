@@ -825,7 +825,26 @@ class SubWindowBase(QDialog):
         self.opacity_anim.setEndValue(0)
         self.opacity_anim.start()
 
-    def close(self) -> None:  # type: ignore[override]
+    def deleteLater(self) -> None:
+        """Stop all animations and timers before deleting."""
+        with suppress(RuntimeError, TypeError):
+            self.geom_anim.stop()
+            super().deleteLater()
+
+    def close(self) -> None:
+        """Close window."""
+        with suppress(RuntimeError, TypeError):
+            self.geom_anim.stop()
+            super().close()
+
+    def close_with_fade(self):
         """Fade out then close."""
         with suppress(RuntimeError, TypeError):
-            super().close()
+            self.opacity_anim.stop()
+            self.geom_anim.stop()
+
+            self.opacity_anim.setDuration(self.FADE_OUT_RATE)
+            self.opacity_anim.setStartValue(self.MAX_OPACITY)
+            self.opacity_anim.setEndValue(0)
+            self.opacity_anim.start()
+            self.opacity_anim.finished.connect(self.close)

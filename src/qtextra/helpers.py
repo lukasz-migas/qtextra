@@ -17,7 +17,7 @@ from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect
 from qtpy.QtGui import QColor, QCursor, QDesktopServices, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap
 from superqt import QElidingLabel, QLabeledSlider
 
-from qtextra.typing import Callback
+from qtextra.typing import Callback, Orientation
 from qtextra.utils.table_config import TableConfig
 from qtextra.utils.utilities import IS_MAC, IS_WIN
 
@@ -931,11 +931,11 @@ def make_btn(
     tooltip: str | None = None,
     flat: bool = False,
     checkable: bool = False,
+    check: bool = False,
     func: Callback | None = None,
     font_size: int | None = None,
     bold: bool = False,
     object_name: str = "",
-    check: bool = False,
     properties: dict[str, ty.Any] | None = None,
 ) -> QtPushButton:
     """Make button."""
@@ -986,16 +986,26 @@ def make_tool_btn(
 
 
 def make_rich_btn(
-    parent: Qw.QWidget | None, text: str, tooltip: str | None = None, flat: bool = False
+    parent: Qw.QWidget | None,
+    text: str,
+    tooltip: str | None = None,
+    flat: bool = False,
+    checkable: bool = False,
+    check: bool = False,
+    func: Callback | None = None,
 ) -> QtRichTextButton:
     """Make button."""
     from qtextra.widgets.qt_buttons import QtRichTextButton
 
     widget = QtRichTextButton(parent, text)
+    widget.setCheckable(checkable)
+    widget.setChecked(check)
     if tooltip:
         widget.setToolTip(tooltip)
     if flat:
         widget.setFlat(flat)
+    if func:
+        [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1408,7 +1418,7 @@ def make_slider(
     minimum: float = 0,
     maximum: float = 100,
     step_size: float = 1,
-    orientation="horizontal",
+    orientation: Orientation = "horizontal",
     tooltip: str | None = None,
     default: float = 1,
     value: float | None = None,
@@ -1420,7 +1430,7 @@ def make_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
+    orientation = _get_orientation(orientation)
     widget = Qw.QSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1430,6 +1440,8 @@ def make_slider(
         widget.setToolTip(tooltip)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
+    if func:
+        [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -1439,7 +1451,7 @@ def make_slider_with_text(
     max_value: int = 100,
     step_size: int = 1,
     value: int = 1,
-    orientation="horizontal",
+    orientation: Orientation = "horizontal",
     tooltip: str | None = None,
     focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
     func: Callback | None = None,
@@ -1447,7 +1459,7 @@ def make_slider_with_text(
     """Make QSlider."""
     from superqt import QLabeledSlider
 
-    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
+    orientation = _get_orientation(orientation)
     widget = QLabeledSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setValue(value)
@@ -1467,7 +1479,7 @@ def make_double_slider_with_text(
     step_size: float = 1,
     value: float = 1,
     n_decimals: int = 1,
-    orientation="horizontal",
+    orientation: Orientation = "horizontal",
     tooltip: str | None = None,
     focus_policy: Qt.FocusPolicy = Qt.FocusPolicy.TabFocus,
     func: Callback | None = None,
@@ -1475,7 +1487,7 @@ def make_double_slider_with_text(
     """Make QSlider."""
     from superqt import QLabeledDoubleSlider
 
-    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
+    orientation = _get_orientation(orientation)
     widget = QLabeledDoubleSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setDecimals(n_decimals)
@@ -1489,12 +1501,18 @@ def make_double_slider_with_text(
     return widget
 
 
+def _get_orientation(orientation: str | Qt.Orientation) -> Qt.Orientation:
+    if isinstance(orientation, str):
+        orientation = Qt.Orientation.Horizontal if orientation.lower() == "horizontal" else Qt.Orientation.Vertical
+    return orientation
+
+
 def make_labelled_slider(
     parent: Qw.QWidget | None,
     minimum: float = 0,
     maximum: float = 100,
     step_size: float = 1,
-    orientation="horizontal",
+    orientation: Orientation = "horizontal",
     tooltip: str | None = None,
     default: float = 1,
     value: float | None = None,
@@ -1506,7 +1524,7 @@ def make_labelled_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = Qt.Orientation.Horizontal if orientation.lower() else Qt.Orientation.Vertical
+    orientation = _get_orientation(orientation)
     widget = QLabeledSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1639,13 +1657,16 @@ def make_toggle_group(
     func: Callback | None = None,
     tooltip: str = "",
     checked_label: str = "",
+    orientation: Orientation = "horizontal",
 ) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
     """Make toggle button."""
     widget = Qw.QButtonGroup(parent)
-    layout = make_h_layout()
+
+    orientation = _get_orientation(orientation)
+    layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
     layout.setSpacing(2)
     for btn_id, btn_label in enumerate(label):
-        radio_btn = make_btn(
+        radio_btn = make_rich_btn(
             parent, btn_label, func=func, checkable=True, tooltip=tooltip, check=checked_label == btn_label
         )
         widget.addButton(radio_btn, btn_id)
@@ -2316,7 +2337,7 @@ def choose(
     parent: ty.Optional[QObject],
     options: dict[ty.Any, str] | list[str],
     text: str = "Please choose from available options.",
-    orientation: str | ty.Literal["horizontal", "vertical"] = "vertical",
+    orientation: Orientation = "vertical",
 ) -> ty.Any:
     """Chose from list."""
     from qtextra.widgets.qt_pick_option import QtScrollablePickOption

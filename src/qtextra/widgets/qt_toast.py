@@ -111,6 +111,17 @@ class QtToast(SubWindowBase):
         self._timer_indicator.setVisible(False)
         return super().mouseMoveEvent(event)
 
+    def deleteLater(self) -> None:
+        """Stop all animations and timers before deleting."""
+        self.timer_dismiss.stop()
+        self.timer_remaining.stop()
+        super().deleteLater()
+
+    def close(self):
+        self.timer_dismiss.stop()
+        self.timer_remaining.stop()
+        super().close()
+
 
 if __name__ == "__main__":  # pragma: no cover
 
