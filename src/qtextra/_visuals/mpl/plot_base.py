@@ -1,6 +1,7 @@
 """Base class for all mpl-based plotting functionality."""
 
 import typing as ty
+from contextlib import suppress
 
 import matplotlib
 import matplotlib.cm as cm
@@ -47,6 +48,12 @@ class PlotBase(QWidget):
     """Generic plot base."""
 
     evt_unregister = Signal()
+
+    evt_pick = Signal()
+    evt_pressed = Signal()
+    evt_double_click = Signal()
+    evt_released = Signal()
+
     PLOT_TYPE = None
 
     def __init__(self, parent, *args, **kwargs):
@@ -69,12 +76,12 @@ class PlotBase(QWidget):
             self.figsize[1] = 1.0
 
         self.facecolor = kwargs.get("facecolor", "white")
-        self.zoom_color = kwargs.pop("zoom_color", Qt.black)
+        self.zoom_color = kwargs.pop("zoom_color", Qt.GlobalColor.black)
         # setup figure
         self.figure = Figure(facecolor=self.facecolor, dpi=100, figsize=self.figsize)
         self.canvas = FigureCanvasQTAgg(figure=self.figure)
         # This is necessary to ensure keyboard events work
-        self.canvas.setFocusPolicy(Qt.WheelFocus)
+        self.canvas.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
         self.canvas.setFocus()
 
         # RESIZE
@@ -100,6 +107,7 @@ class PlotBase(QWidget):
         self.y_divider = 1
 
     def add_zoom(self):
+        """Add zoom."""
         extent = get_extent(self.ax)
         self.setup_new_zoom([self.ax], data_limits=[extent], allow_extraction=False)
         self.store_plot_limits([extent], [self.ax])
@@ -494,6 +502,10 @@ class PlotBase(QWidget):
         """Get current x-axis limits."""
         return self.ax.get_xlim()
 
+    def get_current_ylim(self):
+        """Get current x-axis limits."""
+        return self.ax.get_ylim()
+
     def get_ylim(self):
         """Get y-axis limits."""
         plot_limits = self.get_plot_limits()
@@ -608,7 +620,7 @@ class PlotBase(QWidget):
         ypos: float = 0,
         color: str = "k",
         alpha: float = 0.7,
-        gid: str = "hline",
+        gid: str = "ax_hline",
     ):
         """Add horizontal line to the axes."""
         line = self.ax.axhline(ypos, xmin, xmax, color=color, alpha=alpha, gid=gid)
@@ -617,14 +629,23 @@ class PlotBase(QWidget):
 
     def plot_remove_line(self, gid: str):
         """Remove horizontal line."""
-        remove_id = None
+        to_remove = []
         for i, line in enumerate(self.lines):
             if line.obj_name == gid:
-                line.remove()
-                remove_id = i
+                with suppress(ValueError):
+                    line.remove()
+                to_remove.append(i)
 
-        if remove_id is not None:
-            del self.lines[remove_id]
+        if to_remove:
+            for i in reversed(to_remove):
+                del self.lines[i]
+
+    def get_line(self, gid: str):
+        """Get instance of the line."""
+        for line in self.lines:
+            if line.obj_name == gid:
+                return line
+        return None
 
     def plot_add_vline(
         self,
@@ -632,13 +653,38 @@ class PlotBase(QWidget):
         ymin: float = 0,
         ymax: float = 1,
         color: str = "k",
-        alpha: float = 0.7,
-        gid: str = "vline",
+        alpha: float = 0.5,
+        gid: str = "ax_vline",
     ):
         """Add vertical line to the axes."""
-        line = self.ax.axvline(xpos, ymin, ymax, color=color, alpha=alpha, gid=gid)
-        line.obj_name = gid
-        self.lines.append(line)
+        line = self.get_line(gid)
+        if line is not None:
+            line.set_xdata([xpos, xpos])
+            line.set_ydata([ymin, ymax])
+        else:
+            line = self.ax.axvline(xpos, ymin, ymax, color=color, alpha=alpha, gid=gid)
+            line.obj_name = gid
+            self.lines.append(line)
+
+    def plot_add_varrow(self, xpos: float, yoffset=-0.05, gid: str = "ax_varrow") -> None:
+        """Add arrow below the x-axis line, indicating location."""
+        arrow = self.ax.annotate(
+            "",
+            xy=(xpos, 0),
+            xytext=(xpos, yoffset),
+            arrowprops={"arrowstyle": "->", "color": "red"},
+            gid=gid,
+        )
+        arrow.obj_name = gid
+        self.arrows.append(arrow)
+
+    def plot_add_vlines(
+        self, vlines: np.ndarray, ymin: float = 0, color: str = "k", alpha: float = 0.5, ls="--", gid: str = "vlines"
+    ):
+        """Add vertical lines to the axes."""
+        xmax = self.get_xlim()[1]
+        vline = self.ax.vlines(vlines, ymin, xmax, color=color, alpha=alpha, ls=ls, gid=gid)
+        vline.obj_name = gid
 
     def is_locked(self):
         """Check whether plot is locked."""
@@ -691,6 +737,9 @@ class PlotBase(QWidget):
                 plot_id=self.plot_id,
                 zoom_color=self.zoom_color,
             )
+            self.zoom.evt_pressed.connect(self.evt_pressed.emit)
+            self.zoom.evt_released.connect(self.evt_released.emit)
+            self.zoom.evt_double_click.connect(self.evt_double_click.emit)
         else:
             self.zoom = ImageMPLInteraction(
                 figure,
@@ -923,7 +972,8 @@ class PlotBase(QWidget):
 
         for patch in ax.collections:
             if patch.get_gid() == PlotIds.PLOT_1D_PATCH_GID:
-                patch.remove()
+                with suppress(ValueError):
+                    patch.remove()
                 self.plot_1d_add_under_curve(x, y, ax=ax, **kwargs)
 
         # general plot updates
@@ -1005,9 +1055,29 @@ class PlotBase(QWidget):
 
     def plot_1d_remove(self, gid: str):
         """Remove line."""
-        line = self.plot_1d_get_line(gid)
-        if line:
-            line.remove()
+        self.plot_remove_line(gid)
+
+    def remove_gid(self, gid: str, kind: str = "any") -> None:
+        """Remove any object with specific gid."""
+        with suppress(ValueError):
+            if kind in ["any", "line"]:
+                self.plot_remove_line(gid)
+                for line in self.ax.get_lines():
+                    _gid = line.get_gid()
+                    if gid == _gid:
+                        line.remove()
+            if kind in ["any", "patch"]:
+                for coll in self.ax.collections:
+                    _gid = coll.get_gid()
+                    if gid == _gid:
+                        coll.remove()
+                for patch in self.patch:
+                    if patch.obj_name == gid:
+                        patch.remove()
+            if kind in ["any", "arrow"]:
+                for patch in self.arrows:
+                    if patch.obj_name == gid:
+                        patch.remove()
 
     def plot_1d_get_line(self, gid: str):
         """Get line."""
@@ -1041,12 +1111,12 @@ class PlotBase(QWidget):
 
     def plot_scatter(
         self,
-        x,
-        y,
-        title="",
-        x_label="",
-        y_label="",
-        label="",
+        x: np.ndarray,
+        y: np.ndarray,
+        title: str = "",
+        x_label: str = "",
+        y_label: str = "",
+        label: str = "",
         y_lower_start=None,
         y_upper_multiplier=1.1,
         gid=PlotIds.PLOT_1D_LINE_GID,
@@ -1068,18 +1138,20 @@ class PlotBase(QWidget):
             label=label,
             gid=gid,
             zorder=zorder,
-            # lw=line_width, alpha=line_alpha, ls=line_style
+            marker=kwargs.get("marker", "o"),
+            s=kwargs.get("size", 5),
         )
         if kwargs.get("spectrum_line_fill_under", False):
             self.plot_1d_add_under_curve(x, y, **kwargs)
 
         # setup axis formatters
         self.ax.yaxis.set_major_formatter(get_intensity_formatter())
-        self.ax.set_xlim(xlimits)
-        self.ax.set_ylim(ylimits)
         self.set_plot_xlabel(x_label, **kwargs)
         self.set_plot_ylabel(y_label, **kwargs)
         self.set_plot_title(title, **kwargs)
+        if kwargs.get("update_limits", True):
+            self.ax.set_xlim(xlimits)
+            self.ax.set_ylim(ylimits)
 
         self.setup_new_zoom(
             [self.ax],

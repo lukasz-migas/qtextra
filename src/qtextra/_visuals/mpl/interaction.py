@@ -31,11 +31,17 @@ class MPLInteraction(QWidget):
     """Improved matplotlib interaction."""
 
     # signals
+    evt_key = Signal(str)
+
     evt_ctrl = Signal(list, list, list)
     evt_shift = Signal(list, list, list)
     evt_alt = Signal(list, list, list)
     evt_view_activate = Signal(str)
-    evt_key = Signal(str)
+
+    evt_pick = Signal(object)
+    evt_pressed = Signal()
+    evt_double_click = Signal()
+    evt_released = Signal()
 
     def __init__(
         self,
@@ -145,7 +151,7 @@ class MPLInteraction(QWidget):
         if data_limits is not None:
             self.set_data_limits(data_limits)
 
-    def on_pick_event(self, event):
+    def on_pick(self, event):
         """Store which text object was picked and were the pick event occurs."""
         self._is_label = False
         self._is_legend = False
@@ -163,6 +169,7 @@ class MPLInteraction(QWidget):
                 self.dragged = event.artist
                 self.pick_pos = (self.dragged.get_width() / 2, self.dragged.get_height() / 2)
                 self._is_patch = True
+        self.evt_pick.emit(self.pick_pos)
         return True
 
     def bind_plot_events(self, axes):
@@ -175,9 +182,10 @@ class MPLInteraction(QWidget):
         for ax in axes:
             self.canvas = ax.figure.canvas
             # pick events
-            self.mpl_events.append(self.canvas.mpl_connect("pick_event", self.on_pick_event))
+            self.mpl_events.append(self.canvas.mpl_connect("pick_event", self.on_pick))
 
             # button events
+            self.mpl_events.append(self.canvas.mpl_connect("scroll_event", self.on_wheel))
             self.mpl_events.append(self.canvas.mpl_connect("button_press_event", self.on_press))
             self.mpl_events.append(self.canvas.mpl_connect("button_release_event", self.on_release))
 
@@ -298,6 +306,10 @@ class MPLInteraction(QWidget):
         # If a button pressed, check if the on_release-button is the same
         return evt.inaxes not in self.axes or evt.button != self.evt_press.button
 
+    def on_wheel(self, evt):
+        """Wheel event."""
+        print("wheel event", evt)
+
     def on_press(self, evt):
         """Event on button press."""
         self.evt_view_activate.emit(self.plot_id)
@@ -307,6 +319,8 @@ class MPLInteraction(QWidget):
         # Is the correct button pressed within the correct axes?
         if self.ignore(evt):
             return
+
+        self.evt_pressed.emit()
 
         x, y = evt.x, evt.y
 
@@ -324,7 +338,7 @@ class MPLInteraction(QWidget):
 
         # started panning
         if evt.button == MouseButton.RIGHT:
-            self.canvas.setCursor(QCursor(Qt.SizeAllCursor))
+            self.canvas.setCursor(QCursor(Qt.CursorShape.SizeAllCursor))
             for x, y, a in self._xy_press:
                 a.start_pan(x, y, MouseButton.LEFT)
         return False
@@ -375,7 +389,7 @@ class MPLInteraction(QWidget):
             return
         self.drawRectangle(None)
         self._button_down = False
-        self.canvas.setCursor(QCursor(Qt.ArrowCursor))
+        self.canvas.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
         # drag label
         if self.dragged is not None:
@@ -393,25 +407,30 @@ class MPLInteraction(QWidget):
         try:
             xmin, xmax, ymin, ymax, evt = self.calculate_new_limits(evt)
         except IndexError:
+            self.evt_released.emit()
             return
 
         # adding point to polygon
         if self.roi_shape == "poly" and self.lock:
             # add polygon point that is nearest to the half
             self.polygon.add_point(*round_to_half(self.evt_press.xdata, self.evt_press.ydata))
+            self.evt_released.emit()
             return
 
         if self.is_extracting:
             self.on_callback(xmin, xmax, ymin, ymax, evt)
             self.canvas.draw()
+            self.evt_released.emit()
             return
         elif self._trigger_extraction and not self.allow_extraction:
             logger.warning("Cannot extract data at this moment...")
             self.canvas.draw()
+            self.evt_released.emit()
             return
 
         if self.lock:
             logger.debug("Drag zoom is disabled - you must unlock it first or replot.")
+            self.evt_released.emit()
             return
 
         # left-click + ctrl OR double left click reset axes
@@ -420,6 +439,8 @@ class MPLInteraction(QWidget):
                 logger.debug("Cannot double-click zoom-out while holding CTRL")
                 return
             self._zoom_out(evt)
+            self.evt_double_click.emit()
+            self.evt_released.emit()
             return
 
         # zoom in the plot area
@@ -445,6 +466,7 @@ class MPLInteraction(QWidget):
         # reset triggers
         if self._trigger_extraction:
             self._trigger_extraction = False
+        self.evt_released.emit()
 
     def get_motion_msg(self, evt) -> str:
         """Parse motion event."""

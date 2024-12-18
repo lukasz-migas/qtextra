@@ -1,7 +1,9 @@
 """Views base."""
 
+from __future__ import annotations
+
 import time
-from typing import Optional
+import typing as ty
 
 from koyo.timer import report_time
 from loguru import logger
@@ -157,6 +159,22 @@ class ViewBase:
             self.figure.on_zoom_x_axis(x_min, x_max)
             self.figure.repaint(repaint)
 
+    def get_xlim(self) -> tuple[float, float]:
+        """Get x-axis limits."""
+        return self.figure.get_xlim()
+
+    def get_current_xlim(self) -> tuple[float, float]:
+        """Get x-axis limits."""
+        return self.figure.get_current_xlim()
+
+    def get_ylim(self) -> tuple[float, float]:
+        """Get x-axis limits."""
+        return self.figure.get_ylim()
+
+    def get_current_ylim(self) -> tuple[float, float]:
+        """Get x-axis limits."""
+        return self.figure.get_current_ylim()
+
     def set_ylim(self, y_min: float, y_max: float, repaint: bool = True):
         """Set x-axis limits in the plot area."""
         with QMutexLocker(MUTEX):
@@ -194,9 +212,9 @@ class ViewBase:
         x: float,
         y: float,
         width: float,
-        height: Optional[float] = None,
+        height: ty.Optional[float] = None,
         color="r",
-        obj_name: Optional[str] = None,
+        obj_name: ty.Optional[str] = None,
         pickable: bool = True,
         repaint: bool = True,
     ):
@@ -208,11 +226,11 @@ class ViewBase:
     def update_patch(
         self,
         obj_name: str,
-        color: Optional[str] = None,
-        x: Optional[float] = None,
-        y: Optional[float] = None,
-        width: Optional[float] = None,
-        height: Optional[float] = None,
+        color: ty.Optional[str] = None,
+        x: ty.Optional[float] = None,
+        y: ty.Optional[float] = None,
+        width: ty.Optional[float] = None,
+        height: ty.Optional[float] = None,
         repaint: bool = True,
     ):
         """Update patch."""
@@ -236,8 +254,8 @@ class ViewBase:
         obj_name: str,
         x: float,
         y: float,
-        width: Optional[float] = None,
-        height: Optional[float] = None,
+        width: ty.Optional[float] = None,
+        height: ty.Optional[float] = None,
         repaint: bool = True,
     ):
         """Move rectangular patch to new position - usually used to indicate region of interest."""
@@ -256,9 +274,9 @@ class ViewBase:
         x: float,
         y: float,
         width: float,
-        height: Optional[float],
+        height: ty.Optional[float],
         color="r",
-        obj_name: Optional[str] = None,
+        obj_name: ty.Optional[str] = None,
         pickable: bool = True,
         repaint: bool = True,
     ):
@@ -280,7 +298,7 @@ class ViewBase:
             self.figure.plot_add_patch(_x, _y, _width, _height, obj_name=_obj_name, color=_color, pickable=pickable)
         self.figure.repaint(repaint)
 
-    def remove_patches(self, start_with: Optional[str] = None, repaint: bool = True):
+    def remove_patches(self, start_with: ty.Optional[str] = None, repaint: bool = True):
         """Remove rectangular patches from the plot.
 
         Parameters
@@ -304,24 +322,37 @@ class ViewBase:
         if self.figure and hasattr(self.figure.zoom, "lock"):
             self.figure.zoom.lock = value
 
-    def add_vline(self, xpos: float = 0):
+    def add_vline(self, xpos: float = 0, gid: str = "ax_vline", repaint: bool = True, **kwargs: ty.Any):
         """Add vline."""
-        self.figure.plot_add_vline(xpos=xpos, gid="vline")
-        self.figure.repaint()
+        self.figure.remove_gid(gid)
+        self.figure.plot_add_vline(xpos=xpos, gid=gid, **kwargs)
+        self.figure.repaint(repaint)
+
+    def add_varrow(self, xpos: float = 0, gid: str = "ax_varrow", repaint: bool = True):
+        """Add vline."""
+        self.figure.remove_gid(gid)
+        self.figure.plot_add_varrow(xpos=xpos, gid=gid)
+        self.figure.repaint(repaint)
+
+    def add_vlines(self, vlines: float = 0, gid="vlines", repaint: bool = True):
+        """Add vline."""
+        self.figure.remove_gid(gid)
+        self.figure.plot_add_vlines(vlines, gid=gid)
+        self.figure.repaint(repaint)
 
     def remove_vline(self):
         """Remove vline."""
-        self.figure.plot_remove_line("vline")
+        self.figure.plot_remove_line("ax_vline")
         self.figure.repaint()
 
     def add_hline(self, ypos: float = 0):
         """Add hline."""
-        self.figure.plot_add_hline(ypos=ypos, gid="hline")
+        self.figure.plot_add_hline(ypos=ypos, gid="ax_hline")
         self.figure.repaint()
 
     def remove_hline(self):
         """Remove hline."""
-        self.figure.plot_remove_line("hline")
+        self.figure.plot_remove_line("ax_hline")
         self.figure.repaint()
 
     def reset_limits(self, reset_x: bool = True, reset_y: bool = True, repaint: bool = True):

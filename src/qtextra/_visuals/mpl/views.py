@@ -51,10 +51,29 @@ class ViewMplLine(ViewBase):
                 # set data
                 self._data.update(x=x, y=y)
 
-    def scatter(self, x: np.ndarray, y: np.ndarray, repaint: bool = True):
+    def scatter(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        marker: str | np.ndarray = "o",
+        color: str | np.ndarray = "k",
+        size: float = 5,
+        repaint: bool = True,
+        **kwargs: ty.Any,
+    ):
         """Simple scatter plot."""
         with QMutexLocker(MUTEX):
-            self.figure.plot_scatter(x, y, x_label=self.x_label, y_label=self.y_label, callbacks=self._callbacks)
+            self.figure.plot_scatter(
+                x,
+                y,
+                marker=marker,
+                color=color,
+                x_label=self.x_label,
+                y_label=self.y_label,
+                callbacks=self._callbacks,
+                size=size,
+                **kwargs,
+            )
             self.figure.repaint(repaint)
 
     def update(self, x: np.ndarray, y: np.ndarray, repaint: bool = True, **kwargs: ty.Any) -> None:
@@ -214,6 +233,12 @@ class ViewMplLine(ViewBase):
         """Add centroid."""
         with QMutexLocker(MUTEX):
             self.figure.plot_1d_centroid(x, y, gid=gid)
+            self.figure.repaint(repaint)
+
+    def remove_gid(self, gid: str, repaint: bool = True):
+        """Remove gid."""
+        with QMutexLocker(MUTEX):
+            self.figure.remove_gid(gid)
             self.figure.repaint(repaint)
 
     def remove_line(self, gid: str, repaint: bool = True):

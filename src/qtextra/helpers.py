@@ -220,7 +220,7 @@ def increment_combobox(
     reset_func: ty.Callable | None = None,
     skip: list[int] | None = None,
     skipped: bool = False,
-) -> None:
+) -> int:
     """Increment combobox."""
     idx = combobox.currentIndex()
     count = combobox.count()
@@ -237,6 +237,50 @@ def increment_combobox(
         increment_combobox(combobox, direction, reset_func, skip, skipped=len(skip) > count)
     else:
         combobox.setCurrentIndex(idx)
+    return combobox.currentIndex()
+
+
+def set_combobox_data(
+    widget: Qw.QComboBox, data: ty.Union[dict, ty.OrderedDict, Enum], current_item: str | None = None
+):
+    """Set data/value on combobox."""
+    if not isinstance(data, (dict, ty.OrderedDict)):
+        data = {m: m.value for m in data}
+
+    for index, (item, text) in enumerate(data.items()):
+        if not isinstance(text, str):
+            text = item.value
+        widget.addItem(text, item)
+
+        if current_item is not None:
+            if current_item == item or current_item == text:
+                widget.setCurrentIndex(index)
+
+
+def set_combobox_text_data(
+    widget: Qw.QComboBox, data: ty.Union[list[str], dict[str, ty.Any]], current_item: str | None = None
+):
+    """Set data/value on combobox."""
+    if isinstance(data, ty.List):
+        data = {m: m for m in data}
+    for index, (text, item) in enumerate(data.items()):
+        widget.addItem(str(text), item)
+        if current_item is not None:
+            if current_item == item or current_item == text:
+                widget.setCurrentIndex(index)
+    # set_index = widget.findText(current_item)
+    # if set_index is None:
+    #     set_index = widget.findData(current_item)
+    # if set_index is not None:
+    #     widget.setCurrentIndex(set_index)
+
+
+def set_combobox_current_index(widget: Qw.QComboBox, current_data: ty.Any) -> None:
+    """Set current index on combobox."""
+    for index in range(widget.count()):
+        if widget.itemData(index) == current_data:
+            widget.setCurrentIndex(index)
+            break
 
 
 def make_shortcut_str(sequence: str) -> str:
@@ -834,49 +878,6 @@ def make_searchable_combobox(
     if func:
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
-
-
-def set_combobox_data(
-    widget: Qw.QComboBox, data: ty.Union[dict, ty.OrderedDict, Enum], current_item: str | None = None
-):
-    """Set data/value on combobox."""
-    if not isinstance(data, (dict, ty.OrderedDict)):
-        data = {m: m.value for m in data}
-
-    for index, (item, text) in enumerate(data.items()):
-        if not isinstance(text, str):
-            text = item.value
-        widget.addItem(text, item)
-
-        if current_item is not None:
-            if current_item == item or current_item == text:
-                widget.setCurrentIndex(index)
-
-
-def set_combobox_text_data(
-    widget: Qw.QComboBox, data: ty.Union[list[str], dict[str, ty.Any]], current_item: str | None = None
-):
-    """Set data/value on combobox."""
-    if isinstance(data, ty.List):
-        data = {m: m for m in data}
-    for index, (text, item) in enumerate(data.items()):
-        widget.addItem(str(text), item)
-        if current_item is not None:
-            if current_item == item or current_item == text:
-                widget.setCurrentIndex(index)
-    # set_index = widget.findText(current_item)
-    # if set_index is None:
-    #     set_index = widget.findData(current_item)
-    # if set_index is not None:
-    #     widget.setCurrentIndex(set_index)
-
-
-def set_combobox_current_index(widget: Qw.QComboBox, current_data: ty.Any) -> None:
-    """Set current index on combobox."""
-    for index in range(widget.count()):
-        if widget.itemData(index) == current_data:
-            widget.setCurrentIndex(index)
-            break
 
 
 def make_icon(path: str) -> QIcon:

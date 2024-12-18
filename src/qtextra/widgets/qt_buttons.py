@@ -78,12 +78,15 @@ class QtRichTextButton(QtPushButton):
         self._label.setTextFormat(Qt.TextFormat.RichText)
         self._label.setWordWrap(True)
         self._layout.addWidget(self._label)
-        return
 
     def setText(self, text):
         """Set text on the label."""
         self._label.setText(text)
         self.updateGeometry()
+
+    def text(self):
+        """Return text."""
+        return self._label.text()
 
     def sizeHint(self):
         """Return size hints."""
