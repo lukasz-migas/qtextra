@@ -39,6 +39,7 @@ class MPLInteraction(QWidget):
     evt_view_activate = Signal(str)
 
     evt_pick = Signal(object)
+    evt_wheel = Signal()
     evt_pressed = Signal()
     evt_double_click = Signal()
     evt_released = Signal()
@@ -306,14 +307,47 @@ class MPLInteraction(QWidget):
         # If a button pressed, check if the on_release-button is the same
         return evt.inaxes not in self.axes or evt.button != self.evt_press.button
 
-    def on_wheel(self, evt):
+    def on_wheel(self, evt, base_scale: float = 2):
         """Wheel event."""
-        print("wheel event", evt)
+        self.evt_view_activate.emit(self.plot_id)
+
+        xdata = evt.xdata  # get event x location
+        direction = evt.button
+
+        if direction == "up":
+            scale_factor = 1 / 2
+        elif direction == "down":
+            scale_factor = 2
+        else:
+            scale_factor = 1
+
+        for ax in self.canvas.figure.get_axes():
+            cur_xlim = ax.get_xlim()
+            # cur_ylim = ax.get_ylim()
+            new_width = (cur_xlim[1] - cur_xlim[0]) * scale_factor
+            # new_height = (cur_ylim[1] - cur_ylim[0]) * scale_factor
+
+            relx = (cur_xlim[1] - xdata) / (cur_xlim[1] - cur_xlim[0])
+            # rely = (cur_ylim[1] - ydata) / (cur_ylim[1] - cur_ylim[0])
+            new_xlim = [xdata - new_width * (1 - relx), xdata + new_width * relx]
+            if hasattr(ax, "plot_limits"):
+                xmin, xmax, ymin, ymax = ax.plot_limits
+                new_xlim = [max(xmin, new_xlim[0]), min(xmax, new_xlim[1])]
+
+            ax.set_xlim(new_xlim)
+            # ax.set_ylim([ydata - new_height * (1 - rely), ydata + new_height * rely])
+
+            # new_xlim = [x - (x - cur_xlim[0]) * scale_factor, x + (cur_xlim[1] - x) * scale_factor]
+            # new_ylim = [y - (y - cur_ylim[0]) * scale_factor, y + (cur_ylim[1] - y) * scale_factor]
+            # ax.set_xlim(new_xlim)
+            # ax.set_ylim(new_ylim)
+        self.canvas.draw()
+        if scale_factor != 1:
+            self.evt_wheel.emit()
 
     def on_press(self, evt):
         """Event on button press."""
         self.evt_view_activate.emit(self.plot_id)
-        # pub.sendMessage("view.activate", view_id=self.plot_id)
 
         self.evt_press = evt
         # Is the correct button pressed within the correct axes?

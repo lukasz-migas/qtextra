@@ -17,6 +17,7 @@ from qtpy.QtWidgets import QApplication, QHBoxLayout, QSizePolicy, QWidget
 
 from qtextra._visuals.mpl.gids import PlotIds
 from qtextra._visuals.mpl.interaction import ImageMPLInteraction, MPLInteraction
+from qtextra.utils.utilities import connect
 
 try:
     import seaborn as sns
@@ -53,6 +54,7 @@ class PlotBase(QWidget):
     evt_pressed = Signal()
     evt_double_click = Signal()
     evt_released = Signal()
+    evt_wheel = Signal()
 
     PLOT_TYPE = None
 
@@ -491,7 +493,9 @@ class PlotBase(QWidget):
         """Get plot limits."""
         if ax is None:
             ax = self.ax
-        return ax.plot_limits
+        if hasattr(ax, "plot_limits"):
+            return ax.plot_limits
+        return [*ax.get_xlim(), *ax.get_ylim()]
 
     def get_xlim(self):
         """Get x-axis limits."""
@@ -725,6 +729,13 @@ class PlotBase(QWidget):
         if callbacks is None:
             callbacks = {}
 
+        if self.zoom:
+            connect(self.zoom.evt_pick, self.evt_pick.emit, state=False, silent=True)
+            connect(self.zoom.evt_pressed, self.evt_pressed.emit, state=False, silent=True)
+            connect(self.zoom.evt_released, self.evt_released.emit, state=False, silent=True)
+            connect(self.zoom.evt_wheel, self.evt_wheel.emit, state=False, silent=True)
+            connect(self.zoom.evt_double_click, self.evt_double_click.emit, state=False, silent=True)
+
         if arrays is None:
             self.zoom = MPLInteraction(
                 figure,
@@ -737,9 +748,7 @@ class PlotBase(QWidget):
                 plot_id=self.plot_id,
                 zoom_color=self.zoom_color,
             )
-            self.zoom.evt_pressed.connect(self.evt_pressed.emit)
-            self.zoom.evt_released.connect(self.evt_released.emit)
-            self.zoom.evt_double_click.connect(self.evt_double_click.emit)
+
         else:
             self.zoom = ImageMPLInteraction(
                 figure,
@@ -753,6 +762,11 @@ class PlotBase(QWidget):
                 plot_id=self.plot_id,
                 zoom_color=self.zoom_color,
             )
+        connect(self.zoom.evt_pick, self.evt_pressed.emit)
+        connect(self.zoom.evt_pressed, self.evt_pressed.emit)
+        connect(self.zoom.evt_released, self.evt_released.emit)
+        connect(self.zoom.evt_wheel, self.evt_wheel.emit)
+        connect(self.zoom.evt_double_click, self.evt_double_click.emit)
 
     def update_extents(self, extents: list, obj=None, arrays=None):
         """Update plot extents."""
@@ -1152,17 +1166,17 @@ class PlotBase(QWidget):
         if kwargs.get("update_limits", True):
             self.ax.set_xlim(xlimits)
             self.ax.set_ylim(ylimits)
+            self.store_plot_limits([extent], [self.ax])
 
-        self.setup_new_zoom(
-            [self.ax],
-            data_limits=[extent],
-            allow_extraction=kwargs.get("allow_extraction", True),
-            callbacks=kwargs.get("callbacks", {}),
-        )
+            self.setup_new_zoom(
+                [self.ax],
+                data_limits=[extent],
+                allow_extraction=kwargs.get("allow_extraction", True),
+                callbacks=kwargs.get("callbacks", {}),
+            )
 
         # Setup X-axis getter
-        self.store_plot_limits([extent], [self.ax])
-        self.PLOT_TYPE = "line"
+        self.PLOT_TYPE = "scatter"
 
 
 def get_extent(ax):

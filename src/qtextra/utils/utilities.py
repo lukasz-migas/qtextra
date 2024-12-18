@@ -175,18 +175,22 @@ class Connectable(ty.Protocol):
         """Disconnect function."""
 
 
-def connect(connectable: Connectable, func: ty.Callable, state: bool = True, source: str = "") -> None:
+def connect(
+    connectable: Connectable, func: ty.Callable, state: bool = True, source: str = "", silent: bool = False
+) -> None:
     """Function that connects/disconnects."""
     try:
         connectable_func = connectable.connect if state else connectable.disconnect
         connectable_func(func)
     except Exception as exc:
-        text = (
-            f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func}; connectable={connectable}"
-        )
-        if source:
-            text += f"; source={source}"
-        logger.debug(text)
+        if not silent:
+            text = (
+                f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func};"
+                f" connectable={connectable}"
+            )
+            if source:
+                text += f"; source={source}"
+            logger.debug(text)
 
 
 def human_readable_byte_size(nbytes: int) -> str:
@@ -207,5 +211,5 @@ def human_readable_byte_size(nbytes: int) -> str:
     while nbytes >= 1024 and i < len(suffixes) - 1:
         nbytes /= 1024.0
         i += 1
-    f = ("%.2f" % nbytes).rstrip("0").rstrip(".")
+    f = (f"{nbytes:.2f}").rstrip("0").rstrip(".")
     return f"{f} {suffixes[i]}"
