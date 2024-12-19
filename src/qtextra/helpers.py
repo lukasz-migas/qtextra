@@ -195,13 +195,13 @@ def combobox_setter(
             widget.clear()
         if items:
             widget.addItems(items)
-            if set_item and set_item not in items:
-                set_item = None
+
+        if not items and set_item:
+            set_item = None
         if find_item:
             v = widget.findText(find_item)
             if v == -1:
                 widget.insertItem(0, find_item)
-        print(set_item)
         if set_item:
             widget.setCurrentText(set_item)
 

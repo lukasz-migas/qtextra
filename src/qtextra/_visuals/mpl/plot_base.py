@@ -57,6 +57,7 @@ class PlotBase(QWidget):
     evt_double_click = Signal()
     evt_released = Signal()
     evt_ctrl_released = Signal(tuple)
+    evt_ctrl_double_click = Signal(tuple)
 
     PLOT_TYPE = None
     MPL_STYLE = "seaborn-v0_8-ticks"
@@ -741,6 +742,7 @@ class PlotBase(QWidget):
             connect(self.zoom.evt_ctrl_released, self.evt_ctrl_released.emit, state=False, silent=True)
             connect(self.zoom.evt_wheel, self.evt_wheel.emit, state=False, silent=True)
             connect(self.zoom.evt_double_click, self.evt_double_click.emit, state=False, silent=True)
+            connect(self.zoom.evt_ctrl_double_click, self.evt_ctrl_double_click.emit, state=False, silent=True)
 
         if arrays is None:
             self.zoom = MPLInteraction(
@@ -774,6 +776,7 @@ class PlotBase(QWidget):
         connect(self.zoom.evt_ctrl_released, self.evt_ctrl_released.emit)
         connect(self.zoom.evt_wheel, self.evt_wheel.emit)
         connect(self.zoom.evt_double_click, self.evt_double_click.emit)
+        connect(self.zoom.evt_ctrl_double_click, self.evt_ctrl_double_click.emit)
 
     def update_extents(self, extents: list, obj=None, arrays=None):
         """Update plot extents."""

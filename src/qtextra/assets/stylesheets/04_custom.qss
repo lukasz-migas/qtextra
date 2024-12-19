@@ -386,3 +386,7 @@ QtTileWidget QLabel#large_text {
     font-size: {{ increase(font_size, 4) }};
     font-weight: bold;
 }
+
+QWidget#search_box_popup {
+    background: {{ background }};
+}

@@ -44,6 +44,7 @@ class MPLInteraction(QWidget):
     evt_double_click = Signal()
     evt_released = Signal()
     evt_ctrl_released = Signal(tuple)
+    evt_ctrl_double_click = Signal(tuple)
 
     def __init__(
         self,
@@ -374,6 +375,11 @@ class MPLInteraction(QWidget):
                 return
         self._button_down = True
 
+        if self.evt_press.dblclick:
+            x, y = evt.xdata, evt.ydata
+            self.evt_ctrl_double_click.emit((x, y))
+            return
+
         # started panning
         if evt.button == MouseButton.RIGHT:
             self.canvas.setCursor(QCursor(Qt.CursorShape.SizeAllCursor))
@@ -475,6 +481,8 @@ class MPLInteraction(QWidget):
         # left-click + ctrl OR double left click reset axes
         if self.evt_press.dblclick:
             if self.is_extracting:
+                x, y = evt.x, evt.y
+                self.evt_ctrl_double_click.emit((x, y))
                 logger.debug("Cannot double-click zoom-out while holding CTRL")
                 return
             self._zoom_out(evt)

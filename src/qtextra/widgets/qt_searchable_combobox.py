@@ -18,6 +18,7 @@ class QtSearchableComboBox(QComboBox):
         self.completer_object.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.completer_object.setModelSorting(QCompleter.ModelSorting.CaseSensitivelySortedModel)
         self.completer_object.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.completer_object.activated.connect(self.on_activated)
         self.setCompleter(self.completer_object)
         self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
         self.completer_object.popup().setItemDelegate(QStyledItemDelegate(self))
@@ -25,6 +26,11 @@ class QtSearchableComboBox(QComboBox):
 
     def _text_activated(self):  # pragma: no cover
         self.textActivated.emit(self.currentText())
+
+    def on_activated(self, value: str):
+        """On activated."""
+        # self.currentIndexChanged.emit(self.currentIndex())
+        self.currentTextChanged.emit(self.currentText())
 
     def addItem(self, *args):
         """Add item."""
