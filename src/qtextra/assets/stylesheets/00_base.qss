@@ -773,3 +773,22 @@ QTableView::indicator:indeterminate {
   width: 14px;
   height: 14px;
 }
+
+
+QMainWindow::separator:horizontal {
+    image: url("theme_{{ id }}://horizontal_separator.svg");
+}
+
+QMainWindow::separator:vertical {
+    image: url("theme_{{ id }}://vertical_separator.svg");
+}
+
+QSplitter::handle:vertical {
+    image: url("theme_{{ id }}://horizontal_separator.svg");
+    height: 5px;
+}
+
+QSplitter::handle:horizontal {
+    image: url("theme_{{ id }}://vertical_separator.svg");
+    width: 5px;
+}

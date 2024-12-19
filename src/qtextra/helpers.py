@@ -201,6 +201,7 @@ def combobox_setter(
             v = widget.findText(find_item)
             if v == -1:
                 widget.insertItem(0, find_item)
+        print(set_item)
         if set_item:
             widget.setCurrentText(set_item)
 

@@ -43,6 +43,7 @@ class MPLInteraction(QWidget):
     evt_pressed = Signal()
     evt_double_click = Signal()
     evt_released = Signal()
+    evt_ctrl_released = Signal(tuple)
 
     def __init__(
         self,
@@ -307,7 +308,7 @@ class MPLInteraction(QWidget):
         # If a button pressed, check if the on_release-button is the same
         return evt.inaxes not in self.axes or evt.button != self.evt_press.button
 
-    def on_wheel(self, evt, base_scale: float = 2):
+    def on_wheel(self, evt, base_scale: float = 1.25):
         """Wheel event."""
         self.evt_view_activate.emit(self.plot_id)
 
@@ -315,32 +316,35 @@ class MPLInteraction(QWidget):
         direction = evt.button
 
         if direction == "up":
-            scale_factor = 1 / 2
+            scale_factor = 1 / base_scale
         elif direction == "down":
-            scale_factor = 2
+            scale_factor = base_scale
         else:
             scale_factor = 1
 
-        for ax in self.canvas.figure.get_axes():
-            cur_xlim = ax.get_xlim()
-            # cur_ylim = ax.get_ylim()
-            new_width = (cur_xlim[1] - cur_xlim[0]) * scale_factor
-            # new_height = (cur_ylim[1] - cur_ylim[0]) * scale_factor
+        try:
+            for ax in self.canvas.figure.get_axes():
+                cur_xlim = ax.get_xlim()
+                # cur_ylim = ax.get_ylim()
+                new_width = (cur_xlim[1] - cur_xlim[0]) * scale_factor
+                # new_height = (cur_ylim[1] - cur_ylim[0]) * scale_factor
 
-            relx = (cur_xlim[1] - xdata) / (cur_xlim[1] - cur_xlim[0])
-            # rely = (cur_ylim[1] - ydata) / (cur_ylim[1] - cur_ylim[0])
-            new_xlim = [xdata - new_width * (1 - relx), xdata + new_width * relx]
-            if hasattr(ax, "plot_limits"):
-                xmin, xmax, ymin, ymax = ax.plot_limits
-                new_xlim = [max(xmin, new_xlim[0]), min(xmax, new_xlim[1])]
+                relx = (cur_xlim[1] - xdata) / (cur_xlim[1] - cur_xlim[0])
+                # rely = (cur_ylim[1] - ydata) / (cur_ylim[1] - cur_ylim[0])
+                new_xlim = [xdata - new_width * (1 - relx), xdata + new_width * relx]
+                if hasattr(ax, "plot_limits"):
+                    xmin, xmax, ymin, ymax = ax.plot_limits
+                    new_xlim = [max(xmin, new_xlim[0]), min(xmax, new_xlim[1])]
 
-            ax.set_xlim(new_xlim)
+                ax.set_xlim(new_xlim)
             # ax.set_ylim([ydata - new_height * (1 - rely), ydata + new_height * rely])
 
             # new_xlim = [x - (x - cur_xlim[0]) * scale_factor, x + (cur_xlim[1] - x) * scale_factor]
             # new_ylim = [y - (y - cur_ylim[0]) * scale_factor, y + (cur_ylim[1] - y) * scale_factor]
             # ax.set_xlim(new_xlim)
             # ax.set_ylim(new_ylim)
+        except TypeError:
+            pass
         self.canvas.draw()
         if scale_factor != 1:
             self.evt_wheel.emit()
@@ -455,6 +459,7 @@ class MPLInteraction(QWidget):
             self.on_callback(xmin, xmax, ymin, ymax, evt)
             self.canvas.draw()
             self.evt_released.emit()
+            self.evt_ctrl_released.emit((xmin, xmax, ymin, ymax))
             return
         elif self._trigger_extraction and not self.allow_extraction:
             logger.warning("Cannot extract data at this moment...")

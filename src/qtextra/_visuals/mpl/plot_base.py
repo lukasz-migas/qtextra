@@ -6,6 +6,7 @@ from contextlib import suppress
 import matplotlib
 import matplotlib.cm as cm
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
 from koyo.utilities import get_min_max
 from koyo.visuals import find_text_color, get_intensity_formatter
@@ -51,12 +52,14 @@ class PlotBase(QWidget):
     evt_unregister = Signal()
 
     evt_pick = Signal()
+    evt_wheel = Signal()
     evt_pressed = Signal()
     evt_double_click = Signal()
     evt_released = Signal()
-    evt_wheel = Signal()
+    evt_ctrl_released = Signal(tuple)
 
     PLOT_TYPE = None
+    MPL_STYLE = "seaborn-v0_8-ticks"
 
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent=parent)
@@ -707,9 +710,11 @@ class PlotBase(QWidget):
     @property
     def ax(self):
         """Get axes."""
-        if self._ax is None:
-            self._ax = self.figure.subplots()
-        return self._ax
+        with plt.style.context(self.MPL_STYLE):
+            if self._ax is None:
+                self._ax = self.figure.add_axes([0.1, 0.15, 0.87, 0.82])  # left, bottom, width, height
+                # self._ax = self.figure.subplots()
+            return self._ax
 
     def __repr__(self):
         return f"Plot: {self.plot_name} | Window name: {self.window_name}"
@@ -733,6 +738,7 @@ class PlotBase(QWidget):
             connect(self.zoom.evt_pick, self.evt_pick.emit, state=False, silent=True)
             connect(self.zoom.evt_pressed, self.evt_pressed.emit, state=False, silent=True)
             connect(self.zoom.evt_released, self.evt_released.emit, state=False, silent=True)
+            connect(self.zoom.evt_ctrl_released, self.evt_ctrl_released.emit, state=False, silent=True)
             connect(self.zoom.evt_wheel, self.evt_wheel.emit, state=False, silent=True)
             connect(self.zoom.evt_double_click, self.evt_double_click.emit, state=False, silent=True)
 
@@ -765,6 +771,7 @@ class PlotBase(QWidget):
         connect(self.zoom.evt_pick, self.evt_pressed.emit)
         connect(self.zoom.evt_pressed, self.evt_pressed.emit)
         connect(self.zoom.evt_released, self.evt_released.emit)
+        connect(self.zoom.evt_ctrl_released, self.evt_ctrl_released.emit)
         connect(self.zoom.evt_wheel, self.evt_wheel.emit)
         connect(self.zoom.evt_double_click, self.evt_double_click.emit)
 

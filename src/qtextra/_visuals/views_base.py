@@ -53,6 +53,7 @@ class ViewBase:
         self._y_label = kwargs.pop("y_label", None)
         self._data = {}
         self._plt_kwargs = {}
+        self.style = "default"
 
     def __repr__(self):
         return f"{self.__class__.__name__}<title={self.title}>"
