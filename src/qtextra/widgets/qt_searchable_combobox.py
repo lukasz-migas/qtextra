@@ -29,7 +29,7 @@ class QtSearchableComboBox(QComboBox):
 
     def on_activated(self, value: str):
         """On activated."""
-        # self.currentIndexChanged.emit(self.currentIndex())
+        self.currentIndexChanged.emit(self.currentIndex())
         self.currentTextChanged.emit(self.currentText())
 
     def addItem(self, *args):

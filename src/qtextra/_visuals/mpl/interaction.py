@@ -375,7 +375,7 @@ class MPLInteraction(QWidget):
                 return
         self._button_down = True
 
-        if self.evt_press.dblclick:
+        if self.evt_press.dblclick and self.is_extracting:
             x, y = evt.xdata, evt.ydata
             self.evt_ctrl_double_click.emit((x, y))
             return
