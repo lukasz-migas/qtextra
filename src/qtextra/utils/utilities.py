@@ -57,6 +57,14 @@ def memory_usage() -> float:
     return percent
 
 
+def process_memory_usage() -> float:
+    """Return process memory usage (float)."""
+    import psutil
+
+    process = psutil.Process()
+    return process.memory_percent()
+
+
 def total_ram() -> int:
     """Retrieve total amount of RAM for the system."""
     import psutil

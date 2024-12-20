@@ -1,7 +1,7 @@
 """Base class for all mpl-based plotting functionality."""
 
 import typing as ty
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 
 import matplotlib
 import matplotlib.cm as cm
@@ -99,6 +99,7 @@ class PlotBase(QWidget):
         self._ax = None
         # Prepare for zoom
         self.zoom = None
+        self._disable_repaint = False
         self._repaint = True
 
         # obj containers
@@ -788,8 +789,20 @@ class PlotBase(QWidget):
         if self.zoom is not None:
             self.zoom.update_roi_shape(roi_shape)
 
+    @contextmanager
+    def delayed_repaint(self) -> None:
+        """Temporarily disable repainting."""
+        self._disable_repaint = True
+        yield
+        self._disable_repaint = False
+        self._repaint = True
+        self.repaint()
+
     def repaint(self, repaint: bool = True):
         """Redraw and refresh the plot."""
+        if self._disable_repaint:
+            return
+
         if repaint:
             self.canvas.draw()
         self._repaint = False

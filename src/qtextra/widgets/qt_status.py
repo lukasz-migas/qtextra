@@ -286,6 +286,30 @@ class QtStatusbarMemory(QtStatusbarTimerBase):
         return "Memory usage"
 
 
+class QtStatusbarProcessMemory(QtStatusbarTimerBase):
+    """Status bar widget for system memory usage."""
+
+    def import_test(self) -> None:
+        """Raise ImportError if feature is not supported."""
+        from qtextra.utils.utilities import process_memory_usage
+
+        del process_memory_usage
+
+    def get_value(self) -> str:
+        """Return memory usage."""
+        from qtextra.utils.utilities import process_memory_usage
+
+        try:
+            text = "%d%%" % process_memory_usage()
+        except Exception:
+            text = "N/A"
+        return "Mem " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
+
+    def get_tooltip(self) -> str:
+        """Return the widget tooltip text."""
+        return "Memory usage"
+
+
 class QtStatusbarCPU(QtStatusbarTimerBase):
     """Status bar widget for system cpu usage."""
 
@@ -297,6 +321,27 @@ class QtStatusbarCPU(QtStatusbarTimerBase):
         import psutil
 
         text = "%d%%" % psutil.cpu_percent(interval=0)
+        return "CPU " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
+
+    def get_tooltip(self) -> str:
+        """Return the widget tooltip text."""
+        return "CPU usage"
+
+
+class QtStatusbarProcessCPU(QtStatusbarTimerBase):
+    """Status bar widget for system cpu usage."""
+
+    def import_test(self) -> None:
+        """Raise ImportError if feature is not supported."""
+
+    def get_value(self) -> str:
+        """Return CPU usage."""
+        import psutil
+
+        try:
+            text = "%d%%" % psutil.Process().cpu_percent(interval=0)
+        except Exception:
+            text = "N/A"
         return "CPU " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
 
     def get_tooltip(self) -> str:

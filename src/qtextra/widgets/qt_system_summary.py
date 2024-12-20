@@ -14,6 +14,31 @@ from qtpy.QtWidgets import QGroupBox, QLabel, QVBoxLayout, QWidget
 from qtextra.utils.utilities import human_readable_byte_size
 from qtextra.widgets.qt_dialog import QtFramelessPopup
 
+MEM_USAGE_ERROR = 4e9  # 4 Gb
+MEM_USAGE_WARNING = 16e9  # 16 Gb
+MEM_ERROR = 8e9
+MEM_WARNING = 32e9
+CPU_ERROR = 30
+CPU_WARNING = 15
+
+
+def style_if(widget, value: int, error_if: int, warn_if: int, less: bool = True) -> None:
+    """Style widget based on value."""
+    if less:
+        if value < error_if:
+            widget.setStyleSheet("QLabel {color: red;}")
+        elif value < warn_if:
+            widget.setStyleSheet("QLabel {color: orange;}")
+        else:
+            widget.setStyleSheet("QLabel {color: green;}")
+    else:
+        if value > error_if:
+            widget.setStyleSheet("QLabel {color: red;}")
+        elif value > warn_if:
+            widget.setStyleSheet("QLabel {color: orange;}")
+        else:
+            widget.setStyleSheet("QLabel {color: green;}")
+
 
 class SystemSummaryWidget(QWidget):
     """System information."""
@@ -39,12 +64,7 @@ class SystemSummaryWidget(QWidget):
         n_cpu = os.cpu_count() or 1
         self.nb_cores_label = QLabel(f"Number of CPU cores:       \t {n_cpu // 2}", self)
         self.cpu_group_box_layout.addWidget(self.nb_cores_label)
-        if (n_cpu // 2) < 4:
-            self.nb_cores_label.setStyleSheet("QLabel {color: red;}")
-        elif (n_cpu // 2) <= 6:
-            self.nb_cores_label.setStyleSheet("QLabel {color: orange;}")
-        else:
-            self.nb_cores_label.setStyleSheet("QLabel {color: green;}")
+        style_if(self.nb_cores_label, n_cpu // 2, CPU_ERROR, CPU_WARNING)
 
         self.cpu_load_values = [(elem * 16) for elem in psutil.getloadavg()]
         cpu_1min = "100.0+" if self.cpu_load_values[0] >= 100.0 else round(self.cpu_load_values[0], 2)
@@ -85,30 +105,34 @@ class SystemSummaryWidget(QWidget):
         self.memory_group_box_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.memory_group_box.setLayout(self.memory_group_box_layout)
 
+        virtual = psutil.virtual_memory()
+        available = virtual.available
+        total = virtual.total
+
+        try:
+            mem = psutil.Process().memory_info().rss
+        except Exception:
+            mem = 0
+        self.process_memory_label = QLabel(
+            f"App Memory:\t {human_readable_byte_size(mem)}, " f"({round(100 * mem / total, 2)}%)",
+            self,
+        )
+        self.memory_group_box_layout.addWidget(self.process_memory_label)
+        style_if(self.process_memory_label, mem, MEM_USAGE_ERROR, MEM_USAGE_WARNING, less=False)
+
         self.free_memory_label = QLabel(
-            f"Free Memory:\t {human_readable_byte_size(psutil.virtual_memory().available)}, "
-            f"({round(100 * psutil.virtual_memory().available / psutil.virtual_memory().total, 2)}%)",
+            f"Free Memory:\t {human_readable_byte_size(available)}, " f"({round(100 * available / total, 2)}%)",
             self,
         )
         self.memory_group_box_layout.addWidget(self.free_memory_label)
-        if psutil.virtual_memory().available < 8000000000:
-            self.free_memory_label.setStyleSheet("QLabel {color: red;}")
-        elif psutil.virtual_memory().available < 32000000000:
-            self.free_memory_label.setStyleSheet("QLabel {color: orange;}")
-        else:
-            self.free_memory_label.setStyleSheet("QLabel {color: green;}")
+        style_if(self.free_memory_label, available, MEM_ERROR, MEM_WARNING)
 
         self.total_memory_label = QLabel(
-            f"Total Memory:\t {human_readable_byte_size(psutil.virtual_memory().total)}",
+            f"Total Memory:\t {human_readable_byte_size(total)}",
             self,
         )
         self.memory_group_box_layout.addWidget(self.total_memory_label)
-        if psutil.virtual_memory().total < 8000000000:
-            self.total_memory_label.setStyleSheet("QLabel {color: red;}")
-        elif psutil.virtual_memory().total < 32000000000:
-            self.total_memory_label.setStyleSheet("QLabel {color: orange;}")
-        else:
-            self.total_memory_label.setStyleSheet("QLabel {color: green;}")
+        style_if(self.total_memory_label, total, MEM_ERROR, MEM_WARNING)
 
         # GPU summary
         self.gpu_group_box = QGroupBox("GPU Summary")
