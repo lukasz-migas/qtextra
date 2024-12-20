@@ -387,6 +387,21 @@ QtTileWidget QLabel#large_text {
     font-weight: bold;
 }
 
-QWidget#search_box_popup {
-    background: {{ background }};
+QAbstractItemView#search_box_popup
+{
+    border: 2px solid rgb(81, 81, 81);
+    padding: 1px;
+    border-radius: 15px;
+}
+
+QAbstractItemView#search_box_popup::item
+{
+    border: 2px solid rgb(81, 81, 81);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-radius: 15px;
+}
+QAbstractItemView#search_box_popup::item:hover
+{
+    background-color:lightGrey;
 }

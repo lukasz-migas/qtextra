@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
+from pathlib import Path
 
 import sentry_sdk
 from qtpy.QtWidgets import QWidget
@@ -102,3 +104,29 @@ def set_extra_tags(**kwargs: ty.Any) -> None:
     """Set extra tags."""
     for k, v in kwargs.items():
         sentry_sdk.set_tag(k, v)
+
+
+def report_memory_usage() -> str:
+    """Report memory usage for current process."""
+    import tempfile
+
+    import psutil
+    from koyo.faulthandler import submit_sentry_attachment
+    from koyo.utilities import human_readable_byte_size
+
+    tmp = Path(tempfile.gettempdir())
+    path = tmp / "memory_usage.txt"
+    memory_text = f"Total memory: {human_readable_byte_size(psutil.virtual_memory().total)}\n"
+    memory_text += f"Available memory: {human_readable_byte_size(psutil.virtual_memory().available)}\n"
+    with suppress(Exception):
+        process = psutil.Process()
+        pid = process.pid
+        mem = process.memory_info()
+
+        memory_text += f"RMS ({pid}): {human_readable_byte_size(mem.rss)}\n"
+        memory_text += f"VMS ({pid}): {human_readable_byte_size(mem.rss)}\n"
+    path.write_text(memory_text)
+    submit_sentry_attachment("Current memory usage - encountered memory issues", path)
+    with suppress(Exception):
+        path.unlink()
+    return memory_text
