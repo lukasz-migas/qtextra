@@ -1,5 +1,6 @@
 import pytest
 from loguru import logger
+
 from qtextra.dialogs.qt_logger import QtLoggerDialog
 
 
