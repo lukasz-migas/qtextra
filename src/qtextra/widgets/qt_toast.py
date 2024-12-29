@@ -120,7 +120,7 @@ class QtToast(SubWindowBase):
     def close(self):
         self.timer_dismiss.stop()
         self.timer_remaining.stop()
-        super().close()
+        SubWindowBase.close(self)
 
 
 if __name__ == "__main__":  # pragma: no cover
