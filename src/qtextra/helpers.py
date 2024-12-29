@@ -38,6 +38,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_progress_button import QtActiveProgressBarButton
     from qtextra.widgets.qt_scroll_label import QtScrollableLabel
     from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
+    from qtextra.widgets.qt_toggle_group import QtToggleGroup
     from qtextra.widgets.qt_tool_button import QtToolButton
 
     try:
@@ -115,6 +116,8 @@ def remove_widget_in_form_layout(layout: Qw.QFormLayout, label: str):
         label_widget = label_item.widget()  # type: ignore[union-attr]
         field_item = layout.itemAt(row, Qw.QFormLayout.ItemRole.FieldRole)
         field_widget = field_item.widget()  # type: ignore[union-attr]
+        if field_widget is None:
+            field_widget = field_item.layout()
         layout.removeItem(label_item)
         layout.removeItem(field_item)
         layout.removeRow(row)
@@ -367,6 +370,43 @@ def make_label(
     return widget
 
 
+def _make_tooltip_label(
+    parent: Qw.QWidget | None,
+    icon_name: str,
+    text: str,
+    xxsmall: bool = False,
+    xsmall: bool = False,
+    small: bool = False,
+    normal: bool = False,
+    average: bool = False,
+    medium: bool = False,
+    large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    retain_size: bool = False,
+    **kwargs: ty.Any,
+):
+    from qtextra.widgets.qt_icon_label import QtQtaTooltipLabel
+
+    widget = QtQtaTooltipLabel(parent=parent)
+    widget.set_qta(icon_name)
+    widget.set_default_size(
+        xxsmall=xxsmall,
+        xsmall=xsmall,
+        small=small,
+        normal=normal,
+        average=average,
+        medium=medium,
+        large=large,
+        xlarge=xlarge,
+        xxlarge=xxlarge,
+    )
+    widget.setToolTip(text)
+    if retain_size:
+        set_retain_hidden_size_policy(widget)
+    return widget
+
+
 def make_warning_label(
     parent: Qw.QWidget | None,
     text: str,
@@ -383,25 +423,56 @@ def make_warning_label(
     **kwargs: ty.Any,
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
-    from qtextra.widgets.qt_icon_label import QtQtaTooltipLabel
-
-    widget = QtQtaTooltipLabel(parent=parent)
-    widget.set_qta("warning")
-    widget.set_default_size(
-        xxsmall=xxsmall,
-        xsmall=xsmall,
-        small=small,
-        normal=normal,
-        average=average,
-        medium=medium,
-        large=large,
-        xlarge=xlarge,
-        xxlarge=xxlarge,
+    return _make_tooltip_label(
+        parent,
+        "warning",
+        text,
+        xxsmall,
+        xsmall,
+        small,
+        normal,
+        average,
+        medium,
+        large,
+        xlarge,
+        xxlarge,
+        retain_size,
+        **kwargs,
     )
-    widget.setToolTip(text)
-    if retain_size:
-        set_retain_hidden_size_policy(widget)
-    return widget
+
+
+def make_help_label(
+    parent: Qw.QWidget | None,
+    text: str,
+    xxsmall: bool = False,
+    xsmall: bool = False,
+    small: bool = False,
+    normal: bool = False,
+    average: bool = False,
+    medium: bool = False,
+    large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    retain_size: bool = False,
+    **kwargs: ty.Any,
+) -> QtQtaTooltipLabel:
+    """Create Qta icon with immediate tooltip."""
+    return _make_tooltip_label(
+        parent,
+        "help",
+        text,
+        xxsmall,
+        xsmall,
+        small,
+        normal,
+        average,
+        medium,
+        large,
+        xlarge,
+        xxlarge,
+        retain_size,
+        **kwargs,
+    )
 
 
 def make_url_btn(
@@ -745,6 +816,48 @@ def make_combobox(
     return widget
 
 
+def make_eliding_combobox(
+    parent: Qw.QWidget | None,
+    items: ty.Sequence[str] | None = None,
+    tooltip: str | None = None,
+    enum: list[str] | None = None,
+    options: list[str] | None = None,
+    value: str | None = None,
+    default: str | None = None,
+    func: Callback | None = None,
+    expand: bool = True,
+    object_name: str | None = None,
+    data: dict | None = None,
+    **kwargs: ty.Any,
+) -> Qw.QComboBox:
+    """Make QComboBox."""
+    from qtextra.widgets.qt_eliding_combobox import QtElideComboBox
+
+    if enum is not None:
+        items = enum
+    if value is None:
+        value = default
+    if options is not None:
+        items = options
+    widget = QtElideComboBox(parent)
+    if items:
+        widget.addItems(items)
+    if object_name:
+        widget.setObjectName(object_name)
+    if value and not data:
+        widget.setCurrentText(value)
+    tooltip = kwargs.get("description", tooltip)
+    if tooltip:
+        widget.setToolTip(tooltip)
+    if expand:
+        widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
+    if data:
+        set_combobox_data(widget, data, value)
+    if func:
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
+    return widget
+
+
 def make_checkable_combobox(
     parent: Qw.QWidget | None,
     items: ty.Sequence[str] | None = None,
@@ -846,6 +959,7 @@ def make_searchable_combobox(
     items: ty.Sequence[str] | None = None,
     tooltip: str | None = None,
     func: Callback | None = None,
+    func_index: Callback | None = None,
     enum: list[str] | None = None,
     options: list[str] | None = None,
     value: str | None = None,
@@ -880,6 +994,8 @@ def make_searchable_combobox(
         set_combobox_data(widget, data, value)
     if func:
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
+    if func_index:
+        [widget.currentIndexChanged.connect(func_) for func_ in _validate_func(func_index)]
     return widget
 
 
@@ -1660,24 +1776,48 @@ def make_toggle_group(
     *label: str,
     func: Callback | None = None,
     tooltip: str = "",
-    checked_label: str = "",
+    checked_label: str | list[str] = "",
     orientation: Orientation = "horizontal",
+    exclusive: bool = True,
 ) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
     """Make toggle button."""
     widget = Qw.QButtonGroup(parent)
+    widget.setExclusive(exclusive)
 
-    orientation = _get_orientation(orientation)
-    layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
+    if not isinstance(checked_label, list):
+        checked_label = [checked_label]
+
+    if orientation == "flow":
+        layout = make_flow_layout()
+    else:
+        orientation = _get_orientation(orientation)
+        layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
     layout.setSpacing(2)
     for btn_id, btn_label in enumerate(label):
         radio_btn = make_rich_btn(
-            parent, btn_label, func=func, checkable=True, tooltip=tooltip, check=checked_label == btn_label
+            parent, btn_label, func=func, checkable=True, tooltip=tooltip, check=btn_label in checked_label
         )
         widget.addButton(radio_btn, btn_id)
         layout.addWidget(radio_btn)
-        # if func:
-        #     [radio_btn.clicked.connect(func_) for func_ in _validate_func(func)]
     return layout, widget
+
+
+def make_toggle(
+    parent: Qw.QWidget | None,
+    *label: str,
+    func: Callback | None = None,
+    tooltip: str = "",
+    value: str = "",
+    orientation: Orientation = "horizontal",
+    **kwargs: ty.Any,
+) -> QtToggleGroup:
+    """Make toggle."""
+    from qtextra.widgets.qt_toggle_group import QtToggleGroup
+
+    widget = QtToggleGroup.from_schema(parent, label, tooltip=tooltip, value=value, orientation=orientation, **kwargs)
+    if func:
+        [widget.evt_changed.connect(func_) for func_ in _validate_func(func)]
+    return widget
 
 
 def make_h_line_with_text(
@@ -1779,6 +1919,36 @@ def make_h_layout(
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     layout = Qw.QHBoxLayout(parent)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
+
+
+def make_flow_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    stretch_id: int | tuple[int, ...] | None = None,
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    alignment: Qt.AlignmentFlag | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    parent: Qw.QWidget | None = None,
+) -> Qw.QHBoxLayout:
+    """Make horizontal layout."""
+    from qtextra.widgets.qt_flow_layout import QtFlowLayout
+
+    layout = QtFlowLayout(parent)
     if spacing is not None:
         layout.setSpacing(spacing)
     if margin is not None:
@@ -2897,44 +3067,50 @@ def style_form_layout(layout: Qw.QFormLayout) -> None:
         layout.setVerticalSpacing(4)
 
 
-def show_above_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+def show_above_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
     """Show popup dialog above the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    pos -= QPoint(int(sz_hint.width() / 2) - x_offset, sz_hint.height() - y_offset)  # type: ignore[call-overload]
+    widget_width = sz_hint.width() / 2
+    widget_height = sz_hint.height()
+    pos -= QPoint(int(widget_width - x_offset), int(widget_height + y_offset))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
 
 
-def show_below_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = -14) -> None:
+def show_below_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
     """Show popup dialog below the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    pos -= QPoint(int(sz_hint.width() / 2) - x_offset, y_offset)  # type: ignore[call-overload]
+    widget_width = sz_hint.width() / 2
+    pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
 
 
-def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
+def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    pos -= QPoint(sz_hint.width() + 14, int(sz_hint.height() / 4))  # type: ignore[call-overload]
+    widget_width = sz_hint.width()
+    widget_height = sz_hint.height() / 2
+    pos -= QPoint(int(widget_width + x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
     if show:
         widget_to_show.show()
 
 
-def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
+def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    pos -= QPoint(-20, int(sz_hint.height() / 8))  # type: ignore[call-overload]
+    widget_height = sz_hint.height() / 2
+    pos -= QPoint(int(x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
     if show:
@@ -3063,7 +3239,7 @@ def show_below_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))  # type: ignore[call-overload]
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))
     sz_hint = widget_to_show.sizeHint()
     widget_width = sz_hint.width() / 2
     pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]

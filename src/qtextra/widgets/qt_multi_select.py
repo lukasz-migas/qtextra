@@ -47,9 +47,10 @@ class SelectionWidget(QtFramelessPopup):
     options: list[str] | None = None
     original_options: list[str] | None = None
 
-    def __init__(self, parent: QWidget, title: str = "Select...", text: str = ""):
+    def __init__(self, parent: QWidget, title: str = "Select...", text: str = "", n_max: int = 0):
         self.title = title
         self.text = text
+        self.n_max = n_max
         super().__init__(parent)
         self.setMinimumWidth(500)
         self.setMinimumHeight(350)
@@ -102,11 +103,14 @@ class SelectionWidget(QtFramelessPopup):
         self.evt_update.emit(options)
         super().reject()
 
-    def on_check(self, _index: int, _state: bool) -> None:
+    def on_check(self, index: int, _state: bool) -> None:
         """Check."""
         indices = self.table.get_all_checked()
         options = [self.table.get_value(self.TABLE_CONFIG.option, index) for index in indices]
         self.evt_temp_changed.emit(options)
+        if self.n_max and len(indices) > self.n_max:
+            other_index = next(i for i in indices if i != index)
+            self.table.set_value(self.TABLE_CONFIG.check, other_index, False)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
@@ -154,7 +158,7 @@ class QtMultiSelect(QWidget):
     textChanged = Signal(str)
     evt_selection_changed = Signal(list)
 
-    def __init__(self, parent: QWidget, allow_clear: bool = False, instant_set: bool = False):
+    def __init__(self, parent: QWidget, allow_clear: bool = False, instant_set: bool = False, n_max: int = 0):
         self.instant_set = instant_set
         super().__init__(parent)
         self.options: list[str] = []
@@ -173,6 +177,7 @@ class QtMultiSelect(QWidget):
             self._list_action,
             self.text_edit.ActionPosition.TrailingPosition,
         )
+        self.n_max = n_max
 
         self.text_edit.installEventFilter(self)
 
@@ -202,6 +207,7 @@ class QtMultiSelect(QWidget):
         func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
         func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
         items: dict[str, ty.Any] | None = None,
+        n_max: int = 0,
         **_kwargs: ty.Any,
     ) -> QtMultiSelect:
         """Init."""
@@ -216,7 +222,7 @@ class QtMultiSelect(QWidget):
         else:
             values = value
 
-        obj = cls(parent)
+        obj = cls(parent, n_max=n_max)
         obj.text_edit.setPlaceholderText(placeholder)
         obj.options = options or []
         obj.selected_options = values
@@ -300,7 +306,7 @@ class QtMultiSelect(QWidget):
 
     def on_select(self) -> None:
         """Select."""
-        dlg = SelectionWidget(self)
+        dlg = SelectionWidget(self, n_max=self.n_max)
         dlg.set_options(self.options, self.selected_options)
         dlg.filter_by_option.setFocus()
         dlg.evt_temp_changed.connect(self._set_selected_options if self.instant_set else self.set_selected_options_temp)

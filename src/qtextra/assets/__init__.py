@@ -67,6 +67,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "edit": "ri.edit-box-fill",
     "add": "ri.add-circle-line",
     "remove": "ri.indeterminate-circle-line",
+    "check": "ri.checkbox-circle-line",
     "delete": "fa5s.trash-alt",
     "shuffle": "ph.shuffle-bold",
     "picker": "mdi6.eyedropper",

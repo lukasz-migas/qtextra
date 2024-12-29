@@ -216,7 +216,6 @@ QLabel#medium_text {
     font-size: {{ increase(font_size, 2) }};
 }
 
-
 QWidget#error {
     border: 2px solid {{ lighten(error, 30) }};
     border-radius: 2px;

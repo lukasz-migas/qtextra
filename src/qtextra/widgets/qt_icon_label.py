@@ -12,6 +12,7 @@ from superqt.utils import qdebounced
 
 from qtextra.config import THEMES
 from qtextra.widgets._qta_mixin import QtaMixin
+from qtextra.widgets.qt_info_popup import InfoDialog
 
 
 def make_png_label(icon_path: str, size: tuple[int, int] = (40, 40)) -> QLabel:
@@ -87,7 +88,7 @@ class QtIconLabel(QLabel):
 
     def mousePressEvent(self, ev):
         """Mouse press event."""
-        if ev.button() == Qt.LeftButton:
+        if ev.button() == Qt.MouseButton.LeftButton:
             self.evt_clicked.emit()
         super().mousePressEvent(ev)
 
@@ -155,10 +156,38 @@ class QtQtaTooltipLabel(QtQtaLabel):
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
         if self.toolTip():
-            sh = self.sizeHint()
-            pos = self.mapToGlobal(self.contentsRect().center()) - QPoint(-10, int(sh.height() * 1.5))
+            pos = self.mapToGlobal(self.contentsRect().center())
             QToolTip.showText(pos, self.toolTip(), self)
         super().enterEvent(event)
+
+    def _remove_dialog(self) -> None:
+        """Remove dialog."""
+        if self._dlg:
+            self._dlg = None
+
+
+class QtQtaHelpLabel(QtQtaLabel):
+    """Label."""
+
+    _dlg: InfoDialog | None = None
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self.set_qta("help")
+        self.set_average()
+
+    def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
+        """Override to show tooltips instantly."""
+        if self.toolTip() and not self._dlg:
+            self._dlg = InfoDialog(self, self.toolTip())
+            self._dlg.evt_close.connect(self._remove_dialog)
+            self._dlg.show_right_of_widget(self)
+        super().enterEvent(event)
+
+    def _remove_dialog(self) -> None:
+        """Remove dialog."""
+        if self._dlg:
+            self._dlg = None
 
 
 class QtSeverityLabel(QtQtaLabel):

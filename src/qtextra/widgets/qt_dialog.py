@@ -82,6 +82,26 @@ class ScreenManager:
 class DialogMixin:
     """Mixin class for dialogs."""
 
+    def show_on_mouse(self, show: bool = True) -> None:
+        """Show popup dialog in the center of mouse cursor position."""
+        hp.show_on_mouse(self, show)
+
+    def show_right_of_mouse(self, show: bool = True) -> None:
+        """Show popup dialog on the right hand side of the mouse cursor position."""
+        hp.show_right_of_mouse(self, show)
+
+    def show_left_of_mouse(self, show: bool = True) -> None:
+        """Show popup dialog on the left hand side of the mouse cursor position."""
+        hp.show_left_of_mouse(self, show)
+
+    def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
+        """Show popup dialog above the mouse cursor position."""
+        hp.show_above_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
+
+    def show_below_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -0) -> None:
+        """Show popup dialog above the mouse cursor position."""
+        hp.show_below_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
+
     def show_in_center_of_screen(self, show: bool = True) -> None:
         """Show dialog in the center of the widget."""
         hp.show_in_center_of_screen(self, show)
@@ -94,39 +114,19 @@ class DialogMixin:
         """Show popup dialog above the widget."""
         hp.show_above_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-        """Show popup dialog above the mouse cursor position."""
-        hp.show_above_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
-
     def show_below_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
         hp.show_below_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
-
-    def show_below_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = -0) -> None:
-        """Show popup dialog above the mouse cursor position."""
-        hp.show_below_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
 
     def show_right_of_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the widget."""
         hp.show_right_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_on_mouse(self, show: bool = True) -> None:
-        """Show popup dialog in the center of mouse cursor position."""
-        hp.show_on_mouse(self, show)
-
-    def show_right_of_mouse(self, show: bool = True) -> None:
-        """Show popup dialog on the right hand side of the mouse cursor position."""
-        hp.show_right_of_mouse(self, show)
-
     def show_left_of_widget(
-        self, parent: QObject | None, show: bool = True, x_offset: int = 14, y_offset: int = 0
+        self, parent: QObject | None, show: bool = True, x_offset: int = 0, y_offset: int = 0
     ) -> None:
         """Show popup dialog above the widget."""
         hp.show_left_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
-
-    def show_left_of_mouse(self, show: bool = True) -> None:
-        """Show popup dialog on the left hand side of the mouse cursor position."""
-        hp.show_left_of_mouse(self, show)
 
     def move_to(self, position="top", *, win_ratio=0.9, min_length=0) -> None:
         """Move popup to a position relative to the QMainWindow.
