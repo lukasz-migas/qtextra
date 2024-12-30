@@ -280,6 +280,9 @@ class QtMultiSelect(QWidget):
         """List of options."""
         if selected_options is None:
             selected_options = []
+        if not isinstance(selected_options, list):
+            selected_options = [selected_options]
+        selected_options = list(map(str, selected_options))
         if self.options:
             selected_options = filter_selected(selected_options, self.options)
         self.selected_options = selected_options
