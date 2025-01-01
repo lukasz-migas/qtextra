@@ -136,11 +136,16 @@ class SelectionWidget(QtFramelessPopup):
         layout.setContentsMargins(6, 6, 6, 6)
         hp.style_form_layout(layout)
 
-        # _, header_layout = self._make_hide_handle(self.title)
-        # layout.addRow(header_layout)
-        layout.addRow(
-            hp.make_label(self, self.text, alignment=Qt.AlignmentFlag.AlignHCenter, wrap=True, enable_url=True, hide=bool(self.text))
-        )
+        if self.text:
+            layout.addRow(
+                hp.make_label(
+                    self,
+                    self.text,
+                    alignment=Qt.AlignmentFlag.AlignHCenter,
+                    wrap=True,
+                    enable_url=True,
+                )
+            )
         layout.addRow(self.table)
         layout.addRow(self.filter_by_option)
         layout.addRow(

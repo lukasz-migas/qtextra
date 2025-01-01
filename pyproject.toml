@@ -51,10 +51,9 @@ pyside2 = ["pyside2"]
 pyside6 = ["pyside6"]
 pyqt5 = ["pyqt5"]
 pyqt6 = ["pyqt6"]
-plot = ["napari", "napari-plot"]
 1d = ["vispy", "napari-plot"]
 2d = ["vispy", "napari==0.4.19"]
-plot ["qtextra[1d]", "qtextra[2d]"]
+plot = ["qtextra[1d]", "qtextra[2d]"]
 dev = [
     "black",
     "ipython",
