@@ -139,10 +139,10 @@ class SelectionWidget(QtFramelessPopup):
         # _, header_layout = self._make_hide_handle(self.title)
         # layout.addRow(header_layout)
         layout.addRow(
-            hp.make_label(self, self.text, alignment=Qt.AlignmentFlag.AlignHCenter, wrap=True, enable_url=True)
+            hp.make_label(self, self.text, alignment=Qt.AlignmentFlag.AlignHCenter, wrap=True, enable_url=True, hide=bool(self.text))
         )
-        layout.addRow(self.filter_by_option)
         layout.addRow(self.table)
+        layout.addRow(self.filter_by_option)
         layout.addRow(
             hp.make_h_layout(
                 hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.on_cancel)
