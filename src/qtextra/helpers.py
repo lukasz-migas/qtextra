@@ -713,8 +713,8 @@ def make_line_edit(
         text = default
     widget = Qw.QLineEdit(parent)
     widget.setText(text)
-    widget.setClearButtonEnabled(True)
-    disable_widgets(widget, disabled=disabled, min_opacity=0.9)
+    widget.setClearButtonEnabled(not disabled)
+    disable_widgets(widget, disabled=disabled, min_opacity=0.95)
     widget.setPlaceholderText(placeholder)
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)

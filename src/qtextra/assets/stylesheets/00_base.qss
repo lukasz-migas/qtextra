@@ -35,9 +35,9 @@ QWidget {
   selection-color: {{ text }};
 }
 
-QWidget:disabled {
-  color: {{ opacity(text, 90) }};
-}
+/*QWidget:disabled {*/
+/*  color: {{ opacity(text, 90) }};*/
+/*}*/
 
 QWidget[emphasized="true"] {
     background-color: {{ foreground }};
