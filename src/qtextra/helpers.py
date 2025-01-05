@@ -3071,8 +3071,8 @@ def show_above_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: in
     """Show popup dialog above the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width() / 2
-    widget_height = sz_hint.height()
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight())
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width - x_offset), int(widget_height + y_offset))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
@@ -3084,7 +3084,7 @@ def show_below_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: in
     """Show popup dialog below the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width() / 2
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
@@ -3096,8 +3096,8 @@ def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: 
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width()
-    widget_height = sz_hint.height() / 2
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight())
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width + x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
@@ -3109,7 +3109,7 @@ def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset:
     """Show popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
-    widget_height = sz_hint.height() / 2
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 2
     pos -= QPoint(int(x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
@@ -3121,7 +3121,9 @@ def show_on_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
     """Show popup dialog in the center of mouse cursor position."""
     pos = QCursor().pos()
     sz_hint = widget_to_show.sizeHint()
-    pos -= QPoint(int(sz_hint.width() / 2), int(sz_hint.height() / 4))
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 4
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
+    pos -= QPoint(int(widget_width), int(widget_height))
     pos = check_if_outside_for_mouse(pos, sz_hint)
     widget_to_show.move(pos)
     if show:
@@ -3178,8 +3180,8 @@ def show_in_center_of_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width() / 2
-    widget_height = sz_hint.height() / 2
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 2
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width - x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
@@ -3209,8 +3211,8 @@ def show_left_of_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(rect.left(), (rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width()
-    widget_height = sz_hint.height() / 2
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth())
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 2
     pos -= QPoint(int(widget_width + x_offset), int(widget_height - y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
@@ -3225,8 +3227,8 @@ def show_above_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width() / 2
-    widget_height = sz_hint.height()
+    widget_height = max(sz_hint.height(), widget_to_show.minimumHeight())
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width - x_offset), int(widget_height + y_offset))
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
@@ -3241,7 +3243,7 @@ def show_below_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))
     sz_hint = widget_to_show.sizeHint()
-    widget_width = max(widget_to_show.minimumWidth(), sz_hint.width()) / 2
+    widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)
