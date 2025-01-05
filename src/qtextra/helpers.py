@@ -3241,7 +3241,7 @@ def show_below_widget(
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))
     sz_hint = widget_to_show.sizeHint()
-    widget_width = sz_hint.width() / 2
+    widget_width = max(widget_to_show.minimumWidth(), sz_hint.width()) / 2
     pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]
     pos = check_if_outside_for_widget(parent, pos, sz_hint)
     widget_to_show.move(pos)

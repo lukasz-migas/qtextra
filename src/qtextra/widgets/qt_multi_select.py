@@ -47,12 +47,12 @@ class SelectionWidget(QtFramelessPopup):
     options: list[str] | None = None
     original_options: list[str] | None = None
 
-    def __init__(self, parent: QWidget, title: str = "Select...", text: str = "", n_max: int = 0):
+    def __init__(self, parent: QWidget, title: str = "Select...", text: str = "", n_max: int = 0, min_width: int = 500):
         self.title = title
         self.text = text
         self.n_max = n_max
         super().__init__(parent)
-        self.setMinimumWidth(500)
+        self.setMinimumWidth(min_width)
         self.setMinimumHeight(350)
         self.filter_by_option.setFocus()
 
@@ -74,7 +74,7 @@ class SelectionWidget(QtFramelessPopup):
         self.original_options = selected_options
         widths = [len(v) for v in options] or [50]
         if widths:
-            self.setMinimumWidth(min([500, max(widths) * 10]))
+            self.setMinimumWidth(max([self.minimumWidth(), max(widths) * 10]))
 
     @property
     def selected_options(self) -> list[str]:
@@ -165,26 +165,25 @@ class QtMultiSelect(QWidget):
 
     def __init__(self, parent: QWidget, allow_clear: bool = False, instant_set: bool = False, n_max: int = 0):
         self.instant_set = instant_set
+        self.n_max = n_max
+
         super().__init__(parent)
         self.options: list[str] = []
         self.selected_options: list[str] = []
         self.text_edit = hp.make_line_edit(self, placeholder="Select...")
         self.text_edit.setReadOnly(True)
         self.text_edit.setClearButtonEnabled(allow_clear)
+        self.text_edit.installEventFilter(self)
+
         self._clear_action = self.text_edit.findChild(QAction)
         if self._clear_action:
             self._clear_action.setEnabled(True)
             self._clear_action.triggered.connect(self.clear_current)
+
         self._list_action = hp.make_action(
             self, "list", func=self.on_select, tooltip="Click here to select one or more options"
         )
-        self.text_edit.addAction(
-            self._list_action,
-            self.text_edit.ActionPosition.TrailingPosition,
-        )
-        self.n_max = n_max
-
-        self.text_edit.installEventFilter(self)
+        self.text_edit.addAction(self._list_action, self.text_edit.ActionPosition.TrailingPosition)
 
         layout = hp.make_h_layout(self.text_edit, stretch_id=0, spacing=0)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -314,7 +313,7 @@ class QtMultiSelect(QWidget):
 
     def on_select(self) -> None:
         """Select."""
-        dlg = SelectionWidget(self, n_max=self.n_max)
+        dlg = SelectionWidget(self, n_max=self.n_max, min_width=self.text_edit.width())
         dlg.set_options(self.options, self.selected_options)
         dlg.filter_by_option.setFocus()
         dlg.evt_temp_changed.connect(self._set_selected_options if self.instant_set else self.set_selected_options_temp)
