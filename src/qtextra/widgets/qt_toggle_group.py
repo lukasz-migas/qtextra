@@ -44,14 +44,22 @@ class QtToggleGroup(QFrame):
 
     def _on_changed(self, _: ty.Any):
         self.evt_changed.emit(self.value)
+        print(self.value, "???")
+
+    @property
+    def button(self) -> ty.Any:
+        """Button."""
+        value = []
+        for button in self.buttons.buttons():
+            if button.isChecked():
+                value.append(button)
+        return value
 
     @property
     def value(self) -> str | list[str] | None:
         """Get value."""
-        value = []
-        for button in self.buttons.buttons():
-            if button.isChecked():
-                value.append(button.text())
+        buttons = self.button
+        value = [button.text() for button in buttons]
         if value and self.buttons.exclusive():
             return value[0]
         return value
