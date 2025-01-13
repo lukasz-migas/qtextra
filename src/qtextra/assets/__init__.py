@@ -1,5 +1,7 @@
 """Assets."""
 
+from __future__ import annotations
+
 import typing as ty
 from pathlib import Path
 
@@ -63,7 +65,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "zoom": "mdi.magnify",
     "erase": "ph.eraser-fill",
     "new": "mdi.new-box",
-    "check": "fa5s.check",
+    # "check": "fa5s.check",
     "edit": "ri.edit-box-fill",
     "add": "ri.add-circle-line",
     "remove": "ri.indeterminate-circle-line",
@@ -209,8 +211,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "polygon": "mdi.pentagon-outline",
     # selection
     "invert_selection": "fa5s.exchange-alt",
-    "pin_on": "ri.pushpin-2-fill",
-    "pin_off": "ri.pushpin-fill",
+    "pin_on": ("ph.push-pin-fill", {"rotated": -45}),
+    "pin_off": "ph.push-pin-fill",
 }
 
 
@@ -235,17 +237,26 @@ def update_icons(mapping: ty.Dict[str, str]) -> None:
     ICONS.update(mapping)
 
 
-def get_icon(name: str) -> str:
+def get_icon(name: str | tuple[str, dict]) -> tuple[str | dict]:
     """Return icon."""
+    kwargs = None
+    if isinstance(name, tuple):
+        name, kwargs = name
+    if kwargs is None:
+        kwargs = {}
+
     original_name = name
     if name == "":
-        return QTA_MAPPING["MISSING"]
-    if "." not in name:
+        name = QTA_MAPPING["MISSING"]
+    elif "." not in name:
         name = QTA_MAPPING.get(name)
         if name is None:
             logger.warning(f"Failed to retrieve icon: '{original_name}'")
             name = QTA_MAPPING["MISSING"]
-    return name
+    if isinstance(name, tuple):
+        name, kwargs_ = name
+        kwargs.update(kwargs_)
+    return name, kwargs
 
 
 def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[str]] = None) -> str:

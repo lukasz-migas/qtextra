@@ -70,7 +70,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     def set_toggle_qta(self, name: str, checked_name: str, connect: bool = True, **kwargs: ty.Any) -> None:
         """Set changeable icon."""
-        name = get_icon(name)
+        name, kwargs_ = get_icon(name)
+        kwargs.update(kwargs_)
         checked_name = get_icon(checked_name)
         self._qta_data = (name, kwargs)
         self._checked_qta_data = (checked_name, kwargs)
@@ -605,9 +606,11 @@ class QtPriorityButton(QtImagePushButton):
     def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
         menu = hp.make_menu(self)
-        menu.addAction("Low", lambda: setattr(self, "priority", "low"))
-        menu.addAction("Normal", lambda: setattr(self, "priority", "normal"))
-        menu.addAction("High", lambda: setattr(self, "priority", "high"))
+        hp.make_menu_item(self, "Low", icon="priority_low", func=lambda: setattr(self, "priority", "low"), menu=menu)
+        hp.make_menu_item(
+            self, "Normal", icon="priority_normal", func=lambda: setattr(self, "priority", "normal"), menu=menu
+        )
+        hp.make_menu_item(self, "High", icon="priority_high", func=lambda: setattr(self, "priority", "high"), menu=menu)
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)
         super().enterEvent(event)  # type: ignore[arg-type]
@@ -678,6 +681,10 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(expand_btn)
 
         priority_btn = QtPriorityButton(parent=frame)
+        lay.addWidget(priority_btn)
+
+        priority_btn = QtPinButton(parent=frame)
+        priority_btn.clicked.connect(priority_btn.toggle_state)
         lay.addWidget(priority_btn)
 
         ha.addWidget(hp.make_v_line())

@@ -24,12 +24,20 @@ class QtaMixin:
     setIconSize: ty.Callable
     setObjectName: ty.Callable
 
-    def set_qta(self, name: str, **kwargs: ty.Any) -> None:
+    def set_qta(self, name: str | tuple[str, dict], **kwargs: ty.Any) -> None:
         """Set QtAwesome icon."""
-        name = get_icon(name)
+        name, kwargs_ = get_icon(name)
+        kwargs.update(kwargs_)
         self._qta_data = (name, kwargs)
         color_ = kwargs.pop("color", None)
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
+        if "spin" in kwargs:
+            kwargs["animation"] = qtawesome.Spin(self, autostart=True)
+            kwargs.pop("spin")
+        if "pulse" in kwargs:
+            kwargs["animation"] = qtawesome.Pulse(self, autostart=True)
+            kwargs.pop("pulse")
+
         try:
             icon = qtawesome.icon(name, **self._qta_data[1], color=color)
             self.setIcon(icon)

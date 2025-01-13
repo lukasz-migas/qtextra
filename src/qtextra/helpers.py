@@ -1011,7 +1011,8 @@ def make_qta_icon(name: str, color: str | None = None, **kwargs: ty.Any) -> QIco
     from qtextra.assets import get_icon
     from qtextra.config import THEMES
 
-    name = get_icon(name)
+    name, kwargs_ = get_icon(name)
+    kwargs.update(kwargs_)
     if color is None:
         color = THEMES.get_hex_color("icon")
     qta_icon = qta.icon(name, color=color, **kwargs)

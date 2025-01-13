@@ -1,4 +1,5 @@
 """QtAction."""
+
 import qtawesome
 from qtpy.QtWidgets import QAction
 
@@ -17,7 +18,8 @@ class QtQtaAction(QAction):
 
     def set_qta(self, name: str, **kwargs):
         """Set QtAwesome icon."""
-        name = get_icon(name)
+        name, kwargs_ = get_icon(name)
+        kwargs.update(kwargs_)
         self._qta_data = (name, kwargs)
         icon = qtawesome.icon(name, **self._qta_data[1], color=THEMES.get_hex_color("icon"))
         self.setIcon(icon)
