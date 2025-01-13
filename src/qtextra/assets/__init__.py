@@ -209,6 +209,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "polygon": "mdi.pentagon-outline",
     # selection
     "invert_selection": "fa5s.exchange-alt",
+    "pin_on": "ri.pushpin-2-fill",
+    "pin_off": "ri.pushpin-fill",
 }
 
 

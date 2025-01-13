@@ -11,6 +11,8 @@ from qtpy.QtWidgets import QFrame, QWidget
 class QtToggleGroup(QFrame):
     """Widget for toggle group."""
 
+    _old_value: ty.Any = None
+
     evt_changed = Signal(object)
 
     def __init__(
@@ -42,16 +44,25 @@ class QtToggleGroup(QFrame):
         layout.setSpacing(1)
         self.setLayout(layout)
 
-    def _on_changed(self, _: ty.Any):
-        self.evt_changed.emit(self.value)
+    def _on_changed(self, _: ty.Any) -> None:
+        if self._old_value != self.value:
+            self._old_value = self.value
+            self.evt_changed.emit(self.value)
+
+    @property
+    def button(self) -> ty.Any:
+        """Button."""
+        value = []
+        for button in self.buttons.buttons():
+            if button.isChecked():
+                value.append(button)
+        return value
 
     @property
     def value(self) -> str | list[str] | None:
         """Get value."""
-        value = []
-        for button in self.buttons.buttons():
-            if button.isChecked():
-                value.append(button.text())
+        buttons = self.button
+        value = [button.text() for button in buttons]
         if value and self.buttons.exclusive():
             return value[0]
         return value
