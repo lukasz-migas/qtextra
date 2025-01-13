@@ -386,18 +386,47 @@ class QtVisibleButton(QtTogglePushButton):
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._is_visible = False
+        self._is_active = False
         self.visible = True
 
     @property
     def visible(self) -> bool:
         """Get toggle state."""
-        return self._is_visible
+        return self._is_active
 
     @visible.setter
     def visible(self, state: bool) -> None:
-        self._is_visible = state
+        self._is_active = state
         self.set_qta("visible" if state else "visible_off")
+
+    @property
+    def hidden(self) -> bool:
+        """Get toggle state."""
+        return not self._is_active
+
+    def toggle_state(self) -> None:
+        """Toggle state between shown/hidden."""
+        self.visible = not self.visible
+        self.evt_toggled.emit(self.visible)
+
+
+class QtPinButton(QtTogglePushButton):
+    """Lock button with shown/hidden icon."""
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self._is_active = False
+        self.pin = False
+
+    @property
+    def pin(self) -> bool:
+        """Get toggle state."""
+        return self._is_active
+
+    @pin.setter
+    def pin(self, state: bool) -> None:
+        self._is_active = state
+        self.set_qta("pin_on" if state else "pin_off")
 
     @property
     def hidden(self) -> bool:
@@ -406,8 +435,8 @@ class QtVisibleButton(QtTogglePushButton):
 
     def toggle_state(self) -> None:
         """Toggle state between shown/hidden."""
-        self.visible = not self.visible
-        self.evt_toggled.emit(self.visible)
+        self.pin = not self.pin
+        self.evt_toggled.emit(self.pin)
 
 
 class QtToolbarPushButton(QtImagePushButton):

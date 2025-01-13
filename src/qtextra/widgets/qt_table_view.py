@@ -71,6 +71,8 @@ class FilterProxyModel(QSortFilterProxyModel):
 
     sourceModel: ty.Callable[[], QtCheckableItemModel]
 
+    evt_filtered = Signal()
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         QSortFilterProxyModel.__init__(self, *args, **kwargs)
         self.filters: dict[int, str] = {}
@@ -99,6 +101,7 @@ class FilterProxyModel(QSortFilterProxyModel):
             del self.filters[column]
         self.filters[column] = str(text).lower()
         self.invalidateFilter()
+        self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         """Filter rows."""
@@ -473,6 +476,7 @@ class QtCheckableTableView(QTableView):
     # value changed
     evt_changed = Signal()
     evt_double_clicked = Signal(int)
+    evt_reset = Signal()
 
     def __init__(
         self,
@@ -729,6 +733,7 @@ class QtCheckableTableView(QTableView):
     def reset_data(self) -> None:
         """Clear table."""
         self.model().reset_data()
+        self.evt_reset.emit()
 
     def set_data(
         self,
