@@ -2036,6 +2036,13 @@ def update_widget_style(widget: Qw.QWidget, object_name: str):
     widget.style().polish(widget)
 
 
+def update_widgets_style(*widget: Qw.QWidget, object_name: str):
+    """Update widget style by forcing its re-polish."""
+    for widget_ in widget:
+        widget_.setObjectName(object_name)
+        widget_.style().polish(widget_)
+
+
 def update_property(widget: Qw.QWidget, prop: str, value: ty.Any) -> None:
     """Update properties of widget to update style."""
     widget.setProperty(prop, value)

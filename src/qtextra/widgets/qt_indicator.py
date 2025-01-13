@@ -1,20 +1,26 @@
 """Simple indicator widget."""
 
+from __future__ import annotations
+
 from qtpy.QtCore import QEasingCurve, QPoint, QPropertyAnimation, Slot
 from qtpy.QtGui import QPainter
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QSizePolicy, QWidget
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
+DEFAULT_START_OPACITY = 1.0
+DEFAULT_END_OPACITY = 0.2
+DEFAULT_PULSE_RATE = 1000
+DEFAULT_N_LOOPS = 5
 
 
 class QtIndicator(QWidget):
     """Small indicator widget that flashes occasionally."""
 
     # states: success, warning, active, none
-    START_OPACITY = 1.0
-    END_OPACITY = 0.2
-    PULSE_RATE = 1000
-    N_LOOPS = 5
+    START_OPACITY = DEFAULT_START_OPACITY
+    END_OPACITY = DEFAULT_END_OPACITY
+    PULSE_RATE = DEFAULT_PULSE_RATE
+    N_LOOPS = DEFAULT_N_LOOPS
 
     def __init__(self, parent=None, max_size=None):
         super().__init__(parent=parent)
@@ -53,8 +59,10 @@ class QtIndicator(QWidget):
         self.start_pulse() if value else self.stop_pulse()
 
     @Slot(int)
-    def _loop_update(self, loop: int):
+    def _loop_update(self, loop: int | None = None):
         """Reverse pulse direction for nicer visual effect."""
+        if loop is None:
+            loop = self.opacity_anim.currentLoop()
         start, end = (self.START_OPACITY, self.END_OPACITY) if loop % 2 == 0 else (self.END_OPACITY, self.START_OPACITY)
         self.opacity_anim.setStartValue(start)
         self.opacity_anim.setEndValue(end)
@@ -74,7 +82,7 @@ class QtIndicator(QWidget):
 
     def start_pulse(self):
         """Start pulsating."""
-        self.opacity_anim.setEasingCurve(QEasingCurve.Linear)
+        self.opacity_anim.setEasingCurve(QEasingCurve.Type.Linear)
         self.opacity_anim.setDuration(self.PULSE_RATE)
         self.opacity_anim.setStartValue(self.START_OPACITY)
         self.opacity_anim.setEndValue(self.END_OPACITY)
@@ -85,6 +93,19 @@ class QtIndicator(QWidget):
         """Stop pulsating."""
         self.opacity_anim.stop()
         self.opacity.setOpacity(1.0)
+
+    def temporary_pulse(self, duration: int = 1000, pulse: int = DEFAULT_PULSE_RATE):
+        """Pulse for a short duration."""
+        if self.opacity_anim.state() == QPropertyAnimation.State.Running:
+            self.opacity_anim.stop()
+        self.opacity_anim.setEasingCurve(QEasingCurve.Type.Linear)
+        self.opacity_anim.setDuration(pulse)
+        self.opacity_anim.setStartValue(self.START_OPACITY)
+        self.opacity_anim.setEndValue(self.END_OPACITY)
+        self.opacity_anim.setLoopCount(max(1, int(round(duration / pulse))))
+        self.opacity_anim.finished.connect(self.hide)
+        self.opacity_anim.start()
+        self.show()
 
 
 if __name__ == "__main__":  # pragma: no cover
