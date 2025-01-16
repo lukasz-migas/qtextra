@@ -1,4 +1,5 @@
 """Popup for developer tools."""
+
 from qtpy.QtWidgets import QLayout, QVBoxLayout, QWidget
 from qtreload.qt_reload import QtReloadWidget
 
@@ -11,6 +12,7 @@ class QDevPopup(QtFramelessTool):
     def __init__(self, parent: QWidget, modules: list[str]):
         self.modules = modules
         super().__init__(parent)
+        self.setMinimumWidth(800)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QLayout:
@@ -19,7 +21,8 @@ class QDevPopup(QtFramelessTool):
 
         _, hide_layout = self._make_hide_handle("Developer tools")
         layout = QVBoxLayout()
-        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(2)
+        layout.setContentsMargins(2, 2, 2, 2)
         layout.addLayout(hide_layout)
         layout.addWidget(self.qdev, stretch=True)
         return layout
