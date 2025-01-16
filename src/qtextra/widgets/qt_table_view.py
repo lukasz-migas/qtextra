@@ -327,7 +327,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         for column, value in column_value.items():
             self.update_value(row, column, value)
 
-    def update_row(self, row, value) -> None:
+    def update_row(self, row: int, value: ty.Any) -> None:
         """Update row."""
         if len(value) != len(self.header):
             raise ValueError("Cannot update row as length of the values does not match header length")
@@ -938,9 +938,9 @@ class QtCheckableTableView(QTableView):
 
     def update_column(self, col: int, values: list, match_to_sort: bool = True, block_signals: bool = False) -> None:
         """Update entire row."""
-        assert len(values) == self.n_rows, (
-            f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
-        )
+        assert (
+            len(values) == self.n_rows
+        ), f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
         model = self.model()
         with qt_signals_blocked(model, block_signals=block_signals):
             model.update_column(col, values, match_to_sort)
