@@ -420,12 +420,13 @@ def make_warning_label(
     xlarge: bool = False,
     xxlarge: bool = False,
     retain_size: bool = False,
+    icon_name: str = "warning",
     **kwargs: ty.Any,
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
     return _make_tooltip_label(
         parent,
-        "warning",
+        icon_name,
         text,
         xxsmall,
         xsmall,

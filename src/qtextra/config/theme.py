@@ -479,6 +479,11 @@ class Themes(ConfigBase):
         """Get syntax style."""
         return self.active.syntax_style
 
+    def get_font_size(self) -> int:
+        """Get font size."""
+        unit = "pt" if "pt" in self.active.font_size else "px"
+        return int(self.active.font_size.split(unit)[0])
+
     def get_rgb_color(self, name: str) -> str:
         """Get color in the default style."""
         color: Color = getattr(self.active, name)

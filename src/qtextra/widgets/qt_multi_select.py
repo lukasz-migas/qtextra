@@ -12,6 +12,7 @@ import qtextra.helpers as hp
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtFramelessPopup
 from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
+from qtextra.config import THEMES
 
 
 def filter_selected(current_options: list[str], all_options: list[str]) -> list[str]:
@@ -118,7 +119,7 @@ class SelectionWidget(QtFramelessPopup):
         self.table = QtCheckableTableView(self, config=self.TABLE_CONFIG, enable_all_check=True, sortable=True)
         self.table.setCornerButtonEnabled(False)
         self.table.evt_checked.connect(self.on_check)
-        hp.set_font(self.table)
+        hp.set_font(self.table, THEMES.get_font_size())
         self.table.setup_model(
             self.TABLE_CONFIG.header, self.TABLE_CONFIG.no_sort_columns, self.TABLE_CONFIG.hidden_columns
         )
@@ -128,7 +129,7 @@ class SelectionWidget(QtFramelessPopup):
         self.table.setModel(self.table_proxy)
         self.filter_by_option = hp.make_line_edit(
             self,
-            placeholder="Type in option value...",
+            placeholder="Filter by value...",
             func_changed=lambda text, col=self.TABLE_CONFIG.option: self.table_proxy.setFilterByColumn(text, col),
         )
 
