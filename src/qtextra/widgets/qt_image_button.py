@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 import typing as ty
 
 import qtawesome
@@ -70,11 +72,14 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     def set_toggle_qta(self, name: str, checked_name: str, connect: bool = True, **kwargs: ty.Any) -> None:
         """Set changeable icon."""
+        checked_kwargs = deepcopy(kwargs)
+
         name, kwargs_ = get_icon(name)
         kwargs.update(kwargs_)
-        checked_name = get_icon(checked_name)
+        checked_name, checked_kwargs_ = get_icon(checked_name)
+        checked_kwargs.update(checked_kwargs_)
         self._qta_data = (name, kwargs)
-        self._checked_qta_data = (checked_name, kwargs)
+        self._checked_qta_data = (checked_name, checked_kwargs)
         color_ = kwargs.pop("color", None)
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
         icon = qtawesome.icon(

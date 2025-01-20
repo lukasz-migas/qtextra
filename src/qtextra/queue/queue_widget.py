@@ -59,6 +59,7 @@ class QueueList(QScrollArea):
 
         main_layout = QVBoxLayout(scroll_widget)
         main_layout.setSpacing(2)
+        main_layout.setContentsMargins(1, 1, 1, 1)
         main_layout.addStretch(1)
 
         self.setWidgetResizable(True)
