@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-
 import typing as ty
+from copy import deepcopy
 
 import qtawesome
 from qtpy.QtCore import (  # type: ignore[attr-defined]

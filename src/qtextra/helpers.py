@@ -14,7 +14,18 @@ import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.typing import PathLike
 from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, QUrl
-from qtpy.QtGui import QColor, QCursor, QDesktopServices, QFont, QGuiApplication, QIcon, QImage, QMovie, QPixmap, QValidator
+from qtpy.QtGui import (
+    QColor,
+    QCursor,
+    QDesktopServices,
+    QFont,
+    QGuiApplication,
+    QIcon,
+    QImage,
+    QMovie,
+    QPixmap,
+    QValidator,
+)
 from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.typing import Callback, Orientation
@@ -706,7 +717,7 @@ def make_line_edit(
     func_changed: Callback | None = None,
     default: str = "",
     disabled: bool = False,
-        validator: QValidator | None = None,
+    validator: QValidator | None = None,
     **_kwargs,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
