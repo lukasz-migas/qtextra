@@ -291,7 +291,7 @@ class Theme(EventedModel):
         from pygments.styles import STYLE_MAP
 
         assert value in STYLE_MAP, (
-            "Incorrect `syntax_style` value provided. Please use one of the following:" f" {', '.join(STYLE_MAP)}"
+            f"Incorrect `syntax_style` value provided. Please use one of the following: {', '.join(STYLE_MAP)}"
         )
         return value
 
