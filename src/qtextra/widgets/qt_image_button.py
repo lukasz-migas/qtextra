@@ -151,6 +151,11 @@ class QtTogglePushButton(QtImagePushButton):
 
     evt_toggled = Signal(bool)
 
+    def __init__(self, *args, auto_connect: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if auto_connect:
+            self.auto_connect()
+
     def auto_connect(self) -> None:
         """Automatically connect."""
         self.evt_click.connect(self.toggle_state)

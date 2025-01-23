@@ -80,6 +80,7 @@ class QtSelectionList(QWidget):
         allow_toolbar: bool = True,
         allow_sort: bool = True,
         allow_filter: bool = True,
+        allow_visible_toggle: bool = True,
         enable_single_click: bool = False,
         double_click_to_select: bool = True,
     ):
@@ -87,6 +88,9 @@ class QtSelectionList(QWidget):
         self.allow_toolbar = allow_toolbar
         self.allow_sort = allow_sort
         self.allow_filter = allow_filter
+        self.allow_visible_toggle = allow_visible_toggle
+
+        # actions
         self.enable_single_click = enable_single_click
         self.double_click_to_select = double_click_to_select
         self.init_ui()
@@ -109,8 +113,30 @@ class QtSelectionList(QWidget):
             hp.make_qta_btn(self, "toggle_off", "Deselect all", func=self.on_deselect_all, average=True)
         )
         self.toolbar.add_widget(
-            hp.make_qta_btn(self, "invert_selection", "Invert selection", func=self.on_invert_selection, average=True)
+            hp.make_qta_btn(
+                self,
+                "invert_selection",
+                "Invert selection",
+                func=self.on_invert_selection,
+                average=True,
+                hide=not self.allow_visible_toggle,
+            )
         )
+        self.toolbar.add_widget(
+            hp.make_qta_btn(
+                self, "visible", "Show all", func=self.on_show_all, average=True, hide=not self.allow_visible_toggle
+            ),
+        )
+        self.toolbar.add_widget(
+            hp.make_qta_btn(
+                self,
+                "visible_off",
+                "Hide deselected",
+                func=self.on_hide_deselected,
+                average=True,
+            ),
+        )
+
         self.toolbar.add_widget(self.filter_by, stretch=True)
         self.toolbar.add_widget(self.info_label)
         if not self.allow_filter:
