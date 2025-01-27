@@ -335,10 +335,10 @@ class ViewBase:
         self.figure.plot_add_varrow(xpos=xpos, gid=gid)
         self.figure.repaint(repaint)
 
-    def add_vlines(self, vlines: float = 0, gid="vlines", repaint: bool = True):
+    def add_vlines(self, vlines: float = 0, gid="vlines", color: str = "k", repaint: bool = True):
         """Add vline."""
         self.figure.remove_gid(gid)
-        self.figure.plot_add_vlines(vlines, gid=gid)
+        self.figure.plot_add_vlines(vlines, gid=gid, color=color)
         self.figure.repaint(repaint)
 
     def remove_vline(self):

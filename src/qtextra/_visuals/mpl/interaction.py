@@ -38,11 +38,13 @@ class MPLInteraction(QWidget):
     evt_alt = Signal(list, list, list)
     evt_view_activate = Signal(str)
 
+    evt_move = Signal(tuple)
     evt_pick = Signal(object)
     evt_wheel = Signal()
     evt_pressed = Signal()
     evt_double_click = Signal()
     evt_released = Signal()
+    evt_ctrl_changed = Signal(bool)
     evt_ctrl_released = Signal(tuple)
     evt_ctrl_double_click = Signal(tuple)
 
@@ -247,24 +249,17 @@ class MPLInteraction(QWidget):
     def on_key_state(self, evt):
         """Update state of the key."""
         _modifiers = QGuiApplication.keyboardModifiers()
-        #         if modifiers == Qt.ControlModifier:
-        #             self._ctrl_key = True
-        #         elif modifiers == Qt.ShiftModifier:
-        #             self._shift_key = True
-        #         elif modifiers == Qt.AltModifier:
-        #             self._alt_key = True
-        #         elif modifiers == (Qt.ControlModifier | Qt.ShiftModifier):
-        #             self._ctrl_key, self._shift_key = True, True
-        #         elif modifiers == (Qt.AltModifier | Qt.ShiftModifier):
-        #             self._alt_key, self._shift_key = True, True
 
         self._key_press = evt.key is not None
         key = "" if evt.key is None else evt.key
+        ctrl_before = self._ctrl_key
         self._ctrl_key = "control" in key if not IS_MAC else "cmd" in key  # use command key on mac
         self._shift_key = "shift" in key
         self._alt_key = "alt" in key
         self._trigger_extraction = False
         self.evt_key.emit(key)
+        if ctrl_before != self._ctrl_key:
+            self.evt_ctrl_changed.emit(self._ctrl_key)
 
     def _reset_keys(self):
         """Utility function to reset keys whenever user enters/leaves the axes."""
@@ -390,7 +385,8 @@ class MPLInteraction(QWidget):
     def on_motion(self, evt):
         """Event on motion."""
         # send event
-        # if evt.xdata is not None and evt.ydata is not None:
+        if evt.xdata is not None and evt.ydata is not None:
+            self.evt_move.emit((evt.xdata, evt.ydata))
         #     pub.sendMessage("statusbar.update.coordinates", msg=self.get_motion_msg(evt))
 
         # drag label

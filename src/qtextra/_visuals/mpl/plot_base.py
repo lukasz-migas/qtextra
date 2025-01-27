@@ -52,10 +52,12 @@ class PlotBase(QWidget):
     evt_unregister = Signal()
 
     evt_pick = Signal()
+    evt_move = Signal(tuple)
     evt_wheel = Signal()
     evt_pressed = Signal()
     evt_double_click = Signal()
     evt_released = Signal()
+    evt_ctrl_changed = Signal(bool)
     evt_ctrl_released = Signal(tuple)
     evt_ctrl_double_click = Signal(tuple)
 
@@ -740,9 +742,10 @@ class PlotBase(QWidget):
             connect(self.zoom.evt_pick, self.evt_pick.emit, state=False, silent=True)
             connect(self.zoom.evt_pressed, self.evt_pressed.emit, state=False, silent=True)
             connect(self.zoom.evt_released, self.evt_released.emit, state=False, silent=True)
+            connect(self.zoom.evt_ctrl_changed, self.evt_ctrl_changed.emit, state=False, silent=True)
             connect(self.zoom.evt_ctrl_released, self.evt_ctrl_released.emit, state=False, silent=True)
             connect(self.zoom.evt_wheel, self.evt_wheel.emit, state=False, silent=True)
-            connect(self.zoom.evt_double_click, self.evt_double_click.emit, state=False, silent=True)
+            connect(self.zoom.evt_move, self.evt_move.emit, state=False, silent=True)
             connect(self.zoom.evt_ctrl_double_click, self.evt_ctrl_double_click.emit, state=False, silent=True)
 
         if arrays is None:
@@ -772,11 +775,13 @@ class PlotBase(QWidget):
                 zoom_color=self.zoom_color,
             )
         connect(self.zoom.evt_pick, self.evt_pressed.emit)
+        connect(self.zoom.evt_move, self.evt_move.emit)
         connect(self.zoom.evt_pressed, self.evt_pressed.emit)
         connect(self.zoom.evt_released, self.evt_released.emit)
         connect(self.zoom.evt_ctrl_released, self.evt_ctrl_released.emit)
         connect(self.zoom.evt_wheel, self.evt_wheel.emit)
         connect(self.zoom.evt_double_click, self.evt_double_click.emit)
+        connect(self.zoom.evt_ctrl_changed, self.evt_ctrl_changed.emit)
         connect(self.zoom.evt_ctrl_double_click, self.evt_ctrl_double_click.emit)
 
     def update_extents(self, extents: list, obj=None, arrays=None):

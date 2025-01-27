@@ -213,6 +213,9 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "invert_selection": "fa5s.exchange-alt",
     "pin_on": ("ph.push-pin-fill", {"rotated": -45}),
     "pin_off": "ph.push-pin-fill",
+    "minimize": "fa5s.window-minimize",
+    "maximize": "fa5s.window-maximize",
+    "fullscreen": "fa5s.expand",
 }
 
 
