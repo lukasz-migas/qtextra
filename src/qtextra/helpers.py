@@ -2506,7 +2506,7 @@ def get_color(
     return new_color
 
 
-def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
+def _get_confirm_dlg(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
 
@@ -2524,6 +2524,30 @@ def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you su
         )
     )
     dlg.setLayout(layout)
+    return dlg
+
+
+def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
+    """Confirm action."""
+    dlg = _get_confirm_dlg(parent, message, title)
+    return bool(dlg.exec_())
+
+
+def confirm_dont_ask_again(
+    parent: ty.Optional[QObject], message: str, title: str = "Are you sure?", config: ty.Any = None, attr: str = ""
+) -> bool:
+    """Confirm action."""
+
+    if not config or not attr:
+        func = lambda _: None
+        value = False
+    else:
+        func = partial(lambda value: config.update(**{attr: bool(value)}))
+        value = getattr(config, attr, False)
+
+    dlg = _get_confirm_dlg(parent, message, title)
+    layout = dlg.layout()
+    layout.addWidget(make_checkbox(dlg, "Don't ask again", func=func, value=value))
     return bool(dlg.exec_())
 
 
