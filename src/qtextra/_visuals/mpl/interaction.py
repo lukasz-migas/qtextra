@@ -630,7 +630,7 @@ class MPLInteraction(QWidget):
 
         This function will automatically update joint plots (x, y) with new data whenever user zooms-in or zooms-out
         """
-        if self.data_object is None or len(self.axes) == 3 and self.is_joint:
+        if self.data_object is None or (len(self.axes) == 3 and self.is_joint):
             return
 
         # get current limits
