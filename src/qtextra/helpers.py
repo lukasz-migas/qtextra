@@ -1070,6 +1070,7 @@ def make_btn(
     bold: bool = False,
     object_name: str = "",
     properties: dict[str, ty.Any] | None = None,
+    hide: bool = False,
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_buttons import QtPushButton
@@ -1090,6 +1091,8 @@ def make_btn(
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
     if object_name:
         widget.setObjectName(object_name)
+    if hide:
+        widget.hide()
     set_properties(widget, properties)
     return widget
 
@@ -2537,9 +2540,11 @@ def confirm_dont_ask_again(
     parent: ty.Optional[QObject], message: str, title: str = "Are you sure?", config: ty.Any = None, attr: str = ""
 ) -> bool:
     """Confirm action."""
-
     if not config or not attr:
-        func = lambda _: None
+
+        def func(_):
+            return None
+
         value = False
     else:
         func = partial(lambda value: config.update(**{attr: bool(value)}))
