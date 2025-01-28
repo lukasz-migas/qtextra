@@ -2511,7 +2511,7 @@ def _get_confirm_dlg(parent: ty.Optional[QObject], message: str, title: str = "A
     from qtpy.QtWidgets import QDialog
 
     dlg = QDialog(parent)
-    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore[attr-defined]
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)  # type: ignore[attr-defined]
     dlg.setObjectName("confirm_dialog")
     dlg.setMinimumSize(350, 200)
     dlg.setWindowTitle(title)
@@ -2582,6 +2582,7 @@ def choose_from_list(
     from qtextra.widgets.qt_multi_select import SelectionWidget
 
     dlg = SelectionWidget(parent, title=title, text=text)
+    dlg.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
     dlg.set_options(options, selected)
     if dlg.exec_() == Qw.QDialog.DialogCode.Accepted:
         return dlg.options
@@ -2593,7 +2594,7 @@ def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "War
     from qtpy.QtWidgets import QDialog
 
     dlg = QDialog(parent)
-    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowStaysOnTopHint)  # type: ignore[attr-defined]
+    dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
     dlg.setObjectName("confirm_dialog")
     dlg.setMinimumSize(350, 200)
     dlg.setWindowTitle(title)
