@@ -2537,9 +2537,11 @@ def confirm_dont_ask_again(
     parent: ty.Optional[QObject], message: str, title: str = "Are you sure?", config: ty.Any = None, attr: str = ""
 ) -> bool:
     """Confirm action."""
-
     if not config or not attr:
-        func = lambda _: None
+
+        def func(_):
+            return None
+
         value = False
     else:
         func = partial(lambda value: config.update(**{attr: bool(value)}))
