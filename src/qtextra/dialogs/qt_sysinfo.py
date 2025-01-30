@@ -38,6 +38,7 @@ class QtSystemInfo(QDialog):
 
     def __init__(self, system_info: str, citation_info: str, title: str = "", parent: QWidget | None = None):
         super().__init__(parent)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
 
         self._layout = QVBoxLayout(self)
 
