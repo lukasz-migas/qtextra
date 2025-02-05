@@ -290,9 +290,9 @@ class Theme(EventedModel):
     def _ensure_syntax_style(value: str) -> str:
         from pygments.styles import STYLE_MAP
 
-        assert (
-            value in STYLE_MAP
-        ), f"Incorrect `syntax_style` value provided. Please use one of the following: {', '.join(STYLE_MAP)}"
+        assert value in STYLE_MAP, (
+            f"Incorrect `syntax_style` value provided. Please use one of the following: {', '.join(STYLE_MAP)}"
+        )
         return value
 
     @validator("font_size", "header_size", pre=True, allow_reuse=True)
@@ -809,11 +809,6 @@ def build_theme_svgs(theme_name: str) -> str:
         theme_override={"warning": "warning", "logo_silhouette": "background"},
     )
     return str(out)
-
-
-def is_dark() -> bool:
-    """Check if theme is dark."""
-    return THEMES.is_dark
 
 
 THEMES: Themes = Themes()
