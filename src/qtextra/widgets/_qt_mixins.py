@@ -1,4 +1,5 @@
 """Mixin classes for Qt widgets."""
+
 import time
 import typing as ty
 from contextlib import contextmanager

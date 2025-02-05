@@ -6,7 +6,7 @@ from koyo.path import open_directory_alt
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QLabel, QTextBrowser, QTextEdit, QVBoxLayout, QWidget
 
-from qtextra.widgets.qt_clipboard_button import QtCopyToClipboardButton
+from qtextra.widgets.qt_button_clipboard import QtCopyToClipboardButton
 
 
 class QtSystemInfo(QDialog):

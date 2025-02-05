@@ -37,8 +37,6 @@ dependencies = [
     "qtawesome",
     "psygnal",
     "sentry_sdk>2",
-    "pyqt-toast-notification",
-    "qt-command-palette",
     "qtconsole>=4.5.1,!=4.7.6,!=5.4.2",
     "ipykernel>=5.2.0",
 ]
@@ -46,7 +44,8 @@ dependencies = [
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
-test = ["pytest>=6.0", "pytest-cov", "pytest-qt"]
+notify = ["pyqt-toast-notification"]
+palette = ["qt-command-palette"]
 pyside2 = ["pyside2"]
 pyside6 = ["pyside6"]
 pyqt5 = ["pyqt5"]
@@ -54,6 +53,7 @@ pyqt6 = ["pyqt6"]
 1d = ["vispy", "napari-plot"]
 2d = ["vispy", "napari==0.4.19"]
 plot = ["qtextra[1d]", "qtextra[2d]"]
+test = ["pytest>=6.0", "pytest-cov", "pytest-qt"]
 dev = [
     "black",
     "ipython",

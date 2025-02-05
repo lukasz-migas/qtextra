@@ -426,7 +426,7 @@ def show_tb(notification: ErrorNotification, parent):
 def copy_to_clipboard(notification: ErrorNotification, parent):
     """Copy traceback to clipboard."""
     from qtextra.utils.utilities import get_system_info
-    from qtextra.widgets.qt_clipboard_button import copy_text_to_clipboard
+    from qtextra.widgets.qt_button_clipboard import copy_text_to_clipboard
 
     html = "<b>More information</b><br><br>" + get_system_info(as_html=True) + "<br><br><b>Exception</b><br>"
     exception = notification.as_html()
@@ -445,7 +445,7 @@ def show_report(notification: ErrorNotification, parent):
 
     from qtextra import __issue_url__
     from qtextra.utils.utilities import get_system_info
-    from qtextra.widgets.qt_clipboard_button import copy_text_to_clipboard
+    from qtextra.widgets.qt_button_clipboard import copy_text_to_clipboard
 
     def _go_to_github():
         copy_text_to_clipboard(text.toMarkdown())
