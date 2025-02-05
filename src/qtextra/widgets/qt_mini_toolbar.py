@@ -8,7 +8,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_image_button import QtImagePushButton
+from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 
 class QtMiniToolbar(QFrame):

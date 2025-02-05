@@ -6,8 +6,8 @@ https://github.dev/napari/superqt/blob/f4d9881b0c64c0419fa2da182a1c403a01bd084f/
 
 from __future__ import annotations
 
-from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLayout, QWidget
 from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLayout, QWidget
 from superqt import QCollapsible
 
 import qtextra.helpers as hp
@@ -32,7 +32,7 @@ class QtCheckCollapsible(QCollapsible):
 
         self.icon_btn = hp.make_qta_btn(self, icon_name=icon, standout=True, average=True)
 
-        self.warning_label = hp.make_warning_label(self, "", icon_name=icon, normal=True)
+        self.warning_label = hp.make_warning_label(self, "", icon_name=warning_icon, normal=True)
 
         # create layout where the first item is checkbox
         layout = QHBoxLayout()

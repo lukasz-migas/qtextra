@@ -12,7 +12,7 @@ import qtextra.helpers as hp
 from qtextra.config import THEMES
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtFramelessPopup
-from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
+from qtextra.widgets.qt_table_view_check import FilterProxyModel, QtCheckableTableView
 
 
 def filter_selected(current_options: list[str], all_options: list[str]) -> list[str]:

@@ -378,7 +378,7 @@ class ScreenshotMixin:
 
     def clipboard(self):
         """Take screenshot af the viewer and put it in the clipboard."""
-        from qtextra.widgets.qt_copy_to_clipboard import copy_image_to_clipboard
+        from qtextra.widgets.qt_button_clipboard import copy_image_to_clipboard
 
         with self.run_with_screenshot():
             img = self._screenshot()

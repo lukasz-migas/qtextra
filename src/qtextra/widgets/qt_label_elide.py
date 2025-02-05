@@ -1,4 +1,5 @@
 """Eliding label."""
+
 from qtpy.QtCore import Qt
 from superqt import QElidingLabel
 

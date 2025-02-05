@@ -151,13 +151,6 @@ QProgressBar::chunk#step_indicator {
     background-color: {{ success }};
 }
 
-/* ------------ QtColorSwatch ------------ */
-#colorSwatch {
-   border-radius: 1px;
-   min-height: 22px;
-   min-width: 22px;
-}
-
 /* ----------------- Console ------------------ */
 
 QtConsole {
@@ -247,12 +240,7 @@ QtCheckableTableView QHeaderView {
     font-weight: bold;
 }
 
-QPushButton#update_btn{
-    color: {{ replace(success) }};
-    background-color: {{ success }};
-    font-size: {{ increase(font_size, 1) }};
-    font-weight: bold;
-}
+
 
 QComboBox#filter_combo {
     max-height: 14px;
@@ -268,14 +256,7 @@ QtPushButton#pick_option_button {
     font-size: {{ increase(font_size, 4) }};
     font-weight: bold;
 }
-QLabel#pick_option_label {
-    font-size: {{ increase(font_size, 2) }};
-}
 
-QLabel#window_title {
-    font-size: {{ increase(font_size, 4) }};
-    font-weight: bold;
-}
 
 QtConfirmCloseDialog QLabel {
     font-size: {{ increase(font_size, 4) }};

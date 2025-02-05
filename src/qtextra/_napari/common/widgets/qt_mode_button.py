@@ -5,7 +5,7 @@ from enum import Enum
 
 from napari.layers import Layer
 
-from qtextra.widgets.qt_image_button import QtImagePushButton
+from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 
 class QtModeRadioButton(QtImagePushButton):

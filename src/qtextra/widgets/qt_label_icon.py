@@ -12,7 +12,7 @@ from superqt.utils import qdebounced
 
 from qtextra.config import THEMES
 from qtextra.widgets._qta_mixin import QtaMixin
-from qtextra.widgets.qt_info_popup import InfoDialog
+from qtextra.dialogs.qt_info_popup import InfoDialog
 
 
 def make_png_label(icon_path: str, size: tuple[int, int] = (40, 40)) -> QLabel:

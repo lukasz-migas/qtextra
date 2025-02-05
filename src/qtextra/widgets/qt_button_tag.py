@@ -10,8 +10,8 @@ from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_flow_layout import QtFlowLayout
-from qtextra.widgets.qt_image_button import QtImagePushButton
+from qtextra.widgets.qt_button_icon import QtImagePushButton
+from qtextra.widgets.qt_layout_flow import QtFlowLayout
 
 # FIXME: There is a bug that only occurs when:
 #       1. Remove single widget. Dont check any of the existing widgets.

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from qtextra.widgets.qt_color_button import QtColorSwatch
+from qtextra.widgets.qt_button_color import QtColorSwatch
 
 
 @pytest.fixture

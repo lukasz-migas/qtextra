@@ -10,7 +10,7 @@ from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import SubWindowBase
-from qtextra.widgets.qt_icon_label import QtSeverityLabel
+from qtextra.widgets.qt_label_icon import QtSeverityLabel
 
 
 class QtToast(SubWindowBase):

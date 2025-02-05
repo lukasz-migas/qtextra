@@ -73,12 +73,12 @@ class QtIndicator(QWidget):
         # default paint
         width = self.rect().width()
         height = self.rect().height()
-        pos = QPoint(width - (width / 2) - 5, height - (height / 4) - 5)
+        pos = QPoint(width - int(width / 2) - 5, height - int(height / 4) - 5)
 
         paint = QPainter(self)
         pen = paint.pen()
         paint.setBrush(pen.brush())
-        paint.drawEllipse(pos, width / 4, height / 4)
+        paint.drawEllipse(pos, int(width / 4), int(height / 4))
 
     def start_pulse(self):
         """Start pulsating."""

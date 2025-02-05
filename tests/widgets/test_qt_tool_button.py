@@ -1,5 +1,5 @@
 import pytest
-from qtextra.widgets.qt_tool_button import QtToolButton
+from qtextra.widgets.qt_button_tool import QtToolButton
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMenu
 

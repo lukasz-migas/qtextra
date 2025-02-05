@@ -152,10 +152,18 @@ QtLockButton:hover, QtLockButton:hover{
     background: {{ primary }};
 }
 
-/* ----------------- QtPauseButton / QtLockButton ----------------- */
+
+/* ------------ QtColorSwatch ------------ */
 QtColorSwatch:hover {
     border: 2px solid {{ foreground }};
 }
+#colorSwatch {
+    border-radius: 1px;
+    min-height: 22px;
+    min-width: 22px;
+}
+
+/* ----------------- Other ----------------- */
 
 QtPushButton[with_menu=true]::menu-indicator {
     right: 5px;
@@ -166,4 +174,12 @@ QtPushButton[with_menu=true] QMenu::item {
 QtPushButton[with_menu=true] QMenu::item:selected {
     font-size: {{ increase(font_size, 3) }};
     background: {{ highlight }};
+}
+
+
+QPushButton#update_btn{
+    color: {{ replace(success) }};
+    background-color: {{ success }};
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
 }

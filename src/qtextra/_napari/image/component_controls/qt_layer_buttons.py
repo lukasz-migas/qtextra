@@ -13,7 +13,7 @@ from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSlider, QVBoxLayout, QW
 
 import qtextra.helpers as hp
 from qtextra._napari.image.components._viewer_key_bindings import toggle_grid, toggle_ndisplay
-from qtextra.widgets.qt_image_button import QtImagePushButton
+from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 if ty.TYPE_CHECKING:
     from qtextra._napari.image.components.viewer_model import ViewerModel

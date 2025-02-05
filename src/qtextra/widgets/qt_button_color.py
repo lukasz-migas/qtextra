@@ -14,6 +14,22 @@ AnyColorType = ty.Union[ColorType, QColor]
 TRANSPARENT = np.array([0, 0, 0, 0], np.float32)
 
 
+FILL_QSS = """
+    QPushButton#color_btn {
+        border: none;
+        margin: 0px;
+        padding: 0px;
+        background-color: COLOR;
+    }
+"""
+EMPTY_QSS = FILL_QSS.replace("COLOR", "transparent")
+HOVER_QSS = """
+    QPushButton#color_btn:hover {
+        border: 2px solid black;
+    }
+"""
+
+
 class QtColorButton(QPushButton):
     """
     Custom widget to allow selection of color.
@@ -66,11 +82,9 @@ class QtColorButton(QPushButton):
             self.evt_color_changed.emit(color)
 
         if self._color:
-            self.setStyleSheet(
-                f"QPushButton#color_btn {{border: none; margin: 0px; padding: 0px; background-color: {self._color};}}"
-            )
+            self.setStyleSheet(FILL_QSS.replace("COLOR", self._color) + HOVER_QSS)
         else:
-            self.setStyleSheet("QPushButton#color_btn {border: none; margin: 0px; padding: 0px;}")
+            self.setStyleSheet(EMPTY_QSS + HOVER_QSS)
 
     def onColorPicker(self):
         """Show color-picker dialog to select color.

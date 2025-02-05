@@ -92,9 +92,7 @@ class ImageViewer(QGraphicsView):
         self.fitInView(self.pixmap_item, Qt.AspectRatioMode.KeepAspectRatio)
 
     def wheelEvent(self, event: QWheelEvent):
-        """
-        Handle zoom in/out with mouse wheel.
-        """
+        """Handle zoom in/out with mouse wheel."""
         # Determine the mouse position relative to the scene
         mouse_scene_pos = self.mapToScene(event.position().toPoint())
 
@@ -112,9 +110,7 @@ class ImageViewer(QGraphicsView):
         self.fitInView(self.pixmap_item, Qt.AspectRatioMode.KeepAspectRatio)
 
     def zoom(self, direction, center_point):
-        """
-        Adjust zoom level and apply scaling centered around a point.
-        """
+        """Adjust zoom level and apply scaling centered around a point."""
         if direction > 0:
             factor = self.base_zoom_factor
             self.zoom_level += 1
@@ -135,9 +131,7 @@ class ImageViewer(QGraphicsView):
         self.centerOn(self.mapToScene(self.viewport().rect().center()) + offset)
 
     def reset_zoom(self):
-        """
-        Reset the zoom to its original state and fit the image to the view.
-        """
+        """Reset the zoom to its original state and fit the image to the view."""
         self.resetTransform()
         self.zoom_level = 0
         self.fitInView(self.pixmap_item, Qt.AspectRatioMode.KeepAspectRatio)

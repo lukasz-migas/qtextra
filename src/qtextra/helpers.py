@@ -34,23 +34,23 @@ from qtextra.utils.utilities import IS_MAC, IS_WIN
 
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
-    from qtextra.widgets.qt_buttons import QtActivePushButton, QtPushButton, QtRichTextButton
-    from qtextra.widgets.qt_click_label import QtClickableLabel, QtClickLabel
+    from qtextra.widgets.qt_button import QtActivePushButton, QtPushButton, QtRichTextButton
+    from qtextra.widgets.qt_label_click import QtClickableLabel, QtClickLabel
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
-    from qtextra.widgets.qt_color_button import QtColorSwatch
-    from qtextra.widgets.qt_eliding_label import QtElidingLabel
-    from qtextra.widgets.qt_flow_layout import QtFlowLayout
-    from qtextra.widgets.qt_icon_label import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
-    from qtextra.widgets.qt_image_button import QtImagePushButton, QtLockButton, QtToolbarPushButton
+    from qtextra.widgets.qt_button_color import QtColorSwatch
+    from qtextra.widgets.qt_label_elide import QtElidingLabel
+    from qtextra.widgets.qt_layout_flow import QtFlowLayout
+    from qtextra.widgets.qt_label_icon import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
+    from qtextra.widgets.qt_button_icon import QtImagePushButton, QtLockButton, QtToolbarPushButton
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
-    from qtextra.widgets.qt_multi_select import QtMultiSelect
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
-    from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
-    from qtextra.widgets.qt_progress_button import QtActiveProgressBarButton
-    from qtextra.widgets.qt_scroll_label import QtScrollableLabel
-    from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
+    from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
+    from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
+    from qtextra.widgets.qt_label_scroll import QtScrollableLabel
+    from qtextra.widgets.qt_combobox_search import QtSearchableComboBox
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
-    from qtextra.widgets.qt_tool_button import QtToolButton
+    from qtextra.widgets.qt_button_tool import QtToolButton
 
     try:
         from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
@@ -343,7 +343,7 @@ def make_label(
     **kwargs: ty.Any,
 ) -> QtClickLabel:
     """Make QLabel element."""
-    from qtextra.widgets.qt_click_label import QtClickLabel
+    from qtextra.widgets.qt_label_click import QtClickLabel
 
     tooltip = kwargs.get("description", tooltip)
     text = kwargs.get("default", text)
@@ -397,7 +397,7 @@ def _make_tooltip_label(
     retain_size: bool = False,
     **kwargs: ty.Any,
 ):
-    from qtextra.widgets.qt_icon_label import QtQtaTooltipLabel
+    from qtextra.widgets.qt_label_icon import QtQtaTooltipLabel
 
     widget = QtQtaTooltipLabel(parent=parent)
     widget.set_qta(icon_name)
@@ -534,7 +534,7 @@ def make_scrollable_label(
     activated_func: Callback | None = None,
 ) -> QtScrollableLabel:
     """Make QLabel element."""
-    from qtextra.widgets.qt_scroll_label import QtScrollableLabel
+    from qtextra.widgets.qt_label_scroll import QtScrollableLabel
 
     widget = QtScrollableLabel(parent, text=text)
     widget.setObjectName(object_name)
@@ -573,7 +573,7 @@ def make_click_label(
     tooltip: str = "",
 ) -> QtClickableLabel:
     """Make clickable label."""
-    from qtextra.widgets.qt_click_label import QtClickableLabel
+    from qtextra.widgets.qt_label_click import QtClickableLabel
 
     widget = QtClickableLabel(text, parent)
     widget.setElideMode(elide)
@@ -605,7 +605,7 @@ def make_qta_label(
     **kwargs: ty.Any,
 ) -> QtQtaLabel:
     """Make QLabel element."""
-    from qtextra.widgets.qt_icon_label import QtQtaLabel, QtQtaTooltipLabel
+    from qtextra.widgets.qt_label_icon import QtQtaLabel, QtQtaTooltipLabel
 
     if hover:
         widget = QtQtaTooltipLabel(parent=parent)
@@ -650,7 +650,7 @@ def make_eliding_label(
     font_size: int | None = None,
 ) -> QtElidingLabel:
     """Make single-line QLabel with automatic eliding."""
-    from qtextra.widgets.qt_eliding_label import QtElidingLabel
+    from qtextra.widgets.qt_label_elide import QtElidingLabel
 
     widget = QtElidingLabel(parent=parent, elide=elide)
     widget.setElideMode(elide)
@@ -771,7 +771,7 @@ def make_multi_select(
     **kwargs: ty.Any,
 ) -> QtMultiSelect:
     """Make multi select."""
-    from qtextra.widgets.qt_multi_select import QtMultiSelect
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
 
     return QtMultiSelect.from_schema(
         parent,
@@ -843,7 +843,7 @@ def make_eliding_combobox(
     **kwargs: ty.Any,
 ) -> Qw.QComboBox:
     """Make QComboBox."""
-    from qtextra.widgets.qt_eliding_combobox import QtElideComboBox
+    from qtextra.widgets.qt_combobox_elide import QtElideComboBox
 
     if enum is not None:
         items = enum
@@ -884,7 +884,7 @@ def make_checkable_combobox(
     **kwargs: ty.Any,
 ) -> Qw.QComboBox:
     """Make QComboBox."""
-    from qtextra.widgets.qt_checkable_combobox import QtCheckableComboBox
+    from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
 
     if enum is not None:
         items = enum
@@ -982,7 +982,7 @@ def make_searchable_combobox(
     **kwargs: ty.Any,
 ) -> QtSearchableComboBox:
     """Make QComboBox."""
-    from qtextra.widgets.qt_searchable_combobox import QtSearchableComboBox
+    from qtextra.widgets.qt_combobox_search import QtSearchableComboBox
 
     if enum is not None:
         items = enum
@@ -1073,7 +1073,7 @@ def make_btn(
     hide: bool = False,
 ) -> QtPushButton:
     """Make button."""
-    from qtextra.widgets.qt_buttons import QtPushButton
+    from qtextra.widgets.qt_button import QtPushButton
 
     widget = QtPushButton(parent=parent)
     widget.setText(text)
@@ -1106,7 +1106,7 @@ def make_tool_btn(
     font_size: int | None = None,
 ) -> QtPushButton:
     """Make button."""
-    from qtextra.widgets.qt_tool_button import QtToolButton
+    from qtextra.widgets.qt_button_tool import QtToolButton
 
     widget = QtToolButton(parent=parent)
     widget.setText(text)
@@ -1131,7 +1131,7 @@ def make_rich_btn(
     func: Callback | None = None,
 ) -> QtRichTextButton:
     """Make button."""
-    from qtextra.widgets.qt_buttons import QtRichTextButton
+    from qtextra.widgets.qt_button import QtRichTextButton
 
     widget = QtRichTextButton(parent, text)
     widget.setCheckable(checkable)
@@ -1153,7 +1153,7 @@ def make_active_btn(
     func: Callback | None = None,
 ) -> QtActivePushButton:
     """Make button with activity indicator."""
-    from qtextra.widgets.qt_buttons import QtActivePushButton
+    from qtextra.widgets.qt_button import QtActivePushButton
 
     widget = QtActivePushButton(parent=parent)
     widget.setParent(parent)
@@ -1175,7 +1175,7 @@ def make_active_progress_btn(
     cancel_func: Callback | None = None,
 ) -> QtActiveProgressBarButton:
     """Make button with activity indicator."""
-    from qtextra.widgets.qt_progress_button import QtActiveProgressBarButton
+    from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
 
     widget = QtActiveProgressBarButton(parent=parent)
     widget.setParent(parent)
@@ -1232,7 +1232,7 @@ def make_qta_btn(
     **kwargs: ty.Any,
 ) -> QtImagePushButton:
     """Make button with qtawesome icon."""
-    from qtextra.widgets.qt_image_button import QtImagePushButton
+    from qtextra.widgets.qt_button_icon import QtImagePushButton
 
     widget = QtImagePushButton(parent=parent)
     widget.set_qta(icon_name, **kwargs)
@@ -1285,7 +1285,7 @@ def make_lock_btn(
     standout: bool = False,
 ) -> QtLockButton:
     """Make lock button."""
-    from qtextra.widgets.qt_image_button import QtLockButton
+    from qtextra.widgets.qt_button_icon import QtLockButton
 
     widget = QtLockButton(parent=parent)
     widget.auto_connect()
@@ -1317,7 +1317,7 @@ def make_svg_btn(
     checkable: bool = False,
 ) -> QtImagePushButton:
     """Make button."""
-    from qtextra.widgets.qt_image_button import QtImagePushButton
+    from qtextra.widgets.qt_button_icon import QtImagePushButton
 
     widget = QtImagePushButton(parent=parent)
     widget.setObjectName(object_name)
@@ -1350,7 +1350,7 @@ def make_toolbar_btn(
     icon_kwargs: dict | None = None,
 ) -> QtToolbarPushButton:
     """Make button."""
-    from qtextra.widgets.qt_image_button import QtToolbarPushButton
+    from qtextra.widgets.qt_button_icon import QtToolbarPushButton
 
     if icon_kwargs is None:
         icon_kwargs = {}
@@ -1387,7 +1387,7 @@ def make_swatch(
     **kwargs: ty.Any,
 ) -> QtColorSwatch:
     """Make color swatch."""
-    from qtextra.widgets.qt_color_button import QtColorSwatch
+    from qtextra.widgets.qt_button_color import QtColorSwatch
 
     if value is None:
         value = default
@@ -1408,7 +1408,7 @@ def make_swatch_grid(
     """Make grid of swatches."""
     from koyo.utilities import chunks
 
-    from qtextra.widgets.qt_flow_layout import QtFlowLayout
+    from qtextra.widgets.qt_layout_flow import QtFlowLayout
 
     swatches = []
     if use_flow_layout:
@@ -1456,7 +1456,7 @@ def make_bitmap_tool_btn(
     tooltip: str | None = None,
 ) -> QtToolButton:
     """Make bitmap button."""
-    from qtextra.widgets.qt_tool_button import QtToolButton
+    from qtextra.widgets.qt_button_tool import QtToolButton
 
     widget = QtToolButton(parent)
     widget.setIcon(icon)
@@ -1962,7 +1962,7 @@ def make_flow_layout(
     parent: Qw.QWidget | None = None,
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
-    from qtextra.widgets.qt_flow_layout import QtFlowLayout
+    from qtextra.widgets.qt_layout_flow import QtFlowLayout
 
     layout = QtFlowLayout(parent)
     if spacing is not None:
@@ -2019,7 +2019,7 @@ def make_progressbar(
 ) -> ty.Union[Qw.QProgressBar, QtLabeledProgressBar]:
     """Make progressbar."""
     if with_progress:
-        from qtextra.widgets.qt_progress_bar import QtLabeledProgressBar
+        from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
 
         widget = QtLabeledProgressBar(parent)
     else:
@@ -2563,7 +2563,7 @@ def choose(
     orientation: Orientation = "vertical",
 ) -> ty.Any:
     """Chose from list."""
-    from qtextra.widgets.qt_pick_option import QtScrollablePickOption
+    from qtextra.widgets.qt_select_one import QtScrollablePickOption
 
     if isinstance(options, list):
         options = {opt: opt for opt in options}
@@ -2582,7 +2582,7 @@ def choose_from_list(
     text: str = "",
 ) -> list[str]:
     """Choose from list."""
-    from qtextra.widgets.qt_multi_select import SelectionWidget
+    from qtextra.widgets.qt_select_multi import SelectionWidget
 
     dlg = SelectionWidget(parent, title=title, text=text)
     dlg.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
@@ -3329,6 +3329,26 @@ def check_if_outside_for_widget(parent: Qw.QWidget, pos: QPoint, sz_hint: QSize)
         # Move down if the widget starts too far up
         pos.setY(available_geo.top())
     return pos
+
+
+def get_current_screen() -> ty.Any:
+    """Get current screen."""
+    cursorPos = QCursor.pos()
+
+    for s in Qw.QApplication.screens():
+        if s.geometry().contains(cursorPos):
+            return s
+    return None
+
+
+def get_current_screen_geometry(avaliable: bool = True) -> QRect:
+    """Get current screen geometry."""
+    screen = get_current_screen() or Qw.QApplication.primaryScreen()
+
+    # this should not happen
+    if not screen:
+        return QRect(0, 0, 1920, 1080)
+    return screen.availableGeometry() if avaliable else screen.geometry()
 
 
 def copy_text_to_clipboard(text: str) -> None:

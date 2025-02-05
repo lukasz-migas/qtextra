@@ -12,8 +12,8 @@ from qtpy.QtGui import QFont, QIcon, QMouseEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QSizePolicy, QStatusBar, QWidget
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_icon_label import QtQtaLabel
-from qtextra.widgets.qt_tool_button import QtToolButton
+from qtextra.widgets.qt_label_icon import QtQtaLabel
+from qtextra.widgets.qt_button_tool import QtToolButton
 
 __all__ = [
     "QtStatusbarLabel",

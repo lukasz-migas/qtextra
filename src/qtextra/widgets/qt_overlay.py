@@ -7,7 +7,7 @@ from qtpy.QtGui import QPainter
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QStyle, QStyleOption, QVBoxLayout, QWidget
 
 from qtextra.helpers import make_btn
-from qtextra.widgets.qt_icon_label import QtIconLabel
+from qtextra.widgets.qt_label_icon import QtIconLabel
 
 
 # noinspection PyPep8Naming

@@ -38,7 +38,7 @@ from qtextra.mixins import CloseMixin, ConfigMixin, DocumentationMixin, Indicato
 if ty.TYPE_CHECKING:
     from qtextra._napari.image.wrapper import NapariImageView
     from qtextra._napari.line.wrapper import NapariLineView
-    from qtextra.widgets.qt_image_button import QtExpandButton
+    from qtextra.widgets.qt_button_icon import QtExpandButton
 
 
 class ScreenManager:

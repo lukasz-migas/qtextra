@@ -1,0 +1,20 @@
+QLabel#error_label {
+    color : {{ error }};
+}
+
+QLabel#warning_label {
+    color : {{ warning }};
+}
+
+QLabel#success_label {
+    color : {{ success }};
+}
+
+QLabel#pick_option_label {
+    font-size: {{ increase(font_size, 2) }};
+}
+
+QLabel#window_title {
+    font-size: {{ increase(font_size, 4) }};
+    font-weight: bold;
+}

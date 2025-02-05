@@ -1,9 +1,12 @@
 """Modified SystemTrayIcon."""
+
 # Third-party imports
 from qtpy.QtWidgets import QSystemTrayIcon
 
 
 class QtSystemTrayIcon(QSystemTrayIcon):
+    """Modified SystemTrayIcon."""
+
     is_destroyed = False
 
     def __init__(self, parent):

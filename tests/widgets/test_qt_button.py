@@ -1,5 +1,5 @@
 import pytest
-from qtextra.widgets.qt_buttons import QtActivePushButton
+from qtextra.widgets.qt_button import QtActivePushButton
 
 
 @pytest.fixture

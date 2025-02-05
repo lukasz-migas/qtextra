@@ -33,7 +33,7 @@ LOOP_COUNTS = {
 LOOP_MODE_TRANSLATIONS = {LoopMode.ONCE: "Once", LoopMode.LOOP: "Loop", LoopMode.BACK_AND_FORTH: "Back-and-forth"}
 
 
-class QtAmnimationBase(QObject):
+class QtAnimationBase(QObject):
     """Animation base.
 
     This class is responsible for animating/progressing through set of frames. This can include different ion images,

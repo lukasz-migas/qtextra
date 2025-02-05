@@ -1,126 +1,166 @@
-"""Progress bar with label."""
+"""Loading bar."""
 
-from __future__ import annotations
-
-from napari.utils.events import Event
-from qtpy import QtCore
-from qtpy.QtWidgets import QApplication, QHBoxLayout, QLabel, QProgressBar, QVBoxLayout, QWidget
-
-from qtextra.utils.progress import Progress
+from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt
+from qtpy.QtGui import QColor, QPainter
+from qtpy.QtWidgets import QProgressBar
 
 
-class QtLabeledProgressBar(QWidget):
-    """QProgressBar with QLabels for description and ETA."""
+class QtLineProgressBar(QProgressBar):
+    """Thin progress bar."""
 
-    def __init__(self, parent: QWidget | None = None, progress: Progress | None = None) -> None:
-        super().__init__(parent)
-        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
+    Direction = 0
+    Height = 2
+    Color = QColor("#00d989")
+    FailedColor = QColor("#ed3814")
 
-        self.progress = progress
+    # Enum attributes
+    TOP = 0
+    BOTTOM = 1
+    Instances = {}
 
-        self.description_label = QLabel()
-        self.qt_progress_bar = QProgressBar()
-        self.qt_progress_bar.setTextVisible(True)
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(*args, parent=parent, **kwargs)
+        if parent:
+            parent.installEventFilter(self)
+        self._height = None  # height of the widget
+        self._color = None  # color of the progress bar
+        self._failed_color = None  # color when progress had failed
+        self._direction = None  # direction
+        self._alpha = 255  # transparency
+        self.is_error = False  # flag to indicate whether progress had failed
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.setTextVisible(False)
+        self.animation = QPropertyAnimation(self, b"alpha", self, loopCount=1, duration=1000)
+        self.animation.setEasingCurve(QEasingCurve.Type.SineCurve)
+        self.animation.setStartValue(0)
+        self.animation.setEndValue(255)
+        self.Instances[self] = self
 
-        layout = QHBoxLayout()
-        layout.addWidget(self.description_label)
-        layout.addWidget(self.qt_progress_bar)
+    @property
+    def alpha(self):
+        """Return alpha."""
+        return self._alpha
 
-        pbar_layout = QVBoxLayout(self)
-        pbar_layout.addLayout(layout, stretch=True)
-        pbar_layout.setContentsMargins(0, 0, 0, 0)
-        pbar_layout.setSpacing(0)
+    @alpha.setter
+    def alpha(self, alpha):
+        self._alpha = alpha
+        QProgressBar.update(self)
 
-        self.setMinimum = self.qt_progress_bar.setMinimum
-        self.setMaximum = self.qt_progress_bar.setMaximum
+    def paintEvent(self, _):
+        """Paint event."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        # painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
+        # background color
+        painter.fillRect(self.rect(), Qt.transparent)
+        # progress
+        ratio = (self.value() - self.minimum()) / (self.maximum() - self.minimum())
+        width = self.rect().width() * ratio
+        if self.is_error:
+            color = QColor(self._failed_color or QtLineProgressBar.FailedColor)
+        else:
+            color = QColor(self._color or QtLineProgressBar.Color)
+        color.setAlpha(self._alpha)
+        painter.setBrush(color)
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(QRectF(0, 0, width, self.height()), 2, 2)
 
-    def setRange(self, min_value: int, max_value: int) -> None:
-        """Set range."""
-        self.qt_progress_bar.setRange(min_value, max_value)
+    def eventFilter(self, obj, event):
+        """Filter events."""
+        if event.type() == event.Resize:
+            # resize event
+            widget = QtLineProgressBar.Instances.get(obj, None)
+            if widget:
+                direction = widget._direction or QtLineProgressBar.Direction
+                height = widget._height or QtLineProgressBar.Height
+                widget.setGeometry(
+                    0, 0 if direction == QtLineProgressBar.TOP else obj.height() - height, obj.width(), height
+                )
+        return super().eventFilter(obj, event)
 
-    def setValue(self, value: int) -> None:
-        """Set value."""
-        self.qt_progress_bar.setValue(value)
-        QApplication.processEvents()
+    def start(self, minimum=0, maximum=100, height=None, direction=None, color=None, failed_color=None):
+        """Create a loading bar.
 
-    def setDescription(self, value: str) -> None:
-        """Set description."""
-        self.description_label.setText(value)
-        QApplication.processEvents()
+        Parameters
+        ----------
+        minimum : int
+            Lower step value.
+        maximum : int
+            Upper step value.
+        height : int
+            Height of the progress bar.
+        direction : int
+            Progress bar position
+        color : str
+            Success color
+        failed_color : str
+            Fail color.
+        """
+        self._height = height
+        self._color = color
+        self._failed_color = failed_color
+        self._direction = direction
+        self.setRange(minimum, maximum)
+        self.setValue(minimum)
+        direction = self._direction or QtLineProgressBar.Direction
+        height = self._height or QtLineProgressBar.Height
+        self.setGeometry(
+            0,
+            0 if direction == QtLineProgressBar.TOP else self.parent().height() - height,
+            self.parent().width(),
+            height,
+        )
 
-    def _set_value(self, event: Event) -> None:
-        self.setValue(event.value)
+    def finish(self):
+        """Finish."""
+        self._alpha = 255
+        self.is_error = False
+        self.setValue(self.maximum())
+        self.animation.start()
 
-    def _get_value(self) -> int:
-        return self.qt_progress_bar.value()
+    def error(self):
+        """Raise error."""
+        self._alpha = 255
+        self.is_error = True
+        self.setValue(self.maximum())
+        self.animation.start()
 
-    def _set_description(self, event: Event) -> None:
-        self.setDescription(event.value)
-
-    def _make_indeterminate(self, event: Event) -> None:
-        self.setRange(0, 0)
-
-    def _set_eta(self, event: Event) -> None:
-        self.qt_progress_bar.setFormat(event.value)
-
-    def _on_clear(self, event: Event) -> None:
-        self.description_label.setText("")
-
-
-def set_progress_bar(progress: Progress, progress_bar: QtLabeledProgressBar):
-    """Make progress bar."""
-    progress.gui = True
-    progress.leave = False
-
-    # connect progress object events to updating progress bar
-    progress.events.value.connect(progress_bar._set_value)
-    progress.events.description.connect(progress_bar._set_description)
-    progress.events.overflow.connect(progress_bar._make_indeterminate)
-    progress.events.eta.connect(progress_bar._set_eta)
-    progress.events.close.connect(progress_bar._on_clear)
-
-    # set its range etc. based on progress object
-    if progress.total is not None:
-        progress_bar.setRange(progress.n, progress.total)
-        progress_bar.setValue(progress.n)
-    else:
-        progress_bar.setRange(0, 0)
-        progress.total = 0
-    progress_bar.setDescription(progress.desc)
-
-
-def _test(pbar):
-    import time
-
-    prog = Progress(range(50))
-    set_progress_bar(prog, pbar)
-    for _v in prog:
-        time.sleep(0.1)
-    prog.close()
+    def update_value(self, value):
+        """Update."""
+        self._alpha = 255
+        self.is_error = False
+        self.show()
+        self.setValue(value)
 
 
 if __name__ == "__main__":  # pragma: no cover
-    import sys
-    from functools import partial
 
-    from qtpy.QtWidgets import QPushButton
+    def _main():  # type: ignore[no-untyped-def]
+        import sys
 
-    from qtextra.utils.dev import qframe
+        from qtextra.utils.dev import qmain, theme_toggle_btn
 
-    app, frame, ha = qframe(False)
-    frame.setLayout(ha)
-    frame.setMinimumSize(400, 400)
+        app, frame, ha = qmain(False)
+        frame.setMinimumSize(600, 600)
+        ha.addWidget(theme_toggle_btn(frame))
 
-    pbar1 = QtLabeledProgressBar()
-    ha.addWidget(pbar1)
+        widget = QtLineProgressBar(parent=frame)
+        widget.start(height=50)
+        widget.update_value(50)
+        ha.addWidget(widget)
 
-    pbar2 = QtLabeledProgressBar()
-    ha.addWidget(pbar2)
+        widget = QtLineProgressBar(parent=frame)
+        widget.start(height=1, direction=QtLineProgressBar.TOP)
+        widget.update_value(30)
+        ha.addWidget(widget)
 
-    btn = QPushButton("Press me to start")
-    btn.clicked.connect(partial(_test, pbar1))
-    btn.clicked.connect(partial(_test, pbar2))
-    ha.addWidget(btn)
+        widget = QtLineProgressBar(parent=frame)
+        widget.start(height=1, direction=QtLineProgressBar.TOP)
+        widget.update_value(76)
+        ha.addWidget(widget)
 
-    frame.show()
-    sys.exit(app.exec_())
+        frame.show()
+        sys.exit(app.exec_())
+
+    _main()

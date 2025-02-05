@@ -112,5 +112,10 @@ if __name__ == "__main__":  # pragma: no cover
     btn1.setText("TEST BUTTON")
     ha.addWidget(btn1)
 
+    btn1 = QtRichTextButton(frame)
+    btn1.clicked.connect(_test)
+    btn1.setText("TEST <b>button</b>")
+    ha.addWidget(btn1)
+
     frame.show()
     sys.exit(app.exec_())

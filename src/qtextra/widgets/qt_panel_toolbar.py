@@ -21,7 +21,7 @@ from qtpy.QtWidgets import (  # type: ignore[attr-defined]
 
 import qtextra.helpers as hp
 from qtextra.utils.utilities import connect
-from qtextra.widgets.qt_image_button import QtToolbarPushButton
+from qtextra.widgets.qt_button_icon import QtToolbarPushButton
 
 
 class QtAboutWidget(QWidget):

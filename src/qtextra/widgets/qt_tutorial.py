@@ -14,6 +14,8 @@ import qtextra.helpers as hp
 class Position(str, Enum):
     """Position."""
 
+    CENTER = "center"
+
     LEFT_TOP = "left_top"
     LEFT = "left"
     LEFT_BOTTOM = "left_bottom"
@@ -120,19 +122,21 @@ class QtTutorial(QDialog):
         self.chevron_right_top = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
         self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
         self.chevron_right_bottom = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
+
         self.chevrons = {
-            Position.BOTTOM_LEFT: self.chevron_up_left,
-            Position.BOTTOM: self.chevron_up_mid,
-            Position.BOTTOM_RIGHT: self.chevron_up_right,
-            Position.TOP_LEFT: self.chevron_down_left,
-            Position.TOP: self.chevron_down_mid,
-            Position.TOP_RIGHT: self.chevron_down_right,
-            Position.RIGHT_TOP: self.chevron_left_top,
-            Position.RIGHT: self.chevron_left_mid,
-            Position.RIGHT_BOTTOM: self.chevron_left_bottom,
-            Position.LEFT_TOP: self.chevron_right_top,
-            Position.LEFT: self.chevron_right_mid,
-            Position.LEFT_BOTTOM: self.chevron_right_bottom,
+            Position.CENTER: None,
+            Position.TOP_LEFT: self.chevron_up_left,
+            Position.TOP: self.chevron_up_mid,
+            Position.TOP_RIGHT: self.chevron_up_right,
+            Position.BOTTOM_LEFT: self.chevron_down_left,
+            Position.BOTTOM: self.chevron_down_mid,
+            Position.BOTTOM_RIGHT: self.chevron_down_right,
+            Position.LEFT_TOP: self.chevron_left_top,
+            Position.LEFT: self.chevron_left_mid,
+            Position.LEFT_BOTTOM: self.chevron_left_bottom,
+            Position.RIGHT_TOP: self.chevron_right_top,
+            Position.RIGHT: self.chevron_right_mid,
+            Position.RIGHT_BOTTOM: self.chevron_right_bottom,
         }
 
         header_widget = QWidget(self)
@@ -244,23 +248,33 @@ class QtTutorial(QDialog):
         position = Position(position)
         x_pad, y_pad = 5, 5
         popup_size = self.size()
-        icon_pos = self.chevrons[position].pos()
+        chevron = self.chevrons[position]
+        if chevron:
+            icon_pos = chevron.pos()
+            x_offset = int(chevron.size().width() / 2)
+            y_offset = int(chevron.size().height() / 2)
+        else:
+            icon_pos = QPoint(0, 0)
+            x_offset = 0
+            y_offset = 0
+
         x_pos_offset, y_pos_offset = position_offset
-        x_offset = int(self.chevrons[position].size().width() / 2)
-        y_offset = int(self.chevrons[position].size().height() / 2)
         rect_of_widget = widget.rect()
-        if position in ["left", "left_top", "left_bottom"]:
+        if position in ["right", "right_top", "right_bottom"]:
             x = rect_of_widget.left() - popup_size.width() - x_pad - x_pos_offset
             y = rect_of_widget.center().y() - icon_pos.y() - y_offset - y_pos_offset
-        elif position in ["right", "right_top", "right_bottom"]:
+        elif position in ["left", "left_top", "left_bottom"]:
             x = rect_of_widget.right() + x_pad - x_pos_offset
             y = rect_of_widget.center().y() - icon_pos.y() - y_offset - y_pos_offset
-        elif position in ["top", "top_left", "top_right"]:
-            x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
-            y = rect_of_widget.top() - popup_size.height() - y_pad - y_pos_offset
         elif position in ["bottom", "bottom_left", "bottom_right"]:
             x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
+            y = rect_of_widget.top() - popup_size.height() - y_pad - y_pos_offset
+        elif position in ["top", "top_left", "top_right"]:
+            x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
             y = rect_of_widget.bottom() + y_pad - y_pos_offset
+        elif position in ["center"]:
+            x = rect_of_widget.center().x() - popup_size.width() / 2
+            y = rect_of_widget.center().y() - popup_size.height() / 2
         else:
             raise ValueError(f"Invalid position '{position}'.")
         pos = widget.mapToGlobal(QPoint(int(x), int(y)))
@@ -272,6 +286,8 @@ class QtTutorial(QDialog):
         position = Position(position)
         if self.ALLOW_CHEVRON:
             for key, chevron in self.chevrons.items():
+                if not chevron:
+                    continue
                 chevron.setVisible(key == position)
 
     def on_next(self) -> None:
@@ -305,25 +321,37 @@ class QtTutorial(QDialog):
             super().keyPressEvent(event)
 
 
-#
-def _popover(frame, widget):
-    text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-    et dolore magna aliqua. Vestibulum lorem sed risus ultricies tristique nulla aliquet. Malesuada nunc vel risus
-     commodo viverra maecenas. Nascetur ridiculus mus mauris vitae ultricies leo. Tellus in hac habitasse platea
-     dictumst vestibulum rhoncus. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate.
-     Amet nulla facilisi morbi tempus iaculis urna id volutpat lacus. Aliquet nec ullamcorper sit amet risus nullam
-     eget felis. Pharetra magna ac placerat vestibulum lectus. Dignissim convallis aenean et tortor at risus. Vitae
-     tempus quam pellentesque nec nam aliquam sem et. Pulvinar proin gravida hendrerit lectus."""
-    pop = QtTutorial(frame)
-    pop.set_steps(
-        [
-            TutorialStep(
-                title=f"{position}",
-                message=text,
-                widget=widget,
-                position=position,
-            )
-            for position in Position
-        ]
-    )
-    pop.show()
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.utils.dev import qframe
+
+    def _popover(frame, widget):
+        text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
+        et dolore magna aliqua. Vestibulum lorem sed risus ultricies tristique nulla aliquet. Malesuada nunc vel risus
+         commodo viverra maecenas. Nascetur ridiculus mus mauris vitae ultricies leo. Tellus in hac habitasse platea
+         dictumst vestibulum rhoncus. Egestas fringilla phasellus faucibus scelerisque eleifend donec pretium vulputate.
+         Amet nulla facilisi morbi tempus iaculis urna id volutpat lacus. Aliquet nec ullamcorper sit amet risus nullam
+         eget felis. Pharetra magna ac placerat vestibulum lectus. Dignissim convallis aenean et tortor at risus. Vitae
+         tempus quam pellentesque nec nam aliquam sem et. Pulvinar proin gravida hendrerit lectus."""
+        pop = QtTutorial(frame)
+        pop.set_steps(
+            [
+                TutorialStep(
+                    title=f"{position}",
+                    message=text,
+                    widget=widget,
+                    position=position,
+                )
+                for position in Position
+            ]
+        )
+        pop.show()
+
+    app, frame, ha = qframe()
+
+    _popover(frame, frame)
+    frame.show()
+    frame.setMaximumHeight(400)
+
+    sys.exit(app.exec_())

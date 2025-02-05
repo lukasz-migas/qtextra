@@ -38,7 +38,7 @@ from qtpy.QtWidgets import (
 from superqt.sliders import QRangeSlider
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_mode_radio_button import QtModePushButton
+from qtextra.widgets.qt_button_radio import QtModePushButton
 
 blurb = """
 <h3>Heading</h3>

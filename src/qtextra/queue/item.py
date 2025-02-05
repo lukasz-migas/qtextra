@@ -14,7 +14,7 @@ import qtextra.helpers as hp
 from qtextra.queue.task import Task
 from qtextra.queue.utilities import format_command, format_interval
 from qtextra.typing import TaskState
-from qtextra.widgets.qt_image_button import QtPauseButton
+from qtextra.widgets.qt_button_icon import QtPauseButton
 
 if ty.TYPE_CHECKING:
     from qtextra.queue.info import TaskInfoDialog

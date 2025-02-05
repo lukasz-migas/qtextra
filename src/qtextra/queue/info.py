@@ -25,7 +25,7 @@ from qtextra.queue.utilities import format_command, format_interval, format_time
 from qtextra.typing import TaskState
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtDialog
-from qtextra.widgets.qt_table_view import FilterProxyModel, QtCheckableTableView
+from qtextra.widgets.qt_table_view_check import FilterProxyModel, QtCheckableTableView
 
 logger = logger.bind(src="TaskInfo")
 

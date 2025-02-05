@@ -11,6 +11,7 @@ from numba.cuda import CudaSupportError
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QGroupBox, QLabel, QVBoxLayout, QWidget
 
+import qtextra.helpers as hp
 from qtextra.utils.utilities import human_readable_byte_size
 from qtextra.widgets.qt_dialog import QtFramelessPopup
 
@@ -18,26 +19,39 @@ MEM_USAGE_ERROR = 4e9  # 4 Gb
 MEM_USAGE_WARNING = 16e9  # 16 Gb
 MEM_ERROR = 8e9
 MEM_WARNING = 32e9
-CPU_ERROR = 30
-CPU_WARNING = 15
+
+CPU_N_ERROR = 30
+CPU_N_WARNING = 15
+
+CPU_PERCENT_ERROR = 50
+CPU_PERCENT_WARNING = 30
 
 
 def style_if(widget, value: int, error_if: int, warn_if: int, less: bool = True) -> None:
     """Style widget based on value."""
+    from operator import gt, lt
+
+    # if op(value, error_if):
+    #     object_name = "error_label"
+    # elif op(value, warn_if):
+    #     object_name = "warning_label"
+    # else:
+    #     object_name = "success_label"
     if less:
         if value < error_if:
-            widget.setStyleSheet("QLabel {color: red;}")
+            object_name = "error_label"
         elif value < warn_if:
-            widget.setStyleSheet("QLabel {color: orange;}")
+            object_name = "warning_label"
         else:
-            widget.setStyleSheet("QLabel {color: green;}")
+            object_name = "success_label"
     else:
         if value > error_if:
-            widget.setStyleSheet("QLabel {color: red;}")
+            object_name = "error_label"
         elif value > warn_if:
-            widget.setStyleSheet("QLabel {color: orange;}")
+            object_name = "warning_label"
         else:
-            widget.setStyleSheet("QLabel {color: green;}")
+            object_name = "success_label"
+    hp.update_widget_style(widget, object_name)
 
 
 class SystemSummaryWidget(QWidget):
@@ -64,7 +78,7 @@ class SystemSummaryWidget(QWidget):
         n_cpu = os.cpu_count() or 1
         self.nb_cores_label = QLabel(f"Number of CPU cores:       \t {n_cpu // 2}", self)
         self.cpu_group_box_layout.addWidget(self.nb_cores_label)
-        style_if(self.nb_cores_label, n_cpu // 2, CPU_ERROR, CPU_WARNING)
+        style_if(self.nb_cores_label, n_cpu // 2, CPU_N_ERROR, CPU_N_WARNING)
 
         self.cpu_load_values = [(elem * 16) for elem in psutil.getloadavg()]
         cpu_1min = "100.0+" if self.cpu_load_values[0] >= 100.0 else round(self.cpu_load_values[0], 2)
@@ -79,24 +93,9 @@ class SystemSummaryWidget(QWidget):
         self.cpu_load_label2 = QLabel(f"CPU load over last 15 mins:\t {cpu_15min}%", self)
         self.cpu_group_box_layout.addWidget(self.cpu_load_label2)
 
-        if self.cpu_load_values[0] >= 30:
-            self.cpu_load_label0.setStyleSheet("QLabel {color: red;}")
-        elif self.cpu_load_values[0] > 15:
-            self.cpu_load_label0.setStyleSheet("QLabel {color: orange;}")
-        else:
-            self.cpu_load_label0.setStyleSheet("QLabel {color: green;}")
-        if self.cpu_load_values[1] >= 30:
-            self.cpu_load_label1.setStyleSheet("QLabel {color: red;}")
-        elif self.cpu_load_values[1] > 15:
-            self.cpu_load_label1.setStyleSheet("QLabel {color: orange;}")
-        else:
-            self.cpu_load_label1.setStyleSheet("QLabel {color: green;}")
-        if self.cpu_load_values[2] >= 30:
-            self.cpu_load_label2.setStyleSheet("QLabel {color: red;}")
-        elif self.cpu_load_values[2] > 15:
-            self.cpu_load_label2.setStyleSheet("QLabel {color: orange;}")
-        else:
-            self.cpu_load_label2.setStyleSheet("QLabel {color: green;}")
+        style_if(self.cpu_load_label0, self.cpu_load_values[0], CPU_PERCENT_ERROR, CPU_PERCENT_WARNING)
+        style_if(self.cpu_load_label1, self.cpu_load_values[1], CPU_PERCENT_ERROR, CPU_PERCENT_WARNING)
+        style_if(self.cpu_load_label2, self.cpu_load_values[2], CPU_PERCENT_ERROR, CPU_PERCENT_WARNING)
 
         # Memory summary
         self.memory_group_box = QGroupBox("Memory Summary")
@@ -114,8 +113,7 @@ class SystemSummaryWidget(QWidget):
         except Exception:
             mem = 0
         self.process_memory_label = QLabel(
-            f"App Memory:\t {human_readable_byte_size(mem)}, " f"({round(100 * mem / total, 2)}%)",
-            self,
+            f"App Memory:\t {human_readable_byte_size(mem)}, " f"({round(100 * mem / total, 2)}%)", self
         )
         self.memory_group_box_layout.addWidget(self.process_memory_label)
         style_if(self.process_memory_label, mem, MEM_USAGE_ERROR, MEM_USAGE_WARNING, less=False)
@@ -149,10 +147,9 @@ class SystemSummaryWidget(QWidget):
         self.cuda_gpu_label = QLabel(f"CUDA GPU: \t\t{cuda_gpu_name}", self)
         self.gpu_group_box_layout.addWidget(self.cuda_gpu_label)
 
-        if cuda_gpu_name != "N/A":
-            self.cuda_gpu_label.setStyleSheet("QLabel {color: green;}")
-        else:
-            self.cuda_gpu_label.setStyleSheet("QLabel {color: red;}")
+        hp.set_object_name(
+            self.cuda_gpu_label, object_name="success_label" if cuda_gpu_name != "N/A" else "error_label"
+        )
 
         # cuda_toolkit = numba.cuda.cudadrv.nvvm.is_available()
         # self.cudatoolkit_label = QLabel(f"CUDA Toolkit: \t\t{'present' if cuda_toolkit else 'absent'}", self)
@@ -177,20 +174,19 @@ class SystemSummaryWidget(QWidget):
         self.gpu_group_box_layout.addWidget(self.gpu_memory_total_label)
 
         if cuda_memory_total == 0:
-            self.gpu_memory_total_label.setStyleSheet("QLabel {color: red;}")
-            self.gpu_memory_free_label.setStyleSheet("QLabel {color: red;}")
+            hp.set_object_name(self.gpu_memory_total_label, self.gpu_memory_free_label, object_name="error_label")
         else:
             if numba.cuda.current_context().get_memory_info().total < 8000000000:
-                self.gpu_memory_total_label.setStyleSheet("QLabel {color: orange;}")
+                hp.set_object_name(self.gpu_memory_free_label, object_name="warning_label")
             else:
-                self.gpu_memory_total_label.setStyleSheet("QLabel {color: green;}")
+                hp.set_object_name(self.gpu_memory_free_label, object_name="success_label")
 
             if cuda_memory_free / cuda_memory_total < 0.4:
-                self.gpu_memory_free_label.setStyleSheet("QLabel {color: red;}")
+                hp.set_object_name(self.gpu_memory_free_label, object_name="error_label")
             elif cuda_memory_free / cuda_memory_total < 0.8:
-                self.gpu_memory_free_label.setStyleSheet("QLabel {color: orange;}")
+                hp.set_object_name(self.gpu_memory_free_label, object_name="warning_label")
             else:
-                self.gpu_memory_free_label.setStyleSheet("QLabel {color: green;}")
+                hp.set_object_name(self.gpu_memory_free_label, object_name="success_label")
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)

@@ -1,7 +1,7 @@
 """Test qt_table_view"""
 
 import pytest
-from qtextra.widgets.qt_table_view import QtCheckableTableView
+from qtextra.widgets.qt_table_view_check import QtCheckableTableView
 
 
 @pytest.fixture
