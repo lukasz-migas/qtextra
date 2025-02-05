@@ -35,22 +35,22 @@ from qtextra.utils.utilities import IS_MAC, IS_WIN
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
     from qtextra.widgets.qt_button import QtActivePushButton, QtPushButton, QtRichTextButton
-    from qtextra.widgets.qt_label_click import QtClickableLabel, QtClickLabel
-    from qtextra.widgets.qt_collapsible import QtCheckCollapsible
     from qtextra.widgets.qt_button_color import QtColorSwatch
-    from qtextra.widgets.qt_label_elide import QtElidingLabel
-    from qtextra.widgets.qt_layout_flow import QtFlowLayout
-    from qtextra.widgets.qt_label_icon import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
     from qtextra.widgets.qt_button_icon import QtImagePushButton, QtLockButton, QtToolbarPushButton
+    from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
+    from qtextra.widgets.qt_button_tool import QtToolButton
+    from qtextra.widgets.qt_collapsible import QtCheckCollapsible
+    from qtextra.widgets.qt_combobox_search import QtSearchableComboBox
+    from qtextra.widgets.qt_label_click import QtClickableLabel, QtClickLabel
+    from qtextra.widgets.qt_label_elide import QtElidingLabel
+    from qtextra.widgets.qt_label_icon import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
+    from qtextra.widgets.qt_label_scroll import QtScrollableLabel
+    from qtextra.widgets.qt_layout_flow import QtFlowLayout
     from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
-    from qtextra.widgets.qt_select_multi import QtMultiSelect
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
-    from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
-    from qtextra.widgets.qt_label_scroll import QtScrollableLabel
-    from qtextra.widgets.qt_combobox_search import QtSearchableComboBox
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
-    from qtextra.widgets.qt_button_tool import QtToolButton
 
     try:
         from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox

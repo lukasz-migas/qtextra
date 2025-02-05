@@ -151,302 +151,388 @@ class QtTogglePushButton(QtImagePushButton):
 
     evt_toggled = Signal(bool)
 
+    ICON_ON: str = ""
+    ICON_OFF: str = ""
+
+    _state: bool = False
+
     def __init__(self, *args, auto_connect: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         if auto_connect:
             self.auto_connect()
+        self.state = False
+
+    @property
+    def state(self) -> bool:
+        """Get state."""
+        return self._state
+
+    @state.setter
+    def state(self, value: bool) -> None:
+        self._state = value
+        self.set_qta(self.ICON_ON if value else self.ICON_OFF)
+        self.evt_toggled.emit(value)
 
     def auto_connect(self) -> None:
         """Automatically connect."""
         self.evt_click.connect(self.toggle_state)
 
     def toggle_state(self) -> None:
-        """Toggle state between on/off state."""
-        raise NotImplementedError("Must implement method")
+        """Toggle state."""
+        self.state = not self.state
 
 
 class QtAnimationPlayButton(QtTogglePushButton):
     """Play button with multiple states to indicate current state."""
 
+    ICON_ON = "stop"
+    ICON_OFF = "start"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._reverse = False
-        self.reverse = False
-        self._playing = False
-        self.playing = False
+        # self._reverse = False
+        # self.reverse = False
 
     @property
     def playing(self) -> bool:
         """Get playing state."""
-        return self._playing
+        return self.state
 
     @playing.setter
     def playing(self, state: bool) -> None:
-        self._playing = state
-        self.set_qta("stop" if state else "start")
+        self.state = state
 
-    @property
-    def reverse(self) -> bool:
-        """Get reverse state."""
-        return self._reverse
-
-    @reverse.setter
-    def reverse(self, state: bool) -> None:
-        from qtextra.helpers import polish_widget
-
-        self._reverse = state
-        self.set_qta("arrow_left" if state else "arrow_right")
-        self.setProperty("reverse", str(state))
-        polish_widget(self)
-
-    def toggle_state(self) -> None:
-        """Toggle state."""
-        self.playing = not self.playing
-        self.evt_toggled.emit(self.playing)
+    # @property
+    # def reverse(self) -> bool:
+    #     """Get reverse state."""
+    #     return self._reverse
+    #
+    # @reverse.setter
+    # def reverse(self, state: bool) -> None:
+    #     from qtextra.helpers import polish_widget
+    #
+    #     self._reverse = state
+    #     self.set_qta("arrow_left" if state else "arrow_right")
+    #     self.setProperty("reverse", str(state))
+    #     polish_widget(self)
 
 
 class QtPauseButton(QtTogglePushButton):
     """Play button with multiple states to indicate current state."""
 
+    ICON_ON = "start"
+    ICON_OFF = "pause"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._paused = False
-        self.paused = False
 
     @property
     def paused(self) -> bool:
         """Get playing state."""
-        return self._paused
+        return self.state
 
     @paused.setter
     def paused(self, state: bool) -> None:
-        self._paused = state
-        self.set_qta("start" if state else "pause")
-
-    def toggle_state(self) -> None:
-        """Toggle state."""
-        self.paused = not self.paused
-        self.evt_toggled.emit(self.paused)
+        self.state = state
 
 
 class QtLockButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
+    ICON_ON = "lock_closed"
+    ICON_OFF = "lock_open"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._locked = False
-        self.locked = False
-
-    def toggle_lock(self) -> None:
-        """Toggle lock."""
-        self.locked = not self.locked
 
     @property
     def locked(self) -> bool:
         """Get playing state."""
-        return self._locked
+        return self.state
 
     @locked.setter
     def locked(self, state: bool) -> None:
-        self._locked = state
-        self.set_qta("lock_closed" if state else "lock_open")
-
-    def toggle_state(self) -> None:
-        """Toggle state."""
-        self.locked = not self.locked
-        self.evt_toggled.emit(self.locked)
+        self.state = state
 
 
 class QtThemeButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
+    ICON_ON = "dark_theme"
+    ICON_OFF = "light_theme"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._dark = False
-        self.dark = False
-
-    def toggle_theme(self) -> None:
-        """Toggle lock."""
-        self.dark = not self.dark
 
     @property
     def dark(self) -> bool:
         """Get playing state."""
-        return self._dark
+        return self.state
 
     @dark.setter
     def dark(self, state: bool) -> None:
-        self._dark = state
-        self.set_qta("dark_theme" if state else "light_theme")
-
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.dark = not self.dark
-        self.evt_toggled.emit(self.dark)
+        self.state = state
 
 
 class QtExpandButton(QtTogglePushButton):
     """Button that has chevron point up or down."""
 
+    ICON_ON = "chevron_up"
+    ICON_OFF = "chevron_down"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._expanded = False
-        self.expanded = False
 
     @property
     def expanded(self) -> bool:
         """Get state."""
-        return self._expanded
+        return self.state
 
     @expanded.setter
     def expanded(self, state: bool) -> None:
-        self._expanded = state
-        self.set_qta("chevron_up" if state else "chevron_down")
-
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.expanded = not self.expanded
-        self.evt_toggled.emit(self.expanded)
+        self.state = state
 
 
 class QtToggleButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
+    ICON_ON = "toggle_on"
+    ICON_OFF = "toggle_off"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._toggled = False
-        self.toggled = False
 
     @property  # type: ignore[override]
     def toggled(self) -> bool:
         """Get toggle state."""
-        return self._toggled
+        return self.state
 
     @toggled.setter
     def toggled(self, state: bool) -> None:
-        self._toggled = state
-        self.set_qta("toggle_on" if state else "toggle_off")
-
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.toggled = not self.toggled
-        self.evt_toggled.emit(self.toggled)
+        self.state = state
 
 
 class QtVerticalDirectionButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
+    ICON_ON = "long_arrow_up"
+    ICON_OFF = "long_arrow_down"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._is_up = False
-        self.up = True
 
     @property
     def up(self) -> bool:
         """Get toggle state."""
-        return self._is_up
+        return self.state
 
     @up.setter
     def up(self, state: bool) -> None:
-        self._is_up = state
-        self.set_qta("long_arrow_up" if state else "long_arrow_down")
+        self.state = state
 
     @property
     def down(self) -> bool:
         """Get toggle state."""
-        return not self._is_up
-
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.up = not self.up
-        self.evt_toggled.emit(self.up)
+        return not self.up
 
 
 class QtHorizontalDirectionButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
+    ICON_ON = "long_arrow_right"
+    ICON_OFF = "long_arrow_left"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._is_right = False
-        self.right = True
 
     @property
     def right(self) -> bool:
         """Get toggle state."""
-        return self._is_right
+        return self.state
 
     @right.setter
     def right(self, state: bool) -> None:
-        self._is_right = state
-        self.set_qta("long_arrow_right" if state else "long_arrow_left")
+        self.state = state
 
     @property
     def left(self) -> bool:
         """Get toggle state."""
-        return not self._is_right
-
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.right = not self.right
-        self.evt_toggled.emit(self.right)
+        return not self.left
 
 
 class QtVisibleButton(QtTogglePushButton):
     """Lock button with shown/hidden icon."""
 
+    ICON_ON = "visible_on"
+    ICON_OFF = "visible_off"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._is_active = False
-        self.visible = True
 
     @property
     def visible(self) -> bool:
         """Get toggle state."""
-        return self._is_active
+        return self.state
 
     @visible.setter
     def visible(self, state: bool) -> None:
-        self._is_active = state
-        self.set_qta("visible" if state else "visible_off")
+        self.state = state
 
     @property
     def hidden(self) -> bool:
         """Get toggle state."""
-        return not self._is_active
-
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.visible = not self.visible
-        self.evt_toggled.emit(self.visible)
+        return not self.visible
 
 
 class QtPinButton(QtTogglePushButton):
     """Lock button with shown/hidden icon."""
 
+    ICON_ON = "pin_on"
+    ICON_OFF = "pin_off"
+
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._is_active = False
-        self.pin = False
 
     @property
     def pin(self) -> bool:
         """Get toggle state."""
-        return self._is_active
+        return self.state
 
     @pin.setter
     def pin(self, state: bool) -> None:
-        self._is_active = state
-        self.set_qta("pin_on" if state else "pin_off")
+        self.state = state
+
+
+class QtFullscreenButton(QtTogglePushButton):
+    """Lock button with shown/hidden icon."""
+
+    ICON_ON = "fullscreen"
+    ICON_OFF = "maximize"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
 
     @property
-    def hidden(self) -> bool:
+    def fullscreen(self) -> bool:
         """Get toggle state."""
-        return not self._is_visible
+        return self.state
 
-    def toggle_state(self) -> None:
-        """Toggle state between shown/hidden."""
-        self.pin = not self.pin
-        self.evt_toggled.emit(self.pin)
+    @fullscreen.setter
+    def fullscreen(self, state: bool) -> None:
+        self.state = state
+
+
+class QtMinimizeButton(QtTogglePushButton):
+    ICON_ON = "minimize"
+    ICON_OFF = "maximize"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def minimized(self) -> bool:
+        """Get toggle state."""
+        return self.state
+
+    @minimized.setter
+    def minimized(self, state: bool) -> None:
+        self.state = state
+
+
+class QtBoolButton(QtTogglePushButton):
+    ICON_ON = "true"
+    ICON_OFF = "false"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+
+class QtMultiStatePushButton(QtImagePushButton):
+    """Play button with multiple states to indicate current state."""
+
+    DEFAULT_STATE: str = ""
+    STATE_TO_ICON: ty.ClassVar[dict[str, str]]
+    STATE_TO_OPTION: ty.ClassVar[dict[str, str]]
+
+    evt_changed = Signal(str)
+
+    _state: str = ""
+    _menu: ty.Optional[QWidget]
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self.setMouseTracking(True)
+        if self.DEFAULT_STATE:
+            self.state = self.DEFAULT_STATE
+
+    @property
+    def state(self) -> str:
+        """Get playing state."""
+        return self._state
+
+    @state.setter
+    def state(self, state: str) -> None:
+        self._state = state
+        self.set_qta(self.STATE_TO_ICON[state])
+        self.evt_changed.emit(state)
+
+    def set_menu(self) -> None:
+        """Set menu."""
+        menu = hp.make_menu(self)
+        for state, label in self.STATE_TO_OPTION.items():
+            hp.make_menu_item(
+                self, label, icon=self.STATE_TO_ICON[state], func=lambda: setattr(self, "state", state), menu=menu
+            )
+        self._menu = menu
+        hp.show_below_widget(menu, self, x_offset=20)
+
+    def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
+        """Event."""
+        self.set_menu()
+        super().enterEvent(event)  # type: ignore[arg-type]
+
+    def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
+        """Event."""
+        self._menu.close()  # type: ignore[union-attr]
+        self._menu = None
+        super().leaveEvent(event)
+
+
+class QtPriorityButton(QtMultiStatePushButton):
+    """Multi-state button."""
+
+    DEFAULT_STATE = "normal"
+    STATE_TO_ICON: ty.ClassVar[dict] = {"low": "priority_low", "normal": "priority_normal", "high": "priority_high"}
+    STATE_TO_OPTION: ty.ClassVar[dict] = {"low": "Low", "normal": "Normal", "high": "High"}
+
+    @property
+    def priority(self) -> str:
+        """Get playing state."""
+        return self.state
+
+    @priority.setter
+    def priority(self, state: str) -> None:
+        self.state = state
+
+
+class QtStateButton(QtMultiStatePushButton):
+    """Multi-state button."""
+
+    DEFAULT_STATE = "info"
+    STATE_TO_ICON: ty.ClassVar[dict] = {
+        "success": "success",
+        "debug": "debug",
+        "info": "info",
+        "warning": "warning",
+        "error": "error",
+    }
+    STATE_TO_OPTION: ty.ClassVar[dict] = {
+        "success": "Success",
+        "debug": "Debug",
+        "info": "Info",
+        "warning": "Warning",
+        "error": "Error",
+    }
 
 
 class QtToolbarPushButton(QtImagePushButton):
@@ -586,51 +672,6 @@ class QtLabelledToolbarPushButton(QWidget):
         self.image_btn.set_qta(name, **kwargs)
 
 
-class QtPriorityButton(QtImagePushButton):
-    """Play button with multiple states to indicate current state."""
-
-    PRIORITY_TO_ICON: ty.ClassVar[dict] = {
-        "normal": "priority_normal",
-        "high": "priority_high",
-        "low": "priority_low",
-    }
-
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
-        super().__init__(*args, **kwargs)
-        self.setMouseTracking(True)
-        self._priority: str = "normal"
-        self._menu = None
-        self.priority = self._priority
-
-    @property
-    def priority(self) -> str:
-        """Get playing state."""
-        return self._priority
-
-    @priority.setter
-    def priority(self, state: str) -> None:
-        self._priority = state
-        self.set_qta(self.PRIORITY_TO_ICON[state])
-
-    def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
-        """Event."""
-        menu = hp.make_menu(self)
-        hp.make_menu_item(self, "Low", icon="priority_low", func=lambda: setattr(self, "priority", "low"), menu=menu)
-        hp.make_menu_item(
-            self, "Normal", icon="priority_normal", func=lambda: setattr(self, "priority", "normal"), menu=menu
-        )
-        hp.make_menu_item(self, "High", icon="priority_high", func=lambda: setattr(self, "priority", "high"), menu=menu)
-        self._menu = menu
-        hp.show_below_widget(menu, self, x_offset=20)
-        super().enterEvent(event)  # type: ignore[arg-type]
-
-    def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
-        """Event."""
-        self._menu.close()  # type: ignore[union-attr]
-        self._menu = None
-        super().leaveEvent(event)
-
-
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
@@ -657,44 +698,22 @@ if __name__ == "__main__":  # pragma: no cover
         btn2.setObjectName("info")
         lay.addWidget(btn2)
 
-        play_btn = QtAnimationPlayButton(parent=frame)
-        play_btn.clicked.connect(play_btn.toggle_state)
-        lay.addWidget(play_btn)
+        lay.addWidget(QtAnimationPlayButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtPauseButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtLockButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtVerticalDirectionButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtHorizontalDirectionButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtVisibleButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtToggleButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtExpandButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtPinButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtFullscreenButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtMinimizeButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtBoolButton(parent=frame, auto_connect=True))
 
-        pause_btn = QtPauseButton(parent=frame)
-        pause_btn.clicked.connect(pause_btn.toggle_state)
-        lay.addWidget(pause_btn)
-
-        lock_btn = QtLockButton(parent=frame)
-        lock_btn.clicked.connect(lock_btn.toggle_state)
-        lay.addWidget(lock_btn)
-
-        vert_btn = QtVerticalDirectionButton(parent=frame)
-        vert_btn.clicked.connect(vert_btn.toggle_state)
-        lay.addWidget(vert_btn)
-
-        horz_btn = QtHorizontalDirectionButton(parent=frame)
-        horz_btn.clicked.connect(horz_btn.toggle_state)
-        lay.addWidget(horz_btn)
-
-        visible_btn = QtVisibleButton(parent=frame)
-        visible_btn.clicked.connect(visible_btn.toggle_state)
-        lay.addWidget(visible_btn)
-
-        toggle_btn = QtToggleButton(parent=frame)
-        toggle_btn.clicked.connect(toggle_btn.toggle_state)
-        lay.addWidget(toggle_btn)
-
-        expand_btn = QtExpandButton(parent=frame)
-        expand_btn.clicked.connect(expand_btn.toggle_state)
-        lay.addWidget(expand_btn)
-
-        priority_btn = QtPriorityButton(parent=frame)
-        lay.addWidget(priority_btn)
-
-        priority_btn = QtPinButton(parent=frame)
-        priority_btn.clicked.connect(priority_btn.toggle_state)
-        lay.addWidget(priority_btn)
+        # multi-state
+        lay.addWidget(QtPriorityButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtStateButton(parent=frame, auto_connect=True))
 
         ha.addWidget(hp.make_v_line())
 
