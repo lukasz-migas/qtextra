@@ -18,10 +18,11 @@ class QtActiveProgressBarButton(QWidget):
         self.setText = self.active_btn.setText
 
         self.progress_bar = QProgressBar(self)
-        hp.set_retain_hidden_size_policy(self.progress_bar)
-        hp.set_sizer_policy(self.progress_bar, h_stretch=True, v_stretch=False)
         self.progress_bar.setObjectName("progress_timer")
         self.progress_bar.setTextVisible(False)
+        self.progress_bar.setMaximumHeight(10)
+        hp.set_sizer_policy(self.progress_bar, h_stretch=True, v_stretch=False)
+        hp.set_retain_hidden_size_policy(self.progress_bar)
 
         self.cancel_btn = hp.make_qta_btn(self, "cancel", average=True)
         self.cancel_btn.setVisible(False)
@@ -89,17 +90,27 @@ if __name__ == "__main__":  # pragma: no cover
 
     from qtextra.utils.dev import qframe
 
-    def _test():
-        btn1.active = not btn1.active
+    def _test1():
         btn1.setValue(btn1.step + 1)
+        btn1.active = not btn1.active
+
+    def _test2():
+        btn2.setValue(btn2.step + 1)
+        btn2.active = not btn2.active
 
     app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
     btn1 = QtActiveProgressBarButton(frame)
-    btn1.evt_clicked.connect(_test)
+    btn1.evt_clicked.connect(_test1)
     btn1.setText("TEST BUTTON")
     btn1.setRange(0, 100)
     ha.addWidget(btn1)
+
+    btn2 = QtActiveProgressBarButton(frame)
+    btn2.evt_clicked.connect(_test2)
+    btn2.setText("TEST BUTTON")
+    btn2.setRange(0, 100)
+    ha.addWidget(btn2)
 
     frame.show()
     sys.exit(app.exec_())

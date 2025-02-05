@@ -171,6 +171,7 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "toggle_off": "mdi.checkbox-blank-outline",
     # visible
     "visible": "ei.eye-open",
+    "visible_on": "ei.eye-open",
     "visible_off": "ei.eye-close",
     # priority
     "priority_high": "mdi6.chevron-triple-up",
