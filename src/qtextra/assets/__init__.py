@@ -21,11 +21,11 @@ STYLES = {x.stem: str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
 
 # Some gifs were made using https://loading.io/
 # orange color = #ff4500
-LOADING_SQUARE_GIF = str(HERE / "loading-square.gif")
-LOADING_CIRCLE_GIF = str(HERE / "loading-circle.gif")
-LOADING_DOTS_GIF = str(HERE / "loading-dots.gif")
-LOADING_INFINITY_GIF = str(HERE / "loading-infinity.gif")
-LOADING_OVAL_GIF = str(HERE / "loading-oval.gif")
+LOADING_SQUARE_GIF = str(HERE / "gifs" / "loading-square.gif")
+LOADING_CIRCLE_GIF = str(HERE / "gifs" / "loading-circle.gif")
+LOADING_DOTS_GIF = str(HERE / "gifs" / "loading-dots.gif")
+LOADING_INFINITY_GIF = str(HERE / "gifs" / "loading-infinity.gif")
+LOADING_OVAL_GIF = str(HERE / "gifs" / "loading-oval.gif")
 
 LOADING_GIFS = {
     "square": LOADING_SQUARE_GIF,

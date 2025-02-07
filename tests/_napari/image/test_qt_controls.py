@@ -2,8 +2,8 @@
 import numpy as np
 import pytest
 from napari.layers import Image, Labels
-from qtextra._napari.common.layer_controls.qt_image_controls import QtBaseImageControls, QtImageControls
-from qtextra._napari.common.layer_controls.qt_labels_controls import QtLabelsControls
+from qtextraplot._napari.common.layer_controls.qt_image_controls import QtBaseImageControls, QtImageControls
+from qtextraplot._napari.common.layer_controls.qt_labels_controls import QtLabelsControls
 
 # make label data
 np.random.seed(0)

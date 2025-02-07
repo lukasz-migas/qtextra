@@ -85,39 +85,6 @@ QSplitter {
   margin: 0px;
 }
 
-/* ------------ QtToast / QtTutorial ------------ */
-QtToast{
-    background-color: {{ lighten(background, 10) }};
-    border: 2px solid {{ darken(foreground, 10) }};
-}
-
-QtToast > QLabel, QtToast > QtImagePushButton {
-    background: none;
-}
-
-QtToast > QWidget#toast_header {
-    background-color: {{ foreground }};
-    border: 2px solid {{ darken(foreground, 10) }};
-}
-
-QtToast > QWidget#toast_header, QWidget#toast_header > QLabel {
-    background-color: {{ foreground }};
-}
-
-/* ------------ QtTutorial ------------ */
-QtTutorial{
-    background-color: {{ lighten(background, 10) }};
-    border: 2px solid {{ darken(foreground, 30) }};
-}
-
-QtTutorial > QLabel, QtTutorial > QtImagePushButton {
-    background: none;
-}
-
-QtTutorial > QWidget#tutorial_header, QtTutorial > QWidget#tutorial_footer {
-    background: none;
-}
-
 QLabel#step_label {
     color: {{ highlight }};
     background: none;
@@ -384,4 +351,162 @@ QAbstractItemView#search_box_popup::item
 QAbstractItemView#search_box_popup::item:hover
 {
     background-color:lightGrey;
+}
+
+
+QLabel#h1 {
+  font-size: 28px;
+}
+
+QLabel#h2 {
+  font-size: 22px;
+  color: {{ secondary }};
+}
+
+QLabel#h3 {
+  font-size: 18px;
+  color: {{ secondary }};
+}
+
+QtViewer {
+   padding-top: 0px;
+}
+
+QtLayerButtons, QtViewerButtons, QtLayerList {
+  min-width: 242px;
+}
+
+/* ------------- QMainWindow --------- */
+/* QDockWidgets will use the MainWindow styles
+as long as they are docked (though they use the
+style of QDockWidget when undocked) */
+
+QStatusBar {
+  background: {{ background }};
+  color: {{ text }};
+}
+
+/* ------------- Window separator --------- */
+
+QMainWindow::separator {
+  width: 4px;
+  height: 4px;
+  border: none;
+  background-color: {{ background }};
+}
+
+QMainWindow::separator:hover {
+  background: {{ foreground }};
+}
+
+QMainWindow::separator:horizontal {
+  image: url("theme_{{ id }}:/horizontal_separator.svg");
+}
+
+QMainWindow::separator:vertical {
+  image: url("theme_{{ id }}:/vertical_separator.svg");
+}
+
+/* ------------- DockWidgets --------- */
+
+#QtCustomTitleBar {
+  padding-top:3px;
+  background-color: {{ background }};
+}
+
+#QtCustomTitleBar:hover {
+  background-color: {{ darken(background, 10) }};
+}
+
+#QtCustomTitleBarLine {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QPushButton {
+  background-color: none;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+#QtCustomTitleBar > QPushButton:hover {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QLabel {
+  color: {{ primary }};
+  font-size: 11pt;
+}
+
+#QTitleBarCloseButton{
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    image: url("theme_{{ id }}:/delete_shape.svg");
+}
+
+
+#QTitleBarFloatButton{
+    image: url("theme_{{ id }}:/pop_out.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}
+
+#QTitleBarHideButton{
+    image: url("theme_{{ id }}:/visibility_off.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}
+
+/* ------------- DockWidgets --------- */
+
+#QtCustomTitleBar {
+  padding-top:3px;
+  background-color: {{ background }};
+}
+
+#QtCustomTitleBar:hover {
+  background-color: {{ darken(background, 10) }};
+}
+
+#QtCustomTitleBarLine {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QPushButton {
+  background-color: none;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+#QtCustomTitleBar > QPushButton:hover {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QLabel {
+  color: {{ primary }};
+  font-size: 11pt;
+}
+
+#QTitleBarCloseButton{
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    image: url("theme_{{ id }}:/delete_shape.svg");
+}
+
+
+#QTitleBarFloatButton{
+    image: url("theme_{{ id }}:/pop_out.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}
+
+#QTitleBarHideButton{
+    image: url("theme_{{ id }}:/visibility_off.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
 }

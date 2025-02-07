@@ -19,7 +19,7 @@ from qtpy.QtGui import QColor, QCursor, QIcon, QImage, QPainter, QPixmap
 from qtpy.QtWidgets import QApplication, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.config import THEMES
+from qtextra.config import is_dark
 from qtextra.utils.wrap import TextWrap
 from qtextra.widgets.qt_label_image import QImageLabel
 
@@ -49,11 +49,11 @@ class PopoutViewBase(QWidget):
 
     def background_color(self):
         """Return the background color."""
-        return QColor(40, 40, 40) if THEMES.is_dark else QColor(248, 248, 248)
+        return QColor(40, 40, 40) if is_dark() else QColor(248, 248, 248)
 
     def border_color(self):
         """Return the border color."""
-        return QColor(0, 0, 0, 45) if THEMES.is_dark else QColor(0, 0, 0, 17)
+        return QColor(0, 0, 0, 45) if is_dark() else QColor(0, 0, 0, 17)
 
     def paintEvent(self, e):
         """Paint event."""
@@ -68,7 +68,28 @@ class PopoutViewBase(QWidget):
 
 
 class PopoutView(PopoutViewBase):
-    """Popout view."""
+    """Popout view.
+
+    Parameters
+    ----------
+    title: str
+        the title of teaching tip
+
+    content: str
+        the content of teaching tip
+
+    icon: InfoBarIcon | QIcon | str
+        the icon of teaching tip
+
+    image: str | QPixmap | QImage
+        the image of teaching tip
+
+    is_closable: bool
+        whether to show the close button
+
+    parent: QWidget
+        parent widget
+    """
 
     evt_closed = Signal()
 
@@ -82,27 +103,7 @@ class PopoutView(PopoutViewBase):
         parent=None,
     ):
         super().__init__(parent=parent)
-        """
-        Parameters
-        ----------
-        title: str
-            the title of teaching tip
 
-        content: str
-            the content of teaching tip
-
-        icon: InfoBarIcon | FluentIconBase | QIcon | str
-            the icon of teaching tip
-
-        image: str | QPixmap | QImage
-            the image of teaching tip
-
-        is_closable: bool
-            whether to show the close button
-
-        parent: QWidget
-            parent widget
-        """
         self.icon = icon
         self.title = title
         self.image = image
@@ -222,7 +223,7 @@ class Popout(QWidget):
 
     def setShadowEffect(self, blurRadius=35, offset=(0, 8)):
         """Add shadow to dialog."""
-        color = QColor(0, 0, 0, 80 if THEMES.is_dark else 30)
+        color = QColor(0, 0, 0, 80 if is_dark() else 30)
         self.shadowEffect = QGraphicsDropShadowEffect(self.view)
         self.shadowEffect.setBlurRadius(blurRadius)
         self.shadowEffect.setOffset(*offset)
@@ -315,7 +316,7 @@ class Popout(QWidget):
         content: str
             the content of teaching tip
 
-        icon: InfoBarIcon | FluentIconBase | QIcon | str
+        icon: InfoBarIcon | QIcon | str
             the icon of teaching tip
 
         image: str | QPixmap | QImage
@@ -538,9 +539,25 @@ if __name__ == "__main__":  # pragma: no cover
                 is_closable=True,
             )
 
-        btn = hp.make_btn(frame, "Show Popout", func=_popup)
+        def _popup2():
+            class MyPopoutView(PopoutView):
+                def __init__(self, title, content, icon=None, image=None, parent=None):
+                    super().__init__(title, content, icon, image, True, parent=parent)
+                    self.addWidget(hp.make_btn(self, "Button 1"))
+                    self.addWidget(hp.make_btn(self, "Button 2"))
+                    self.addWidget(hp.make_btn(self, "Button 3"))
 
+            MyPopoutView(
+                "Hello World",
+                "Here is some text that should be displayed below the title",
+                parent=frame,
+            )
+
+        btn = hp.make_btn(frame, "Show Popout", func=_popup)
         ha.addWidget(btn)
+        btn2 = hp.make_btn(frame, "Show Popout with buttons", func=_popup2)
+        ha.addWidget(btn2)
+
         frame.show()
         sys.exit(app.exec_())
 

@@ -1,0 +1,13 @@
+/* ------------ QtTutorial ------------ */
+QtTutorial{
+    background-color: {{ lighten(background, 10) }};
+    border: 2px solid {{ darken(foreground, 30) }};
+}
+
+QtTutorial > QLabel, QtTutorial > QtImagePushButton {
+    background: none;
+}
+
+QtTutorial > QWidget#tutorial_header, QtTutorial > QWidget#tutorial_footer {
+    background: none;
+}

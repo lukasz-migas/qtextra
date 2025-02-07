@@ -1,4 +1,4 @@
-"""Teaching tip widget."""
+"""tool tip widget."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from qtextra.widgets.qt_popout import PopoutView, PopoutViewBase
 
 
 class TipPosition(Enum):
-    """Teaching tip tail position."""
+    """tool tip tail position."""
 
     TOP = 0
     BOTTOM = 1
@@ -42,7 +42,7 @@ class ImagePosition(Enum):
 
 
 class ToolTipView(PopoutView):
-    """Teaching tip view."""
+    """tool tip view."""
 
     def __init__(
         self,
@@ -96,7 +96,7 @@ class ToolTipView(PopoutView):
 
 
 class ToolTipBubble(QWidget):
-    """Teaching tip bubble."""
+    """tool tip bubble."""
 
     def __init__(self, view: PopoutViewBase, tail_position: TipPosition = TipPosition.BOTTOM, parent=None):
         super().__init__(parent=parent)
@@ -124,7 +124,7 @@ class ToolTipBubble(QWidget):
 
 
 class ToolTip(QWidget):
-    """Teaching tip."""
+    """tool tip."""
 
     def __init__(
         self,
@@ -142,11 +142,11 @@ class ToolTip(QWidget):
             the target widget to show tip
 
         view: PopoutViewBase
-            teaching tip view
+            tool tip view
 
         duration: int
-            the time for teaching tip to display in milliseconds. If duration is less than zero,
-            teaching tip will never disappear.
+            the time for tool tip to display in milliseconds. If duration is less than zero,
+            tool tip will never disappear.
 
         tail_position: TipPosition
             the position of bubble tail
@@ -223,7 +223,7 @@ class ToolTip(QWidget):
         return super().eventFilter(obj, e)
 
     def addWidget(self, widget: QWidget, stretch=0, align=Qt.AlignmentFlag.AlignLeft):
-        """Add widget to teaching tip."""
+        """Add widget to tool tip."""
         self.view.addSpacing(8)
         self.view.addWidget(widget, stretch, align)
 
@@ -248,14 +248,14 @@ class ToolTip(QWidget):
         Parameters
         ----------
         view: PopoutViewBase
-            teaching tip view
+            tool tip view
 
         target: QWidget
             the target widget to show tip
 
         duration: int
-            the time for teaching tip to display in milliseconds. If duration is less than zero,
-            teaching tip will never disappear.
+            the time for tool tip to display in milliseconds. If duration is less than zero,
+            tool tip will never disappear.
 
         tail_position: TipPosition
             the position of bubble tail
@@ -291,23 +291,23 @@ class ToolTip(QWidget):
             the target widget to show tip
 
         title: str
-            the title of teaching tip
+            the title of tool tip
 
         content: str
-            the content of teaching tip
+            the content of tool tip
 
-        icon: InfoBarIcon | FluentIconBase | QIcon | str
-            the icon of teaching tip
+        icon:  QIcon | str
+            the icon of tool tip
 
         image: str | QPixmap | QImage
-            the image of teaching tip
+            the image of tool tip
 
         is_closable: bool
             whether to show the close button
 
         duration: int
-            the time for teaching tip to display in milliseconds. If duration is less than zero,
-            teaching tip will never disappear.
+            the time for tool tip to display in milliseconds. If duration is less than zero,
+            tool tip will never disappear.
         parent: QWidget
             parent widget
         tail_position: TipPosition
@@ -322,7 +322,7 @@ class ToolTip(QWidget):
 
 
 class PopupToolTip(ToolTip):
-    """Pop up teaching tip."""
+    """Pop up tool tip."""
 
     def __init__(
         self,
@@ -340,7 +340,7 @@ class PopupToolTip(ToolTip):
 
 
 class ToolTipManager(QObject):
-    """Teaching tip manager."""
+    """tool tip manager."""
 
     def __init__(self):
         super().__init__()
@@ -370,7 +370,7 @@ class ToolTipManager(QObject):
 
     @staticmethod
     def make(position: TipPosition):
-        """Mask teaching tip manager according to the display position."""
+        """Mask tool tip manager according to the display position."""
         managers = {
             TipPosition.TOP: TopTailToolTipManager,
             TipPosition.BOTTOM: BottomTailToolTipManager,
@@ -388,13 +388,13 @@ class ToolTipManager(QObject):
         }
 
         if position not in managers:
-            raise ValueError(f"`{position}` is an invalid teaching tip position.")
+            raise ValueError(f"`{position}` is an invalid tool tip position.")
 
         return managers[position]()
 
 
 class TopTailToolTipManager(ToolTipManager):
-    """Top tail teaching tip manager."""
+    """Top tail tool tip manager."""
 
     def _update_layout(self, tip):
         tip.hBoxLayout.setContentsMargins(0, 8, 0, 0)
@@ -421,7 +421,7 @@ class TopTailToolTipManager(ToolTipManager):
 
 
 class BottomTailToolTipManager(ToolTipManager):
-    """Bottom tail teaching tip manager."""
+    """Bottom tail tool tip manager."""
 
     def _update_layout(self, tip):
         tip.hBoxLayout.setContentsMargins(0, 0, 0, 8)
@@ -445,7 +445,7 @@ class BottomTailToolTipManager(ToolTipManager):
 
 
 class LeftTailToolTipManager(ToolTipManager):
-    """Left tail teaching tip manager."""
+    """Left tail tool tip manager."""
 
     def _update_layout(self, tip):
         tip.hBoxLayout.setContentsMargins(8, 0, 0, 0)
@@ -473,7 +473,7 @@ class LeftTailToolTipManager(ToolTipManager):
 
 
 class RightTailToolTipManager(ToolTipManager):
-    """Left tail teaching tip manager."""
+    """Left tail tool tip manager."""
 
     def _update_layout(self, tip):
         tip.hBoxLayout.setContentsMargins(0, 0, 8, 0)
@@ -501,7 +501,7 @@ class RightTailToolTipManager(ToolTipManager):
 
 
 class TopLeftTailTeachingTipManager(TopTailToolTipManager):
-    """Top left tail teaching tip manager."""
+    """Top left tail tool tip manager."""
 
     def draw(self, tip, painter):
         w, h = tip.width(), tip.height()
@@ -522,7 +522,7 @@ class TopLeftTailTeachingTipManager(TopTailToolTipManager):
 
 
 class TopRightTailTeachingTipManager(TopTailToolTipManager):
-    """Top right tail teaching tip manager."""
+    """Top right tail tool tip manager."""
 
     def draw(self, tip, painter):
         w, h = tip.width(), tip.height()
@@ -543,7 +543,7 @@ class TopRightTailTeachingTipManager(TopTailToolTipManager):
 
 
 class BottomLeftTailTeachingTipManager(BottomTailToolTipManager):
-    """Bottom left tail teaching tip manager."""
+    """Bottom left tail tool tip manager."""
 
     def draw(self, tip, painter):
         w, h = tip.width(), tip.height()
@@ -564,7 +564,7 @@ class BottomLeftTailTeachingTipManager(BottomTailToolTipManager):
 
 
 class BottomRightTailTeachingTipManager(BottomTailToolTipManager):
-    """Bottom right tail teaching tip manager."""
+    """Bottom right tail tool tip manager."""
 
     def draw(self, tip, painter):
         w, h = tip.width(), tip.height()
@@ -585,7 +585,7 @@ class BottomRightTailTeachingTipManager(BottomTailToolTipManager):
 
 
 class LeftTopTailTeachingTipManager(LeftTailToolTipManager):
-    """Left top tail teaching tip manager."""
+    """Left top tail tool tip manager."""
 
     def _get_image_position(self):
         return ImagePosition.BOTTOM
@@ -610,7 +610,7 @@ class LeftTopTailTeachingTipManager(LeftTailToolTipManager):
 
 
 class LeftBottomTailTeachingTipManager(LeftTailToolTipManager):
-    """Left bottom tail teaching tip manager."""
+    """Left bottom tail tool tip manager."""
 
     def _get_image_position(self):
         return ImagePosition.TOP
@@ -635,7 +635,7 @@ class LeftBottomTailTeachingTipManager(LeftTailToolTipManager):
 
 
 class RightTopTailTeachingTipManager(RightTailToolTipManager):
-    """Right top tail teaching tip manager."""
+    """Right top tail tool tip manager."""
 
     def _get_image_position(self):
         return ImagePosition.BOTTOM
@@ -660,7 +660,7 @@ class RightTopTailTeachingTipManager(RightTailToolTipManager):
 
 
 class RightBottomTailTeachingTipManager(RightTailToolTipManager):
-    """Right bottom tail teaching tip manager."""
+    """Right bottom tail tool tip manager."""
 
     def _get_image_position(self):
         return ImagePosition.TOP

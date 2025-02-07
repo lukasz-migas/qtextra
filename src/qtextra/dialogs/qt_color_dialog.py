@@ -8,7 +8,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialogButtonBox, QHBoxLayout, QLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.utils.color import colormap_to_hex
+from koyo.color import colormap_to_hex
 from qtextra.widgets.qt_dialog import QtDialog
 
 

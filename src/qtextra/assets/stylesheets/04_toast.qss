@@ -1,0 +1,55 @@
+QtInfoToast {
+    border: 1px solid {{ background }};
+    border-radius: 6px;
+    background-color: {{ background }};
+}
+
+QtInfoToast#titleLabel {
+    font-weight: bold;
+    color: {{ text }};
+    background-color: transparent;
+}
+
+QtInfoToast#contentLabel {
+    color: {{ text }};
+    background-color: transparent;
+}
+
+QtInfoToast[type="info"] {
+    border: 1px solid {{ progress }};
+    background-color: {{ lighten(progress, 50) }};
+}
+
+QtInfoToast[type="success"] {
+    border: 1px solid {{ success }};
+    background-color: {{ lighten(success, 50) }};
+}
+
+QtInfoToast[type="warning"] {
+    border: 1px solid {{ warning }};
+    background-color: {{ lighten(warning, 50) }};
+}
+
+QtInfoToast[type="error"], QtInfoToast[type="critical"] {
+    border: 1px solid {{ error }};
+    background-color: {{ lighten(error, 50) }};
+}
+
+/* ------------ QtToast ------------ */
+QtToast{
+    background-color: {{ lighten(background, 10) }};
+    border: 2px solid {{ darken(foreground, 10) }};
+}
+
+QtToast > QLabel, QtToast > QtImagePushButton {
+    background: none;
+}
+
+QtToast > QWidget#toast_header {
+    background-color: {{ foreground }};
+    border: 2px solid {{ darken(foreground, 10) }};
+}
+
+QtToast > QWidget#toast_header, QWidget#toast_header > QLabel {
+    background-color: {{ foreground }};
+}
