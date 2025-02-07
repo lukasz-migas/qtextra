@@ -6,12 +6,18 @@ import os
 import sys
 import typing as ty
 
+from koyo.utilities import is_installed
 from loguru import logger
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
 from qtpy.QtWidgets import QApplication, QDialog, QDockWidget, QLayout, QMainWindow, QWidget
 
 if ty.TYPE_CHECKING:
     from qtreload.qt_reload import QtReloadWidget
+
+
+DEFAULT_MODULES = ("qtextra", "koyo")
+if is_installed("qtextraplot"):
+    DEFAULT_MODULES += ("qtextraplot",)
 
 
 def disable_warnings() -> None:
@@ -29,7 +35,7 @@ def disable_warnings() -> None:
 
 
 def qdev(
-    parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo"), log_func: ty.Callable[[str], None] | None = None
+    parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
 ) -> QtReloadWidget:
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
@@ -42,7 +48,7 @@ def qdev(
 
 
 def qdev_dock(
-    parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo"), log_func: ty.Callable[[str], None] | None = None
+    parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
 ) -> ty.Tuple[QtReloadWidget, QDockWidget]:
     """Create reload widget in dock."""
     widget = qdev(parent, modules, log_func=log_func)
@@ -51,7 +57,7 @@ def qdev_dock(
 
 
 def qdev_popup(
-    parent=None, modules: ty.Iterable[str] = ("qtextra", "koyo"), log_func: ty.Callable[[str], None] | None = None
+    parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
 ) -> ty.Tuple[QtReloadWidget, QWidget]:
     """Create reload widget in popup."""
     widget = qdev(parent, modules, log_func=log_func)
@@ -110,7 +116,7 @@ def qframe(
     with_layout: bool = True,
     add_reload: bool = True,
     set_style: bool = True,
-    modules: tuple[str, ...] = ("qtextra", "koyo"),
+    modules: tuple[str, ...] = DEFAULT_MODULES,
 ) -> tuple[QApplication, QWidget, QLayout]:
     """Create frame widget."""
     from qtpy import QtWidgets

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from koyo.color import hex_to_rgb, is_dark_color, rgb_to_hex
+from koyo.color import hex_to_rgb, rgb_to_hex
 from qtpy.QtGui import QColor
 
 
@@ -48,3 +48,9 @@ def rgb_to_qt_rgb(color: np.ndarray) -> str:
     """Convert numpy array to Qt color."""
     color = (255 * color).astype("int")
     return f"rgb({color[0]}, {color[1]}, {color[2]})"
+
+
+def is_dark_color(background: QColor) -> bool:
+    """Check whether its a dark background."""
+    a = 1 - (0.299 * background.redF() + 0.587 * background.greenF() + 0.114 * background.blueF())
+    return background.alphaF() > 0 and a >= 0.45
