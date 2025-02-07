@@ -161,7 +161,7 @@ class QtColorSwatch(QFrame):
     @Slot(np.ndarray)
     def _update_swatch_style(self, _color: ColorType) -> None:
         """Update appearance."""
-        rgba = f'rgba({",".join(str(int(x*255)) for x in self._color)})'
+        rgba = f"rgba({','.join(str(int(x * 255)) for x in self._color)})"
         self.setStyleSheet("#colorSwatch {background-color: " + rgba + ";}")
 
     def mouseReleaseEvent(self, event: QEvent):

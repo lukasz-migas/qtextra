@@ -29,5 +29,3 @@ def is_dark_color(background: QColor) -> bool:
     """Check whether its a dark background."""
     a = 1 - (0.299 * background.redF() + 0.587 * background.greenF() + 0.114 * background.blueF())
     return background.alphaF() > 0 and a >= 0.3
-
-

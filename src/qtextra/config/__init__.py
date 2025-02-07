@@ -9,4 +9,4 @@ def get_settings():
     pass
 
 
-__all__ = ["CanvasThemes", "Themes", "CANVAS", "THEMES", "EVENTS", "get_settings", "is_dark"]
+__all__ = ["CANVAS", "EVENTS", "THEMES", "CanvasThemes", "Themes", "get_settings", "is_dark"]
