@@ -23,9 +23,9 @@ from superqt.utils import qthrottled
 import qtextra.helpers as hp
 from qtextra.config import EVENTS, THEMES, get_settings
 from qtextra.utils.notifications import NOTIFICATION_LEVELS, ErrorNotification, Notification, NotificationSeverity
+from qtextra.widgets.qt_button_icon import QtExpandButton
 from qtextra.widgets.qt_dialog import QtFramelessPopup, SubWindowBase
 from qtextra.widgets.qt_label_icon import QtSeverityLabel
-from qtextra.widgets.qt_button_icon import QtExpandButton
 
 ActionSequence = ty.Sequence[ty.Tuple[str, ty.Callable[[], None]]]
 

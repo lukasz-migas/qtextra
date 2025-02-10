@@ -64,7 +64,7 @@ class TimerMixin:
 
         if start:
             timer.start()
-        logger.debug(f"Added periodic timer event that runs every {interval/1000}s")
+        logger.debug(f"Added periodic timer event that runs every {interval / 1000}s")
         return timer
 
     def _add_single_shot_timer(self, delay: int, fcn) -> QTimer:

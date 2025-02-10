@@ -1,4 +1,5 @@
 """Info widget."""
+
 from qtpy.QtWidgets import QFormLayout, QWidget
 
 import qtextra.helpers as hp

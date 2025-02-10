@@ -279,7 +279,6 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
     _main_layout = None
     _title = ""
 
-
     DELAY_CONNECTION: ty.ClassVar[bool] = False
     setLayout: ty.Callable[[QLayout], None]
 

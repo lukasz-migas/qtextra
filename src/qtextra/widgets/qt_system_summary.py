@@ -113,13 +113,13 @@ class SystemSummaryWidget(QWidget):
         except Exception:
             mem = 0
         self.process_memory_label = QLabel(
-            f"App Memory:\t {human_readable_byte_size(mem)}, " f"({round(100 * mem / total, 2)}%)", self
+            f"App Memory:\t {human_readable_byte_size(mem)}, ({round(100 * mem / total, 2)}%)", self
         )
         self.memory_group_box_layout.addWidget(self.process_memory_label)
         style_if(self.process_memory_label, mem, MEM_USAGE_ERROR, MEM_USAGE_WARNING, less=False)
 
         self.free_memory_label = QLabel(
-            f"Free Memory:\t {human_readable_byte_size(available)}, " f"({round(100 * available / total, 2)}%)",
+            f"Free Memory:\t {human_readable_byte_size(available)}, ({round(100 * available / total, 2)}%)",
             self,
         )
         self.memory_group_box_layout.addWidget(self.free_memory_label)

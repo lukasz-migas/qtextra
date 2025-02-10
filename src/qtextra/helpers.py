@@ -2402,6 +2402,28 @@ def open_filename(
     return filename
 
 
+def get_directories(parent: Qw.QWidget | None, title: str = "Select directories...", base_dir: str = "") -> list[str]:
+    """Get directories."""
+    from qtpy.QtWidgets import QAbstractItemView, QFileDialog, QListView, QTreeView
+
+    file_dialog = QFileDialog(parent)
+    file_dialog.setFileMode(QFileDialog.FileMode.Directory)
+    file_dialog.setOption(QFileDialog.DontUseNativeDialog, True)
+    file_view = file_dialog.findChild(QListView, "listView")
+
+    # to make it possible to select multiple directories:
+    if file_view:
+        file_view.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+    f_tree_view = file_dialog.findChild(QTreeView)
+    if f_tree_view:
+        f_tree_view.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+
+    paths = None
+    if file_dialog.exec():
+        paths = file_dialog.selectedFiles()
+    return paths
+
+
 def get_directory(
     parent: Qw.QWidget | None,
     title: str = "Select directory...",

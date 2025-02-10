@@ -88,9 +88,7 @@ class QtDataFrameWidget(Qw.QWidget):
 
         # Styling
         for header in [self.indexHeader, self.columnHeader]:
-            header.setStyleSheet(
-                "background-color: white;" "selection-color: black;" "selection-background-color: #EAEAEA;"
-            )
+            header.setStyleSheet("background-color: white;selection-color: black;selection-background-color: #EAEAEA;")
 
         self.dataView.setStyleSheet(
             "background-color: white;"
