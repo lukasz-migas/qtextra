@@ -117,6 +117,7 @@ def qframe(
     add_reload: bool = True,
     set_style: bool = True,
     modules: tuple[str, ...] = DEFAULT_MODULES,
+    dev: bool = True,
 ) -> tuple[QApplication, QWidget, QLayout]:
     """Create frame widget."""
     from qtpy import QtWidgets
@@ -137,6 +138,10 @@ def qframe(
         frame.setLayout(ha)
     if set_style:
         apply_style(frame)
+    if dev:
+        from koyo.hooks import install_debugger_hook
+
+        install_debugger_hook()
     return app, frame, ha
 
 

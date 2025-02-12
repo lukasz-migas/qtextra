@@ -41,6 +41,7 @@ dependencies = [
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
+all = ["console", "sentry", "pyqt6"]
 notify = ["pyqt-toast-notification"]
 sentry = ["sentry-sdk>2"]
 console = [
@@ -48,6 +49,7 @@ console = [
     "ipykernel>=5.2.0",
 ]
 palette = ["qt-command-palette"]
+reload = ["qtreload"]
 pyside2 = ["pyside2"]
 pyside6 = ["pyside6"]
 pyqt5 = ["pyqt5"]
@@ -61,7 +63,7 @@ dev = [
     "pre-commit",
     "rich",
     "ruff",
-    "qtextra[test]",
+    "qtextra[test,reload]",
 ]
 
 [project.urls]

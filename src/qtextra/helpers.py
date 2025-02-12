@@ -78,7 +78,10 @@ if ty.TYPE_CHECKING:
 
 
 def make_form_layout(
-    widget: ty.Optional[Qw.QWidget] = None, *widgets: tuple, stretch_after: bool = False
+    widget: ty.Optional[Qw.QWidget] = None,
+    *widgets: tuple,
+    stretch_after: bool = False,
+    margin: int | tuple[int, int, int, int] | None = None,
 ) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(widget)
@@ -87,6 +90,10 @@ def make_form_layout(
     layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
     layout.setFormAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
     layout.setRowWrapPolicy(Qw.QFormLayout.RowWrapPolicy.DontWrapRows)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
     for widget_ in widgets:
         layout.addRow(*widget_)
     if stretch_after:
