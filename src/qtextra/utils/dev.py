@@ -20,6 +20,13 @@ if is_installed("qtextraplot"):
     DEFAULT_MODULES += ("qtextraplot",)
 
 
+def exec_(app: QApplication) -> None:
+    from napari._qt.utils import _maybe_allow_interrupt
+
+    with _maybe_allow_interrupt(app):
+        sys.exit(app.exec_())
+
+
 def disable_warnings() -> None:
     """Disable warnings."""
     import warnings

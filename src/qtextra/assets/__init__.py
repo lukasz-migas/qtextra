@@ -229,16 +229,26 @@ def update_icon_mapping(mapping: ty.Dict[str, str]) -> None:
     QTA_MAPPING.update(mapping)
 
 
-def update_styles(mapping: ty.Dict[str, str]) -> None:
+def update_styles(mapping: ty.Dict[str, str], append: bool = True) -> None:
     """Update icon mapping."""
     global STYLES
-    STYLES.update(mapping)
+
+    if append:
+        STYLES.update(mapping)
+    else:
+        mapping.update(STYLES)
+        STYLES = mapping
 
 
-def update_icons(mapping: ty.Dict[str, str]) -> None:
+def update_icons(mapping: ty.Dict[str, str], append: bool = True) -> None:
     """Update icon mapping."""
     global ICONS
-    ICONS.update(mapping)
+
+    if append:
+        ICONS.update(mapping)
+    else:
+        mapping.update(ICONS)
+        ICONS = mapping
 
 
 def get_icon(name: str | tuple[str, dict]) -> tuple[str | dict]:
