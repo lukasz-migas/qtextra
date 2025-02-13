@@ -23,6 +23,7 @@ class QtToggleGroup(QFrame):
         tooltip: str = "",
         orientation: str = "horizontal",
         exclusive: bool = True,
+        multiline: bool = False,
     ):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.Box)
@@ -39,6 +40,7 @@ class QtToggleGroup(QFrame):
             func=self._on_changed,
             orientation=orientation,
             exclusive=exclusive,
+            multiline=multiline,
         )
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(1)
@@ -89,6 +91,7 @@ class QtToggleGroup(QFrame):
         items: dict[str, ty.Any] | None = None,
         func: ty.Callable | None = None,
         exclusive: bool = True,
+        multiline: bool = False,
         **kwargs: dict,
     ) -> QtToggleGroup:
         """From schema."""
@@ -105,7 +108,13 @@ class QtToggleGroup(QFrame):
         if "enum" in kwargs:
             options = kwargs["enum"]
         widget = cls(
-            parent, options=options, value=value, tooltip=tooltip, orientation=orientation, exclusive=exclusive
+            parent,
+            options=options,
+            value=value,
+            tooltip=tooltip,
+            orientation=orientation,
+            exclusive=exclusive,
+            multiline=multiline,
         )
         if func:
             [widget.evt_changed.connect(func_) for func_ in hp._validate_func(func)]

@@ -203,6 +203,35 @@ def make_periodic_timer(parent: Qw.QWidget, func: ty.Callable, delay: int, start
     return timer
 
 
+def run_process(
+    program: str,
+    arguments: list[str],
+    detached: bool = True,
+    stdout_func: ty.Callable | None = None,
+    error_func: ty.Callable | None = None,
+) -> None:
+    """Execute process."""
+    from qtpy.QtCore import QProcess
+
+    process = QProcess()
+    process.setProgram(program)
+    if IS_WIN and hasattr(process, "setNativeArguments"):
+        process.setNativeArguments(" ".join(arguments))
+    else:
+        process.setArguments(arguments)
+    if detached:
+        if stdout_func:
+            process.readyReadStandardOutput.connect(
+                lambda: stdout_func(process.readAllStandardOutput().data().decode())
+            )
+            process.readyReadStandardError.connect(lambda: stdout_func(process.readAllStandardError().data().decode()))
+        if error_func:
+            process.errorOccurred.connect(error_func)
+        process.startDetached()
+    else:
+        process.start()
+
+
 def combobox_setter(
     widget: Qw.QComboBox,
     clear: bool = True,
@@ -1802,6 +1831,7 @@ def make_toggle_group(
     checked_label: str | list[str] = "",
     orientation: Orientation = "horizontal",
     exclusive: bool = True,
+    multiline: bool = True,
 ) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
     """Make toggle button."""
     widget = Qw.QButtonGroup(parent)
@@ -1811,7 +1841,7 @@ def make_toggle_group(
         checked_label = [checked_label]
 
     if orientation == "flow":
-        layout = make_flow_layout()
+        layout = make_animated_flow_layout()
     else:
         orientation = _get_orientation(orientation)
         layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
@@ -1972,6 +2002,37 @@ def make_flow_layout(
     from qtextra.widgets.qt_layout_flow import QtFlowLayout
 
     layout = QtFlowLayout(parent)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
+
+
+def make_animated_flow_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    stretch_id: int | tuple[int, ...] | None = None,
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    alignment: Qt.AlignmentFlag | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    parent: Qw.QWidget | None = None,
+    use_animation: bool = False,
+) -> Qw.QHBoxLayout:
+    """Make horizontal layout."""
+    from qtextra.widgets.qt_layout_flow import QtAnimatedFlowLayout
+
+    layout = QtAnimatedFlowLayout(parent, use_animation=use_animation, tight=True)
     if spacing is not None:
         layout.setSpacing(spacing)
     if margin is not None:
