@@ -32,7 +32,7 @@ class QtToggleGroup(QFrame):
 
         import qtextra.helpers as hp
 
-        layout, self.buttons = hp.make_toggle_group(
+        layout, self.button_group = hp.make_toggle_group(
             self,
             *options,
             checked_label=value,
@@ -52,10 +52,15 @@ class QtToggleGroup(QFrame):
             self.evt_changed.emit(self.value)
 
     @property
-    def button(self) -> ty.Any:
+    def buttons(self) -> list[QWidget]:
+        """Buttons."""
+        return self.button_group.buttons()
+
+    @property
+    def checked_buttons(self) -> ty.Any:
         """Button."""
         value = []
-        for button in self.buttons.buttons():
+        for button in self.button_group.buttons():
             if button.isChecked():
                 value.append(button)
         return value
@@ -63,9 +68,9 @@ class QtToggleGroup(QFrame):
     @property
     def value(self) -> str | list[str] | None:
         """Get value."""
-        buttons = self.button
+        buttons = self.checked_buttons
         value = [button.text() for button in buttons]
-        if value and self.buttons.exclusive():
+        if value and self.button_group.exclusive():
             return value[0]
         return value
 
@@ -74,7 +79,7 @@ class QtToggleGroup(QFrame):
         """Set value."""
         if not isinstance(value, list):
             value = [value]
-        for button in self.buttons.buttons():
+        for button in self.button_group.buttons():
             if button.text() in value:
                 button.setChecked(True)
 

@@ -30,6 +30,8 @@ class QtaMixin:
         kwargs.update(kwargs_)
         self._qta_data = (name, kwargs)
         color_ = kwargs.pop("color", None)
+        if color_:
+            self._icon_color = color_
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
         if "spin" in kwargs:
             kwargs["animation"] = qtawesome.Spin(self, autostart=True)

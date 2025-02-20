@@ -2145,11 +2145,11 @@ def make_advanced_collapsible(
     parent: Qw.QWidget,
     title: str = "Advanced options",
     allow_checkbox: bool = True,
-    icon: str = "info",
+    icon: str | tuple[str, dict] = "info",
     allow_icon: bool = False,
     icon_func: Callback | None = None,
     allow_warning: bool = False,
-    warning_icon: str = "warning",
+    warning_icon: str | tuple[str, dict] = "warning",
     collapsed: bool = True,
 ) -> QtCheckCollapsible:
     """Make collapsible widget."""

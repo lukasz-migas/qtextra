@@ -156,11 +156,11 @@ class QtTogglePushButton(QtImagePushButton):
 
     _state: bool = False
 
-    def __init__(self, *args, auto_connect: bool = False, **kwargs):
+    def __init__(self, *args, state: bool = False, auto_connect: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
         if auto_connect:
             self.auto_connect()
-        self.state = False
+        self.state = state
 
     @property
     def state(self) -> bool:
@@ -169,9 +169,11 @@ class QtTogglePushButton(QtImagePushButton):
 
     @state.setter
     def state(self, value: bool) -> None:
+        changed = value != self._state
         self._state = value
         self.set_qta(self.ICON_ON if value else self.ICON_OFF)
-        self.evt_toggled.emit(value)
+        if changed:
+            self.evt_toggled.emit(value)
 
     def auto_connect(self) -> None:
         """Automatically connect."""
@@ -180,6 +182,11 @@ class QtTogglePushButton(QtImagePushButton):
     def toggle_state(self) -> None:
         """Toggle state."""
         self.state = not self.state
+
+    def set_state(self, state: bool, trigger: bool = True) -> None:
+        """Set state."""
+        with hp.qt_signals_blocked(self, block_signals=not trigger):
+            self.state = state
 
 
 class QtAnimationPlayButton(QtTogglePushButton):
