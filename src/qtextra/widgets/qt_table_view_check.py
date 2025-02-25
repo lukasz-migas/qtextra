@@ -1026,9 +1026,9 @@ class QtCheckableTableView(QTableView):
 
     def update_column(self, col: int, values: list, match_to_sort: bool = True, block_signals: bool = False) -> None:
         """Update entire row."""
-        assert (
-            len(values) == self.n_rows
-        ), f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
+        assert len(values) == self.n_rows, (
+            f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
+        )
         model = self.model()
         with qt_signals_blocked(model, block_signals=block_signals):
             model.update_column(col, values, match_to_sort)
