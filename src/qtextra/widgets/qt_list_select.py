@@ -97,7 +97,7 @@ class QtSelectionList(QWidget):
 
     def init_ui(self) -> None:
         """Initialize the user interface."""
-        self._layout = hp.make_form_layout(self)
+        self._layout = hp.make_form_layout(parent=self)
 
         self.filter_by = hp.make_line_edit(self, placeholder="Type in text to filter...", func_changed=self.on_filter)
         self.filter_by.setMinimumWidth(200)

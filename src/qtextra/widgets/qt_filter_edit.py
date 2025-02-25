@@ -62,7 +62,7 @@ class QtFilterEdit(QWidget):
 
     evt_filters_changed = Signal(list)
 
-    def __init__(self, parent: QWidget | None = None, placeholder: str = "Type in..."):
+    def __init__(self, parent: QWidget | None = None, placeholder: str = "Type in...", above: bool = False):
         super().__init__(parent)
 
         self.text_edit = hp.make_line_edit(
@@ -80,8 +80,12 @@ class QtFilterEdit(QWidget):
         self._scroll.setMaximumHeight(self.text_edit.height())
 
         self._main_layout = hp.make_form_layout(margin=0)
-        self._main_layout.addRow(self.text_edit)
-        self._main_layout.addRow(self._scroll)
+        if above:
+            self._main_layout.addRow(self._scroll)
+            self._main_layout.addRow(self.text_edit)
+        else:
+            self._main_layout.addRow(self.text_edit)
+            self._main_layout.addRow(self._scroll)
         self.setLayout(self._main_layout)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 

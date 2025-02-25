@@ -24,8 +24,7 @@ class InfoDialog(QtFramelessPopup):
             self, wrap=True, enable_url=True, selectable=True, object_name="title_label"
         )
 
-        layout = hp.make_form_layout(self)
-        hp.style_form_layout(layout)
+        layout = hp.make_form_layout(parent=self)
         layout.addRow(header_layout)
         layout.addRow(self.label)
         return layout

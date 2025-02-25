@@ -51,9 +51,7 @@ class InfoDialog(QtFramelessPopup):
         else:
             header_layout = self._make_title_handle(self._title)
 
-        layout = hp.make_form_layout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        hp.style_form_layout(layout)
+        layout = hp.make_form_layout(parent=self, margin=2)
         layout.addRow(header_layout)
 
         if self.quick:

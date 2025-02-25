@@ -382,7 +382,7 @@ class SettingsPopup(QtFramelessPopup):
         hp.set_combobox_data(self.level, NOTIFICATION_LEVELS, get_settings().notification.level)
         self.level.currentTextChanged.connect(self.on_apply)
 
-        main_layout = QFormLayout()
+        main_layout = hp.make_form_layout()
         main_layout.addRow(
             hp.make_label(self, "Notification Settings", alignment=Qt.AlignmentFlag.AlignHCenter, bold=True)
         )

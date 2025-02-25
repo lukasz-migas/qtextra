@@ -133,9 +133,7 @@ class SelectionWidget(QtFramelessPopup):
             func_changed=lambda text, col=self.TABLE_CONFIG.option: self.table_proxy.setFilterByColumn(text, col),
         )
 
-        layout = hp.make_form_layout(self)
-        layout.setContentsMargins(6, 6, 6, 6)
-        hp.style_form_layout(layout)
+        layout = hp.make_form_layout(parent=self, margin=6)
 
         if self.text:
             layout.addRow(

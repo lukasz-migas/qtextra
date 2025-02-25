@@ -63,13 +63,12 @@ class ChangelogDialog(QtFramelessTool):
             self.download_btn.hide()
         if self.path_to_out is not None and self.path_to_out.exists():
             self.progress_label.setText(
-                f"<a href='{self.path_to_out.as_uri()}'>Open {self.path_to_out} - it's been"
-                f" previously downloaded.</a>"
+                f"<a href='{self.path_to_out.as_uri()}'>Open {self.path_to_out} - it's been previously downloaded.</a>"
             )
             self.progress_label.show()
             self.download_btn.hide()
 
-        layout = hp.make_form_layout(self)
+        layout = hp.make_form_layout(parent=self)
         layout.addRow(self._make_close_handle("Changelog")[1])
         layout.addRow(self.text_edit)
         layout.addRow(self.download_label)
@@ -159,7 +158,7 @@ def report_hook(
                 pbar.total = tot_size
             pbar.update((b - last_b[0]) * bsize)
             progress_bar.setValue(pbar.n)
-            text = f"{pbar.n / 1024 ** 2:.2f} / {pbar.total / 1024 ** 2:.2f} MB"
+            text = f"{pbar.n / 1024**2:.2f} / {pbar.total / 1024**2:.2f} MB"
             label.setText(text)
         last_b[0] = b
 

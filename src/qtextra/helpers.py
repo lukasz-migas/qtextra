@@ -78,13 +78,13 @@ if ty.TYPE_CHECKING:
 
 
 def make_form_layout(
-    widget: ty.Optional[Qw.QWidget] = None,
     *widgets: tuple,
     stretch_after: bool = False,
     margin: int | tuple[int, int, int, int] | None = None,
+    parent: ty.Optional[Qw.QWidget] = None,
 ) -> Qw.QFormLayout:
     """Make form layout."""
-    layout = Qw.QFormLayout(widget)
+    layout = Qw.QFormLayout(parent)
     style_form_layout(layout)
     layout.setFieldGrowthPolicy(Qw.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
     layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
