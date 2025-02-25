@@ -17,6 +17,8 @@ class QtScrollableHLayout(QScrollArea):
     def __init__(self, parent: ty.Optional[QWidget] = None):
         super().__init__(parent)
 
+        self.setMaximumHeight(45)
+
         self._widget = QWidget()
         self._main_layout = hp.make_h_layout(stretch_after=True, spacing=1, margin=1, parent=self._widget)
         self.setWidgetResizable(True)
@@ -24,7 +26,7 @@ class QtScrollableHLayout(QScrollArea):
         self.setContentsMargins(0, 0, 0, 0)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
     def count(self) -> int:
         """Return count of widgets."""
@@ -77,8 +79,11 @@ class QtFilterEdit(QWidget):
 
         self._scroll = QtScrollableHLayout(self)
 
-        self._main_layout = hp.make_v_layout(self._scroll, self.text_edit)
+        self._main_layout = hp.make_form_layout()
+        self._main_layout.addRow(self._scroll)
+        self._main_layout.addRow(self.text_edit)
         self.setLayout(self._main_layout)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
     def on_add(self) -> None:
         """Add filter."""

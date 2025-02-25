@@ -515,3 +515,14 @@ QMainWindow::separator:vertical {
     height: 8px;
     padding: 2 1 2 1;
 }
+
+QtScrollableHLayout QScrollBar:horizontal {
+    max-height: 1px;
+}
+QtScrollableHLayout QScrollBar::add-line:horizontal, QtScrollableHLayout QScrollBar::sub-line:horizontal {
+    border: none;
+    background: none;
+    height: 0px;
+    width: 0px;
+
+}
