@@ -672,7 +672,7 @@ class QtCheckableTableView(QTableView):
     def model(self) -> QtCheckableItemModel:
         """Return instance of model."""
         model: QtCheckableItemModel = super().model()
-        if isinstance(model, MultiColumnSingleValueProxyModel):
+        if hasattr(model, "sourceModel"):
             return model.sourceModel()
         return model
 
@@ -732,7 +732,6 @@ class QtCheckableTableView(QTableView):
         # disable drag
         self.setDragEnabled(self._drag)
         if self._drag:
-            # self.setDragDropMode(Qt.Dro.MoveAction)
             self.setDropIndicatorShown(True)
         # set selection mode
         self.setSelectionMode(self._selection)
@@ -820,7 +819,9 @@ class QtCheckableTableView(QTableView):
 
     def reset_data(self) -> None:
         """Clear table."""
-        self.model().reset_data()
+        model = self.model()
+        if hasattr(model, "reset_data"):
+            model.reset_data()
         self.evt_reset.emit()
 
     def set_data(
