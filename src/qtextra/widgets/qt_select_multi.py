@@ -164,9 +164,17 @@ class QtMultiSelect(QWidget):
     textChanged = Signal(str)
     evt_selection_changed = Signal(list)
 
-    def __init__(self, parent: QWidget, allow_clear: bool = False, instant_set: bool = False, n_max: int = 0):
+    def __init__(
+        self,
+        parent: QWidget,
+        allow_clear: bool = False,
+        instant_set: bool = False,
+        n_max: int = 0,
+        hover_opens: bool = False,
+    ):
         self.instant_set = instant_set
         self.n_max = n_max
+        self.hover_opens = hover_opens
 
         super().__init__(parent)
         self.options: list[str] = []
@@ -192,6 +200,12 @@ class QtMultiSelect(QWidget):
 
         self.text_edit.editingFinished.connect(self.editingFinished.emit)
         self.text_edit.textChanged.connect(self.textChanged.emit)
+
+    def enterEvent(self, event: ty.Any) -> None:
+        """Enter event."""
+        if self.hover_opens:
+            self.text_edit.setFocus()
+        super().enterEvent(event)
 
     def eventFilter(self, obj: QObject, evt: QEvent) -> bool:
         """Event filter."""
