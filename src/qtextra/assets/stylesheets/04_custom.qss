@@ -274,7 +274,7 @@ QtTagButton > QtIconLabel, QtLeftPillLabel, QtPillActionButton, QtTagButton{
     background: none;
 }
 QtTagButton > QtLeftPillLabel{
-    font-size: 14pt;
+    font-size: {{ increase(font_size, 2) }};
 }
 
 QtPillActionButton::hover {

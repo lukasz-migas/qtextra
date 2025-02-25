@@ -108,7 +108,8 @@ class QtTagButton(QFrame):
         layout = QHBoxLayout(self)
         layout.addWidget(self.selected, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter, stretch=True)
-        layout.addWidget(hp.make_v_line(self))
+        if allow_action:
+            layout.addWidget(hp.make_v_line(self))
         layout.addWidget(self.action_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -175,7 +176,7 @@ class QtTagManager(QWidget):
         self.allow_action = allow_action
 
         self._layout = QtFlowLayout(self) if flow else QHBoxLayout(self)
-        self._layout.setSpacing(0)
+        self._layout.setSpacing(-2)
         self._layout.setContentsMargins(2, 2, 2, 2)
         self.widgets: dict[str, QtTagButton] = {}
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
