@@ -155,9 +155,16 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
 class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
     """Proxy model to filter by."""
 
-    def __init__(self, *args: ty.Any, mode: MultiFilterMode = MultiFilterMode.AND, **kwargs: ty.Any):
+    def __init__(
+        self,
+        *args: ty.Any,
+        mode: MultiFilterMode = MultiFilterMode.AND,
+        column_mode: MultiFilterMode = MultiFilterMode.OR,
+        **kwargs: ty.Any,
+    ):
         super().__init__(*args, mode=mode, **kwargs)
         self.filters: dict[int, list[str]] = {}
+        self.column_compare_func = any if column_mode == MultiFilterMode.OR else all
 
     def setFilterByColumn(self, filters: list[str], column: int) -> None:
         """Set filter by column."""
@@ -165,7 +172,8 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
             del self.filters[column]
         if not isinstance(filters, list):
             filters = [filters]
-        self.filters[column] = [filt.lower() for filt in filters]
+        if filters:
+            self.filters[column] = [filt.lower() for filt in filters]
         self.invalidateFilter()
         self.evt_filtered.emit()
 
@@ -173,9 +181,6 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
         """Filter rows."""
         if not self.filters:
             return True
-        # if not source_parent.isValid():
-        #     return True
-
         results: list[bool] = []
         for column, _texts in self.filters.items():
             value = ""
@@ -184,7 +189,7 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
                 value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
                 if not value:
                     return True
-            results.append(self.compare_func(text in value.lower() for text in _texts))
+            results.append(self.column_compare_func(text in value.lower() for text in _texts))
         return self.compare_func(results)
 
 
@@ -202,6 +207,7 @@ class SingleColumnMultiValueProxyModel(FilterProxyModelBase):
             self.column = column
         if not isinstance(filters, list):
             filters = [filters]
+
         self.filters = [filt.lower() for filt in filters]
         self.invalidateFilter()
         self.evt_filtered.emit()
@@ -1027,9 +1033,9 @@ class QtCheckableTableView(QTableView):
 
     def update_column(self, col: int, values: list, match_to_sort: bool = True, block_signals: bool = False) -> None:
         """Update entire row."""
-        assert len(values) == self.n_rows, (
-            f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
-        )
+        assert (
+            len(values) == self.n_rows
+        ), f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
         model = self.model()
         with qt_signals_blocked(model, block_signals=block_signals):
             model.update_column(col, values, match_to_sort)

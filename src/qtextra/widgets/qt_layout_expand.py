@@ -107,7 +107,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     app, frame, ha = qframe(with_layout=False)
     frame.setMinimumSize(600, 600)
-    flow_layout = QtExpandLayout(frame)
+    flow_layout = QtExpandLayout()
     for text in [
         "Short",
         "Longer",
@@ -121,6 +121,7 @@ if __name__ == "__main__":  # pragma: no cover
         "Even longer button text",
     ]:
         flow_layout.addWidget(QPushButton(text))
+    frame.setLayout(flow_layout)
 
     frame.show()
     sys.exit(app.exec_())

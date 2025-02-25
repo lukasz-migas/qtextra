@@ -17,8 +17,6 @@ class QtScrollableHLayout(QScrollArea):
     def __init__(self, parent: ty.Optional[QWidget] = None):
         super().__init__(parent)
 
-        self.setMaximumHeight(45)
-
         self._widget = QWidget()
         self._main_layout = hp.make_h_layout(stretch_after=True, spacing=1, margin=1, parent=self._widget)
         self.setWidgetResizable(True)
@@ -71,6 +69,7 @@ class QtFilterEdit(QWidget):
             self,
             placeholder=placeholder,
             func_changed=self.emit_current_filters,
+            func=self.on_add,
         )
         self._list_action = hp.make_action(
             self, "add", func=self.on_add, tooltip="Add currently entered text as a filter."
@@ -78,10 +77,11 @@ class QtFilterEdit(QWidget):
         self.text_edit.addAction(self._list_action, self.text_edit.ActionPosition.TrailingPosition)
 
         self._scroll = QtScrollableHLayout(self)
+        self._scroll.setMaximumHeight(self.text_edit.height())
 
-        self._main_layout = hp.make_form_layout()
-        self._main_layout.addRow(self._scroll)
+        self._main_layout = hp.make_form_layout(margin=0)
         self._main_layout.addRow(self.text_edit)
+        self._main_layout.addRow(self._scroll)
         self.setLayout(self._main_layout)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
 
