@@ -11,6 +11,7 @@ from importlib import metadata
 from subprocess import run
 
 from loguru import logger
+from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
 try:
     from rich import print as pprint
@@ -167,6 +168,14 @@ def get_sample_event(**kwargs) -> dict:
     return EVENT
 
 
+SENTRY_LOGURU = LoguruIntegration(
+    level=LoggingLevels.ERROR.value,  # Capture info and above as breadcrumbs
+    event_level=LoggingLevels.ERROR.value,  # Send errors as events
+)
+
+INTEGRATIONS = [SENTRY_LOGURU]
+
+
 SENTRY_SETTINGS = {
     "dsn": SENTRY_DSN,
     "release": VERSION,
@@ -199,7 +208,7 @@ SENTRY_SETTINGS = {
     "environment": platform.platform(),
     # max_breadcrumbs=DEFAULT_MAX_BREADCRUMBS,
     # shutdown_timeout=2,
-    # integrations=[],
+    "integrations": INTEGRATIONS,
     # in_app_include=[],
     # in_app_exclude=[],
     # default_integrations=True,
@@ -216,8 +225,8 @@ SENTRY_SETTINGS = {
     # ca_certs=None,
     # propagate_traces=True,
     # traces_sampler=None,
-    # auto_enabling_integrations=True,
     # auto_session_tracking=True,
+    "auto_enabling_integrations": False,
     "profiles_sample_rate": 1.0,
     "profiler_mode": "thread",
     # "_experiments": {
