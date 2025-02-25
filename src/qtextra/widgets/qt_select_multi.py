@@ -12,7 +12,7 @@ import qtextra.helpers as hp
 from qtextra.config import THEMES
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtFramelessPopup
-from qtextra.widgets.qt_table_view_check import FilterProxyModel, QtCheckableTableView
+from qtextra.widgets.qt_table_view_check import MultiColumnSingleValueProxyModel, QtCheckableTableView
 
 
 def filter_selected(current_options: list[str], all_options: list[str]) -> list[str]:
@@ -123,7 +123,7 @@ class SelectionWidget(QtFramelessPopup):
         self.table.setup_model(
             self.TABLE_CONFIG.header, self.TABLE_CONFIG.no_sort_columns, self.TABLE_CONFIG.hidden_columns
         )
-        self.table_proxy = FilterProxyModel(self)
+        self.table_proxy = MultiColumnSingleValueProxyModel(self)
         self.table_proxy.setSourceModel(self.table.model())
         self.table.model().table_proxy = self.table_proxy
         self.table.setModel(self.table_proxy)
@@ -184,7 +184,7 @@ class QtMultiSelect(QWidget):
         self._list_action = hp.make_action(
             self, "list", func=self.on_select, tooltip="Click here to select one or more options"
         )
-        self.text_edit.addAction(self._list_action, self.text_edit.ActionPosition.TrailingPosition)
+        self.text_edit.addAction(self._list_action, self.text_edit.ActionPosition.LeadingPosition)
 
         layout = hp.make_h_layout(self.text_edit, stretch_id=0, spacing=0)
         layout.setContentsMargins(0, 0, 0, 0)

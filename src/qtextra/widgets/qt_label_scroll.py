@@ -1,5 +1,7 @@
 """Scrollable label."""
 
+from __future__ import annotations
+
 import typing as ty
 
 from koyo.typing import PathLike
@@ -56,9 +58,9 @@ class QtScrollableLabel(QScrollArea):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.utils.dev import qmain
+    from qtextra.utils.dev import qframe
 
-    app, frame, ha = qmain(False)
+    app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
 
     wdg = QtScrollableLabel(text="This is a long text that will make the QLabel scrollable. " * 20)

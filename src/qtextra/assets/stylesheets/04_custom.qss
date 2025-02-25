@@ -277,6 +277,11 @@ QtTagButton > QtLeftPillLabel{
     font-size: 14pt;
 }
 
+QtPillActionButton::hover {
+    border-radius: 10px;
+    background-color: {{ lighten(success, 25) }};
+}
+
 QtPillActionButton[mode=delete]::hover {
     border-radius: 10px;
     background-color: {{ lighten(warning, 25) }};

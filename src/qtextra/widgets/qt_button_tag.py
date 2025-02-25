@@ -30,8 +30,19 @@ class QtPillActionButton(QtImagePushButton):
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        self._mode = "delete"
-        self.mode = "delete"
+        self._mode = self._icon = "delete"
+        self.mode = self.icon = "delete"
+
+    @property
+    def icon(self) -> str:
+        """Get icon."""
+        return self._icon
+
+    @icon.setter
+    def icon(self, value: str):
+        """Set icon."""
+        self._icon = value
+        self.set_qta(value)
 
     @property
     def mode(self) -> str:
@@ -39,10 +50,9 @@ class QtPillActionButton(QtImagePushButton):
         return self._mode
 
     @mode.setter
-    def mode(self, action_type: str) -> None:
-        self._mode = action_type
-        self.set_qta(action_type)
-        self.setProperty("mode", action_type)
+    def mode(self, value: str) -> None:
+        self._mode = value
+        self.setProperty("mode", value)
         hp.polish_widget(self)
 
 
@@ -64,6 +74,7 @@ class QtTagButton(QFrame):
         parent: QWidget | None = None,
         allow_action: bool = True,
         action_type: str = "delete",
+        action_icon: str = "cross",
         allow_selected: bool = True,
     ):
         super().__init__(parent=parent)
@@ -89,6 +100,7 @@ class QtTagButton(QFrame):
         self.action_btn.clicked.connect(self._on_action)
         self.action_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.MinimumExpanding)
         self.action_btn.setVisible(allow_action)
+        self.action_btn.icon = action_icon
         self.action_btn.mode = action_type
         self.setProperty("mode", action_type)
         hp.polish_widget(self.action_btn)
@@ -96,6 +108,7 @@ class QtTagButton(QFrame):
         layout = QHBoxLayout(self)
         layout.addWidget(self.selected, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter, stretch=True)
+        layout.addWidget(hp.make_v_line(self))
         layout.addWidget(self.action_btn, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -157,11 +170,11 @@ class QtTagManager(QWidget):
     evt_plus_clicked = Signal()
     _action_btn = None
 
-    def __init__(self, parent: QWidget | None = None, allow_action: bool = False):
+    def __init__(self, parent: QWidget | None = None, allow_action: bool = False, flow: bool = True):
         super().__init__(parent=parent)
         self.allow_action = allow_action
 
-        self._layout = QtFlowLayout(self)
+        self._layout = QtFlowLayout(self) if flow else QHBoxLayout(self)
         self._layout.setSpacing(0)
         self._layout.setContentsMargins(2, 2, 2, 2)
         self.widgets: dict[str, QtTagButton] = {}

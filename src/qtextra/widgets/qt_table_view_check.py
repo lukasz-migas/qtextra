@@ -66,18 +66,19 @@ class MultiFilterMode(str, Enum):
     AND = "AND"
 
 
-class FilterProxyModel(QSortFilterProxyModel):
-    """Proxy model to filter by."""
+class FilterProxyModelBase(QSortFilterProxyModel):
+    """Base class for filters."""
 
+    compare_func: ty.Callable[[ty.Iterable[bool]], bool]
+    is_multi_or: bool
     sourceModel: ty.Callable[[], QtCheckableItemModel]
 
     evt_filtered = Signal()
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, mode: MultiFilterMode = MultiFilterMode.AND, **kwargs: ty.Any):
         QSortFilterProxyModel.__init__(self, *args, **kwargs)
-        self.filters: dict[int, str] = {}
-        self._multi_filter_mode = MultiFilterMode.AND
-        self.is_multi_or = self.multi_filter_mode == MultiFilterMode.OR
+        self._multi_filter_mode = mode
+        self.multi_filter_mode = mode
 
     @property
     def multi_filter_mode(self) -> MultiFilterMode:
@@ -88,6 +89,7 @@ class FilterProxyModel(QSortFilterProxyModel):
     def multi_filter_mode(self, value: MultiFilterMode) -> None:
         self._multi_filter_mode = value
         self.is_multi_or = self.multi_filter_mode == MultiFilterMode.OR
+        self.compare_func = any if self.is_multi_or else all
 
     def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
         """Sort table."""
@@ -95,32 +97,13 @@ class FilterProxyModel(QSortFilterProxyModel):
             return
         super().sort(column, order)
 
-    def setFilterByColumn(self, text: str, column: int) -> None:
+    def setFilterByColumn(self, *args: ty.Any) -> None:
         """Set filter by column."""
-        if not text and column in self.filters:
-            del self.filters[column]
-        self.filters[column] = str(text).lower()
-        self.invalidateFilter()
-        self.evt_filtered.emit()
+        raise NotImplementedError("Must implement method")
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         """Filter rows."""
-        if not self.filters:
-            return True
-        # if not source_parent.isValid():
-        #     return True
-
-        results: list[bool] = []
-        for column, text in self.filters.items():
-            value = ""
-            index = self.sourceModel().index(source_row, column, source_parent)
-            if index.isValid():
-                value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
-                if not value:
-                    return True
-            results.append(text in value.lower())
-        matched = any(results) if self.is_multi_or else all(results)
-        return matched
+        raise NotImplementedError("Must implement method")
 
     def find_visible_rows(self) -> tuple[list[int], list[int]]:
         """Find visible rows."""
@@ -137,13 +120,118 @@ class FilterProxyModel(QSortFilterProxyModel):
         return visible_rows, hidden_rows
 
 
+class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
+    """Proxy model to filter by."""
+
+    def __init__(self, *args: ty.Any, mode: MultiFilterMode = MultiFilterMode.AND, **kwargs: ty.Any):
+        super().__init__(*args, mode=mode, **kwargs)
+        self.filters: dict[int, str] = {}
+
+    def setFilterByColumn(self, text: str, column: int) -> None:
+        """Set filter by column."""
+        if not text and column in self.filters:
+            del self.filters[column]
+        self.filters[column] = str(text).lower()
+        self.invalidateFilter()
+        self.evt_filtered.emit()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        """Filter rows."""
+        if not self.filters:
+            return True
+
+        results: list[bool] = []
+        for column, text in self.filters.items():
+            value = ""
+            index = self.sourceModel().index(source_row, column, source_parent)
+            if index.isValid():
+                value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
+                if not value:
+                    return True
+            results.append(text in value.lower())
+        return self.compare_func(results)
+
+
+class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
+    """Proxy model to filter by."""
+
+    def __init__(self, *args: ty.Any, mode: MultiFilterMode = MultiFilterMode.AND, **kwargs: ty.Any):
+        super().__init__(*args, mode=mode, **kwargs)
+        self.filters: dict[int, list[str]] = {}
+
+    def setFilterByColumn(self, filters: list[str], column: int) -> None:
+        """Set filter by column."""
+        if not filters and column in self.filters:
+            del self.filters[column]
+        if not isinstance(filters, list):
+            filters = [filters]
+        self.filters[column] = [filt.lower() for filt in filters]
+        self.invalidateFilter()
+        self.evt_filtered.emit()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        """Filter rows."""
+        if not self.filters:
+            return True
+        # if not source_parent.isValid():
+        #     return True
+
+        results: list[bool] = []
+        for column, _texts in self.filters.items():
+            value = ""
+            index = self.sourceModel().index(source_row, column, source_parent)
+            if index.isValid():
+                value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
+                if not value:
+                    return True
+            results.append(self.compare_func(text in value.lower() for text in _texts))
+        return self.compare_func(results)
+
+
+class SingleColumnMultiValueProxyModel(FilterProxyModelBase):
+    """Proxy model to filter by."""
+
+    def __init__(self, *args: ty.Any, column: int, mode: MultiFilterMode = MultiFilterMode.AND, **kwargs: ty.Any):
+        super().__init__(*args, mode=mode, **kwargs)
+        self.column = column
+        self.filters: list[str] = []
+
+    def setFilterByColumn(self, filters: list[str], column: int | None = None) -> None:
+        """Set filter by column."""
+        if column is not None:
+            self.column = column
+        if not isinstance(filters, list):
+            filters = [filters]
+        self.filters = [filt.lower() for filt in filters]
+        self.invalidateFilter()
+        self.evt_filtered.emit()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        """Filter rows."""
+        if not self.filters:
+            return True
+        # if not source_parent.isValid():
+        #     return True
+
+        results: list[bool] = []
+        for text in self.filters:
+            value = ""
+            index = self.sourceModel().index(source_row, self.column, source_parent)
+            if index.isValid():
+                value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
+                if not value:
+                    return True
+            results.append(text in value.lower())
+        return self.compare_func(results)
+
+
 class QtCheckableItemModel(QAbstractTableModel):
     """Checkable item model."""
 
     evt_checked = Signal(int, bool)
     evt_value_checked = Signal(int, int, bool)
 
-    table_proxy: FilterProxyModel | None = None
+    table_proxy: MultiColumnSingleValueProxyModel | SingleColumnMultiValueProxyModel | None = None
 
     def __init__(
         self,
@@ -584,18 +672,18 @@ class QtCheckableTableView(QTableView):
     def model(self) -> QtCheckableItemModel:
         """Return instance of model."""
         model: QtCheckableItemModel = super().model()
-        if isinstance(model, FilterProxyModel):
+        if isinstance(model, MultiColumnSingleValueProxyModel):
             return model.sourceModel()
         return model
 
     def is_proxy(self) -> bool:
         """Return True if model is a proxy model."""
-        return isinstance(super().model(), FilterProxyModel)
+        return isinstance(super().model(), MultiColumnSingleValueProxyModel)
 
-    def proxy_or_model(self) -> QtCheckableItemModel | FilterProxyModel:
+    def proxy_or_model(self) -> QtCheckableItemModel | MultiColumnSingleValueProxyModel:
         """Return instance of model."""
         model: QtCheckableItemModel = super().model()
-        if isinstance(model, FilterProxyModel):
+        if isinstance(model, MultiColumnSingleValueProxyModel):
             return model
         return model
 
@@ -938,9 +1026,9 @@ class QtCheckableTableView(QTableView):
 
     def update_column(self, col: int, values: list, match_to_sort: bool = True, block_signals: bool = False) -> None:
         """Update entire row."""
-        assert len(values) == self.n_rows, (
-            f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
-        )
+        assert (
+            len(values) == self.n_rows
+        ), f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
         model = self.model()
         with qt_signals_blocked(model, block_signals=block_signals):
             model.update_column(col, values, match_to_sort)

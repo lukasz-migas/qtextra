@@ -25,7 +25,7 @@ from qtextra.queue.utilities import format_command, format_interval, format_time
 from qtextra.typing import TaskState
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_dialog import QtDialog
-from qtextra.widgets.qt_table_view_check import FilterProxyModel, QtCheckableTableView
+from qtextra.widgets.qt_table_view_check import MultiColumnSingleValueProxyModel, QtCheckableTableView
 
 logger = logger.bind(src="TaskInfo")
 
@@ -234,7 +234,7 @@ class TaskInfoDialog(QtDialog):
         self.command_table.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
         self.command_table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
-        self.table_proxy = FilterProxyModel(self)
+        self.table_proxy = MultiColumnSingleValueProxyModel(self)
         self.table_proxy.setSourceModel(self.command_table.model())
         self.command_table.model().table_proxy = self.table_proxy
         self.command_table.setModel(self.table_proxy)
