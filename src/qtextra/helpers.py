@@ -1997,17 +1997,17 @@ def make_flow_layout(
     stretch_before: bool = False,
     stretch_after: bool = False,
     parent: Qw.QWidget | None = None,
+    vertical_spacing: int | None = None,
+    horizontal_spacing: int | None = None,
 ) -> Qw.QHBoxLayout:
     """Make horizontal layout."""
     from qtextra.widgets.qt_layout_flow import QtFlowLayout
 
-    layout = QtFlowLayout(parent)
-    if spacing is not None:
-        layout.setSpacing(spacing)
-    if margin is not None:
-        if isinstance(margin, int):
-            margin = (margin, margin, margin, margin)
-        layout.setContentsMargins(*margin)
+    layout = QtFlowLayout(parent, spacing=0, margin=margin)
+    if vertical_spacing is not None:
+        layout.setVerticalSpacing(vertical_spacing)
+    if horizontal_spacing is not None:
+        layout.setHorizontalSpacing(horizontal_spacing)
     return _set_in_layout(
         *widgets,
         layout=layout,
