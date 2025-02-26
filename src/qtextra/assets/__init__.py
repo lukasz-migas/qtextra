@@ -37,6 +37,7 @@ LOADING_GIFS = {
 
 QTA_MAPPING: ty.Dict[str, str] = {
     "MISSING": "ri.error-warning-line",
+    "clear": "mdi6.delete-empty",
     "json": "mdi6.code-json",
     "binary": "msc.file-binary",
     "hdf5": "fa5s.file",

@@ -14,6 +14,8 @@ from qtextra.widgets.qt_button_tag import QtTagButton
 class QtScrollableHLayout(QScrollArea):
     """Scrollable horizontal layout."""
 
+    MIN_HEIGHT: int = 30
+
     def __init__(self, parent: ty.Optional[QWidget] = None):
         super().__init__(parent)
 
@@ -30,31 +32,57 @@ class QtScrollableHLayout(QScrollArea):
         """Return count of widgets."""
         return self._main_layout.count()
 
-    def add_widget(self, widget: QWidget, **kwargs: ty.Any) -> None:
-        """Add widget."""
-        self._main_layout.addWidget(widget, **kwargs)
-
-    def insert_widget(self, index: int, widget: QWidget, **kwargs: ty.Any) -> None:
-        """Insert widget."""
-        self._main_layout.insertWidget(index, widget, **kwargs)
-
-    def add_layout(self, layout: QWidget, **kwargs: ty.Any) -> None:
-        """Add layout."""
-        self._main_layout.addLayout(layout, **kwargs)
-
-    def insert_layout(self, index: int, layout: QWidget, **kwargs: ty.Any) -> None:
-        """Insert layout."""
-        self._main_layout.insertLayout(index, layout, **kwargs)
-
-    def remove_widget_or_layout(self, index: int) -> None:
-        """Remove widget or layout based on index position."""
+    def get_widget(self, index: int) -> QWidget | None:
+        """Get widget at position."""
         item = self._main_layout.itemAt(index)
         if not item:
             return
         widget = item.widget()
+        return widget
+
+    def add_widget(self, widget: QWidget, **kwargs: ty.Any) -> None:
+        """Add widget."""
+        self._main_layout.addWidget(widget, **kwargs)
+        self._update_scroll()
+
+    def insert_widget(self, index: int, widget: QWidget, **kwargs: ty.Any) -> None:
+        """Insert widget."""
+        self._main_layout.insertWidget(index, widget, **kwargs)
+        self._update_scroll()
+
+    def add_layout(self, layout: QWidget, **kwargs: ty.Any) -> None:
+        """Add layout."""
+        self._main_layout.addLayout(layout, **kwargs)
+        self._update_scroll()
+
+    def insert_layout(self, index: int, layout: QWidget, **kwargs: ty.Any) -> None:
+        """Insert layout."""
+        self._main_layout.insertLayout(index, layout, **kwargs)
+        self._update_scroll()
+
+    def remove_widget_or_layout(self, index: int) -> None:
+        """Remove widget or layout based on index position."""
+        widget = self.get_widget(index)
         if widget:
             self._main_layout.removeWidget(widget)
             widget.deleteLater()
+            self._update_scroll()
+
+    def minimum_height_for_widgets(self) -> int:
+        """Return minimum height for all widgets."""
+        height = 0
+        for i in range(self.count() - 1):
+            widget = self.get_widget(i)
+            if widget:
+                height = max(height, widget.minimumHeight())
+        return height
+
+    def _update_scroll(self) -> None:
+        height = self.MIN_HEIGHT
+        if self.count() > 1:
+            height = max(height, self.minimum_height_for_widgets())
+        if self.maximumHeight() != height:
+            self.setMaximumHeight(height + 8)
 
 
 class QtFilterEdit(QWidget):
@@ -66,18 +94,17 @@ class QtFilterEdit(QWidget):
         super().__init__(parent)
 
         self.text_edit = hp.make_line_edit(
-            self,
-            placeholder=placeholder,
-            func_changed=self.emit_current_filters,
-            func=self.on_add,
+            self, placeholder=placeholder, func_changed=self.emit_current_filters, func=self.on_add
         )
-        self._list_action = hp.make_action(
-            self, "add", func=self.on_add, tooltip="Add currently entered text as a filter."
+        self.clear_action = hp.make_action(self, "clear", func=self.on_remove_all, tooltip="Remove all filters.")
+        self.text_edit.addAction(self.clear_action, self.text_edit.ActionPosition.TrailingPosition)
+        self.add_action = hp.make_action(
+            self, "add", func=self.on_add_action, tooltip="Add currently entered text as a filter."
         )
-        self.text_edit.addAction(self._list_action, self.text_edit.ActionPosition.TrailingPosition)
+        self.text_edit.addAction(self.add_action, self.text_edit.ActionPosition.TrailingPosition)
 
         self._scroll = QtScrollableHLayout(self)
-        self._scroll.setMaximumHeight(self.text_edit.height())
+        self._scroll.MIN_HEIGHT = self.text_edit.height()
 
         self._main_layout = hp.make_form_layout(margin=0)
         if above:
@@ -88,6 +115,11 @@ class QtFilterEdit(QWidget):
             self._main_layout.addRow(self._scroll)
         self.setLayout(self._main_layout)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+    def on_add_action(self) -> None:
+        """This is a workaround some minor issues with action being triggered twice."""
+        with hp.qt_signals_blocked(self.text_edit):
+            self.on_add()
 
     def on_add(self) -> None:
         """Add filter."""
@@ -106,6 +138,12 @@ class QtFilterEdit(QWidget):
         index = filters.index(hash_id)
         self._scroll.remove_widget_or_layout(index)
         self.evt_filters_changed.emit(self.get_filters())
+
+    def on_remove_all(self) -> None:
+        """Remove all filters."""
+        while self._scroll.count() != 1:
+            self._scroll.remove_widget_or_layout(0)
+        self.evt_filters_changed.emit([])
 
     def get_filters(self, current: bool = False) -> list[str]:
         """Get list of currently selected filters."""
@@ -132,7 +170,7 @@ if __name__ == "__main__":  # pragma: no cover
     app, frame, ha = qframe(horz=False)
     frame.setMinimumSize(600, 600)
     ha.addWidget(QtFilterEdit())
-    ha.addWidget(QtFilterEdit())
+    ha.addWidget(QtFilterEdit(above=True))
     ha.addWidget(QtFilterEdit())
 
     frame.show()

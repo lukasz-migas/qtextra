@@ -2,7 +2,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from qtextra.widgets.qt_line import QtHorzLine
+from qtextra.widgets.qt_separator import QtHorzLine
 
 
 class QReadMoreLessLabel(QWidget):

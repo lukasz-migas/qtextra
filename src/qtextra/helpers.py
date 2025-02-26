@@ -28,7 +28,7 @@ from qtpy.QtGui import (
 )
 from superqt import QElidingLabel, QLabeledSlider
 
-from qtextra.typing import Callback, Orientation
+from qtextra.typing import Callback, IconType, Orientation
 from qtextra.utils.table_config import TableConfig
 from qtextra.utils.utilities import IS_MAC, IS_WIN
 
@@ -46,10 +46,10 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_label_icon import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
     from qtextra.widgets.qt_label_scroll import QtScrollableLabel
     from qtextra.widgets.qt_layout_flow import QtFlowLayout
-    from qtextra.widgets.qt_line import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
     from qtextra.widgets.qt_select_multi import QtMultiSelect
+    from qtextra.widgets.qt_separator import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
     try:
@@ -419,7 +419,7 @@ def make_label(
 
 def _make_tooltip_label(
     parent: Qw.QWidget | None,
-    icon_name: str,
+    icon_name: IconType,
     text: str,
     xxsmall: bool = False,
     xsmall: bool = False,
@@ -467,7 +467,7 @@ def make_warning_label(
     xlarge: bool = False,
     xxlarge: bool = False,
     retain_size: bool = False,
-    icon_name: str = "warning",
+    icon_name: IconType = "warning",
     **kwargs: ty.Any,
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
@@ -624,7 +624,7 @@ def make_click_label(
 
 def make_qta_label(
     parent: Qw.QWidget | None,
-    icon_name: str,
+    icon_name: IconType,
     alignment: Qt.AlignmentFlag | None = None,
     tooltip: str | None = None,
     xxsmall: bool = False,
@@ -1244,7 +1244,7 @@ def make_scroll_area(
 
 def make_qta_btn(
     parent: Qw.QWidget | None,
-    icon_name: str,
+    icon_name: IconType,
     tooltip: str | None = None,
     flat: bool = False,
     checkable: bool = False,
@@ -1259,7 +1259,7 @@ def make_qta_btn(
     retain_size: bool = False,
     checked: bool = False,
     func_menu: ty.Callable | None = None,
-    checked_icon_name: str = "",
+    checked_icon_name: IconType = "",
     properties: dict[str, ty.Any] | None = None,
     label: str = "",
     standout: bool = False,
@@ -1896,7 +1896,7 @@ def make_h_line_with_text(
 
 def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzLine:
     """Make horizontal line."""
-    from qtextra.widgets.qt_line import QtHorzLine
+    from qtextra.widgets.qt_separator import QtHorzLine
 
     widget = QtHorzLine(parent)
     if thin:
@@ -1908,7 +1908,7 @@ def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzL
 
 def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool = False) -> QtVertLine:
     """Make horizontal line."""
-    from qtextra.widgets.qt_line import QtVertLine
+    from qtextra.widgets.qt_separator import QtVertLine
 
     widget = QtVertLine(parent)
     if thin:
@@ -2145,11 +2145,11 @@ def make_advanced_collapsible(
     parent: Qw.QWidget,
     title: str = "Advanced options",
     allow_checkbox: bool = True,
-    icon: str | tuple[str, dict] = "info",
+    icon: IconType = "info",
     allow_icon: bool = False,
     icon_func: Callback | None = None,
     allow_warning: bool = False,
-    warning_icon: str | tuple[str, dict] = "warning",
+    warning_icon: IconType = "warning",
     collapsed: bool = True,
 ) -> QtCheckCollapsible:
     """Make collapsible widget."""
@@ -2297,7 +2297,7 @@ def make_menu_group(parent: Qw.QWidget, *actions):
     return group
 
 
-def make_action(parent: Qw.QWidget, icon_name: str, tooltip: str, func: Callback) -> Qw.QAction:
+def make_action(parent: Qw.QWidget, icon_name: IconType, tooltip: str, func: Callback | None = None) -> Qw.QAction:
     """Make action."""
     from qtextra.widgets.qt_action import QtQtaAction
 
@@ -2313,7 +2313,7 @@ def make_overlay_message(
     parent: Qw.QWidget | None,
     widget: Qw.QWidget,
     text: str = "",
-    icon_name: str = "info",
+    icon_name: IconType = "info",
     wrap: bool = True,
     dismiss_btn: bool = True,
     can_dismiss: bool = True,
