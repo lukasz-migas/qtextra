@@ -17,7 +17,7 @@ from qtpy.QtWidgets import QHBoxLayout, QPlainTextEdit, QVBoxLayout, QWidget
 
 from qtextra.utils.utilities import connect
 from qtextra.widgets.qt_dialog import QtFramelessTool
-from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
+from qtextra.widgets.qt_toolbar_mini import QtMiniToolbar
 
 
 class QtHandler(QObject):

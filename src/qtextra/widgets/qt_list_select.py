@@ -19,7 +19,7 @@ from qtpy.QtWidgets import (
 )
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_mini_toolbar import QtMiniToolbar
+from qtextra.widgets.qt_toolbar_mini import QtMiniToolbar
 
 
 class HTMLDelegate(QStyledItemDelegate):

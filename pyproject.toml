@@ -30,7 +30,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "qtpy",
-    "superqt",
+    "superqt>=0.7.1",
     "qtawesome",
     "koyo",
     "numpy",
