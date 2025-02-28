@@ -417,10 +417,10 @@ def make_label(
     return widget
 
 
-def _make_tooltip_label(
+def make_tooltip_label(
     parent: Qw.QWidget | None,
     icon_name: IconType,
-    text: str,
+    tooltip: str,
     xxsmall: bool = False,
     xsmall: bool = False,
     small: bool = False,
@@ -431,8 +431,10 @@ def _make_tooltip_label(
     xlarge: bool = False,
     xxlarge: bool = False,
     retain_size: bool = False,
+    hide: bool = False,
     **kwargs: ty.Any,
 ):
+    """Create Qta icon with immediate tooltip."""
     from qtextra.widgets.qt_label_icon import QtQtaTooltipLabel
 
     widget = QtQtaTooltipLabel(parent=parent)
@@ -448,79 +450,24 @@ def _make_tooltip_label(
         xlarge=xlarge,
         xxlarge=xxlarge,
     )
-    widget.setToolTip(text)
+    widget.setToolTip(tooltip)
     if retain_size:
         set_retain_hidden_size_policy(widget)
+    if hide:
+        widget.hide()
     return widget
 
 
 def make_warning_label(
-    parent: Qw.QWidget | None,
-    text: str,
-    xxsmall: bool = False,
-    xsmall: bool = False,
-    small: bool = False,
-    normal: bool = False,
-    average: bool = False,
-    medium: bool = False,
-    large: bool = False,
-    xlarge: bool = False,
-    xxlarge: bool = False,
-    retain_size: bool = False,
-    icon_name: IconType = "warning",
-    **kwargs: ty.Any,
+    parent: Qw.QWidget | None, tooltip: str, icon_name: IconType = "warning", **kwargs: ty.Any
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
-    return _make_tooltip_label(
-        parent,
-        icon_name,
-        text,
-        xxsmall,
-        xsmall,
-        small,
-        normal,
-        average,
-        medium,
-        large,
-        xlarge,
-        xxlarge,
-        retain_size,
-        **kwargs,
-    )
+    return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
 
 
-def make_help_label(
-    parent: Qw.QWidget | None,
-    text: str,
-    xxsmall: bool = False,
-    xsmall: bool = False,
-    small: bool = False,
-    normal: bool = False,
-    average: bool = False,
-    medium: bool = False,
-    large: bool = False,
-    xlarge: bool = False,
-    xxlarge: bool = False,
-    retain_size: bool = False,
-    **kwargs: ty.Any,
-) -> QtQtaTooltipLabel:
+def make_help_label(parent: Qw.QWidget | None, tooltip: str, **kwargs: ty.Any) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
-    return _make_tooltip_label(
-        parent,
-        "help",
-        text,
-        xxsmall,
-        xsmall,
-        small,
-        normal,
-        average,
-        medium,
-        large,
-        xlarge,
-        xxlarge,
-        retain_size,
-        **kwargs,
-    )
+    return make_tooltip_label(parent, "help", tooltip, **kwargs)
 
 
 def make_url_btn(

@@ -22,8 +22,20 @@ decrease_pattern = re.compile(r"{{\s?decrease\((\w+),?\s?([-\d]+)?\)\s?}}")
 gradient_pattern = re.compile(r"([vh])gradient\((.+)\)")
 darken_pattern = re.compile(r"{{\s?darken\((\w+),?\s?([-\d]+)?\)\s?}}")
 lighten_pattern = re.compile(r"{{\s?lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
+darken_or_lighten_pattern = re.compile(r"{{\s?darken_or_lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
 opacity_pattern = re.compile(r"{{\s?opacity\((\w+),?\s?([-\d]+)?\)\s?}}")
 replace_pattern = re.compile(r"{{\s?replace\((\w+)\)\s?}}")
+
+
+def _get_color(color: ty.Union[str, Color]) -> tuple[int, int, int]:
+    if isinstance(color, str):
+        if color.startswith("#"):
+            color = hex_to_qt_rgb(color)
+        if color.startswith("rgb("):
+            color = literal_eval(color.lstrip("rgb(").rstrip(")"))
+    elif isinstance(color, Color):
+        color = color.as_rgb_tuple()
+    return color
 
 
 def decrease(font_size: str, pt: int) -> str:
@@ -38,27 +50,25 @@ def increase(font_size: str, pt: int) -> str:
 
 def color_for_background(color: ty.Union[str, Color]) -> str:
     """Return color that will stand out against background color."""
-    if isinstance(color, str):
-        if color.startswith("#"):
-            color = hex_to_qt_rgb(color)
-        if color.startswith("rgb("):
-            color = literal_eval(color.lstrip("rgb(").rstrip(")"))
-    else:
-        color = color.as_rgb_tuple()
+    color = _get_color(color)
     return get_text_color(rgb_to_hex(color, 1)).name()
+
+
+def darken_or_lighten(color: ty.Union[str, Color], percentage=10) -> str:
+    """Darken or lighten the color.
+
+    If color is light, darken it, otherwise lighten it.
+    """
+    red, green, blue = _get_color(color)
+    if (red * 0.299 + green * 0.587 + blue * 0.114) > 186:
+        return darken(color, percentage)
+    return lighten(color, percentage)
 
 
 def darken(color: ty.Union[str, Color], percentage=10) -> str:
     """Darken the color."""
-    if isinstance(color, str):
-        if color.startswith("#"):
-            color = hex_to_qt_rgb(color)
-        if color.startswith("rgb("):
-            color = literal_eval(color.lstrip("rgb(").rstrip(")"))
-    else:
-        color = color.as_rgb_tuple()
+    red, green, blue = _get_color(color)
     ratio = 1 - float(percentage) / 100
-    red, green, blue = color
     red = min(max(int(red * ratio), 0), 255)
     green = min(max(int(green * ratio), 0), 255)
     blue = min(max(int(blue * ratio), 0), 255)
@@ -67,15 +77,8 @@ def darken(color: ty.Union[str, Color], percentage=10) -> str:
 
 def lighten(color: ty.Union[str, Color], percentage=10) -> str:
     """Lighten the color."""
-    if isinstance(color, str):
-        if color.startswith("#"):
-            color = hex_to_qt_rgb(color)
-        if color.startswith("rgb("):
-            color = literal_eval(color.lstrip("rgb(").rstrip(")"))
-    else:
-        color = color.as_rgb_tuple()
+    red, green, blue = _get_color(color)
     ratio = float(percentage) / 100
-    red, green, blue = color
     red = min(max(int(red + (255 - red) * ratio), 0), 255)
     green = min(max(int(green + (255 - green) * ratio), 0), 255)
     blue = min(max(int(blue + (255 - blue) * ratio), 0), 255)
@@ -84,14 +87,7 @@ def lighten(color: ty.Union[str, Color], percentage=10) -> str:
 
 def opacity(color: ty.Union[str, Color], value=255) -> str:
     """Adjust opacity."""
-    if isinstance(color, str):
-        if color.startswith("#"):
-            color = hex_to_qt_rgb(color)
-        if color.startswith("rgb("):
-            color = literal_eval(color.lstrip("rgb(").rstrip(")"))
-    else:
-        color = color.as_rgb_tuple()
-    red, green, blue = color
+    red, green, blue = _get_color(color)
     return f"rgba({red}, {green}, {blue}, {max(min(int(value), 255), 0)})"
 
 
@@ -129,6 +125,10 @@ def template(css, **theme):
         color, percentage = matchobj.groups()
         return lighten(theme[color], percentage)
 
+    def _darken_or_lighten_match(matchobj):
+        color, percentage = matchobj.groups()
+        return darken_or_lighten(theme[color], percentage)
+
     def _opacity_match(matchobj):
         color, percentage = matchobj.groups()
         return opacity(theme[color], percentage)
@@ -150,9 +150,10 @@ def template(css, **theme):
         css = gradient_pattern.sub(_gradient_match, css)
         css = darken_pattern.sub(_darken_match, css)
         css = lighten_pattern.sub(_lighten_match, css)
+        css = darken_or_lighten_pattern.sub(_darken_or_lighten_match, css)
         css = opacity_pattern.sub(_opacity_match, css)
         css = replace_pattern.sub(_replace_match, css)
         if isinstance(v, Color):
             v = v.as_rgb()
-        css = css.replace("{{ %s }}" % k, v)
+        css = css.replace(f"{{{{ {k} }}}}", v)
     return css
