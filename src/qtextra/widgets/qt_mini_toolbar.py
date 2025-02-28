@@ -27,12 +27,14 @@ class QtMiniToolbar(QFrame):
         self.orientation = orientation
 
         self.layout_ = QHBoxLayout(self) if orientation == Qt.Orientation.Horizontal else QVBoxLayout(self)
+        self.layout_.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout_.setSpacing(spacing)
+        self.layout_.setContentsMargins(0, 0, 0, 0)
         if add_spacer:
             self.layout_.addSpacerItem(
                 hp.make_h_spacer() if orientation == Qt.Orientation.Horizontal else hp.make_v_spacer()
             )
-        self.layout_.setSpacing(spacing)
-        self.layout_.setContentsMargins(0, 0, 0, 0)
+
         self.max_size = 28
         self.icon_object_name, self.icon_size = (
             QtImagePushButton.get_icon_size_for_name(icon_size) if icon_size else None,
@@ -46,7 +48,15 @@ class QtMiniToolbar(QFrame):
 
     @max_size.setter
     def max_size(self, value: int) -> None:
+        current_max = self.max_size
+        if current_max == value:
+            return
         self.setMaximumHeight(value) if self.orientation == Qt.Orientation.Horizontal else self.setMaximumWidth(value)
+
+    def _update_max_size(self, widget: QWidget, padding: int = 4):
+        self.max_size = (
+            widget.sizeHint().height() if self.orientation == Qt.Orientation.Horizontal else widget.sizeHint().width()
+        ) + padding
 
     @property
     def n_items(self) -> int:
@@ -97,24 +107,6 @@ class QtMiniToolbar(QFrame):
         self._tools[name] = btn
         return btn
 
-    def add_button(self, button: QtImagePushButton) -> QtImagePushButton:
-        """Add any button the toolbar."""
-        self.layout_.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
-        return button
-
-    def add_widget(self, widget: QWidget, stretch: bool = False) -> QWidget:
-        """Insert any widget at specified position."""
-        kws = {}
-        if not stretch:
-            kws["alignment"] = Qt.AlignmentFlag.AlignCenter
-        self.layout_.addWidget(widget, stretch=stretch, **kws)
-        return widget
-
-    def add_layout(self, layout: QLayout) -> QLayout:
-        """Insert any layout at specified position."""
-        self.layout_.addLayout(layout)
-        return layout
-
     def add_qta_tool(
         self,
         name: str,
@@ -140,22 +132,44 @@ class QtMiniToolbar(QFrame):
         self.add_button(btn)
         return btn
 
-    def insert_button(self, button: QtImagePushButton, index: int = 0, set_size: bool = True) -> QtImagePushButton:
-        """Insert any button at specified position."""
-        if hasattr(button, "set_size") and set_size:
-            button.set_size((26, 26))
-        self.layout_.insertWidget(index, button, alignment=Qt.AlignmentFlag.AlignCenter)
-        return button
-
-    def insert_widget(self, widget: QWidget, index: int = 0) -> QWidget:
-        """Insert any widget at specified position."""
-        self.layout_.insertWidget(index, widget, alignment=Qt.AlignmentFlag.AlignCenter)
-        return widget
+    def add_layout(self, layout: QLayout) -> QLayout:
+        """Insert any layout at specified position."""
+        self.layout_.addLayout(layout)
+        return layout
 
     def insert_layout(self, layout: QLayout, index: int = 0) -> QLayout:
         """Insert any layout at specified position."""
         self.layout_.insertLayout(index, layout)
         return layout
+
+    def add_button(self, button: QtImagePushButton) -> QtImagePushButton:
+        """Add any button the toolbar."""
+        self.layout_.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._update_max_size(button)
+        return button
+
+    def insert_button(self, button: QtImagePushButton, index: int = 0, set_size: bool = True) -> QtImagePushButton:
+        """Insert any button at specified position."""
+        if hasattr(button, "set_size") and set_size:
+            button.set_size((26, 26))
+        self.layout_.insertWidget(index, button, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._update_max_size(button)
+        return button
+
+    def add_widget(self, widget: QWidget, stretch: bool = False) -> QWidget:
+        """Insert any widget at specified position."""
+        kws = {}
+        if not stretch:
+            kws["alignment"] = Qt.AlignmentFlag.AlignCenter
+        self.layout_.addWidget(widget, stretch=stretch, **kws)
+        self._update_max_size(widget)
+        return widget
+
+    def insert_widget(self, widget: QWidget, index: int = 0) -> QWidget:
+        """Insert any widget at specified position."""
+        self.layout_.insertWidget(index, widget, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._update_max_size(widget)
+        return widget
 
     def insert_qta_tool(
         self,
@@ -207,9 +221,7 @@ class QtMiniToolbar(QFrame):
 
     def append_spacer(self) -> None:
         """Insert spacer item."""
-        spacer = (
-            hp.make_spacer_widget()
-        )  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
+        spacer = hp.make_spacer_widget()
         self.layout_.insertWidget(self.layout_.count(), spacer, stretch=True)
 
     def show_border(self) -> None:
@@ -239,10 +251,8 @@ if __name__ == "__main__":  # pragma: no cover
     frame.setLayout(ha)
 
     h = QtMiniToolbar(None, orientation=Qt.Orientation.Horizontal)
-
-    v = QtMiniToolbar(None, orientation=Qt.Orientation.Vertical)
-
     ha.addWidget(h)
+    v = QtMiniToolbar(None, orientation=Qt.Orientation.Vertical)
     ha.addWidget(v)
     frame.show()
     sys.exit(app.exec_())
