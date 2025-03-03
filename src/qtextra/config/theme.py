@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from koyo.timer import MeasureTimer
 from loguru import logger
-from psygnal._evented_model import EventedModel
+from psygnal import EventedModel
 from pydantic import PrivateAttr, ValidationError, validator
 from pydantic.color import Color
 from qtpy.QtCore import QDateTime, QTime, Signal

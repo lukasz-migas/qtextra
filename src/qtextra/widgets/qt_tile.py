@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as ty
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, validator
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QFrame, QVBoxLayout, QWidget
@@ -13,6 +13,8 @@ import qtextra.helpers as hp
 class Tile(BaseModel):
     """Workflow model."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     title: str
     description: str
     icon: ty.Optional[str] = ""
@@ -20,13 +22,8 @@ class Tile(BaseModel):
     icon_kws: ty.Optional[ty.Dict[str, ty.Any]] = None
     warning: str = ""
 
-    class Config:
-        """Pydantic config."""
-
-        arbitrary_types_allowed = True
-
     @validator("func", pre=True)
-    def _validate_widget(cls, value) -> func:
+    def _validate_widget(cls, value) -> ty.Callable:
         """Check correct model is provided."""
         if not value:
             return lambda: None

@@ -3,12 +3,13 @@
 import typing as ty
 from enum import Enum
 
-from pydantic import BaseModel
+# from pydantic import BaseModel, ConfigDict, validator
 from qtpy.QtCore import QEasingCurve, QPoint, Qt, QVariantAnimation
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
+from qtextra._pydantic_compat import BaseModel
 
 
 class Position(str, Enum):
@@ -51,17 +52,27 @@ class TutorialStep(BaseModel):
         Offset position of the tutorial chevron.
     """
 
+    class Config:
+        """Config."""
+
+        arbitrary_types_allowed = True
+
+    # model_config = ConfigDict(arbitrary_types_allowed=True)
+
     title: str = ""
     message: str
     widget: QWidget
     position: Position = Position.RIGHT
     position_offset: tuple[int, int] = (0, 0)
     func: ty.Optional[tuple[ty.Callable, ...]] = None
-
-    class Config:
-        """Configuration."""
-
-        arbitrary_types_allowed = True
+    #
+    # @validator("widget", pre=True)
+    # @classmethod
+    # def validate_widget(cls, widget: QWidget) -> QWidget:
+    #     """Validate widget."""
+    #     if not isinstance(widget, QWidget):
+    #         raise ValueError(f"Invalid widget '{widget}'.")
+    #     return widget
 
 
 class QtTutorial(QDialog):
