@@ -281,6 +281,25 @@ class QtThemeButton(QtTogglePushButton):
         self.state = state
 
 
+class QtAndOrButton(QtTogglePushButton):
+    """Lock button with open/closed state to indicate current state."""
+
+    ICON_ON = "and"
+    ICON_OFF = "or"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def dark(self) -> bool:
+        """Get playing state."""
+        return self.state
+
+    @dark.setter
+    def dark(self, state: bool) -> None:
+        self.state = state
+
+
 class QtExpandButton(QtTogglePushButton):
     """Button that has chevron point up or down."""
 

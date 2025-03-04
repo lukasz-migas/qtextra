@@ -6,6 +6,7 @@ from qtpy.QtCore import Signal
 from qtpy.QtWidgets import QSizePolicy, QWidget
 
 import qtextra.helpers as hp
+from qtextra.widgets.qt_button_icon import QtAndOrButton
 from qtextra.widgets.qt_button_tag import QtTagButton
 from qtextra.widgets.qt_layout_scroll import QtScrollableHLayout
 
@@ -13,11 +14,17 @@ from qtextra.widgets.qt_layout_scroll import QtScrollableHLayout
 class QtFilterEdit(QWidget):
     """Scrollable edit.."""
 
-    evt_filters_changed = Signal(list)
+    evt_filters_changed = Signal(list, str)
 
     def __init__(
-        self, parent: QWidget | None = None, placeholder: str = "Type in...", above: bool = False, flow: bool = False
+        self,
+        parent: QWidget | None = None,
+        placeholder: str = "Type in...",
+        above: bool = False,
+        flow: bool = False,
+        enable_switch: bool = False,
     ):
+        self.enable_switch = enable_switch
         super().__init__(parent)
 
         self.text_edit = hp.make_line_edit(
@@ -30,6 +37,12 @@ class QtFilterEdit(QWidget):
         )
         self.text_edit.addAction(self.add_action, self.text_edit.ActionPosition.TrailingPosition)
 
+        self.switch_toggle = QtAndOrButton(auto_connect=True, state=True)
+        self.switch_toggle.set_normal()
+        self.switch_toggle.evt_toggled.connect(self.emit_current_filters)
+        if not enable_switch:
+            self.switch_toggle.hide()
+
         if flow:
             self._filter_layout = hp.make_flow_layout(margin=0, horizontal_spacing=1, vertical_spacing=1)
         else:
@@ -40,9 +53,13 @@ class QtFilterEdit(QWidget):
         self._main_layout = hp.make_form_layout(margin=0)
         if above:
             self._main_layout.addRow(self._filter_layout)
-            self._main_layout.addRow(self.text_edit)
+            self._main_layout.addRow(
+                hp.make_h_layout(self.text_edit, self.switch_toggle, spacing=1, margin=0, stretch_id=(0,))
+            )
         else:
-            self._main_layout.addRow(self.text_edit)
+            self._main_layout.addRow(
+                hp.make_h_layout(self.text_edit, self.switch_toggle, spacing=1, margin=0, stretch_id=(0,))
+            )
             self._main_layout.addRow(self._filter_layout)
         self.setLayout(self._main_layout)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
@@ -60,21 +77,21 @@ class QtFilterEdit(QWidget):
             return
         button = QtTagButton(text, text, allow_selected=False, action_type="delete", action_icon="cross")
         button.evt_action.connect(self.on_remove)
-        self._filter_layout.insertWidget(self._filter_layout.count() - 1, button)
-        self.evt_filters_changed.emit(self.get_filters())
+        self._filter_layout.insertWidget(0, button)
+        self.evt_filters_changed.emit(self.get_filters(), self.mode)
 
     def on_remove(self, hash_id: str) -> None:
         """Remove filter."""
         filters = self.get_filters()
         index = filters.index(hash_id)
         self._filter_layout.removeWidgetOrLayout(index)
-        self.evt_filters_changed.emit(self.get_filters())
+        self.evt_filters_changed.emit(self.get_filters(), self.mode)
 
     def on_remove_all(self) -> None:
         """Remove all filters."""
         while self._filter_layout.count() != self._n:
             self._filter_layout.removeWidgetOrLayout(0)
-        self.evt_filters_changed.emit([])
+        self.evt_filters_changed.emit([], self.mode)
 
     def get_filters(self, current: bool = False) -> list[str]:
         """Get list of currently selected filters."""
@@ -89,9 +106,16 @@ class QtFilterEdit(QWidget):
                 tags.append(text)
         return tags
 
+    @property
+    def mode(self) -> str | None:
+        """Get mode."""
+        if not self.enable_switch:
+            return None
+        return "AND" if self.switch_toggle.state else "OR"
+
     def emit_current_filters(self) -> None:
         """Emit current filters."""
-        self.evt_filters_changed.emit(self.get_filters(current=True))
+        self.evt_filters_changed.emit(self.get_filters(current=True), self.mode)
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -104,6 +128,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(QtFilterEdit())
     ha.addWidget(QtFilterEdit(above=True))
     ha.addWidget(QtFilterEdit(flow=True))
+    ha.addWidget(QtFilterEdit(enable_switch=True))
 
     frame.show()
     sys.exit(app.exec_())

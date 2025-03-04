@@ -163,17 +163,30 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
         **kwargs: ty.Any,
     ):
         super().__init__(*args, mode=mode, **kwargs)
+        self.column_mode = column_mode
+        # self.column_compare_func = any if column_mode == MultiFilterMode.OR else all
         self.filters: dict[int, list[str]] = {}
-        self.column_compare_func = any if column_mode == MultiFilterMode.OR else all
+        self.column_compare_funcs: dict[int, ty.Callable[[ty.Iterable[bool]], bool]] = {}
 
-    def setFilterByColumn(self, filters: list[str], column: int) -> None:
+    def column_compare_func(self, column: int) -> ty.Callable:
+        """Return instance of callable for specific column."""
+        if column in self.column_compare_funcs:
+            return self.column_compare_funcs[column]
+        return any if self.column_mode == MultiFilterMode.OR else all
+
+    def setFilterByColumn(self, filters: list[str], column: int, column_mode: MultiFilterMode | None = None) -> None:
         """Set filter by column."""
-        if not filters and column in self.filters:
-            del self.filters[column]
+        if not filters:
+            if column in self.filters:
+                del self.filters[column]
+            if column in self.column_compare_funcs:
+                del self.column_compare_funcs[column]
         if not isinstance(filters, list):
             filters = [filters]
         if filters:
             self.filters[column] = [filt.lower() for filt in filters]
+            if column_mode:
+                self.column_compare_funcs[column] = any if column_mode == MultiFilterMode.OR else all
         self.invalidateFilter()
         self.evt_filtered.emit()
 
@@ -189,7 +202,7 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
                 value = self.sourceModel().data(index, Qt.ItemDataRole.DisplayRole)
                 if not value:
                     return True
-            results.append(self.column_compare_func(text in value.lower() for text in _texts))
+            results.append(self.column_compare_func(column)(text in value.lower() for text in _texts))
         return self.compare_func(results)
 
 
