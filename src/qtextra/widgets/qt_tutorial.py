@@ -9,7 +9,7 @@ from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra._pydantic_compat import BaseModel
+from pydantic import BaseModel
 
 
 class Position(str, Enum):
