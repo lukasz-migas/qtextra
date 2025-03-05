@@ -1880,6 +1880,7 @@ def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
 def make_v_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: int | tuple[int, ...] | None = None,
+    stretch_ratio: int | tuple[int, ...] = 1,
     spacing: int | None = None,
     margin: int | tuple[int, int, int, int] | None = None,
     alignment: Qt.AlignmentFlag | None = None,
@@ -1900,6 +1901,7 @@ def make_v_layout(
         *widgets,
         layout=layout,
         stretch_id=stretch_id,
+        stretch_ratio=stretch_ratio,
         alignment=alignment,
         stretch_before=stretch_before,
         stretch_after=stretch_after,
@@ -1910,6 +1912,7 @@ def make_v_layout(
 def make_h_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: int | tuple[int, ...] | None = None,
+    stretch_ratio: int | tuple[int, ...] = 1,
     spacing: int | None = None,
     margin: int | tuple[int, int, int, int] | None = None,
     alignment: Qt.AlignmentFlag | None = None,
@@ -1929,6 +1932,7 @@ def make_h_layout(
         *widgets,
         layout=layout,
         stretch_id=stretch_id,
+        stretch_ratio=stretch_ratio,
         alignment=alignment,
         stretch_before=stretch_before,
         stretch_after=stretch_after,
@@ -2000,6 +2004,7 @@ def _set_in_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     layout: Qw.QVBoxLayout | Qw.QHBoxLayout,
     stretch_id: int | tuple[int, ...],
+    stretch_ratio: int | tuple[int, ...] = 1,
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
@@ -2020,8 +2025,12 @@ def _set_in_layout(
     if stretch_id is not None:
         if isinstance(stretch_id, int):
             stretch_id = (stretch_id,)
-        for st_id in stretch_id:
-            layout.setStretch(st_id, True)
+        if isinstance(stretch_ratio, int):
+            stretch_ratio = (stretch_ratio,) * len(stretch_id)
+        assert len(stretch_id) == len(stretch_ratio), "Stretch id and ratio must have same length"
+        stretch_ratio = list(stretch_ratio)
+        for index, st_id in enumerate(stretch_id):
+            layout.setStretch(st_id, stretch_ratio[index])
     if alignment:
         layout.setAlignment(alignment)
     if stretch_after:

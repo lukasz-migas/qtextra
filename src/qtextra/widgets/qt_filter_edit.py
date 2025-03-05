@@ -47,7 +47,7 @@ class QtFilterEdit(QWidget):
             self._filter_layout = hp.make_flow_layout(margin=0, horizontal_spacing=1, vertical_spacing=1)
         else:
             self._filter_layout = QtScrollableHLayout(self)
-            self._filter_layout.MIN_HEIGHT = self.text_edit.height()
+            self._filter_layout.set_min_height(self.text_edit.height())
         self._n = self._filter_layout.count()
 
         self._main_layout = hp.make_form_layout(margin=0)
