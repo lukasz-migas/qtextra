@@ -1049,6 +1049,7 @@ def make_btn(
     checkable: bool = False,
     check: bool = False,
     func: Callback | None = None,
+    func_right_click: Callback | None = None,
     font_size: int | None = None,
     bold: bool = False,
     object_name: str = "",
@@ -1072,6 +1073,8 @@ def make_btn(
         set_bold(widget, bold)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
+    if func_right_click:
+        [widget.connect_to_right_click(func_) for func_ in _validate_func(func_right_click)]
     if object_name:
         widget.setObjectName(object_name)
     if hide:
