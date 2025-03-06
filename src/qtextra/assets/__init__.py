@@ -35,8 +35,10 @@ LOADING_GIFS = {
     "oval": LOADING_OVAL_GIF,
 }
 
+MISSING = "MISSING"
+
 QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
-    "MISSING": "ri.error-warning-line",
+    MISSING: "ri.error-warning-line",
     "clear": "mdi6.delete-empty",
     "json": "mdi6.code-json",
     "binary": "msc.file-binary",
@@ -275,12 +277,12 @@ def get_icon(name: str | tuple[str, dict]) -> tuple[str | dict]:
 
     original_name = name
     if name == "":
-        name = QTA_MAPPING["MISSING"]
+        name = QTA_MAPPING[MISSING]
     elif "." not in name:
         name = QTA_MAPPING.get(name)
         if name is None:
             logger.warning(f"Failed to retrieve icon: '{original_name}'")
-            name = QTA_MAPPING["MISSING"]
+            name = QTA_MAPPING[MISSING]
     if isinstance(name, tuple):
         name, kwargs_ = name
         kwargs.update(kwargs_)

@@ -5,9 +5,10 @@ from __future__ import annotations
 import typing as ty
 
 import qtawesome
+from loguru import logger
 from qtpy.QtCore import QSize
 
-from qtextra.assets import get_icon
+from qtextra.assets import MISSING, get_icon
 from qtextra.config import THEMES
 
 
@@ -24,9 +25,20 @@ class QtaMixin:
     setIconSize: ty.Callable
     setObjectName: ty.Callable
 
+    def _set_icon(self, *args: ty.Any, **kwargs: ty.Any) -> None:
+        """Set icon."""
+        try:
+            icon = qtawesome.icon(*args, **kwargs)
+            self.setIcon(icon)
+        except Exception:
+            logger.warning(f"Failed to set icon: {args}, {kwargs}")
+            icon, _ = get_icon(MISSING)  # type: ignore[misc]
+            icon = qtawesome.icon(icon, color=THEMES.get_hex_color("warning"))
+            self.setIcon(icon)
+
     def set_qta(self, name: str | tuple[str, dict], **kwargs: ty.Any) -> None:
         """Set QtAwesome icon."""
-        name, kwargs_ = get_icon(name)
+        name, kwargs_ = get_icon(name)  # type: ignore[misc]
         kwargs.update(kwargs_)
         self._qta_data = (name, kwargs)
         color_ = kwargs.pop("color", None)
@@ -39,18 +51,12 @@ class QtaMixin:
         if "pulse" in kwargs:
             kwargs["animation"] = qtawesome.Pulse(self, autostart=True)
             kwargs.pop("pulse")
-
-        try:
-            icon = qtawesome.icon(name, **self._qta_data[1], color=color)
-            self.setIcon(icon)
-        except Exception:
-            raise Exception(f"Failed to set icon: {name}")
+        self._set_icon(name, **self._qta_data[1], color=color)
 
     def _set_qta_icon(self, name: str, **kwargs: ty.Any) -> None:
         """Update icon without setting any attributes."""
         color = self._icon_color or THEMES.get_hex_color("icon")
-        icon = qtawesome.icon(name, **kwargs, color=color)
-        self.setIcon(icon)
+        self._set_icon(name, **kwargs, color=color)
 
     def set_default_size(
         self,
