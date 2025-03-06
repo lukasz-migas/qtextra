@@ -26,3 +26,16 @@ class QDevPopup(QtFramelessTool):
         layout.addLayout(hide_layout)
         layout.addWidget(self.qdev, stretch=True)
         return layout
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.utils.dev import apply_style, qapplication
+
+    app = qapplication(1)
+    dlg = QDevPopup(None, ["qtextra"])
+    apply_style(dlg)
+    dlg.show()
+
+    sys.exit(app.exec_())

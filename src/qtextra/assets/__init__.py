@@ -35,7 +35,7 @@ LOADING_GIFS = {
     "oval": LOADING_OVAL_GIF,
 }
 
-QTA_MAPPING: ty.Dict[str, str] = {
+QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "MISSING": "ri.error-warning-line",
     "clear": "mdi6.delete-empty",
     "json": "mdi6.code-json",
@@ -54,7 +54,9 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "ruler": "ph.ruler",
     "ipython": "mdi.console",
     "cli": "mdi6.console-line",
-    "log": "mdi6.file-document",
+    "template": "ei.file-new",
+    # "log": "mdi6.file-document",
+    "log": "mdi6.clipboard-text",
     "filter_and": "mdi6.filter-plus",
     "filter_or": "mdi6.filter-minus",
     "and": "mdi6.ampersand",
@@ -110,6 +112,11 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "cpu": "ri.cpu-line",
     "ram": "fa5s.memory",
     "upgrade": "ei.download",
+    "schema": "mdi6.badge-account-horizontal",
+    "locked": "mdi.lock",
+    "unlocked": "mdi.lock-open",
+    "notified": "mdi6.bell",
+    "not_notified": "mdi6.bell-off",
     # notification
     "notification": "mdi6.bell",
     "notification_on": "mdi6.bell",
@@ -117,8 +124,8 @@ QTA_MAPPING: ty.Dict[str, str] = {
     "notification_dismiss": "mdi6.bell-cancel",
     "notification_check": "mdi6.bell-check",
     # translate
-    "rotate_left": "fa.rotate-left",
-    "rotate_right": "fa.rotate-right",
+    "rotate_left": "fa6s.rotate-left",
+    "rotate_right": "fa6s.rotate-right",
     "translate_left": "fa5s.arrow-left",
     "translate_right": "fa5s.arrow-right",
     "translate_up": "fa5s.arrow-up",
@@ -130,7 +137,9 @@ QTA_MAPPING: ty.Dict[str, str] = {
     # app
     "settings": "mdi6.tools",
     "reset": "mdi.lock-reset",
-    "update": "fa.refresh",
+    # "update": "ei.refresh",
+    "update": "fa5s.redo-alt",
+    "version": "mdi6.update",
     "telemetry": "mdi.telegram",
     "shortcut": "mdi6.tooltip-text",
     "feedback": "msc.feedback",

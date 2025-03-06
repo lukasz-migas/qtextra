@@ -153,9 +153,9 @@ class QtSampleWidget(QWidget):
 
         groupBox = QGroupBox("Exclusive Radio Buttons")
         radio1 = QRadioButton("&Radio button 1")
+        radio1.setChecked(True)
         radio2 = QRadioButton("R&adio button 2")
         radio3 = QRadioButton("Ra&dio button 3")
-        radio1.setChecked(True)
         hbox = QHBoxLayout()
         hbox.addWidget(radio1)
         hbox.addWidget(radio2)
@@ -166,7 +166,7 @@ class QtSampleWidget(QWidget):
         hbox = QHBoxLayout()
         hbox.addWidget(hp.make_qta_btn(None, "fa5s.save"))
         hbox.addWidget(hp.make_qta_btn(None, "ei.stop-alt"))
-        hbox.addWidget(hp.make_qta_btn(None, "fa.heart"))
+        hbox.addWidget(hp.make_qta_btn(None, "fa6.heart"))
         hbox.addStretch(1)
         lay.addLayout(hbox)
 
