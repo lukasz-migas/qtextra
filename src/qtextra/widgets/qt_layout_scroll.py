@@ -29,6 +29,11 @@ class QtScrollableHLayout(QScrollArea):
         """Return count of widgets."""
         return self._main_layout.count()
 
+    def set_min_height(self, min_height: int) -> None:
+        """Set minimum height."""
+        self.MIN_HEIGHT = min_height
+        self._update_scroll()
+
     def get_widget(self, index: int) -> QWidget | None:
         """Get widget at position."""
         item = self._main_layout.itemAt(index)
@@ -75,6 +80,7 @@ class QtScrollableHLayout(QScrollArea):
         return height
 
     def _update_scroll(self) -> None:
+        """Update scroll."""
         height = self.MIN_HEIGHT
         if self.count() > 1:
             height = max(height, self.minimum_height_for_widgets())

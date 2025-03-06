@@ -3,13 +3,14 @@
 import typing as ty
 from enum import Enum
 
+from pydantic import BaseModel
+
 # from pydantic import BaseModel, ConfigDict, validator
 from qtpy.QtCore import QEasingCurve, QPoint, Qt, QVariantAnimation
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from pydantic import BaseModel
 
 
 class Position(str, Enum):
