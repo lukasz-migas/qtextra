@@ -32,8 +32,8 @@ class QtPushButton(QPushButton):
         super().paintEvent(event)
         painter = QPainter(self)
         if self.has_right_click:
-            width = 6  # self.rect().width() / 6
-            radius = 6  # self.rect().width() / 8
+            width = 6
+            radius = 6
             x = self.rect().width() - (width * 2.0)
             y = self.rect().height() - (width * 2.0)
             color = THEMES.get_hex_color("success")
