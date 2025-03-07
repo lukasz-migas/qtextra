@@ -20,10 +20,12 @@ class QtScrollableLabel(QScrollArea):
         parent: ty.Optional[QWidget] = None,
         text: ty.Optional[str] = None,
         image_path: ty.Optional[PathLike] = None,
+        wrap: bool = False,
     ):
         super().__init__(parent)
 
         self.label = QLabel()
+        self.label.setWordWrap(wrap)
         self.label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         if text:
@@ -31,6 +33,8 @@ class QtScrollableLabel(QScrollArea):
         elif image_path:
             self.set_image(image_path)
 
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setWidgetResizable(True)
         self.setWidget(self.label)
         self.setContentsMargins(0, 0, 0, 0)
@@ -64,6 +68,8 @@ if __name__ == "__main__":  # pragma: no cover
     frame.setMinimumSize(600, 600)
 
     wdg = QtScrollableLabel(text="This is a long text that will make the QLabel scrollable. " * 20)
+    ha.addWidget(wdg)
+    wdg = QtScrollableLabel(text="This is a long text that will make the QLabel scrollable. " * 20, wrap=True)
     ha.addWidget(wdg)
 
     frame.show()

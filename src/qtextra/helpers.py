@@ -519,7 +519,7 @@ def make_scrollable_label(
     """Make QLabel element."""
     from qtextra.widgets.qt_label_scroll import QtScrollableLabel
 
-    widget = QtScrollableLabel(parent, text=text)
+    widget = QtScrollableLabel(parent, text=text, wrap=wrap)
     widget.setObjectName(object_name)
     widget.label.setObjectName(object_name)
     if enable_url:
@@ -542,7 +542,6 @@ def make_scrollable_label(
         )
     if activated_func:
         [widget.label.linkActivated.connect(func) for func in _validate_func(activated_func)]
-    widget.label.setWordWrap(wrap)
     widget.setVisible(visible)
     return widget
 

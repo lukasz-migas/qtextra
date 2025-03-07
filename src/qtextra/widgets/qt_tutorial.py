@@ -232,12 +232,12 @@ class QtTutorial(QDialog):
         self._current = index
 
         step = self.steps[index]
-        self._title_label.setText(step.title)
-        self._message_label.setText(step.message)
-        self._step_label.setText(f"Step {index + 1}/{len(self.steps)}")
         if step.func:
             for func in step.func:
                 func()
+        self._title_label.setText(step.title)
+        self._message_label.setText(step.message)
+        self._step_label.setText(f"Step {index + 1}/{len(self.steps)}")
 
         # enable/disable buttons
         hp.disable_widgets(self._prev_btn, disabled=index == 0)
