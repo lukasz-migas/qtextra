@@ -129,15 +129,15 @@ class QtImagePushButton(QPushButton, QtaMixin):
             paint.setBrush(QColor(color))
             paint.drawEllipse(QPointF(x, y), radius, radius)
         if self.count_enabled:
-            width = self.rect().width() / 4
+            # add text
+            text = "9+" if self.count > 9 else str(self.count)
+
+            color = THEMES.get_hex_color("icon")
+            paint.setPen(QColor(color))
+            paint.setBrush(QColor(color))
             radius = self.rect().width() / 6
             x = self.rect().x()
             y = self.rect().y()
-            # add text
-            color = THEMES.get_hex_color("icon")
-            text = "9+" if self.count > 9 else str(self.count)
-            paint.setPen(QColor(color))
-            paint.setBrush(QColor(color))
             rect = QRectF(x, y, radius * 4, radius * 4)
             font: QFont = paint.font()
             font.setPointSize(12)

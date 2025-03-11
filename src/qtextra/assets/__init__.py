@@ -166,7 +166,8 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "retry": "fa5s.redo-alt",
     "stop": "fa5s.stop-circle",
     "pause": "fa5s.pause-circle",
-    "queue": "ph.queue-fill",
+    # "queue": "ph.queue-fill",
+    "queue": "mdi6.human-queue",
     # lock
     "lock_closed": "fa5s.lock",
     "lock_open": "fa5s.lock-open",

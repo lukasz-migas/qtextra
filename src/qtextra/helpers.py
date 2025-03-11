@@ -3120,14 +3120,14 @@ def disconnect_event(widget: Qw.QWidget, evt_name, func):
         pass
 
 
-def get_main_window() -> Qw.QMainWindow | None:
+def get_main_window(parent: Qw.QWidget | None = None) -> Qw.QMainWindow | None:
     """Get main window."""
     app = Qw.QApplication.instance()
     if app:
         for i in app.topLevelWidgets():
             if isinstance(i, Qw.QMainWindow):  # pragma: no cover
                 return i
-    return None
+    return parent
 
 
 def get_parent(parent: QObject | None = None) -> Qw.QWidget | None:
