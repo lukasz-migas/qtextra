@@ -1,5 +1,7 @@
 """QtAction."""
 
+import typing as ty
+
 import qtawesome
 from qtpy.QtWidgets import QAction
 
@@ -12,11 +14,11 @@ class QtQtaAction(QAction):
 
     _qta_data = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
-    def set_qta(self, name: str, **kwargs):
+    def set_qta(self, name: str, **kwargs: ty.Any):
         """Set QtAwesome icon."""
         name, kwargs_ = get_icon(name)
         kwargs.update(kwargs_)

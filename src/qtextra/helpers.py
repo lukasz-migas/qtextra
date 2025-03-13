@@ -2207,7 +2207,7 @@ def make_menu_item(
     parent: Qw.QWidget | None,
     title: str,
     shortcut: str | None = None,
-    icon: ty.Union[QPixmap, str] = None,
+    icon: str | QPixmap | None = None,
     menu: Qw.QMenu = None,
     status_tip: str | None = None,
     tooltip: str | None = None,
