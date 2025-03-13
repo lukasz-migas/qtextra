@@ -161,21 +161,55 @@ QStatusBar {
     max-height: 28px;
 }
 
+
+/* ----------------- QLabel ----------------- */
 QLabel#error_label {
     font-size: {{ increase(font_size, 4) }};
 }
 QLabel#title_label {
     font-size: {{ increase(font_size, 3) }};
 }
-
+QLabel#header_label {
+    font-size: {{ increase(font_size, 6) }};
+    font-weight: bold;
+}
 QLabel#large_text {
     font-size: {{ increase(font_size, 4) }};
 }
-
 QLabel#medium_text {
     font-size: {{ increase(font_size, 2) }};
 }
+QLabel#tip_label {
+    color: {{ lighten(text, 30) }};
+}
+QLabel#watch_dir {
+    font-size: {{ increase(font_size, 2) }};
+    font-weight: bold;
+    min-height: 80px;
+}
+QLabel#h1 {
+  font-size: 28px;
+}
+QLabel#h2 {
+  font-size: 22px;
+  color: {{ secondary }};
+}
+QLabel#h3 {
+  font-size: 18px;
+  color: {{ secondary }};
+}
 
+/* ----------------- QLineEdit ----------------- */
+
+QLineEdit#discreet_line_edit {
+    background-color: {{ background }};
+    border: 2px solid {{ foreground }};
+}
+
+
+
+
+/* ----------------- QWidget ----------------- */
 QWidget#error {
     border: 2px solid {{ lighten(error, 30) }};
     border-radius: 2px;
@@ -186,15 +220,7 @@ QWidget#warning {
     border-radius: 2px;
 }
 
-QLabel#tip_label {
-    color: {{ lighten(text, 30) }};
-}
 
-QLabel#watch_dir {
-    font-size: {{ increase(font_size, 2) }};
-    font-weight: bold;
-    min-height: 80px;
-}
 
 QtCheckableTableView{
     background-color: {{ darken(background, 10) }};
@@ -358,20 +384,6 @@ QAbstractItemView#search_box_popup::item:hover
     background-color:lightGrey;
 }
 
-
-QLabel#h1 {
-  font-size: 28px;
-}
-
-QLabel#h2 {
-  font-size: 22px;
-  color: {{ secondary }};
-}
-
-QLabel#h3 {
-  font-size: 18px;
-  color: {{ secondary }};
-}
 
 QtViewer {
    padding-top: 0px;

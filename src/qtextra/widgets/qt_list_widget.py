@@ -177,7 +177,9 @@ class QtListWidget(QListWidget):
         if indices is None:
             indices = range(self.count())
         for index in indices:
-            yield self.item(index).item_model  # type: ignore[misc,union-attr]
+            item = self.item(index)
+            if item:
+                yield item.item_model
 
     def get_all_checked(self, *, reverse: bool = False) -> list[int]:
         """Get list of checked items."""
