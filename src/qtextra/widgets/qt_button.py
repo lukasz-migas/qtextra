@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import QPointF, Qt, Signal
+from qtpy.QtCore import QPointF, QSize, Qt, Signal
 from qtpy.QtGui import QColor, QMovie, QPainter
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
 
@@ -17,8 +17,39 @@ class QtPushButton(QPushButton):
     evt_right_click = Signal()
     has_right_click: bool = False
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, text: str | None = None, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
+        self._label = QLabel(self)
+        self._layout = QHBoxLayout()
+        self._layout.setContentsMargins(0, 0, 0, 0)
+        self._layout.setSpacing(0)
+        self.setLayout(self._layout)
+        self._label.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self._label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+        self._label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._layout.addWidget(self._label)
+
+        if text is not None:
+            self.setText(text)
+
+    def setWordWrap(self, state: bool) -> None:
+        """Set word wrap on the button."""
+        label = self.findChild(QLabel)
+        if label:
+            label.setWordWrap(state)
+
+    def setText(self, text: str) -> None:
+        """Set text on the label."""
+        self._label.setText(text)
+
+    def setTextFormat(self, fm: Qt.TextFormat) -> None:
+        """SEt text format."""
+        self._label.setTextFormat(fm)
+
+    def text(self) -> str:
+        """Return text."""
+        return self._label.text()
 
     def mousePressEvent(self, evt: QEvent) -> None:  # type: ignore[override]
         """Mouse press event."""
@@ -26,6 +57,16 @@ class QtPushButton(QPushButton):
             self.evt_right_click.emit()
         else:
             super().mousePressEvent(evt)  # type: ignore[arg-type]
+
+    def sizeHint(self) -> QSize:
+        """Return size hints."""
+        sh = super().sizeHint()
+        lb_sh = self._label.sizeHint()
+        width = max(sh.width(), lb_sh.width())
+        height = max(sh.height(), lb_sh.height())
+        sh.setWidth(width)
+        sh.setHeight(height)
+        return sh
 
     def paintEvent(self, event) -> None:
         """Paint event/."""
@@ -101,39 +142,8 @@ class QtRichTextButton(QtPushButton):
     """Rich-text button."""
 
     def __init__(self, parent: QWidget | None = None, text: str | None = None):
-        super().__init__(parent)
-        self._label = QLabel(self)
-        if text is not None:
-            self._label.setText(text)
-
-        self._layout = QHBoxLayout()
-        self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.setSpacing(0)
-        self.setLayout(self._layout)
-        self._label.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self._label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
-        self._label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        super().__init__(parent=parent, text=text)
         self._label.setTextFormat(Qt.TextFormat.RichText)
-        self._label.setWordWrap(True)
-        self._layout.addWidget(self._label)
-
-    def setText(self, text):
-        """Set text on the label."""
-        self._label.setText(text)
-        self.updateGeometry()
-
-    def text(self):
-        """Return text."""
-        return self._label.text()
-
-    def sizeHint(self):
-        """Return size hints."""
-        sh = super().sizeHint()
-        lb_sh = self._label.sizeHint()
-        sh.setWidth(lb_sh.width() + 15)
-        sh.setHeight(lb_sh.height() + 15)
-        return sh
 
 
 if __name__ == "__main__":  # pragma: no cover

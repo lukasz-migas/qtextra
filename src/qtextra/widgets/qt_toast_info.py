@@ -39,6 +39,17 @@ class ToastPosition(Enum):
     NONE = 6
 
 
+TOAST_POSITION_DICT = {
+    "top": ToastPosition.TOP,
+    "bottom": ToastPosition.BOTTOM,
+    "top_left": ToastPosition.TOP_LEFT,
+    "top_right": ToastPosition.TOP_RIGHT,
+    "bottom_left": ToastPosition.BOTTOM_LEFT,
+    "bottom_right": ToastPosition.BOTTOM_RIGHT,
+    "none": ToastPosition.NONE,
+}
+
+
 class QtInfoToast(QFrame):
     """Information bar."""
 

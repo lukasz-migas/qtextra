@@ -38,7 +38,7 @@ class QtPickOptionBase(QDialog):
         btn_layout.addStretch(1)
         for option, label in self.options.items():
             btn = hp.make_btn(
-                self, label, object_name="pick_option_button", func=partial(self.on_accept, option=option)
+                self, label, object_name="pick_option_button", func=partial(self.on_accept, option=option), wrap=True
             )
             btn_layout.addWidget(btn)
             self.responses[btn.text()] = option

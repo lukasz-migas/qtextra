@@ -1054,11 +1054,13 @@ def make_btn(
     object_name: str = "",
     properties: dict[str, ty.Any] | None = None,
     hide: bool = False,
+    wrap: bool = False,
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
 
     widget = QtPushButton(parent=parent)
+    widget.setWordWrap(wrap)
     widget.setText(text)
     widget.setCheckable(checkable)
     widget.setChecked(check)
@@ -2309,6 +2311,29 @@ def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning"):
     dlg.exec_()
 
 
+def notification(
+    parent: Qw.QWidget,
+    title: str,
+    message: str,
+    position: ty.Literal["top", "bottom", "top_left", "top_right", "bottom_left", "bottom_right", "none"] = "top",
+    is_closable: bool = False,
+    duration: int = 5000,
+    icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "info",
+) -> None:
+    """Show notification."""
+    from qtextra.widgets.qt_toast_info import TOAST_POSITION_DICT, QtInfoToast
+
+    QtInfoToast.new(
+        icon=icon,
+        title=title,
+        content=message,
+        position=TOAST_POSITION_DICT[position],
+        is_closable=is_closable,
+        duration=duration,
+        parent=parent,
+    )
+
+
 def toast(
     parent: Qw.QWidget | None,
     title: str,
@@ -2317,7 +2342,7 @@ def toast(
     position: ty.Literal["top_right", "top_left", "bottom_right", "bottom_left"] = "top_right",
     icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "none",
     duration: int = 5000,
-):
+) -> None:
     """Show notification."""
     from qtextra.widgets.qt_toast import QtToast
 
