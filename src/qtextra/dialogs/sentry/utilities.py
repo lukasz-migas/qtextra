@@ -169,8 +169,8 @@ def get_sample_event(**kwargs) -> dict:
 
 
 SENTRY_LOGURU = LoguruIntegration(
-    level=LoggingLevels.ERROR.value,  # Capture info and above as breadcrumbs
-    event_level=LoggingLevels.ERROR.value,  # Send errors as events
+    level=LoggingLevels.CRITICAL.value,  # Capture info and above as breadcrumbs
+    event_level=LoggingLevels.CRITICAL.value,  # Send errors as events
 )
 
 INTEGRATIONS = [SENTRY_LOGURU]

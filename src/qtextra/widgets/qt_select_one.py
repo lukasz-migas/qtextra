@@ -17,13 +17,13 @@ class QtPickOptionBase(QDialog):
     option: ty.Optional[str] = None
     orientation: str | Orientation = "horizontal"
 
-    def __init__(self, parent: QWidget, text: str, options: ty.Dict[str, str]):
+    def __init__(self, parent: QWidget, text: str, options: ty.Dict[str, ty.Any]):
         super().__init__(parent)
         self.setWindowTitle("Select option")
 
         self.text = text
         self.options = options
-        self.responses: dict[str, str] = {}
+        self.responses: dict[str, ty.Any] = {}
         self._setup_ui()
 
     def _get_layout_widget(self) -> tuple[QWidget | None, QWidget | None]:
@@ -36,7 +36,7 @@ class QtPickOptionBase(QDialog):
         area, widget = self._get_layout_widget()
         btn_layout = QHBoxLayout(area) if self.orientation == "horizontal" else QVBoxLayout(area)
         btn_layout.addStretch(1)
-        for option, label in self.options.items():
+        for label, option in self.options.items():
             btn = hp.make_btn(
                 self, label, object_name="pick_option_button", func=partial(self.on_accept, option=option), wrap=True
             )
@@ -77,7 +77,7 @@ class QtScrollablePickOption(QtPickOptionBase):
         self,
         parent: QWidget,
         text: str,
-        options: dict[ty.Any, str],
+        options: dict[str, ty.Any],
         orientation: str | Orientation = "horizontal",
         max_width: int = 500,
     ):
@@ -105,20 +105,18 @@ if __name__ == "__main__":  # pragma: no cover
         None,
         "Select an option",
         {
-            "option1": "Option 1",
-            "option2": "Option 2",
-            "option3": "Option 3",
-            "option4": "Option 4",
-            "option5": "Option 5",
-            "option6": "Option 6",
-            "option7": "Option 7",
-            "option8": "Option 8",
-            "option9": "Option 9",
-            "option10": "Option 10",
+            "Option 1": "option1",
+            "Option 2": "option2",
+            "Option 3": "option3",
+            "Option 4": "option4",
+            "Option 5 (dict)": {"test": "1", "name": "option5"},
+            "Option 6": "option6",
+            "Option 7": "option7",
         },
         orientation="vertical",
     )
     apply_style(frame)
 
-    frame.show()
-    sys.exit(app.exec_())
+    if frame.exec_():
+        print(frame.option)
+    sys.exit()
