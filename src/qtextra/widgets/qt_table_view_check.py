@@ -459,7 +459,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             if index.isValid():
                 self.setData(index, value)
 
-    def check_all_rows(self) -> None:
+    def toggle_all_rows(self) -> None:
         """Check all rows in the table."""
         if self.state is None:
             self.state = self.n_checked == self.rowCount()
@@ -471,6 +471,16 @@ class QtCheckableItemModel(QAbstractTableModel):
             index = self.createIndex(row, 0)
             self.dataChanged.emit(index, index)
         self.evt_checked.emit(-1, self.state)
+
+    def check_all_rows(self) -> None:
+        """Check all rows in the table."""
+        for row, __ in enumerate(self._table):
+            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
+                continue
+            self._table[row][0] = True
+            index = self.createIndex(row, 0)
+            self.dataChanged.emit(index, index)
+        self.evt_checked.emit(-1, True)
 
     def uncheck_all_rows(self) -> None:
         """Uncheck all rows."""
@@ -966,6 +976,10 @@ class QtCheckableTableView(QTableView):
         """
         return self.model().get_all_unchecked()
 
+    def toggle_all_rows(self) -> None:
+        """Uncheck all values."""
+        self.model().toggle_all_rows()
+
     def check_all_rows(self) -> None:
         """Uncheck all values."""
         self.model().check_all_rows()
@@ -1103,7 +1117,7 @@ class QtCheckableTableView(QTableView):
         if index == 0 and self.checkable:
             self.header.setSortIndicatorShown(False)
             if self.enable_all_check:
-                self.model().check_all_rows()
+                self.model().toggle_all_rows()
             return
         else:
             self.header.setSortIndicatorShown(True)
