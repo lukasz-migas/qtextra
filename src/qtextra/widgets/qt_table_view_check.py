@@ -678,6 +678,15 @@ class QtCheckableTableView(QTableView):
         """Return the number of rows."""
         return self.model().rowCount(self) if self.model() else 0
 
+    def row_visible_count(self) -> int:
+        """Return the number of rows that are actually visible."""
+        model = self.model()
+        if model:
+            if hasattr(model, "table_proxy"):
+                return model.table_proxy.rowCount()
+            return model.rowCount()
+        return 0
+
     @property
     def header(self):
         """Return header."""
@@ -1046,9 +1055,9 @@ class QtCheckableTableView(QTableView):
 
     def update_column(self, col: int, values: list, match_to_sort: bool = True, block_signals: bool = False) -> None:
         """Update entire row."""
-        assert (
-            len(values) == self.n_rows
-        ), f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
+        assert len(values) == self.n_rows, (
+            f"Tried to set incorrect number of rows. Expected {self.n_rows} - got {len(values)}"
+        )
         model = self.model()
         with qt_signals_blocked(model, block_signals=block_signals):
             model.update_column(col, values, match_to_sort)

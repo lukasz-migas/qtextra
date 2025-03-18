@@ -207,6 +207,11 @@ class QtMiniToolbar(QFrame):
             btn.hide()
         return btn
 
+    def add_separator(self) -> None:
+        """Add separator."""
+        sep = hp.make_v_line() if self.orientation == Qt.Orientation.Horizontal else hp.make_h_line(self)
+        self.layout_.addWidget(sep)
+
     def insert_separator(self) -> None:
         """Insert horizontal or vertical separator."""
         sep = hp.make_v_line() if self.orientation == Qt.Orientation.Horizontal else hp.make_h_line(self)
