@@ -290,9 +290,9 @@ class Theme(EventedModel):
     def _ensure_syntax_style(value: str) -> str:
         from pygments.styles import STYLE_MAP
 
-        assert value in STYLE_MAP, (
-            f"Incorrect `syntax_style` value provided. Please use one of the following: {', '.join(STYLE_MAP)}"
-        )
+        assert (
+            value in STYLE_MAP
+        ), f"Incorrect `syntax_style` value provided. Please use one of the following: {', '.join(STYLE_MAP)}"
         return value
 
     @validator("font_size", "header_size", pre=True, allow_reuse=True)

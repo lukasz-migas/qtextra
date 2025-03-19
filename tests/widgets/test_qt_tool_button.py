@@ -1,8 +1,7 @@
 import pytest
+from qtextra.widgets.qt_button_tool import QtToolButton
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMenu
-
-from qtextra.widgets.qt_button_tool import QtToolButton
 
 
 @pytest.fixture
