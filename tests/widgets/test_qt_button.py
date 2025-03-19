@@ -1,5 +1,4 @@
 import pytest
-
 from qtextra.widgets.qt_button import QtActivePushButton
 
 
