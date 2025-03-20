@@ -1,8 +1,9 @@
 from unittest.mock import patch
 
 import pytest
-from qtextra.widgets.qt_button_icon import QtImagePushButton
 from qtpy.QtCore import Qt
+
+from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 
 @pytest.fixture
