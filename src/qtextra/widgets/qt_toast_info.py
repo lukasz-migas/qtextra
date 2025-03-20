@@ -344,9 +344,9 @@ class QtInfoToastManager(QObject):
         return cls._instance
 
     def __init__(self):
-        super().__init__()
         if self.__initialized:
             return
+        super().__init__()
 
         self.spacing = 16
         self.margin = 24

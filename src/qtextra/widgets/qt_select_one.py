@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typing as ty
 
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -35,17 +36,26 @@ class QtPickOptionBase(QDialog):
 
         area, widget = self._get_layout_widget()
         btn_layout = QHBoxLayout(area) if self.orientation == "horizontal" else QVBoxLayout(area)
-        btn_layout.addStretch(1)
+        # btn_layout.addStretch(1)
         for label, option in self.options.items():
             btn = hp.make_btn(
                 self, label, object_name="pick_option_button", func=partial(self.on_accept, option=option), wrap=True
             )
             btn_layout.addWidget(btn)
             self.responses[btn.text()] = option
-        btn_layout.addStretch(1)
+        # btn_layout.addStretch(1)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(hp.make_label(self, self.text, enable_url=True, wrap=True, object_name="pick_option_label"))
+        layout.addWidget(
+            hp.make_label(
+                self,
+                self.text,
+                enable_url=True,
+                wrap=True,
+                object_name="pick_option_label",
+                alignment=Qt.AlignmentFlag.AlignCenter,
+            )
+        )
         if widget:
             layout.addWidget(widget, stretch=True)
         else:
@@ -112,6 +122,7 @@ if __name__ == "__main__":  # pragma: no cover
             "Option 5 (dict)": {"test": "1", "name": "option5"},
             "Option 6": "option6",
             "Option 7": "option7",
+            **{f"Option {i}": f"option{i}" for i in range(8, 20)},
         },
         orientation="vertical",
     )
