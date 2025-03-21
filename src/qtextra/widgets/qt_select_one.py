@@ -94,7 +94,7 @@ class QtScrollablePickOption(QtPickOptionBase):
         self.orientation = orientation
         super().__init__(parent, text, options)
         size = self.sizeHint()
-        size.setWidth(max(size.width(), max_width))
+        size.setWidth(max(size.width() + 50, max_width))
         size.setHeight(min(400, 40 * len(options) + 70))
         self.setMinimumSize(size)
 

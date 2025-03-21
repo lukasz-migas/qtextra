@@ -140,7 +140,7 @@ def qframe(
             ha = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
             w = qdev(modules=modules)
-            w.setMaximumHeight(180)
+            # w.setMaximumHeight(300)
             ha.addWidget(w)
         frame.setLayout(ha)
     if set_style:

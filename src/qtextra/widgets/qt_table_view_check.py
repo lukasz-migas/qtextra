@@ -125,23 +125,39 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
 
     def __init__(self, *args: ty.Any, mode: MultiFilterMode = MultiFilterMode.AND, **kwargs: ty.Any):
         super().__init__(*args, mode=mode, **kwargs)
-        self.filters: dict[int, str] = {}
+        self.filters_by_text: dict[int, str] = {}
+        self.filters_by_state: dict[int, Qt.CheckState] = {}
 
     def setFilterByColumn(self, text: str, column: int) -> None:
         """Set filter by column."""
-        if not text and column in self.filters:
-            del self.filters[column]
-        self.filters[column] = str(text).lower()
+        if not text and column in self.filters_by_text:
+            del self.filters_by_text[column]
+        self.filters_by_text[column] = str(text).lower()
+        self.invalidateFilter()
+        self.evt_filtered.emit()
+
+    def setFilterByState(self, value: bool | None, column: int) -> None:
+        """Set filter by value."""
+        if value is None and column in self.filters_by_state:
+            del self.filters_by_state[column]
+        else:
+            self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
         self.invalidateFilter()
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         """Filter rows."""
-        if not self.filters:
+        if not self.filters_by_text and not self.filters_by_state:
             return True
 
         results: list[bool] = []
-        for column, text in self.filters.items():
+        for column, state in self.filters_by_state.items():
+            index = self.sourceModel().index(source_row, column, source_parent)
+            if index.isValid():
+                value = self.sourceModel().data(index, Qt.ItemDataRole.CheckStateRole)
+                results.append(value == state)
+
+        for column, text in self.filters_by_text.items():
             value = ""
             index = self.sourceModel().index(source_row, column, source_parent)
             if index.isValid():
@@ -165,7 +181,7 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
         super().__init__(*args, mode=mode, **kwargs)
         self.column_mode = column_mode
         # self.column_compare_func = any if column_mode == MultiFilterMode.OR else all
-        self.filters: dict[int, list[str]] = {}
+        self.filters_by_text: dict[int, list[str]] = {}
         self.column_compare_funcs: dict[int, ty.Callable[[ty.Iterable[bool]], bool]] = {}
 
     def column_compare_func(self, column: int) -> ty.Callable:
@@ -177,14 +193,14 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
     def setFilterByColumn(self, filters: list[str], column: int, column_mode: MultiFilterMode | None = None) -> None:
         """Set filter by column."""
         if not filters:
-            if column in self.filters:
-                del self.filters[column]
+            if column in self.filters_by_text:
+                del self.filters_by_text[column]
             if column in self.column_compare_funcs:
                 del self.column_compare_funcs[column]
         if not isinstance(filters, list):
             filters = [filters]
         if filters:
-            self.filters[column] = [filt.lower() for filt in filters]
+            self.filters_by_text[column] = [filt.lower() for filt in filters]
             if column_mode:
                 self.column_compare_funcs[column] = any if column_mode == MultiFilterMode.OR else all
         self.invalidateFilter()
@@ -192,10 +208,10 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         """Filter rows."""
-        if not self.filters:
+        if not self.filters_by_text:
             return True
         results: list[bool] = []
-        for column, _texts in self.filters.items():
+        for column, _texts in self.filters_by_text.items():
             value = ""
             index = self.sourceModel().index(source_row, column, source_parent)
             if index.isValid():

@@ -113,6 +113,18 @@ class SelectionWidget(QtFramelessPopup):
             other_index = next(i for i in indices if i != index)
             self.table.set_value(self.TABLE_CONFIG.check, other_index, False)
 
+    def on_show_selected(self) -> None:
+        """Show/hide selected."""
+        self.table_proxy.setFilterByState(True, self.TABLE_CONFIG.check)
+
+    def on_show_unselected(self) -> None:
+        """Show/hide unselected."""
+        self.table_proxy.setFilterByState(False, self.TABLE_CONFIG.check)
+
+    def on_show_selected_clear(self) -> None:
+        """Show/hide unselected."""
+        self.table_proxy.setFilterByState(None, self.TABLE_CONFIG.check)
+
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QFormLayout:
         """Make panel."""
@@ -127,6 +139,7 @@ class SelectionWidget(QtFramelessPopup):
         self.table_proxy.setSourceModel(self.table.model())
         self.table.model().table_proxy = self.table_proxy
         self.table.setModel(self.table_proxy)
+
         self.filter_by_option = hp.make_line_edit(
             self,
             placeholder="Filter by value...",
@@ -146,7 +159,18 @@ class SelectionWidget(QtFramelessPopup):
                 )
             )
         layout.addRow(self.table)
-        layout.addRow(self.filter_by_option)
+        layout.addRow(
+            hp.make_h_layout(
+                hp.make_qta_btn(self, "visible_on", func=self.on_show_selected, tooltip="Only show checked items."),
+                hp.make_qta_btn(
+                    self, "visible_off", func=self.on_show_unselected, tooltip="Only show unchecked items."
+                ),
+                hp.make_qta_btn(self, "clear", func=self.on_show_selected_clear, tooltip="Clear checked filter."),
+                self.filter_by_option,
+                stretch_id=(3,),
+                spacing=2,
+            )
+        )
         layout.addRow(
             hp.make_h_layout(
                 hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.on_cancel)
