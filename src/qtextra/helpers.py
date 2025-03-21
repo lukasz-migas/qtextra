@@ -2203,6 +2203,18 @@ def make_menu(parent: Qw.QWidget | None, title: str = "") -> Qw.QMenu:
     return widget
 
 
+def make_menu_from_options(
+    parent: Qw.QWidget, menu: Qw.QMenu, options: list[str | None], func: Callback | None
+) -> None:
+    """Make menu of options."""
+    func = _validate_func(func)
+    for option in options:
+        if option is None:
+            menu.addSeparator()
+            continue
+        make_menu_item(parent, option, menu=menu, func=[partial(func_, option) for func_ in func])
+
+
 def make_menu_item(
     parent: Qw.QWidget | None,
     title: str,
