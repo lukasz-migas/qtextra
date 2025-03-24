@@ -1049,6 +1049,7 @@ def make_btn(
     check: bool = False,
     func: Callback | None = None,
     func_right_click: Callback | None = None,
+    func_menu: Callback | None = None,
     font_size: int | None = None,
     bold: bool = False,
     object_name: str = "",
@@ -1058,6 +1059,9 @@ def make_btn(
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
+
+    if func_right_click is not None:
+        func_menu = func_right_click
 
     widget = QtPushButton(parent=parent)
     widget.setWordWrap(wrap)
@@ -1074,8 +1078,8 @@ def make_btn(
         set_bold(widget, bold)
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
-    if func_right_click:
-        [widget.connect_to_right_click(func_) for func_ in _validate_func(func_right_click)]
+    if func_menu:
+        [widget.connect_to_right_click(func_) for func_ in _validate_func(func_menu)]
     if object_name:
         widget.setObjectName(object_name)
     if hide:
