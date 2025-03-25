@@ -700,6 +700,7 @@ def make_line_edit(
     default: str = "",
     disabled: bool = False,
     validator: QValidator | None = None,
+    hide: bool = False,
     **_kwargs,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
@@ -710,6 +711,7 @@ def make_line_edit(
     widget.setClearButtonEnabled(not disabled)
     disable_widgets(widget, disabled=disabled, min_opacity=0.95)
     widget.setPlaceholderText(placeholder)
+    widget.setHidden(hide)
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)
     if bold:

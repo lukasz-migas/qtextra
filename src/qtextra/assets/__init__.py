@@ -87,6 +87,7 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "cancel": "mdi.close-circle",
     "paint_palette": "ph.palette-fill",
     "copy_to_clipboard": "mdi.clipboard-arrow-left-outline",
+    "copy": "mdi6.content-copy",
     "reload": "mdi6.cached",
     "save": "fa5s.save",
     "screenshot": "mdi.camera-outline",
@@ -240,10 +241,12 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
 def update_icon_mapping(mapping: ty.Dict[str, str]) -> None:
     """Update icon mapping."""
     global QTA_MAPPING
-    for k in mapping:
-        if k in QTA_MAPPING:
-            logger.warning(f"Icon mapping already exists for '{k}'")
-    QTA_MAPPING.update(mapping)
+    for k, v_new in mapping.items():
+        v_exist = QTA_MAPPING.get(k, None)
+        v_new = mapping[k]
+        if v_exist and v_exist == v_new:
+            print(f"Warning: Icon mapping already exists for '{k}'")
+        QTA_MAPPING[k] = v_new
 
 
 def update_styles(mapping: ty.Dict[str, str], append: bool = True) -> None:
