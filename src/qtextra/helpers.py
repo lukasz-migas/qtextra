@@ -697,6 +697,7 @@ def make_line_edit(
     object_name: str = "",
     func: Callback | None = None,
     func_changed: Callback | None = None,
+    func_clear: Callback | None = None,
     default: str = "",
     disabled: bool = False,
     validator: QValidator | None = None,
@@ -724,6 +725,11 @@ def make_line_edit(
         widget.setValidator(validator)
     if func:
         [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
+    if func_clear:
+        action = widget.findChild(Qw.QAction)
+        if action:
+            widget.hide_action = action
+            [action.triggered.connect(func_clear) for func_ in _validate_func(func_clear)]
     if func_changed:
         [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     return widget
@@ -2267,7 +2273,7 @@ def make_menu_item(
     return widget
 
 
-def make_menu_group(parent: Qw.QWidget, *actions):
+def make_menu_group(parent: Qw.QWidget, *actions: Qw.QAction) -> Qw.QActionGroup:
     """Make actions group."""
     group = Qw.QActionGroup(parent)
     for action in actions:
