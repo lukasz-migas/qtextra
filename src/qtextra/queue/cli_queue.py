@@ -388,9 +388,10 @@ class CLIQueueHandler(QObject):
                 logger.debug(f"Cancelled task '{task.summary()}'")
                 with suppress(RuntimeError):
                     self._evt_cancel.emit(task)  # type: ignore[unused-ignore]
-        self.pending_queue.clear()
+        if self.pending_queue:
+            self.pending_queue.clear()
+            logger.trace("Queue > Cleared queue")
         self.finished_queue.clear()
-        logger.trace("Queue > Cleared queue")
 
     def count(self) -> int:
         """Retrieves the count of items in the queue."""
