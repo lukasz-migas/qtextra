@@ -148,6 +148,11 @@ class QtColorSwatch(QFrame):
             self.setFrameShape(QFrame.Box)
             self.setLineWidth(2)
 
+    def set_enabled(self, enabled: bool) -> None:
+        """Set the enabled state of the widget."""
+        self.setEnabled(enabled)
+        self.setCursor(Qt.CursorShape.PointingHandCursor if enabled else Qt.CursorShape.ArrowCursor)
+
     @property
     def color(self) -> np.ndarray:
         """Return the current color."""
