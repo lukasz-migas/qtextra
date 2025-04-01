@@ -79,6 +79,7 @@ class QtFilterEdit(QWidget):
         button.evt_action.connect(self.on_remove)
         self._filter_layout.insertWidget(0, button)
         self.evt_filters_changed.emit(self.get_filters(), self.mode)
+        self.text_edit.setText("")
 
     def on_remove(self, hash_id: str) -> None:
         """Remove filter."""
