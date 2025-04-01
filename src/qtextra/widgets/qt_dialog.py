@@ -405,6 +405,32 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):  # type: ignore[misc]
         else:
             super().keyPressEvent(event)
 
+    def closeEvent(self, event: QCloseEvent | None = None) -> None:
+        """Hide rather than close."""
+        if self.HIDE_WHEN_CLOSE:
+            self.hide()
+            self.clearFocus()
+            if hasattr(self, "evt_hide"):
+                self.evt_hide.emit()
+            event.ignore()
+        else:
+            self._on_teardown()
+            self.connect_events(False)
+            if hasattr(self, "evt_close"):
+                self.evt_close.emit()
+            super().closeEvent(event)
+
+    def close(self) -> bool:
+        """Hide dialog rather than delete it."""
+        if self.HIDE_WHEN_CLOSE:
+            self.hide()
+            if hasattr(self, "evt_hide"):
+                self.evt_hide.emit()
+            self.clearFocus()
+            return False
+        else:
+            return super().close()
+
 
 class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
     """Frameless dialog."""
