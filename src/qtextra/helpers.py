@@ -2677,14 +2677,17 @@ def choose_from_list(
     selected: list[str] | None = None,
     title: str = "Please choose from the list.",
     text: str = "",
+    multiple: bool = True,
 ) -> list[str]:
     """Choose from list."""
     from qtextra.widgets.qt_select_multi import SelectionWidget
 
-    dlg = SelectionWidget(parent, title=title, text=text)
+    dlg = SelectionWidget(parent, title=title, text=text, n_max=0 if multiple else 1)
     dlg.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
     dlg.set_options(options, selected)
     if dlg.exec_() == Qw.QDialog.DialogCode.Accepted:
+        if not multiple and dlg.options:
+            return dlg.options[0]
         return dlg.options
     return []
 

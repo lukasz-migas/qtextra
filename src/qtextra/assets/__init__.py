@@ -87,8 +87,12 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "cancel": "mdi.close-circle",
     "paint_palette": "ph.palette-fill",
     "copy_to_clipboard": "mdi.clipboard-arrow-left-outline",
-    "copy": "mdi6.content-copy",
+    "copy": "fa6.copy",
+    "copy_all": "fa6s.copy",
+    "sort": "fa5s.sort-amount-up",
+    "graph": "mdi.graph",
     "reload": "mdi6.cached",
+    "replace": "msc.replace",
     "save": "fa5s.save",
     "screenshot": "mdi.camera-outline",
     "github": "fa5b.github",
@@ -235,6 +239,8 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "minimize": "fa5s.window-minimize",
     "maximize": "fa5s.window-maximize",
     "fullscreen": "fa5s.expand",
+    "random": "fa5s.random",
+    "color_palette": "fa5s.palette",
 }
 
 
