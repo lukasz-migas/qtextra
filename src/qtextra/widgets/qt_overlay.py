@@ -54,18 +54,18 @@ class QtOverlay(QWidget):
         """Event filter."""
         # reimplemented
         if recv is self.__widget:
-            if event.type() == QEvent.Resize or event.type() == QEvent.Move:
+            if event.type() == QEvent.Type.Resize or event.type() == QEvent.Type.Move:
                 self.__layout()
-            elif event.type() == QEvent.Show:
+            elif event.type() == QEvent.Type.Show:
                 self.show()
-            elif event.type() == QEvent.Hide:
+            elif event.type() == QEvent.Type.Hide:
                 self.hide()
         return super().eventFilter(recv, event)
 
     def event(self, event):
         """Event."""
         # reimplemented
-        if event.type() == QEvent.LayoutRequest:
+        if event.type() == QEvent.Type.LayoutRequest:
             self.__layout()
             return True
         else:

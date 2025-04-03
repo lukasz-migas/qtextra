@@ -88,7 +88,7 @@ class QtExpandLayout(QLayout):
 
     def eventFilter(self, obj, e):
         if obj in self.__widgets:
-            if e.type() == QEvent.Resize:
+            if e.type() == QEvent.Type.Resize:
                 re = QResizeEvent(e)
                 ds = re.size() - re.oldSize()  # type:QSize
                 if ds.height() != 0 and ds.width() == 0:

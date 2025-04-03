@@ -231,7 +231,7 @@ class QtMultiSelect(QWidget):
 
     def eventFilter(self, obj: QObject, evt: QEvent) -> bool:
         """Event filter."""
-        if self.isEnabled() and obj == self.text_edit and evt.type() == QEvent.MouseButtonPress:  # type: ignore
+        if self.isEnabled() and obj == self.text_edit and evt.type() == QEvent.Type.MouseButtonPress:  # type: ignore
             self.on_select()
             return True
         return super().eventFilter(obj, evt)

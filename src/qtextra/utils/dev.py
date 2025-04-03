@@ -231,7 +231,7 @@ class MacApplication(QApplication):
 
     def event(self, event):
         """Override event handler to catch file open events."""
-        if event.type() == QEvent.FileOpen:
+        if event.type() == QEvent.Type.FileOpen:
             fname = str(event.file())
             if sys.argv and sys.argv[0] == fname:
                 # Ignore requests to open own script

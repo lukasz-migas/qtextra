@@ -207,7 +207,7 @@ class QtInfoToast(QFrame):
 
     def eventFilter(self, obj, e: QEvent):
         if obj is self.parent():
-            if e.type() in [QEvent.Resize, QEvent.WindowStateChange]:
+            if e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange]:
                 self._adjustText()
 
         return super().eventFilter(obj, e)
@@ -447,8 +447,8 @@ class QtInfoToastManager(QObject):
         if obj not in self._toast:
             return False
 
-        if e.type() in [QEvent.Resize, QEvent.WindowStateChange]:
-            size = e.size() if e.type() == QEvent.Resize else None
+        if e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange]:
+            size = e.size() if e.type() == QEvent.Type.Resize else None
             for bar in self._toast[obj]:
                 bar.move(self._pos(bar, size))
 

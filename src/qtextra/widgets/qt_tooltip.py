@@ -217,7 +217,7 @@ class ToolTip(QWidget):
 
     def eventFilter(self, obj, e: QEvent):
         if self.parent() and obj is self.parent().window():
-            if e.type() in [QEvent.Resize, QEvent.WindowStateChange, QEvent.Move]:
+            if e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange, QEvent.Type.Move]:
                 self.move(self.manager._get_position(self))
 
         return super().eventFilter(obj, e)
