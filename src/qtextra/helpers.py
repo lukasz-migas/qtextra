@@ -1063,6 +1063,7 @@ def make_btn(
     object_name: str = "",
     properties: dict[str, ty.Any] | None = None,
     hide: bool = False,
+    disable: bool = False,
     wrap: bool = False,
 ) -> QtPushButton:
     """Make button."""
@@ -1092,6 +1093,8 @@ def make_btn(
         widget.setObjectName(object_name)
     if hide:
         widget.hide()
+    if disable:
+        disable_widgets(widget, disabled=disable)
     set_properties(widget, properties)
     return widget
 
