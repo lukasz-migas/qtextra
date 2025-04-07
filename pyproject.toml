@@ -222,6 +222,7 @@ ignore = [
     "venv*/**/*",
     "tox.ini",
     "codecov.yml",
+    "mkdocs.yml",
     "renovate.json",
     "docs/*.py",
 ]

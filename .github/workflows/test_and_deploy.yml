@@ -47,10 +47,14 @@ jobs:
             backend: pyside2
           - python-version: "3.12"
             backend: pyqt5
-        include:
+          # super slow
           - python-version: "3.13"
+            backend: pyqt6
             platform: windows-latest
-            backend: "pyqt6"
+        include:
+#          - python-version: "3.13"
+#            platform: windows-latest
+#            backend: "pyqt6"
           - python-version: "3.13"
             platform: ubuntu-latest
             backend: "pyqt6"
