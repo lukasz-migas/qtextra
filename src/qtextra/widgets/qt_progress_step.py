@@ -4,6 +4,8 @@ from qtpy.QtCore import Property, QPoint, QRect, QSize, Qt, QVariantAnimation, S
 from qtpy.QtGui import QColor, QFontMetrics, QPainter, QPen
 from qtpy.QtWidgets import QWidget
 
+from qtextra.config import THEMES
+
 
 class QtStepProgressBar(QWidget):
     """Progress bar with steps.
@@ -51,26 +53,27 @@ class QtStepProgressBar(QWidget):
         return QSize(320, 120)
 
     def paintEvent(self, event):
-        grey = QColor("#777")
-        grey2 = QColor("#dfe3e4")
-        blue = QColor("#2183dd")
-        green = QColor("#009900")
-        white = QColor("#fff")
+        default_line_color = THEMES.get_qt_color("primary")
+        incomplete_color = THEMES.get_qt_color("secondary")
+        progress_color = THEMES.get_qt_color("success")
+        complete_color = THEMES.get_qt_color("success")
+        canvas_color = THEMES.get_qt_color("canvas")
+        text_color = THEMES.get_qt_color("text")
 
         painter = QPainter(self)
 
-        painter.setRenderHints(QPainter.Antialiasing)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing)
 
         height = 5
         offset = 10
 
-        painter.fillRect(self.rect(), white)
+        painter.fillRect(self.rect(), canvas_color)
 
         busy_rect = QRect(0, 0, self.width(), height)
         busy_rect.adjust(offset, 0, -offset, 0)
         busy_rect.moveCenter(self.rect().center())
 
-        painter.fillRect(busy_rect, grey2)
+        painter.fillRect(busy_rect, default_line_color)
 
         number_of_steps = len(self.labels)
 
@@ -100,26 +103,24 @@ class QtStepProgressBar(QWidget):
 
                 if i < number_of_steps:
                     r_busy.moveLeft(x)
-                    painter.fillRect(r_busy, blue)
+                    painter.fillRect(r_busy, progress_color)
 
-                pen = QPen(green)
+                pen = QPen(complete_color)
                 pen.setWidth(3)
                 painter.setPen(pen)
-                painter.setBrush(green)
+                painter.setBrush(complete_color)
                 painter.drawEllipse(r)
-                # painter.setFont(font_icon)
-                painter.setPen(white)
-                # painter.drawText(r, Qt.AlignmentFlag.AlignCenter, chr(0xF00C))
-                painter.setPen(green)
+                painter.setPen(canvas_color)
+                painter.setPen(complete_color)
 
             else:
                 is_active = (self.value + 1) == i
-                pen = QPen(grey if is_active else grey2)
+                pen = QPen(incomplete_color if is_active else default_line_color)
                 pen.setWidth(3)
                 painter.setPen(pen)
-                painter.setBrush(white)
+                painter.setBrush(canvas_color)
                 painter.drawEllipse(r)
-                painter.setPen(blue if is_active else QColor("black"))
+                painter.setPen(progress_color if is_active else text_color)
 
             rect = fm.boundingRect(text)
             rect.moveCenter(QPoint(int(x), int(round(y + 2 * radius))))
@@ -134,10 +135,11 @@ if __name__ == "__main__":  # pragma: no cover
 
     from qtpy.QtWidgets import QPushButton
 
-    from qtextra.utils.dev import qframe
+    from qtextra.utils.dev import qframe, theme_toggle_btn
 
     app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
+    ha.addWidget(theme_toggle_btn(frame))
 
     progressbar = QtStepProgressBar()
     progressbar.labels = ["Step One", "Step Two", "Step Three", "Complete"]

@@ -6,7 +6,7 @@ from contextlib import suppress
 
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QMouseEvent
-from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QProgressBar, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import SubWindowBase
@@ -35,34 +35,34 @@ class QtToast(SubWindowBase):
     def make_ui(self) -> None:
         """Setup UI."""
         title_widget = QWidget()
-        # title_widget.setMaximumHeight(30)
         title_widget.setObjectName("toast_header")
+
         self._icon_label = QtSeverityLabel(title_widget)
         self._icon_label.set_xsmall()
+
         self._title_label = hp.make_label(title_widget, "", bold=True, object_name="transparent")
-        hp.set_expanding_sizer_policy(self._title_label, True, True)
+        hp.set_expanding_sizer_policy(self._title_label, True, False)
+
         self._date_label = hp.make_label(title_widget, "", object_name="transparent")
+
         self._close_btn = hp.make_qta_btn(title_widget, "cross", func=self.close)
         self._close_btn.set_xsmall()
 
         self._message_label = hp.make_label(self, "", wrap=True, enable_url=True)
 
-        self._timer_indicator = QProgressBar(self)
-        self._timer_indicator.setObjectName("progress_timer")
-        self._timer_indicator.setTextVisible(False)
-
-        title_layout = QHBoxLayout(title_widget)
-        hp.set_layout_margin(title_layout, 2)
+        title_layout = hp.make_h_layout(parent=title_widget, margin=2, spacing=1)
         title_layout.addWidget(self._icon_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         title_layout.addWidget(self._title_label, stretch=True, alignment=Qt.AlignmentFlag.AlignVCenter)
         title_layout.addWidget(self._date_label, alignment=Qt.AlignmentFlag.AlignVCenter)
         title_layout.addStretch(1)
         title_layout.addWidget(self._close_btn, alignment=Qt.AlignmentFlag.AlignTop)
 
+        self._timer_indicator = QProgressBar(self)
+        self._timer_indicator.setObjectName("progress_timer")
+        self._timer_indicator.setTextVisible(False)
+
         # layout
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = hp.make_v_layout(parent=self, margin=0, spacing=0)
         layout.addWidget(title_widget)
         layout.addWidget(self._message_label, stretch=True)
         layout.addStretch(1)

@@ -164,7 +164,7 @@ class ToolTip(QWidget):
         self.manager = ToolTipManager.make(tail_position)
 
         self.hBoxLayout = QHBoxLayout(self)
-        self.opacityAni = QPropertyAnimation(self, b"windowOpacity", self)
+        self.opacity_animation = QPropertyAnimation(self, b"windowOpacity", self)
 
         self.bubble = ToolTipBubble(view, tail_position, self)
 
@@ -191,11 +191,11 @@ class ToolTip(QWidget):
 
     def _fadeOut(self):
         """Fade out."""
-        self.opacityAni.setDuration(167)
-        self.opacityAni.setStartValue(1)
-        self.opacityAni.setEndValue(0)
-        self.opacityAni.finished.connect(self.close)
-        self.opacityAni.start()
+        self.opacity_animation.setDuration(167)
+        self.opacity_animation.setStartValue(1)
+        self.opacity_animation.setEndValue(0)
+        self.opacity_animation.finished.connect(self.close)
+        self.opacity_animation.start()
 
     def showEvent(self, e):
         if self.duration >= 0:
@@ -203,10 +203,10 @@ class ToolTip(QWidget):
 
         self.move(self.manager._get_position(self))
         self.adjustSize()
-        self.opacityAni.setDuration(167)
-        self.opacityAni.setStartValue(0)
-        self.opacityAni.setEndValue(1)
-        self.opacityAni.start()
+        self.opacity_animation.setDuration(167)
+        self.opacity_animation.setStartValue(0)
+        self.opacity_animation.setEndValue(1)
+        self.opacity_animation.start()
         super().showEvent(e)
 
     def closeEvent(self, e):

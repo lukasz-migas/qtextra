@@ -238,15 +238,17 @@ if __name__ == "__main__":  # pragma: no cover
 
     from qtpy.QtWidgets import QVBoxLayout
 
-    from qtextra.assets import QTA_MAPPING
+    from qtextra.assets import QTA_MAPPING, get_icon
     from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe()
 
     lay = QVBoxLayout()
-    for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
+    for i, name in enumerate(QTA_MAPPING.keys()):
+        qta_name, qta_kws = get_icon(name)
+        qta_kws["scale_factor"] = 1
         label = QtQtaLabel()
-        label.set_qta(qta_name, scale_factor=1)
+        label.set_qta(qta_name, **qta_kws)
         label.setToolTip(f"{name} :: {qta_name}")
         label.set_large()
         lay.addWidget(label)

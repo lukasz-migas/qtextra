@@ -14,6 +14,8 @@ from qtextra.widgets.qt_label_icon import QtIconLabel
 class QtOverlay(QWidget):
     """A widget positioned on top of another widget."""
 
+    Y_OFFSET: int = 10
+
     def __init__(self, parent=None, alignment=Qt.AlignmentFlag.AlignCenter, **kwargs):
         super().__init__(parent, **kwargs)
         self.setContentsMargins(0, 0, 0, 0)
@@ -76,7 +78,7 @@ class QtOverlay(QWidget):
         opt = QStyleOption()
         opt.initFrom(self)
         painter = QPainter(self)
-        self.style().drawPrimitive(QStyle.PE_Widget, opt, painter, self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
 
     def showEvent(self, event):
         """Show event."""
@@ -159,7 +161,7 @@ class QtOverlay(QWidget):
         else:
             y = bounds.y() + max(0, bounds.height() - size.height()) // 2
 
-        geom = QRect(QPoint(x, y), size)
+        geom = QRect(QPoint(x, y + self.Y_OFFSET), size)
         self.setGeometry(geom)
 
     @Slot()
@@ -182,13 +184,13 @@ class QtOverlayWidget(QFrame):
         **kwargs,
     ):
         super().__init__(parent, **kwargs)
-        self.setFrameShape(QFrame.Box)
+        self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)
 
-        self.text_label = QLabel(text=text, wordWrap=False, textFormat=Qt.AutoText)
-        self.text_label.setAlignment(Qt.AlignJustify)
+        self.text_label = QLabel(text=text, wordWrap=False, textFormat=Qt.TextFormat.AutoText)
+        self.text_label.setAlignment(Qt.AlignmentFlag.AlignJustify)
         if sys.platform == "darwin":
-            self.text_label.setAttribute(Qt.WA_MacSmallSize)
+            self.text_label.setAttribute(Qt.WidgetAttribute.WA_MacSmallSize)
 
         row = QHBoxLayout(self)
         row.addWidget(self.text_label, stretch=True)
@@ -232,7 +234,7 @@ class QtMessageWidget(QFrame):
         icon_name: str = "info",
         text: str = "",
         wrap_word: bool = False,
-        text_format: Qt.TextFormat = Qt.AutoText,
+        text_format: Qt.TextFormat = Qt.TextFormat.AutoText,
         **kwargs,
     ):
         super().__init__(parent, **kwargs)
@@ -245,9 +247,9 @@ class QtMessageWidget(QFrame):
 
         self.icon_label = QtIconLabel(icon_name, parent=self)
         self.text_label = QLabel(text=text, wordWrap=wrap_word, textFormat=text_format)
-        self.text_label.setAlignment(Qt.AlignJustify)
+        self.text_label.setAlignment(Qt.AlignmentFlag.AlignJustify)
         if sys.platform == "darwin":
-            self.text_label.setAttribute(Qt.WA_MacSmallSize)
+            self.text_label.setAttribute(Qt.WidgetAttribute.WA_MacSmallSize)
 
         self.ok_btn = make_btn(self, "OK", tooltip="Accept")
         self.ok_btn.clicked.connect(self.on_accept)
@@ -402,7 +404,7 @@ if __name__ == "__main__":  # pragma: no cover
     frame.setLayout(ha)
     frame.setMinimumSize(400, 400)
 
-    overlay = QtOverlayLabel(parent=frame, text="Spatial")
+    overlay = QtOverlayLabel(parent=frame, text="Spatial overlay text")
 
     # overlay = QtOverlayMessage(
     #     parent=frame,

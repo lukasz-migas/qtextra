@@ -547,11 +547,12 @@ if __name__ == "__main__":  # pragma: no cover
                     self.addWidget(hp.make_btn(self, "Button 2"))
                     self.addWidget(hp.make_btn(self, "Button 3"))
 
-            MyPopoutView(
+            pop = MyPopoutView(
                 "Hello World",
                 "Here is some text that should be displayed below the title",
                 parent=frame,
             )
+            pop.show()
 
         btn = hp.make_btn(frame, "Show Popout", func=_popup)
         ha.addWidget(btn)

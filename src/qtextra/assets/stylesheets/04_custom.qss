@@ -552,3 +552,10 @@ QtScrollableHLayout QScrollBar::sub-line:horizontal {
     height: 0px;
     width: 0px;
 }
+
+
+
+QtOverlay {
+    border: 2px solid {{ secondary }};
+        border-radius: 10px;
+}

@@ -106,12 +106,14 @@ class QtInfoToast(QFrame):
         self.contentLabel.setObjectName("contentLabel")
 
         self.closeButton = hp.make_qta_btn(self, "cross", func=self.close)
+        self.closeButton.set_normal()
         self.closeButton.setCursor(Qt.CursorShape.PointingHandCursor)
         self.closeButton.setVisible(self.is_closable)
 
         self.iconWidget = QtSeverityLabel(self)
+        self.iconWidget.set_normal()
         self.iconWidget.severity = icon
-        hp.set_properties(self, {"type": icon})
+        hp.set_properties(self, {"type": icon, "dark": is_dark()})
 
         self.hBoxLayout = QHBoxLayout(self)
         self.textLayout = QHBoxLayout() if self.orientation == Qt.Orientation.Horizontal else QVBoxLayout()
@@ -122,8 +124,8 @@ class QtInfoToast(QFrame):
         self.opacity_effect.setOpacity(1)
         self.setGraphicsEffect(self.opacity_effect)
 
-        self.lightBackgroundColor = None
-        self.darkBackgroundColor = None
+        self._light_bg_color = None
+        self._dark_bg_color = None
 
         self.__initLayout()
 
@@ -131,7 +133,7 @@ class QtInfoToast(QFrame):
         self.hBoxLayout.setContentsMargins(6, 6, 6, 6)
         self.hBoxLayout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)
         self.textLayout.setSizeConstraint(QHBoxLayout.SizeConstraint.SetMinimumSize)
-        self.textLayout.setAlignment(Qt.AlignTop)
+        self.textLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.textLayout.setContentsMargins(1, 8, 0, 8)
 
         self.hBoxLayout.setSpacing(0)
@@ -201,8 +203,8 @@ class QtInfoToast(QFrame):
         light, dark: str | Qt.GlobalColor | QColor
             background color in light/dark theme mode
         """
-        self.lightBackgroundColor = QColor(light)
-        self.darkBackgroundColor = QColor(dark)
+        self._light_bg_color = QColor(light)
+        self._dark_bg_color = QColor(dark)
         self.update()
 
     def eventFilter(self, obj, e: QEvent):
@@ -233,7 +235,7 @@ class QtInfoToast(QFrame):
 
     def paintEvent(self, e):
         super().paintEvent(e)
-        if self.lightBackgroundColor is None:
+        if self._light_bg_color is None:
             return
 
         painter = QPainter(self)
@@ -241,9 +243,9 @@ class QtInfoToast(QFrame):
         painter.setPen(Qt.PenStyle.NoPen)
 
         if is_dark():
-            painter.setBrush(self.darkBackgroundColor)
+            painter.setBrush(self._dark_bg_color)
         else:
-            painter.setBrush(self.lightBackgroundColor)
+            painter.setBrush(self._light_bg_color)
 
         rect = self.rect().adjusted(1, 1, -1, -1)
         painter.drawRoundedRect(rect, 6, 6)
@@ -260,6 +262,7 @@ class QtInfoToast(QFrame):
         position=ToastPosition.TOP_RIGHT,
         parent=None,
     ):
+        """Create new toast."""
         w = QtInfoToast(icon, title, content, orientation, is_closable, duration, position, parent)
         w.show()
         return w
@@ -275,6 +278,7 @@ class QtInfoToast(QFrame):
         position: ToastPosition = ToastPosition.TOP_RIGHT,
         parent: QWidget | None = None,
     ):
+        """Info toast."""
         return cls.new("info", title, content, orientation, is_closable, duration, position, parent)
 
     @classmethod
@@ -288,6 +292,7 @@ class QtInfoToast(QFrame):
         position: ToastPosition = ToastPosition.TOP_RIGHT,
         parent: QWidget | None = None,
     ):
+        """Success info toast."""
         return cls.new("success", title, content, orientation, is_closable, duration, position, parent)
 
     @classmethod
@@ -301,6 +306,7 @@ class QtInfoToast(QFrame):
         position: ToastPosition = ToastPosition.TOP_RIGHT,
         parent: QWidget | None = None,
     ):
+        """Warning info toast."""
         return cls.new("warning", title, content, orientation, is_closable, duration, position, parent)
 
     @classmethod
@@ -314,6 +320,7 @@ class QtInfoToast(QFrame):
         position: ToastPosition = ToastPosition.TOP_RIGHT,
         parent: QWidget | None = None,
     ):
+        """Error info toast."""
         return cls.new("error", title, content, orientation, is_closable, duration, position, parent)
 
     @classmethod
@@ -327,6 +334,7 @@ class QtInfoToast(QFrame):
         position: ToastPosition = ToastPosition.TOP_RIGHT,
         parent: QWidget | None = None,
     ):
+        """Critical info toast."""
         return cls.new("critical", title, content, orientation, is_closable, duration, position, parent)
 
 
@@ -382,13 +390,12 @@ class QtInfoToastManager(QObject):
 
         # add slide animation
         self._toast[p].append(toast)
-        slideAni = self._create_slide_animation(toast)
-        self._slide_animations.append(slideAni)
+        slide_animation = self._create_slide_animation(toast)
+        self._slide_animations.append(slide_animation)
 
-        toast.setProperty("slideAni", slideAni)
+        toast.setProperty("slide_animation", slide_animation)
         toast.evt_closed.connect(lambda: self.remove(toast))
-
-        slideAni.start()
+        slide_animation.start()
 
     def remove(self, toast: QtInfoToast):
         """Remove info toast."""
@@ -408,23 +415,23 @@ class QtInfoToastManager(QObject):
             self._drop_animations.remove(remove_animation)
 
         # remove slider animation
-        slideAni = toast.property("slideAni")
-        if slideAni:
-            self._slide_animations.remove(slideAni)
+        slide_animation = toast.property("slide_animation")
+        if slide_animation:
+            self._slide_animations.remove(slide_animation)
 
         # adjust the position of the remaining info toasts
         self._update_drop_animation(p)
         self._animation_groups[p].start()
 
     def _create_slide_animation(self, toast: QtInfoToast):
-        slideAni = QPropertyAnimation(toast, b"pos")
-        slideAni.setEasingCurve(QEasingCurve.Type.OutQuad)
-        slideAni.setDuration(200)
+        slide_animation = QPropertyAnimation(toast, b"pos")
+        slide_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+        slide_animation.setDuration(200)
 
-        slideAni.setStartValue(self._slideStartPos(toast))
-        slideAni.setEndValue(self._pos(toast))
+        slide_animation.setStartValue(self._get_slider_start_position(toast))
+        slide_animation.setEndValue(self._get_position(toast))
 
-        return slideAni
+        return slide_animation
 
     def _update_drop_animation(self, parent):
         for bar in self._toast[parent]:
@@ -433,13 +440,13 @@ class QtInfoToastManager(QObject):
                 continue
 
             animation.setStartValue(bar.pos())
-            animation.setEndValue(self._pos(bar))
+            animation.setEndValue(self._get_position(bar))
 
-    def _pos(self, toast: QtInfoToast, size=None) -> QPoint:
+    def _get_position(self, toast: QtInfoToast, size=None) -> QPoint:
         """Return the position of info toast."""
         raise NotImplementedError
 
-    def _slideStartPos(self, toast: QtInfoToast) -> QPoint:
+    def _get_slider_start_position(self, toast: QtInfoToast) -> QPoint:
         """Return the start position of slide animation."""
         raise NotImplementedError
 
@@ -450,7 +457,7 @@ class QtInfoToastManager(QObject):
         if e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange]:
             size = e.size() if e.type() == QEvent.Type.Resize else None
             for bar in self._toast[obj]:
-                bar.move(self._pos(bar, size))
+                bar.move(self._get_position(bar, size))
 
         return super().eventFilter(obj, e)
 
@@ -485,7 +492,7 @@ class QtInfoToastManager(QObject):
 class TopQtInfoToastManager(QtInfoToastManager):
     """Top position info toast manager."""
 
-    def _pos(self, toast: QtInfoToast, size=None):
+    def _get_position(self, toast: QtInfoToast, size=None):
         p = toast.parent()
 
         x = (toast.parent().width() - toast.width()) // 2
@@ -496,8 +503,8 @@ class TopQtInfoToastManager(QtInfoToastManager):
 
         return QPoint(x, y)
 
-    def _slideStartPos(self, toast: QtInfoToast):
-        pos = self._pos(toast)
+    def _get_slider_start_position(self, toast: QtInfoToast):
+        pos = self._get_position(toast)
         return QPoint(pos.x(), pos.y() - 16)
 
 
@@ -505,7 +512,7 @@ class TopQtInfoToastManager(QtInfoToastManager):
 class TopRightQtInfoToastManager(QtInfoToastManager):
     """Top right position info toast manager."""
 
-    def _pos(self, toast: QtInfoToast, size=None):
+    def _get_position(self, toast: QtInfoToast, size=None):
         p = toast.parent()
         size = size or p.size()
 
@@ -517,15 +524,15 @@ class TopRightQtInfoToastManager(QtInfoToastManager):
 
         return QPoint(x, y)
 
-    def _slideStartPos(self, toast: QtInfoToast):
-        return QPoint(toast.parent().width(), self._pos(toast).y())
+    def _get_slider_start_position(self, toast: QtInfoToast):
+        return QPoint(toast.parent().width(), self._get_position(toast).y())
 
 
 @QtInfoToastManager.register(ToastPosition.BOTTOM_RIGHT)
 class BottomRightQtInfoToastManager(QtInfoToastManager):
     """Bottom right position info toast manager."""
 
-    def _pos(self, toast: QtInfoToast, size=None) -> QPoint:
+    def _get_position(self, toast: QtInfoToast, size=None) -> QPoint:
         p = toast.parent()
         size = size or p.size()
 
@@ -538,15 +545,15 @@ class BottomRightQtInfoToastManager(QtInfoToastManager):
 
         return QPoint(x, y)
 
-    def _slideStartPos(self, toast: QtInfoToast):
-        return QPoint(toast.parent().width(), self._pos(toast).y())
+    def _get_slider_start_position(self, toast: QtInfoToast):
+        return QPoint(toast.parent().width(), self._get_position(toast).y())
 
 
 @QtInfoToastManager.register(ToastPosition.TOP_LEFT)
 class TopLeftQtInfoToastManager(QtInfoToastManager):
     """Top left position info toast manager."""
 
-    def _pos(self, toast: QtInfoToast, size=None) -> QPoint:
+    def _get_position(self, toast: QtInfoToast, size=None) -> QPoint:
         p = toast.parent()
 
         y = self.margin
@@ -557,15 +564,15 @@ class TopLeftQtInfoToastManager(QtInfoToastManager):
 
         return QPoint(self.margin, y)
 
-    def _slideStartPos(self, toast: QtInfoToast):
-        return QPoint(-toast.width(), self._pos(toast).y())
+    def _get_slider_start_position(self, toast: QtInfoToast):
+        return QPoint(-toast.width(), self._get_position(toast).y())
 
 
 @QtInfoToastManager.register(ToastPosition.BOTTOM_LEFT)
 class BottomLeftQtInfoToastManager(QtInfoToastManager):
     """Bottom left position info toast manager."""
 
-    def _pos(self, toast: QtInfoToast, size: QSize = None) -> QPoint:
+    def _get_position(self, toast: QtInfoToast, size: QSize = None) -> QPoint:
         p = toast.parent()
         size = size or p.size()
 
@@ -577,15 +584,15 @@ class BottomLeftQtInfoToastManager(QtInfoToastManager):
 
         return QPoint(self.margin, y)
 
-    def _slideStartPos(self, toast: QtInfoToast):
-        return QPoint(-toast.width(), self._pos(toast).y())
+    def _get_slider_start_position(self, toast: QtInfoToast):
+        return QPoint(-toast.width(), self._get_position(toast).y())
 
 
 @QtInfoToastManager.register(ToastPosition.BOTTOM)
 class BottomQtInfoToastManager(QtInfoToastManager):
     """Bottom position info toast manager."""
 
-    def _pos(self, toast: QtInfoToast, size: QSize = None) -> QPoint:
+    def _get_position(self, toast: QtInfoToast, size: QSize = None) -> QPoint:
         p = toast.parent()
         size = size or p.size()
 
@@ -598,8 +605,8 @@ class BottomQtInfoToastManager(QtInfoToastManager):
 
         return QPoint(x, y)
 
-    def _slideStartPos(self, toast: QtInfoToast):
-        pos = self._pos(toast)
+    def _get_slider_start_position(self, toast: QtInfoToast):
+        pos = self._get_position(toast)
         return QPoint(pos.x(), pos.y() + 16)
 
 
@@ -613,7 +620,7 @@ if __name__ == "__main__":  # pragma: no cover
         from qtextra.utils.dev import qframe, theme_toggle_btn
 
         def _popup_notif() -> None:
-            pop = [QtInfoToast.info, QtInfoToast.success, QtInfoToast.warning, QtInfoToast.error]
+            pop = [QtInfoToast.info, QtInfoToast.success, QtInfoToast.warning, QtInfoToast.error, QtInfoToast.critical]
             pop = choice(pop)
             pop = pop(
                 title="Title",

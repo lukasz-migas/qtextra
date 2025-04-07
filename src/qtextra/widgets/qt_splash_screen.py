@@ -33,3 +33,20 @@ class QtSplashScreen(QSplashScreen):
     def on_message(self, msg: str):
         """Show message."""
         self.showMessage(msg, alignment=Qt.AlignmentFlag.AlignLeft, color=Qt.GlobalColor.white)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.assets import ICONS
+    from qtextra.utils.dev import qapplication
+
+    app = qapplication()
+
+    random_icon = next(iter(ICONS.values()))
+
+    wdg = QtSplashScreen(random_icon)
+    wdg.show()
+    wdg.raise_()
+    hp.call_later(wdg, wdg.close, delay=2000)
+    sys.exit(app.exec_())

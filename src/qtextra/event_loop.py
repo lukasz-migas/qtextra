@@ -2,7 +2,6 @@
 
 import os
 import sys
-from contextlib import contextmanager
 from typing import Optional
 from warnings import warn
 
@@ -90,8 +89,6 @@ def get_app(
     because we'd be deleting the QApplication after we created QWidgets with
     it, such as we do for the splash screen.
     """
-    from napari.utils.perf import perf_config
-
     # qtextra defaults are all-or nothing.  If any of the keywords are used
     # then they are all used.
     set_values = {k for k, v in locals().items() if v}
@@ -105,14 +102,9 @@ def get_app(
         set_values.discard("ipy_interactive")
         if set_values:
             warn(
-                "QApplication already existed, these arguments to to 'get_app'" f" were ignored: {set_values}",
+                f"QApplication already existed, these arguments to to 'get_app' were ignored: {set_values}",
                 stacklevel=2,
             )
-        if perf_config and perf_config.trace_qt_events:
-            from napari._qt.perf.qt_event_tracing import convert_app_for_tracing
-
-            # no-op if app is already a QApplicationWithTracing
-            app = convert_app_for_tracing(app)
     else:
         # automatically determine monitor DPI.
         # Note: this MUST be set before the QApplication is instantiated
@@ -125,12 +117,7 @@ def get_app(
             QApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
         if hasattr(Qt, "AA_ShareOpenGLContexts"):
             QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
-        if perf_config and perf_config.trace_qt_events:
-            from napari._qt.perf.qt_event_tracing import QApplicationWithTracing
-
-            app = QApplicationWithTracing(sys.argv)
-        else:
-            app = QApplication(sys.argv)
+        app = QApplication(sys.argv)
 
     # if this is the first time the Qt app is being instantiated, we set
     # the name and metadata
@@ -152,10 +139,6 @@ def get_app(
     if app.windowIcon().isNull():
         app.setWindowIcon(QIcon(kwargs.get("icon")))
 
-    if perf_config and not perf_config.patched:
-        # Will patch based on config file.
-        perf_config.patch_callables()
-
     if not _app_ref:  # running get_app for the first time
         # When a new theme is added, at it to the search path.
         from qtpy.QtCore import QDir
@@ -171,44 +154,6 @@ def get_app(
 
     _app_ref = app  # prevent garbage collection
     return app
-
-
-@contextmanager
-def gui_qt(*, startup_logo=False, gui_exceptions=False, force=False):
-    """Start a Qt event loop in which to run the application.
-
-    NOTE: This context manager may be deprecated in the future. Prefer using
-    :func:`qtextra.run` instead.
-
-    Parameters
-    ----------
-    startup_logo : bool, optional
-        Show a splash screen with the qtextra logo during startup.
-    gui_exceptions : bool, optional
-        Whether to show uncaught exceptions in the GUI, by default they will be
-        shown in the console that launched the event loop.
-    force : bool, optional
-        Force the application event_loop to start, even if there are no top
-        level widgets to show.
-
-    Notes
-    -----
-    This context manager is not needed if running qtextra within an interactive
-    IPython session. In this case, use the ``%gui qt`` magic command, or start
-    IPython with the Qt GUI event loop enabled by default by using
-    ``ipython --gui=qt``.
-    """
-    app = get_app()
-    if startup_logo and app.applicationName() == APP_NAME:
-        from qtextra.widgets.qt_splash_screen import QtSplashScreen
-
-        _splash = QtSplashScreen()
-        yield app
-        _splash.close()
-        run(force=force, gui_exceptions=gui_exceptions, _func_name="gui_qt")
-    else:
-        yield app
-        run(force=force, gui_exceptions=gui_exceptions, _func_name="gui_qt")
 
 
 def _ipython_has_eventloop() -> bool:
@@ -263,9 +208,7 @@ def run(*, force=False, max_loop_level=1, _func_name="run"):
     app = QApplication.instance()
     if not app:
         raise RuntimeError(
-            "No Qt app has been created. "
-            "One can be created by calling `get_app()` "
-            "or qtpy.QtWidgets.QApplication([])"
+            "No Qt app has been created. One can be created by calling `get_app()` or qtpy.QtWidgets.QApplication([])"
         )
     if not app.topLevelWidgets() and not force:
         warn(
@@ -285,6 +228,5 @@ def run(*, force=False, max_loop_level=1, _func_name="run"):
             stacklevel=2,
         )
         return
-    # with NOTIFICATION_MANAGER:
     install_error_monitor()
     app.exec_()

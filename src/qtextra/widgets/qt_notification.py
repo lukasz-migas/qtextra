@@ -30,6 +30,9 @@ from qtextra.widgets.qt_label_icon import QtSeverityLabel
 ActionSequence = ty.Sequence[ty.Tuple[str, ty.Callable[[], None]]]
 
 
+# TODO: This is currently broken since the settings.nottifications settings module is not present
+
+
 class QtNotification(SubWindowBase):
     """Small popup notification that can contain actions."""
 

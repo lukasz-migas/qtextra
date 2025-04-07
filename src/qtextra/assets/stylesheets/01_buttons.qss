@@ -155,7 +155,7 @@ QtLockButton:hover, QtLockButton:hover{
 
 /* ------------ QtColorSwatch ------------ */
 QtColorSwatch:hover {
-    border: 2px solid {{ foreground }};
+    border: 2px solid {{ text }};
 }
 #colorSwatch {
     border-radius: 1px;

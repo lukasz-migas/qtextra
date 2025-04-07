@@ -6,7 +6,7 @@ import time
 import typing as ty
 from contextlib import contextmanager
 
-from koyo.timer import report_time
+from koyo.timer import MeasureTimer
 from loguru import logger
 from qtpy.QtCore import Signal, Slot  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QFrame, QListWidget, QListWidgetItem, QSizePolicy, QWidget
@@ -346,9 +346,9 @@ class QtListWidget(QListWidget):
     @contextmanager
     def measure_time(self, message: str = "Task took", print_: bool = False):
         """Measure time."""
-        t_start = time.time()
-        yield
-        msg = f"{message} {report_time(t_start)}"
+        with MeasureTimer() as timer:
+            yield
+        msg = f"{message} {timer()}"
         logger.debug(msg)
         if print_:
             print(msg)

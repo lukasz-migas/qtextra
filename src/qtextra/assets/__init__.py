@@ -335,5 +335,4 @@ def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[st
         from qtextra.utils.template import template
 
         return template(stylesheet, **THEMES.get_theme(theme, as_dict=True))
-
     return stylesheet

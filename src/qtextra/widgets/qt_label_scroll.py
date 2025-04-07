@@ -67,8 +67,10 @@ if __name__ == "__main__":  # pragma: no cover
     app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
 
+    ha.addWidget(QLabel("Scrollable label without wrap"))
     wdg = QtScrollableLabel(text="This is a long text that will make the QLabel scrollable. " * 20)
     ha.addWidget(wdg)
+    ha.addWidget(QLabel("Scrollable label with wrap"))
     wdg = QtScrollableLabel(text="This is a long text that will make the QLabel scrollable. " * 20, wrap=True)
     ha.addWidget(wdg)
 

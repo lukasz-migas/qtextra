@@ -152,7 +152,7 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qframe
 
     def _test():
-        btn1.active = not btn1.active
+        btn2.active = not btn2.active
 
     def _test2():
         print("clicked")
@@ -163,18 +163,18 @@ if __name__ == "__main__":  # pragma: no cover
     btn1 = QtPushButton(frame)
     btn1.clicked.connect(_test2)
     btn1.connect_to_right_click(_test2)
-    btn1.setText("TEST BUTTON")
+    btn1.setText("TEST STANDARD BUTTON")
     ha.addWidget(btn1)
 
-    btn1 = QtActivePushButton(frame)
-    btn1.clicked.connect(_test)
-    btn1.setText("TEST BUTTON")
-    ha.addWidget(btn1)
+    btn2 = QtActivePushButton(frame)
+    btn2.clicked.connect(_test)
+    btn2.setText("TEST ACTIVE BUTTON")
+    ha.addWidget(btn2)
 
-    btn1 = QtRichTextButton(frame)
-    btn1.clicked.connect(_test)
-    btn1.setText("TEST <b>button</b>")
-    ha.addWidget(btn1)
+    btn3 = QtRichTextButton(frame)
+    btn3.clicked.connect(_test2)
+    btn3.setText("TEST RICH <b>button</b>")
+    ha.addWidget(btn3)
 
     frame.show()
     sys.exit(app.exec_())

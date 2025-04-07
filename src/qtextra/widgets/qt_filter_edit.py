@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QSizePolicy, QWidget
 import qtextra.helpers as hp
 from qtextra.widgets.qt_button_icon import QtAndOrButton
 from qtextra.widgets.qt_button_tag import QtTagButton
-from qtextra.widgets.qt_layout_scroll import QtScrollableHLayout
+from qtextra.widgets.qt_layout_scroll import QtScrollableHLayoutWidget
 
 
 class QtFilterEdit(QWidget):
@@ -46,7 +46,7 @@ class QtFilterEdit(QWidget):
         if flow:
             self._filter_layout = hp.make_flow_layout(margin=0, horizontal_spacing=1, vertical_spacing=1)
         else:
-            self._filter_layout = QtScrollableHLayout(self)
+            self._filter_layout = QtScrollableHLayoutWidget(self)
             self._filter_layout.set_min_height(self.text_edit.height())
         self._n = self._filter_layout.count()
 

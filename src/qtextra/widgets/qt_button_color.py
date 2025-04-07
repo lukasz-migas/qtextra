@@ -3,8 +3,7 @@
 import typing as ty
 
 import numpy as np
-from napari.layers.utils.color_transformations import ColorType
-from napari.utils.colormaps.standardize_color import rgb_to_hex, transform_color
+from koyo.color import ColorType, rgbs_to_hex
 from qtpy.QtCore import QEvent, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QColorDialog, QFrame, QPushButton, QWidget
@@ -161,7 +160,7 @@ class QtColorSwatch(QFrame):
     @property
     def hex_color(self) -> str:
         """Return color in HEX code."""
-        return rgb_to_hex(self._color)[0]
+        return rgbs_to_hex(self._color)[0]
 
     @Slot(np.ndarray)
     def _update_swatch_style(self, _color: ColorType) -> None:
@@ -194,8 +193,12 @@ class QtColorSwatch(QFrame):
             _color = (np.array(color.getRgb()) / 255).astype(np.float32)
         else:
             try:
+                from napari.utils.colormaps.standardize_color import transform_color
+
                 _color = transform_color(color)[0]
             except ValueError:
+                return self.evt_color_changed.emit(self._color)
+            except ImportError:
                 return self.evt_color_changed.emit(self._color)
 
         emit = np.any(self._color != _color)

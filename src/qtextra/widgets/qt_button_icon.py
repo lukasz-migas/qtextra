@@ -712,10 +712,10 @@ if __name__ == "__main__":  # pragma: no cover
 
         dev = qdev(frame)
         va.addWidget(dev)
+        va.addWidget(theme_toggle_btn(frame))
 
         ha = QHBoxLayout()
         va.addLayout(ha)
-        ha.addWidget(theme_toggle_btn(frame))
 
         lay = QVBoxLayout()
         ha.addLayout(lay)

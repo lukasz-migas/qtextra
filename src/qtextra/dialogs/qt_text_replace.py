@@ -6,7 +6,7 @@ import qtextra.helpers as hp
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_button_tag import QtTagButton
 from qtextra.widgets.qt_dialog import QtDialog
-from qtextra.widgets.qt_layout_scroll import QtScrollableHLayout
+from qtextra.widgets.qt_layout_scroll import QtScrollableHLayoutWidget
 from qtextra.widgets.qt_table_view_check import QtCheckableTableView
 
 SEPARATOR = " → "
@@ -127,7 +127,7 @@ class QtTextReplace(QtDialog):
             func_changed=self.on_preview,
         )
 
-        self.search_replace_layout = QtScrollableHLayout(self)
+        self.search_replace_layout = QtScrollableHLayoutWidget(self)
         self.search_replace_layout.set_min_height(self.search_edit.height())
 
         layout = hp.make_form_layout()
