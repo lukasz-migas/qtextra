@@ -190,11 +190,11 @@ class QtLoggerDialog(QtFramelessTool):
         _, header_layout = self._make_hide_handle()
         self._title_label.setText("Logger")
 
-        self._logger = QtLogger(self, log_dir=self.log_dir)
+        self.logger = QtLogger(self, log_dir=self.log_dir)
 
         layout = QVBoxLayout()
         layout.addLayout(header_layout)
-        layout.addWidget(self._logger, stretch=True)
+        layout.addWidget(self.logger, stretch=True)
         layout.setSpacing(2)
         layout.setContentsMargins(6, 6, 6, 6)
         return layout

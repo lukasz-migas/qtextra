@@ -24,18 +24,18 @@ def test_qt_logger_02(qt_logger, qtbot):
     logger.critical("critical")
 
     expected = "light"
-    qt_logger.set_theme(expected)
-    assert qt_logger.THEME == expected
+    qt_logger.logger.set_theme(expected)
+    assert qt_logger.logger.THEME == expected
 
     expected = "dark"
-    qt_logger.set_theme(expected)
-    assert qt_logger.THEME == expected
+    qt_logger.logger.set_theme(expected)
+    assert qt_logger.logger.THEME == expected
 
 
 def test_qt_logger_03(qt_logger, qtbot):
     expected = "other"
     with pytest.raises(ValueError) as __:
-        qt_logger.set_theme(expected)
+        qt_logger.logger.set_theme(expected)
 
 
 if __name__ == "__main__":

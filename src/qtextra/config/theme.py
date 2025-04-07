@@ -10,8 +10,8 @@ import numpy as np
 from koyo.timer import MeasureTimer
 from loguru import logger
 from psygnal import EventedModel
-from pydantic import PrivateAttr, ValidationError, validator
-from pydantic.color import Color
+from pydantic import ConfigDict, PrivateAttr, ValidationError, field_validator
+from pydantic_extra_types.color import Color
 from qtpy.QtCore import QDateTime, QTime, Signal
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QApplication, QWidget
@@ -188,12 +188,12 @@ class CanvasThemes(ConfigBase):
         self.integrate_canvas = self._integrate_canvas
         self.evt_theme_changed.emit()
 
-    def as_array(self, name: str) -> np.ndarray:
-        """Return color array."""
-        from napari.utils.colormaps.standardize_color import transform_color
-
-        color: Color = getattr(self.active, name)
-        return transform_color(color.as_hex())[0]
+    # def as_array(self, name: str) -> np.ndarray:
+    #     """Return color array."""
+    #     from napari.utils.colormaps.standardize_color import transform_color
+    #
+    #     color: Color = getattr(self.active, name)
+    #     return transform_color(color.as_hex())[0]
 
     def as_hex(self, name: str) -> str:
         """Return color as hex."""
@@ -231,10 +231,7 @@ class Theme(EventedModel):
         Color used to highlight Qt widget.
     """
 
-    class Config:
-        """Pydantic config."""
-
-        validate_assignment = True
+    model_config = ConfigDict(validate_assignment=True)
 
     name: str
     type: str
@@ -257,10 +254,10 @@ class Theme(EventedModel):
     font_size: str = "14pt"
     header_size: str = "18pt"
 
-    def __getattr__(self, item: str) -> ty.Any:
+    def __getattr__(self, item: str) -> ty.Union[str, Color]:
         return getattr(self, item)
 
-    @validator(
+    @field_validator(
         "canvas",
         "console",
         "background",
@@ -276,17 +273,16 @@ class Theme(EventedModel):
         "current",
         "progress",
         "standout",
-        pre=True,
-        allow_reuse=True,
+        mode="before",
     )
-    def _validate_color(cls, value) -> Color:
+    def _validate_color(value) -> Color:
         if isinstance(value, np.ndarray):
             value = value.tolist()
         elif isinstance(value, str):
             value = Color(value).as_hex()
         return Color(value)
 
-    @validator("syntax_style", pre=True, allow_reuse=True)
+    @field_validator("syntax_style", mode="before")
     def _ensure_syntax_style(value: str) -> str:
         from pygments.styles import STYLE_MAP
 
@@ -295,7 +291,7 @@ class Theme(EventedModel):
         )
         return value
 
-    @validator("font_size", "header_size", pre=True, allow_reuse=True)
+    @field_validator("font_size", "header_size", mode="before")
     def _ensure_font_size(value: ty.Union[int, str]) -> str:
         if isinstance(value, int):
             value = str(value)
@@ -532,7 +528,7 @@ class Themes(ConfigBase):
             theme = self.themes[theme_name]
             _theme = theme.copy()
             if as_dict:
-                return _theme.dict()
+                return _theme.model_dump()
             return _theme
         else:
             raise ValueError(f"Unrecognized theme {theme_name}. Available themes are {self.available_themes()}")
@@ -589,7 +585,7 @@ class Themes(ConfigBase):
 
         if theme_name is None:
             theme_name = self.theme
-        palette = self.themes[theme_name].dict()
+        palette = self.themes[theme_name].model_dump()
         stylesheet = get_stylesheet()
         stylesheet = template(stylesheet, **palette)
         return stylesheet

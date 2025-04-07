@@ -1,6 +1,7 @@
 """Test CLI Queue."""
 
 import pytest
+
 from qtextra.queue.cli_queue import CLIQueueHandler
 from qtextra.queue.task import Task
 
@@ -20,6 +21,7 @@ class TestCLIQueueHandler:
     def test_init(self, qtbot, setup_widget):
         queued, started, next_, finished, errored, cancelled, paused = [], [], [], [], [], [], []  # type: ignore
         queue = setup_widget()
+        queue.n_parallel = 10
         queue.evt_queued.connect(queued.append)
         queue.evt_started.connect(started.append)
         queue.evt_next.connect(next_.append)
@@ -108,6 +110,10 @@ class TestCLIQueueHandler:
             assert task_id == task.task_id, "Task ID should be the same"
             assert len(queued) == 4, "Queue should have one task"
 
+        assert queue.n_parallel > 0, "Queue should have some parallel tasks"
+        assert queue.is_available(), "Queue should be available"
+        assert len(queue.pending_queue) > 0, "Queue should have some tasks"
+        queue.auto_run = True
         with qtbot.waitSignals([queue.evt_started], timeout=500):
             queue.run_queued()
         with qtbot.waitSignals([queue.evt_paused], timeout=1500):

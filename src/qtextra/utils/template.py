@@ -4,7 +4,7 @@ import re
 import typing as ty
 from ast import literal_eval
 
-from pydantic.color import Color
+from pydantic_extra_types.color import Color
 
 from qtextra.utils.color import get_text_color, hex_to_qt_rgb, rgb_to_hex
 
@@ -33,7 +33,7 @@ def _get_color(color: ty.Union[str, Color]) -> tuple[int, int, int]:
             color = hex_to_qt_rgb(color)
         if color.startswith("rgb("):
             color = literal_eval(color.lstrip("rgb(").rstrip(")"))
-    elif isinstance(color, Color):
+    elif isinstance(color, Color) or hasattr(color, "as_rgb_tuple"):
         color = color.as_rgb_tuple()
     return color
 

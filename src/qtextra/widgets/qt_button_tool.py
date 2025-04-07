@@ -19,8 +19,8 @@ class QtToolButton(QToolButton):
         self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         # Widget setup
+        self._icon_size = QSize(16, 16)
         if icon:
-            self._icon_size = QSize(16, 16)
             self.set_icon(icon)
 
     def set_menu(self, menu: QMenu, action: Optional[Callable] = None, auto_pop: bool = True) -> None:

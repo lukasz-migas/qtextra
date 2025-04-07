@@ -4,6 +4,7 @@ import typing as ty
 
 import numpy as np
 from koyo.color import ColorType, rgbs_to_hex
+from koyo.color import transform_color as _transform_color
 from qtpy.QtCore import QEvent, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QColorDialog, QFrame, QPushButton, QWidget
@@ -199,7 +200,10 @@ class QtColorSwatch(QFrame):
             except ValueError:
                 return self.evt_color_changed.emit(self._color)
             except ImportError:
-                return self.evt_color_changed.emit(self._color)
+                try:
+                    _color = _transform_color(color)[0]
+                except ValueError:
+                    return self.evt_color_changed.emit(self._color)
 
         emit = np.any(self._color != _color)
         self._color = _color

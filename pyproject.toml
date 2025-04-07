@@ -36,7 +36,8 @@ dependencies = [
     "numpy",
     "appdirs",
     "psygnal",
-    "pydantic>2"
+    "pydantic>2",
+    "pydantic-extra-types"
 ]
 
 # extras
@@ -55,7 +56,12 @@ pyside2 = ["pyside2"]
 pyside6 = ["pyside6"]
 pyqt5 = ["pyqt5"]
 pyqt6 = ["pyqt6"]
-test = ["pytest>=6.0", "pytest-cov", "pytest-qt"]
+test = [
+    "pytest>=8.1",
+    "pytest-cov",
+    "pytest-qt",
+    "pytest-pretty",
+]
 dev = [
     "black",
     "ipython",
@@ -149,11 +155,27 @@ extend-ignore = [
 
 # https://docs.pytest.org/en/6.2.x/customize.html
 [tool.pytest.ini_options]
-minversion = "6.0"
-testpaths = ["tests"]
-filterwarnings = ["error"]
-# options so that i can see the stdout and loguru logs
-addopts = ["-s", "-vv", "--log-cli-level=DEBUG", "--log-cli-format=%(asctime)s - %(levelname)s - %(message)s"]
+minversion = "8"
+console_output_style = "count"
+testpaths = ["qtextra", "tests"]
+xfail_strict = true
+# options so that we can see the stdout and loguru logs
+addopts = [
+    "-ras",
+    "-vv",
+    "--maxfail=10",
+    "--durations=10",
+    "--log-cli-level=DEBUG",
+    "--log-cli-format=%(asctime)s - %(levelname)s - %(message)s",
+]
+filterwarnings = [
+  "error:::qtextra", # turn warnings from qtextra into errors
+  "error:::test_.*", # turn warnings in our own tests into errors
+  "ignore::DeprecationWarning:shibokensupport",
+  "ignore::DeprecationWarning:ipykernel",
+  "ignore:numpy.ufunc size changed:RuntimeWarning",
+  "ignore:There is no current event loop:DeprecationWarning:",
+]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
