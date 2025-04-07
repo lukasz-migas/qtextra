@@ -223,6 +223,7 @@ ignore = [
     "tox.ini",
     "codecov.yml",
     "renovate.json",
+    "docs/*.py",
 ]
 
 # https://python-semantic-release.readthedocs.io/en/latest/configuration.html
