@@ -52,12 +52,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_separator import QtHorzLine, QtVertLine
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
-    try:
-        from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
-        from napari.utils.events.custom_types import Array
-    except ImportError:
-        Array = None
-        QtColormapComboBox = None
+
 
 
 # def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
@@ -900,60 +895,7 @@ def make_checkable_combobox(
     return widget
 
 
-def make_colormap_combobox(
-    parent: Qw.QWidget | None,
-    func: Callback | None = None,
-    default: str = "magma",
-    label_min_width: int = 0,
-) -> QtColormapComboBox:
-    """Make colormap combobox."""
-    from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
-    from napari.utils.colormaps import AVAILABLE_COLORMAPS
 
-    def _update_colormap(value):
-        colormap = AVAILABLE_COLORMAPS[value]
-        cbar = colormap.colorbar
-        # Note that QImage expects the image width followed by height
-        image = QImage(
-            cbar,
-            cbar.shape[1],
-            cbar.shape[0],
-            QImage.Format.Format_RGBA8888,
-        )
-        widget_label.setPixmap(QPixmap.fromImage(image))
-
-    widget_label = make_label(parent, "", object_name="colorbar")
-    widget_label.setScaledContents(True)
-    if label_min_width:
-        widget_label.setMinimumWidth(label_min_width)
-    widget = QtColormapComboBox(parent)
-    widget.currentTextChanged.connect(_update_colormap)
-    widget.setObjectName("colormapComboBox")
-    widget.addItems(AVAILABLE_COLORMAPS)
-    widget._allitems = set(AVAILABLE_COLORMAPS)
-    widget.setCurrentText(default)
-    if func:
-        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
-    return widget, make_h_layout(widget_label, widget, stretch_id=[1], spacing=0)
-
-
-def make_colormap_combobox_alone(
-    parent: Qw.QWidget | None = None,
-    func: Callback | None = None,
-    default: str = "magma",
-) -> QtColormapComboBox:
-    """Make colormap combobox."""
-    from napari._qt.layer_controls.qt_colormap_combobox import QtColormapComboBox
-    from napari.utils.colormaps import AVAILABLE_COLORMAPS
-
-    widget = QtColormapComboBox(parent)
-    widget.setObjectName("colormapComboBox")
-    widget.addItems(AVAILABLE_COLORMAPS)
-    widget._allitems = set(AVAILABLE_COLORMAPS)
-    widget.setCurrentText(default)
-    if func:
-        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
-    return widget
 
 
 def make_searchable_combobox(
@@ -2879,7 +2821,7 @@ def add_flash_animation(
         Number of times the animation should flash.
 
     """
-    from napari.utils.colormaps.standardize_color import transform_color
+    from koyo.color import transform_color
 
     color = transform_color(color)[0]
     color = (255 * color).astype("int")

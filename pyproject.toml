@@ -222,7 +222,7 @@ ignore = [
     "venv*/**/*",
     "tox.ini",
     "codecov.yml",
-    "renovate.yml"
+    "renovate.json",
 ]
 
 # https://python-semantic-release.readthedocs.io/en/latest/configuration.html

@@ -460,7 +460,8 @@ class Themes(ConfigBase):
             self.evt_theme_icon_changed.emit()
         logger.debug(f"Changed theme to '{value}' in {timer()}")
 
-    def update_palette(self) -> None:
+    @staticmethod
+    def update_palette() -> None:
         """Get updated palette."""
         qapp = QApplication.instance()
         if qapp is None:
@@ -488,7 +489,7 @@ class Themes(ConfigBase):
     def get_hex_color(self, name: str) -> str:
         """Get color in hex format."""
         color: Color = getattr(self.active, name)
-        return color.as_hex()
+        return color.as_hex(format="long")
 
     def get_qt_color(self, name: str) -> QColor:
         """Get QColor."""

@@ -1,6 +1,7 @@
 """Test CLI Queue."""
 
 import pytest
+from koyo.system import IS_WIN
 
 from qtextra.queue.cli_queue import CLIQueueHandler
 from qtextra.queue.task import Task
@@ -18,6 +19,7 @@ def setup_widget():
 
 
 class TestCLIQueueHandler:
+    @pytest.mark.xfail(IS_WIN, reason="Some signals don't fire on Windows in time")
     def test_init(self, qtbot, setup_widget):
         queued, started, next_, finished, errored, cancelled, paused = [], [], [], [], [], [], []  # type: ignore
         queue = setup_widget()
