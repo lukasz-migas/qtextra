@@ -7,7 +7,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from qtextra.utils.utilities import get_module_path
+from koyo.utilities import get_module_path
 
 HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent.resolve()
 

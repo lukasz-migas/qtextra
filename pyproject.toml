@@ -63,13 +63,13 @@ test = [
     "pytest-pretty",
 ]
 dev = [
-    "black",
     "ipython",
     "mypy",
     "pdbpp",
     "pre-commit",
     "rich",
     "ruff",
+    "check-manifest",
     "qtextra[test,reload]",
 ]
 
@@ -205,6 +205,9 @@ exclude_lines = [
 
 [tool.coverage.run]
 source = ["src"]
+omit = [
+    "**/*_version.py"
+]
 
 # https://github.com/mgedmin/check-manifest#configuration
 [tool.check-manifest]
@@ -215,7 +218,9 @@ ignore = [
     "setup.py",
     "tests/**/*",
     ".idea/**/*",
-    "_version.py"
+    "_version.py",
+    "venv*/**/*",
+    "tox.ini",
 ]
 
 # https://python-semantic-release.readthedocs.io/en/latest/configuration.html

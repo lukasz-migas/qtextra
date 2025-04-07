@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
+from koyo.system import IS_MAC, IS_WIN
 from koyo.typing import PathLike
 from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, QUrl
 from qtpy.QtGui import (
@@ -30,7 +31,6 @@ from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.typing import Callback, IconType, Orientation
 from qtextra.utils.table_config import TableConfig
-from qtextra.utils.utilities import IS_MAC, IS_WIN
 
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
@@ -3214,7 +3214,7 @@ def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
 
 def style_form_layout(layout: Qw.QFormLayout) -> None:
     """Override certain styles for macOS."""
-    from qtextra.utils.utilities import IS_MAC
+    from koyo.system import IS_MAC
 
     if IS_MAC:
         layout.setVerticalSpacing(4)

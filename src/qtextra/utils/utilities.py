@@ -65,14 +65,6 @@ def process_memory_usage() -> float:
     return process.memory_percent()
 
 
-def total_ram() -> int:
-    """Retrieve total amount of RAM for the system."""
-    import psutil
-
-    total = psutil.virtual_memory().total
-    return total
-
-
 @lru_cache(maxsize=2)
 def get_system_info(as_html=False) -> str:
     """Gathers relevant module versions for troubleshooting purposes.
@@ -156,23 +148,6 @@ def get_system_info(as_html=False) -> str:
     return text
 
 
-IS_WIN = sys.platform == "win32"
-IS_LINUX = sys.platform == "linux"
-IS_MAC = sys.platform == "darwin"
-
-
-def get_module_path(module: str, filename: str) -> str:
-    """Get module path."""
-    import importlib.resources
-
-    if not filename.endswith(".py"):
-        filename += ".py"
-
-    with importlib.resources.path(module, filename) as f:
-        path = str(f)
-    return path
-
-
 class Connectable(ty.Protocol):
     """Protocol for connectable objects."""
 
@@ -199,25 +174,3 @@ def connect(
             if source:
                 text += f"; source={source}"
             logger.debug(text)
-
-
-def human_readable_byte_size(nbytes: int) -> str:
-    """
-
-    Parameters
-    ----------
-    nbytes : int
-        Number of bytes.
-
-    Returns
-    -------
-    Human readable string : str
-
-    """
-    suffixes = ["B", "KB", "MB", "GB", "TB", "PB"]
-    i = 0
-    while nbytes >= 1024 and i < len(suffixes) - 1:
-        nbytes /= 1024.0
-        i += 1
-    f = (f"{nbytes:.2f}").rstrip("0").rstrip(".")
-    return f"{f} {suffixes[i]}"

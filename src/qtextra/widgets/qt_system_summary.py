@@ -7,12 +7,12 @@ from contextlib import suppress
 
 import numba
 import psutil
+from koyo.utilities import human_readable_byte_size
 from numba.cuda import CudaSupportError
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QGroupBox, QLabel, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.utils.utilities import human_readable_byte_size
 from qtextra.widgets.qt_dialog import QtFramelessPopup
 
 MEM_USAGE_ERROR = 4e9  # 4 Gb
