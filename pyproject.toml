@@ -221,6 +221,8 @@ ignore = [
     "_version.py",
     "venv*/**/*",
     "tox.ini",
+    "codecov.yml",
+    "renovate.yml"
 ]
 
 # https://python-semantic-release.readthedocs.io/en/latest/configuration.html
