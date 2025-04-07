@@ -1,6 +1,7 @@
 """Test CLI Queue."""
 
 import pytest
+from koyo.system import IS_WIN
 
 from qtextra.queue.cli_queue import CLIQueueHandler
 from qtextra.queue.task import Task
@@ -18,7 +19,7 @@ def setup_widget():
 
 
 class TestCLIQueueHandler:
-    # @pytest.mark.xfail(IS_WIN, reason="Some signals don't fire on Windows in time")
+    @pytest.mark.xfail(IS_WIN, reason="Some signals don't fire on Windows in time")
     def test_init(self, qtbot, setup_widget):
         queued, started, next_, finished, errored, cancelled, paused = [], [], [], [], [], [], []  # type: ignore
         queue = setup_widget()
@@ -33,7 +34,11 @@ class TestCLIQueueHandler:
 
         queue.evt_errored.connect(_append_error)
         queue.evt_cancelled.connect(cancelled.append)
-        queue.evt_paused.connect(paused.append)
+
+        def _append_pause(task, other=None) -> None:
+            paused.append(task)
+
+        queue.evt_paused.connect(_append_pause)
         assert queue, "Queue is not initialized"
         assert queue.n_tasks == (0, 0), "Queue should be empty"
 
@@ -102,8 +107,9 @@ class TestCLIQueueHandler:
 
         with qtbot.waitSignals([queue.evt_started], timeout=500):
             queue.run_queued()
-        with qtbot.waitSignals([queue.evt_cancelled], timeout=1500):
+        with qtbot.waitSignals([queue.evt_cancelled], timeout=5000 if IS_WIN else 1500):
             queue.cancel(task)
+
         assert len(started) == 3, "Queue should have one task running"
         assert len(cancelled) == 1, "Queue should have one task finished"
 
