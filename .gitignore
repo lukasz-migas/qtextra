@@ -107,3 +107,5 @@ ENV/
 _version.py
 *.iml
 .idea/
+
+docs/_auto_images/

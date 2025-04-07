@@ -1,12 +1,28 @@
 # qtextra
 
-[![License](https://img.shields.io/pypi/l/qtextra.svg?color=green)](https://github.com/illumion-io/qtextra/raw/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/qtextra.svg?color=green)](https://github.com/lukasz-migas/qtextra/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/qtextra.svg?color=green)](https://pypi.org/project/qtextra)
 [![Python Version](https://img.shields.io/pypi/pyversions/qtextra.svg?color=green)](https://python.org)
-[![CI](https://github.com/illumion-io/qtextra/actions/workflows/ci.yml/badge.svg)](https://github.com/illumion-io/qtextra/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/illumion-io/qtextra/branch/main/graph/badge.svg)](https://codecov.io/gh/illumion-io/qtextra)
+[![CI](https://github.com/illumion-io/qtextra/actions/workflows/ci.yml/badge.svg)](https://github.com/lukasz-migas/qtextra/actions/workflows/test_and_deploy.yml)
+[![codecov](https://codecov.io/gh/lukasz-migas/qtextra/branch/main/graph/badge.svg)](https://codecov.io/gh/lukasz-migas/qtextra)
 
-Extra widgets for Qt
+### A bunch of *extra* widgets and components for PyQt/PySide
+
+Here, you will find a bunch of extra widgets and components that you can use in your PySide/PyQt (using qtpy) applications.
+The goal is to provide a set of widgets that are not available in the standard PyQt/PySide libraries, or that are not easy to use.
+
+Components are tested on:
+
+- macOS, Windows & Linux
+- Python 3.9 and above
+- PyQt5 (5.11 and above) & PyQt6
+- Pyside2 (5.11 and above) & PySide6
+
+
+This repository is fairly similar in scope to [superqt](https://github.com/pyapp-kit/superqt) which aims to provide a number of useful 
+widgets (in fact we use a couple of them in this library). The main difference is that we aimed to provide a more opinionated 
+style (with stylesheets available in the [assets](src/qtextra/assets/stylesheets) directory) and focus on providing a wider
+range of widgets.
 
 ## Contributing
 
