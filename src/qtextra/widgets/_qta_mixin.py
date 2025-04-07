@@ -178,3 +178,8 @@ class QtaMixin:
             size = self.minimumSize()
             self.set_qta(name, **kwargs)
             self.setMinimumSize(size)
+
+    def _update_from_event(self, event):
+        """Update theme based on event."""
+        if event.type == "icon":
+            self._update_qta()
