@@ -6,6 +6,7 @@ except ImportError:
     QtConsole = None
 
 
+@pytest.mark.skipif(QtConsole is None, reason="IPython not installed")
 def test_console(qtbot):
     """Test creating the console."""
     console = QtConsole()
