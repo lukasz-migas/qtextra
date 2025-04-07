@@ -27,7 +27,11 @@ class TestCLIQueueHandler:
         queue.evt_started.connect(started.append)
         queue.evt_next.connect(next_.append)
         queue.evt_finished.connect(finished.append)
-        queue.evt_errored.connect(lambda args: errored.append(args[0]))
+
+        def _append_error(task, other=None) -> None:
+            errored.append(task)
+
+        queue.evt_errored.connect(_append_error)
         queue.evt_cancelled.connect(cancelled.append)
         queue.evt_paused.connect(paused.append)
         assert queue, "Queue is not initialized"
@@ -66,7 +70,12 @@ class TestCLIQueueHandler:
             qtbot.assertNotEmitted(queue.evt_errored),
         ):
             task = Task(
-                task_id="234", task_name="Task 2", commands=[["sleep", "0.5"], ["ehco", "Hello World"]]
+                task_id="234",
+                task_name="Task 2",
+                commands=[
+                    ["sleep", "0.5"],
+                    ["fake-command", "Hello World"],  # should fail
+                ],
             )  # error in command
             task_id = queue.add_task(task)
             assert task_id == task.task_id, "Task ID should be the same"
@@ -75,7 +84,7 @@ class TestCLIQueueHandler:
         with qtbot.waitSignals([queue.evt_started, queue.evt_errored], timeout=1000):
             queue.run_queued()
         assert len(started) == 2, "Queue should have one task running"
-        assert len(errored) == 1, "Queue should not have any errors"
+        assert len(errored) == 1, "Queue should not have one error"
         assert len(finished) == 1, "Queue should have one task finished"
 
         # test cancellation
