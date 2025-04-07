@@ -224,7 +224,7 @@ ignore = [
     "codecov.yml",
     "mkdocs.yml",
     "renovate.json",
-    "docs/*.py",
+    "docs/**/*",
 ]
 
 # https://python-semantic-release.readthedocs.io/en/latest/configuration.html
