@@ -1,4 +1,9 @@
-from qtextra.dialogs.qt_console import QtConsole
+import pytest
+
+try:
+    from qtextra.dialogs.qt_console import QtConsole
+except ImportError:
+    QtConsole = None
 
 
 def test_console(qtbot):
@@ -9,6 +14,7 @@ def test_console(qtbot):
     assert console.kernel_client is not None
 
 
+@pytest.mark.skipif(QtConsole is None, reason="IPython not installed")
 def test_console_user_variables(qtbot):
     """Test creating the console with user variables."""
     console = QtConsole({"var": 3})
@@ -19,6 +25,7 @@ def test_console_user_variables(qtbot):
     assert console.shell.user_ns["var"] == 3
 
 
+@pytest.mark.skipif(QtConsole is None, reason="IPython not installed")
 def test_multiple_consoles(qtbot):
     """Test creating multiple consoles."""
     console_a = QtConsole({"var_a": 3})

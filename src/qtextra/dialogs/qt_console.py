@@ -38,10 +38,7 @@ if sys.platform.startswith("win"):
     import asyncio
 
     try:
-        from asyncio import (
-            WindowsProactorEventLoopPolicy,
-            WindowsSelectorEventLoopPolicy,
-        )
+        from asyncio import WindowsProactorEventLoopPolicy, WindowsSelectorEventLoopPolicy
     except ImportError:
         pass
         # not affected
@@ -119,7 +116,7 @@ class QtConsole(RichJupyterWidget):
             self.push = lambda var: None
 
         else:
-            raise ValueError("ipython shell not recognized; " f"got {type(shell)}")
+            raise ValueError(f"ipython shell not recognized; got {type(shell)}")
         # Add any user variables
         self.push(variables)
 
