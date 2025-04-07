@@ -28,7 +28,7 @@ class TestCLIQueueHandler:
         queue.evt_started.connect(started.append)
         queue.evt_next.connect(next_.append)
         queue.evt_finished.connect(finished.append)
-        queue.evt_errored.connect(errored.append)
+        queue.evt_errored.connect(lambda args: errored.append(args[0]))
         queue.evt_cancelled.connect(cancelled.append)
         queue.evt_paused.connect(paused.append)
         assert queue, "Queue is not initialized"
