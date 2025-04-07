@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 
 from koyo.typing import PathLike
 from qtpy.QtCore import QPoint, QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
@@ -126,7 +127,8 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
             xlarge=xlarge,
             xxlarge=xxlarge,
         )
-        THEMES.evt_theme_icon_changed.connect(self._update_qta)
+        with suppress(RuntimeError):
+            THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
     def setIcon(self, _icon) -> None:
         """Update icon."""

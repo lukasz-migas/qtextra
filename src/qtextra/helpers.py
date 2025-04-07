@@ -53,8 +53,6 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
 
-
-
 # def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
 #     """Trim dialog size and retrieve new size."""
 #     win = None
@@ -893,9 +891,6 @@ def make_checkable_combobox(
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
         [widget.evt_checked.connect(func_) for func_ in _validate_func(func)]
     return widget
-
-
-
 
 
 def make_searchable_combobox(
@@ -2072,17 +2067,12 @@ def make_advanced_collapsible(
     """Make collapsible widget."""
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
 
-    content = Qw.QWidget()
-    layout = make_form_layout()
-    layout.setContentsMargins(2, 2, 2, 2)
-    content.setLayout(layout)
     advanced_widget = QtCheckCollapsible(title, parent, icon=icon, warning_icon=warning_icon)
     advanced_widget.set_checkbox_visible(allow_checkbox)
     advanced_widget.set_icon_visible(allow_icon)
     advanced_widget.set_warning_visible(allow_warning)
     if icon_func:
-        [advanced_widget.icon_btn.clicked.connect(func_) for func_ in _validate_func(icon_func)]
-    advanced_widget.setContent(content)
+        [advanced_widget.action_btn.clicked.connect(func_) for func_ in _validate_func(icon_func)]
     advanced_widget.collapse() if collapsed else advanced_widget.expand()
     return advanced_widget
 
@@ -2904,7 +2894,7 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 def make_loading_gif(
     parent: Qw.QWidget | None,
-    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "confirm_close",
+    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "infinity",
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,

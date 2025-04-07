@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 from copy import deepcopy
 
 import qtawesome
@@ -42,7 +43,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
         super().__init__()
         self.setProperty("transparent", False)
         self.transparent = False
-        THEMES.evt_theme_icon_changed.connect(self._update_qta)
+        with suppress(RuntimeError):
+            THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
     def set_count(self, count: int, enabled: bool = True) -> None:
         """Enable count indicator."""

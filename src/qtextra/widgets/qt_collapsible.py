@@ -30,7 +30,7 @@ class QtCheckCollapsible(QCollapsible):
         # remove button item from the layout
         self.layout().takeAt(0)
 
-        self.icon_btn = hp.make_qta_btn(self, icon_name=icon, standout=True, average=True)
+        self.action_btn = hp.make_qta_btn(self, icon_name=icon, standout=True, average=True)
 
         self.warning_label = hp.make_warning_label(self, "", icon_name=warning_icon, normal=True)
 
@@ -40,7 +40,7 @@ class QtCheckCollapsible(QCollapsible):
         layout.setSpacing(1)
         layout.addWidget(self.checkbox)
         layout.addWidget(self._toggle_btn, stretch=True)
-        layout.addWidget(self.icon_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(self.action_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self.warning_label, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         # add widget to layout
@@ -49,6 +49,10 @@ class QtCheckCollapsible(QCollapsible):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self._set_icon()
 
+        content = QWidget()
+        layout = hp.make_form_layout(parent=content)
+        layout.setContentsMargins(2, 2, 2, 2)
+        self.setContent(content)
         THEMES.evt_theme_icon_changed.connect(self._set_icon)
 
     def _set_icon(self) -> None:
@@ -61,7 +65,7 @@ class QtCheckCollapsible(QCollapsible):
 
     def set_icon_visible(self, state: bool) -> None:
         """Show or hide the checkbox."""
-        self.icon_btn.setVisible(state)
+        self.action_btn.setVisible(state)
 
     def set_warning_visible(self, state: bool) -> None:
         """Show or hide the checkbox."""

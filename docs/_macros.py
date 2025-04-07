@@ -26,6 +26,7 @@ def define_env(env: MacrosPlugin):
         page = context["page"]
         dest = IMAGES / f"{page.title}.png"
         if "build" in sys.argv:
+            print("Building widget image:", dest)
             dest.unlink(missing_ok=True)
 
             codeblocks = [b[6:].strip() for b in page.markdown.split("```") if b.startswith("python")]
@@ -35,6 +36,7 @@ def define_env(env: MacrosPlugin):
 
             exec(src)
             _grab(dest, width)
+            print("Grabbed widget image:", dest)
         return f"![{page.title}](../{dest.parent.name}/{dest.name}){{ loading=lazy; width={width} }}\n\n"
 
     @env.macro
