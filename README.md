@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/pypi/l/qtextra.svg?color=green)](https://github.com/lukasz-migas/qtextra/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/qtextra.svg?color=green)](https://pypi.org/project/qtextra)
 [![Python Version](https://img.shields.io/pypi/pyversions/qtextra.svg?color=green)](https://python.org)
-[![CI](https://github.com/illumion-io/qtextra/actions/workflows/ci.yml/badge.svg)](https://github.com/lukasz-migas/qtextra/actions/workflows/test_and_deploy.yml)
+[![Test](https://github.com/lukasz-migas/qtextra/actions/workflows/test_and_deploy.yml/badge.svg?branch=main)](https://github.com/lukasz-migas/qtextra/actions/workflows/test_and_deploy.yml)
 [![codecov](https://codecov.io/gh/lukasz-migas/qtextra/branch/main/graph/badge.svg)](https://codecov.io/gh/lukasz-migas/qtextra)
 
 ### A bunch of *extra* widgets and components for PyQt/PySide
