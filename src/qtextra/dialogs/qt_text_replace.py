@@ -59,6 +59,9 @@ class QtTextReplace(QtDialog):
         replace_with = self.replace_edit.text()
         if search_for in self.search_and_replace_map and self.search_and_replace_map[search_for] == replace_with:
             return
+        if search_for == replace_with:
+            return
+
         self.search_and_replace_map[search_for] = replace_with
         self.search_edit.setText("")
         self.replace_edit.setText("")

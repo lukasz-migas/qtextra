@@ -2,9 +2,11 @@
 
 from random import choice
 
+from qtpy.QtCore import QSize
 from qtpy.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
+from qtextra.helpers import make_qta_icon
 from qtextra.widgets.qt_tooltip import QtToolTip, TipPosition
 
 
@@ -18,6 +20,9 @@ def create_popout():
         tail_position=tail_position,
         target=button,
         is_closable=choice([True, False]),
+        image=make_qta_icon("home").pixmap(QSize(32, 32))
+        if tail_position in [TipPosition.LEFT, TipPosition.RIGHT]
+        else None,
     )
 
 

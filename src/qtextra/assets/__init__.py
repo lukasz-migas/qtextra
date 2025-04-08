@@ -5,9 +5,8 @@ from __future__ import annotations
 import typing as ty
 from pathlib import Path
 
-from loguru import logger
-
 from koyo.utilities import get_module_path
+from loguru import logger
 
 HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent.resolve()
 
@@ -277,7 +276,7 @@ def update_icons(mapping: ty.Dict[str, str], append: bool = True) -> None:
         ICONS = mapping
 
 
-def get_icon(name: str | tuple[str, dict]) -> tuple[str | dict]:
+def get_icon(name: str | tuple[str, dict]) -> tuple[str, dict]:
     """Return icon."""
     kwargs = None
     if isinstance(name, tuple):

@@ -140,7 +140,7 @@ class QtSelectionList(QWidget):
         self.toolbar.add_widget(self.filter_by, stretch=True)
         self.toolbar.add_widget(self.info_label)
         if not self.allow_filter:
-            self.toolbar.append_spacer()
+            self.toolbar.add_spacer()
         if not self.allow_toolbar:
             self.toolbar.hide()
         self._layout.addRow(self.toolbar)

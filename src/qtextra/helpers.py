@@ -1505,7 +1505,7 @@ def make_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = Qw.QSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1534,7 +1534,7 @@ def make_slider_with_text(
     """Make QSlider."""
     from superqt import QLabeledSlider
 
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = QLabeledSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setValue(value)
@@ -1562,7 +1562,7 @@ def make_double_slider_with_text(
     """Make QSlider."""
     from superqt import QLabeledDoubleSlider
 
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = QLabeledDoubleSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setDecimals(n_decimals)
@@ -1576,7 +1576,8 @@ def make_double_slider_with_text(
     return widget
 
 
-def _get_orientation(orientation: str | Qt.Orientation) -> Qt.Orientation:
+def get_orientation(orientation: Orientation | Qt.Orientation) -> Qt.Orientation:
+    """Get Qt orientation"""
     if isinstance(orientation, str):
         orientation = Qt.Orientation.Horizontal if orientation.lower() == "horizontal" else Qt.Orientation.Vertical
     return orientation
@@ -1599,7 +1600,7 @@ def make_labelled_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = QLabeledSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1746,7 +1747,7 @@ def make_toggle_group(
     if orientation == "flow":
         layout = make_animated_flow_layout()
     else:
-        orientation = _get_orientation(orientation)
+        orientation = get_orientation(orientation)
         layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
     layout.setSpacing(2)
     for btn_id, btn_label in enumerate(label):
