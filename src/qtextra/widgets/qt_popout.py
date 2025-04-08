@@ -110,10 +110,8 @@ class PopoutView(PopoutViewBase):
         self.content = content
         self.is_closable = is_closable
 
-        self.titleLabel = QLabel(title, self)
-        self.titleLabel.setObjectName("titleLabel")
-        self.contentLabel = QLabel(content, self)
-        self.contentLabel.setObjectName("contentLabel")
+        self.titleLabel = hp.make_label(self, title, bold=True, object_name="titleLabel")
+        self.contentLabel = hp.make_label(self, title, object_name="contentLabel")
 
         # add icon widget
         self.iconWidget = hp.make_qta_label(self, icon or "")
@@ -200,7 +198,7 @@ class PopoutView(PopoutViewBase):
         self.adjustSize()
 
 
-class Popout(QWidget):
+class QtPopout(QWidget):
     """Popout."""
 
     evt_closed = Signal()
@@ -356,7 +354,7 @@ class PopoutAnimationManager(QObject):
 
     managers = {}
 
-    def __init__(self, popout: Popout):
+    def __init__(self, popout: QtPopout):
         super().__init__()
         self._popout = popout
         self.aniGroup = QParallelAnimationGroup(self)
@@ -408,7 +406,7 @@ class PopoutAnimationManager(QObject):
         raise NotImplementedError
 
     @classmethod
-    def make(cls, animation_type: PopoutAnimationType, popup: Popout) -> PopoutAnimationManager:
+    def make(cls, animation_type: PopoutAnimationType, popup: QtPopout) -> PopoutAnimationManager:
         """Mask animation manager."""
         if animation_type not in cls.managers:
             raise ValueError(f"`{animation_type}` is an invalid animation type.")
@@ -530,7 +528,7 @@ if __name__ == "__main__":  # pragma: no cover
         app, frame, ha = qframe()
 
         def _popup():
-            Popout.init(
+            QtPopout.init(
                 "Hello World",
                 "Here is some text that should be displayed below the title",
                 parent=frame,

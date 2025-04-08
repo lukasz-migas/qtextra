@@ -46,12 +46,12 @@ def style_if(widget, value: int, error_if: int, warn_if: int, less: bool = True)
     hp.update_widget_style(widget, object_name)
 
 
-class SystemSummaryWidget(QWidget):
+class QtSystemSummaryWidget(QWidget):
     """System information."""
 
     _update_gpu: bool = True
 
-    def __init__(self, parent: QWidget | None):
+    def __init__(self, parent: QWidget | None = None):
         QWidget.__init__(self, parent)
 
         # CPU summary
@@ -248,7 +248,7 @@ class SystemSummaryPopup(QtFramelessPopup):
         layout = QVBoxLayout()
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(SystemSummaryWidget(self))
+        layout.addWidget(QtSystemSummaryWidget(self))
         return layout
 
 
@@ -263,7 +263,7 @@ if __name__ == "__main__":  # pragma: no cover
         frame.setMinimumSize(600, 600)
         ha.addWidget(theme_toggle_btn(frame))
 
-        wdg = SystemSummaryWidget(parent=frame)
+        wdg = QtSystemSummaryWidget(parent=frame)
         ha.addWidget(wdg)
 
         frame.show()

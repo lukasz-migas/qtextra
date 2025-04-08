@@ -173,7 +173,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     btn3 = QtRichTextButton(frame)
     btn3.clicked.connect(_test2)
-    btn3.setText("TEST RICH <b>button</b>")
+    btn3.setText("<span style='color:#ff00ff;'>TEST</span> <i>RICH</i> <b>button</b>")
     ha.addWidget(btn3)
 
     frame.show()

@@ -72,6 +72,10 @@ class QtFilterEdit(QWidget):
     def on_add(self) -> None:
         """Add filter."""
         text = self.text_edit.text()
+        self.add_filter(text)
+
+    def add_filter(self, text: str) -> None:
+        """Add filter."""
         filters = self.get_filters()
         if not text or text in filters:
             return
