@@ -19,7 +19,7 @@ class QtTextReplace(QtDialog):
         TableConfig()  # type: ignore
         .add("original text", "old", "int", 300, sizing="stretch")
         .add("new text", "new", "str", 300, sizing="stretch")
-        .add("changed", "changed", "str", 50, sizing="stretch")
+        # .add("changed", "changed", "str", 50, sizing="stretch")
     )
 
     def __init__(
@@ -41,7 +41,7 @@ class QtTextReplace(QtDialog):
     def populate(self) -> None:
         """Populate table."""
         for text in self.original_texts:
-            self.table.add_row([text, text, "False"])
+            self.table.add_row([text, text])
 
     def on_preview(self) -> None:
         """Preview text."""
@@ -51,12 +51,16 @@ class QtTextReplace(QtDialog):
         for row, current in enumerate(texts):
             changed, new_text = self.process_text(current)
             self.table.set_value(self.TABLE_CONFIG.new, row, new_text)
-            self.table.set_value(self.TABLE_CONFIG.changed, row, "True" if changed else "False")
+            # self.table.set_value(self.TABLE_CONFIG.changed, row, "True" if changed else "False")
 
     def on_add(self) -> None:
         """Add replacement text."""
         search_for = self.search_edit.text()
         replace_with = self.replace_edit.text()
+        self.add(search_for, replace_with)
+
+    def add(self, search_for: str, replace_with: str) -> None:
+        """Add text replacement."""
         if search_for in self.search_and_replace_map and self.search_and_replace_map[search_for] == replace_with:
             return
         if search_for == replace_with:

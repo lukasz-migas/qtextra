@@ -177,9 +177,17 @@ QtPushButton[with_menu=true] QMenu::item:selected {
 }
 
 
-QPushButton#update_btn{
+QPushButton#update_btn {
     color: {{ replace(success) }};
     background-color: {{ success }};
     font-size: {{ increase(font_size, 1) }};
     font-weight: bold;
+}
+
+QPushButton#success_btn {
+    background-color: {{ darken(success, 15) }};
+}
+
+QPushButton#error_btn {
+    background-color: {{ lighten(error, 50) }};
 }

@@ -2651,13 +2651,13 @@ def confirm_with_text(
     title: str = "Please confirm...",
 ) -> bool:
     """Confirm action."""
-    from qtextra.dialogs.qt_confirm import ConfirmWithTextDialog
+    from qtextra.dialogs.qt_confirm import QtConfirmWithTextDialog
 
     if request not in message:
         if "<b>confirm</b>" not in message:
             raise ValueError(f"Request string ({request}) must be part of the message.")
         message = message.replace("<b>confirm</b>", f"<b>{request}</b>")
-    dlg = ConfirmWithTextDialog(parent, title, message, request)
+    dlg = QtConfirmWithTextDialog(parent, title, message, request)
     return bool(dlg.exec_())
 
 

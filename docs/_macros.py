@@ -32,6 +32,7 @@ def define_env(env: MacrosPlugin):
             codeblocks = [b[6:].strip() for b in page.markdown.split("```") if b.startswith("python")]
             src = codeblocks[0].strip()
             src = src.replace("QApplication([])", "QApplication.instance() or QApplication([])")
+            src = src.replace("widget.exec_()", "widget.processEvents()")
             src = src.replace("app.exec_()", "app.processEvents()")
 
             exec(src)

@@ -1,5 +1,7 @@
 """Simple color scheme builder."""
 
+from __future__ import annotations
+
 import typing as ty
 from copy import deepcopy
 
@@ -28,7 +30,7 @@ class QtColorListDialog(QtDialog):
 
     def __init__(
         self,
-        parent: QWidget,
+        parent: QWidget | None,
         colors: ty.Union[ty.List[str], ty.List[Color]],
         message: str = "Please click on any of the colors and select a new one",
     ):
