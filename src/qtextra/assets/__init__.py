@@ -5,9 +5,8 @@ from __future__ import annotations
 import typing as ty
 from pathlib import Path
 
-from loguru import logger
-
 from koyo.utilities import get_module_path
+from loguru import logger
 
 HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent.resolve()
 

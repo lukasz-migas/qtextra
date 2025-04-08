@@ -53,8 +53,6 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
 
-
-
 # def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
 #     """Trim dialog size and retrieve new size."""
 #     win = None
@@ -893,9 +891,6 @@ def make_checkable_combobox(
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
         [widget.evt_checked.connect(func_) for func_ in _validate_func(func)]
     return widget
-
-
-
 
 
 def make_searchable_combobox(
