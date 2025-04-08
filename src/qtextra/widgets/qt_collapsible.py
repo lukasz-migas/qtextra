@@ -6,6 +6,8 @@ https://github.dev/napari/superqt/blob/f4d9881b0c64c0419fa2da182a1c403a01bd084f/
 
 from __future__ import annotations
 
+from contextlib import suppress
+
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLayout, QWidget
 from superqt import QCollapsible
@@ -53,7 +55,8 @@ class QtCheckCollapsible(QCollapsible):
         layout = hp.make_form_layout(parent=content)
         layout.setContentsMargins(2, 2, 2, 2)
         self.setContent(content)
-        THEMES.evt_theme_icon_changed.connect(self._set_icon)
+        with suppress(RuntimeError):
+            THEMES.evt_theme_icon_changed.connect(self._set_icon)
 
     def _set_icon(self) -> None:
         self.setExpandedIcon(hp.make_qta_icon("chevron_down"))

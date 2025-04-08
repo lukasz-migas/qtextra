@@ -8,6 +8,8 @@ from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
 app = QApplication([])
 
 widget = QWidget()
+THEMES.apply(widget)
+
 layout = QVBoxLayout()
 widget.setLayout(layout)
 
@@ -23,5 +25,4 @@ active_btn.setValue(10)
 layout.addWidget(active_btn)
 widget.show()
 
-THEMES.set_theme_stylesheet(widget)
 app.exec_()

@@ -1,10 +1,12 @@
 """Progress bar."""
 
 from qtpy.QtCore import Property, QPoint, QRect, QSize, Qt, QVariantAnimation, Signal
-from qtpy.QtGui import QColor, QFontMetrics, QPainter, QPen
+from qtpy.QtGui import QFontMetrics, QPainter, QPen
 from qtpy.QtWidgets import QWidget
 
 from qtextra.config import THEMES
+
+# TODO: if the step description is multi-line, it will not be displayed properly
 
 
 class QtStepProgressBar(QWidget):
@@ -13,8 +15,13 @@ class QtStepProgressBar(QWidget):
     https://stackoverflow.com/questions/63004722/how-to-create-a-labelled-qprogressbar-in-pyside
     """
 
-    stepsChanged = Signal(list)
-    valueChanged = Signal(int)
+    evt_steps_changed = Signal(list)
+    evt_value_changed = Signal(int)
+
+    # Attributes
+    RADIUS = 10
+    LINE_WIDTH = 5
+    HORIZONTAL_PADDING = 5
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -27,29 +34,34 @@ class QtStepProgressBar(QWidget):
         self._animation.setDuration(500)
         self._animation.valueChanged.connect(self.update)
 
-    def get_labels(self):
+    def get_labels(self) -> list[str]:
+        """Get labels."""
         return self._labels
 
-    def set_labels(self, labels):
-        self._labels = labels[:]
-        self.stepsChanged.emit(self._labels)
+    def set_labels(self, labels: list[str]) -> None:
+        """Set labels."""
+        self._labels = labels
+        self.evt_steps_changed.emit(self._labels)
 
-    labels = Property(list, fget=get_labels, fset=set_labels, notify=stepsChanged)
+    labels = Property(list, fget=get_labels, fset=set_labels, notify=evt_steps_changed)
 
-    def get_value(self):
+    def get_value(self) -> int:
+        """Get value."""
         return self._value
 
-    def set_value(self, value):
+    def set_value(self, value: int) -> None:
+        """Set current value."""
         if 0 <= value < len(self.labels) + 1:
             self._value = value
-            self.valueChanged.emit(value)
+            self.evt_value_changed.emit(value)
             self.update()
             if self.value < len(self.labels):
                 self._animation.start()
 
-    value = Property(int, fget=get_value, fset=set_value, notify=valueChanged)
+    value = Property(int, fget=get_value, fset=set_value, notify=evt_value_changed)
 
-    def sizeHint(self):
+    def sizeHint(self) -> QSize:
+        """Return the size hint for the widget."""
         return QSize(320, 120)
 
     def paintEvent(self, event):
@@ -64,33 +76,25 @@ class QtStepProgressBar(QWidget):
 
         painter.setRenderHints(QPainter.RenderHint.Antialiasing)
 
-        height = 5
-        offset = 10
-
         painter.fillRect(self.rect(), canvas_color)
 
-        busy_rect = QRect(0, 0, self.width(), height)
-        busy_rect.adjust(offset, 0, -offset, 0)
+        busy_rect = QRect(0, 0, self.width(), self.LINE_WIDTH)
+        busy_rect.adjust(self.HORIZONTAL_PADDING, 0, -self.HORIZONTAL_PADDING, 0)
         busy_rect.moveCenter(self.rect().center())
 
         painter.fillRect(busy_rect, default_line_color)
 
         number_of_steps = len(self.labels)
-
         if number_of_steps == 0:
             return
 
         step_width = busy_rect.width() / number_of_steps
-        x = int(round(offset + step_width / 2))
+        x = int(round(self.HORIZONTAL_PADDING + step_width / 2))
         y = int(round(busy_rect.center().y()))
-        radius = 10
+
+        r = QRect(0, 0, round(1.5 * self.RADIUS), round(1.5 * self.RADIUS))
 
         font_text = painter.font()
-
-        # font_icon = QFont("Font Awesome 5 Free")
-        # font_icon.setPixelSize(radius)
-
-        r = QRect(0, 0, round(1.5 * radius), round(1.5 * radius))
         fm = QFontMetrics(font_text)
 
         for i, text in enumerate(self.labels, 1):
@@ -98,7 +102,7 @@ class QtStepProgressBar(QWidget):
 
             if i <= self.value:
                 w = step_width if i < self.value else self._animation.currentValue() * step_width
-                r_busy = QRect(0, 0, round(w), round(height))
+                r_busy = QRect(0, 0, round(w), round(self.LINE_WIDTH))
                 r_busy.moveCenter(busy_rect.center())
 
                 if i < number_of_steps:
@@ -123,11 +127,10 @@ class QtStepProgressBar(QWidget):
                 painter.setPen(progress_color if is_active else text_color)
 
             rect = fm.boundingRect(text)
-            rect.moveCenter(QPoint(int(x), int(round(y + 2 * radius))))
+            rect.moveCenter(QPoint(int(x), int(round(y + 2 * self.RADIUS))))
             painter.setFont(font_text)
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
-
-            x += step_width
+            x = int(x + step_width)
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -142,7 +145,14 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(theme_toggle_btn(frame))
 
     progressbar = QtStepProgressBar()
-    progressbar.labels = ["Step One", "Step Two", "Step Three", "Complete"]
+    progressbar.labels = [
+        "Step One",
+        "Step Two",
+        "Step Three",
+        "Step Four",
+        "Step Five",
+        "Complete",
+    ]
     ha.addWidget(progressbar)
 
     button = QPushButton("Next Step")

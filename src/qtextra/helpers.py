@@ -2894,7 +2894,7 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 def make_loading_gif(
     parent: Qw.QWidget | None,
-    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "infinity",
+    which: str | ty.Literal["dots", "infinity", "oval", "circle", "square"] = "infinity",
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,

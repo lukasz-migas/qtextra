@@ -5,11 +5,13 @@ Also from:
 https://github.dev/royerlab/aydin/blob/c19595f37a163f6cd34243c5d5975cddb4a637c1/aydin/gui/_qt/custom_widgets/overlay.py.
 """
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QBrush, QPainter, QPen
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
+
+# TODO: it's possible that QtActiveOverlay is not always centered
 
 
 class QtActiveOverlay(QWidget):
@@ -25,7 +27,11 @@ class QtActiveOverlay(QWidget):
     SIZE = 20
     SPACING = 50
 
-    def __init__(self, parent=None):
+    def __init__(self, n_dots: int = 5, interval: int = 200, size: int = 20, spacing=50, parent=None):
+        self.N_DOTS = n_dots
+        self.INTERVAL = interval
+        self.SIZE = size
+        self.SPACING = spacing
         QWidget.__init__(self, parent)
 
     def paintEvent(self, event):
@@ -33,17 +39,31 @@ class QtActiveOverlay(QWidget):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        # Fill background
         painter.fillRect(event.rect(), QBrush(THEMES.get_qt_color("background")))
+
+        # No border
         painter.setPen(QPen(Qt.PenStyle.NoPen))
 
+        # Vertical position for the dots
+        height = (self.height() - self.SIZE) // 2
+
+        # Calculate total width of all dots with spacing
+        total_width = (self.N_DOTS - 1) * self.SPACING + self.SIZE
+
+        # Calculate left margin to center the dots horizontally
+        horizontal_offset = (self.width() - total_width) // 2
+
+        # Draw each dot
         for i in range(self.N_DOTS):
             if i <= self.counter:
-                painter.setBrush(QBrush(THEMES.get_qt_color("success" if not self.REVERSE else "primary")))
+                color = "success" if not self.REVERSE else "primary"
             else:
-                painter.setBrush(QBrush(THEMES.get_qt_color("primary" if not self.REVERSE else "success")))
-            painter.drawEllipse(
-                self.width() // 2 + self.SPACING * i - (self.SPACING * 2), self.height() // 2, self.SIZE, self.SIZE
-            )
+                color = "primary" if not self.REVERSE else "success"
+            painter.setBrush(QBrush(THEMES.get_qt_color(color)))
+            x = horizontal_offset + i * self.SPACING
+            painter.drawEllipse(x, height, self.SIZE, self.SIZE)
         painter.end()
 
     def showEvent(self, event):
@@ -64,19 +84,28 @@ class QtActiveOverlay(QWidget):
         self.killTimer(self.timer)
         self.hide()
 
+    def sizeHint(self) -> QSize:
+        """Return the size hint for the widget."""
+        return QSize(self.SPACING * (self.N_DOTS + 1), 120)
+
+    def minimumHeight(self) -> QSize:
+        """Return the minimum height for the widget."""
+        return QSize(self.SPACING * (self.N_DOTS + 1), 120)
+
 
 class QtActiveWidget(QWidget):
     """Widget that displays activity."""
 
-    def __init__(self, msg: str = "", size=(64, 64), parent=None):
+    def __init__(self, text: str = "", which: str = "infinity", size: tuple[int, int] = (64, 64), parent=None):
         super().__init__(parent)
 
         from qtextra.helpers import make_label, make_loading_gif
 
-        label = make_label(self, msg, bold=True)
-        spinner, _ = make_loading_gif(self, size=size)
+        label = make_label(self, text, bold=True)
+        spinner, _ = make_loading_gif(self, size=size, which=which)
 
         layout = QVBoxLayout(self)
+        layout.setSpacing(2)
         layout.addWidget(label, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(spinner, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -88,14 +117,13 @@ if __name__ == "__main__":  # pragma: no cover
 
         from qtextra.utils.dev import qmain, theme_toggle_btn
 
-        app, frame, ha = qmain(False)
-        frame.setMinimumSize(600, 600)
-        ha.addWidget(theme_toggle_btn(frame))
+        app, frame, va = qmain(False)
+        va.addWidget(theme_toggle_btn(frame))
 
-        wdg = QtActiveWidget(parent=frame)
-        ha.addWidget(wdg)
-        wdg = QtActiveOverlay(parent=frame)
-        ha.addWidget(wdg)
+        va.addWidget(QLabel("QtActiveWidget"), alignment=Qt.AlignmentFlag.AlignHCenter)
+        va.addWidget(QtActiveWidget(parent=frame))
+        va.addWidget(QLabel("QtActiveOverlay"), alignment=Qt.AlignmentFlag.AlignHCenter)
+        va.addWidget(QtActiveOverlay(parent=frame))
 
         frame.show()
         sys.exit(app.exec_())
