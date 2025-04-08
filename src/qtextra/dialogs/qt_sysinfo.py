@@ -41,6 +41,8 @@ class QtSystemInfo(QDialog):
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
 
         self._layout = QVBoxLayout(self)
+        self._layout.setSpacing(2)
+        self._layout.setContentsMargins(5, 5, 5, 5)
 
         # Description
         title_label = QLabel(title)
@@ -62,6 +64,7 @@ class QtSystemInfo(QDialog):
         self.info_layout.addWidget(self.infoTextBox, 1)
         self.info_layout.addWidget(self.infoCopyButton, 0, Qt.AlignmentFlag.AlignTop)
         self.info_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._layout.addWidget(QLabel("<b>System information:</b>"))
         self._layout.addLayout(self.info_layout)
 
         self.infoTextBox.setText(system_info)

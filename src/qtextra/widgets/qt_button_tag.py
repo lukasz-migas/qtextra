@@ -176,7 +176,10 @@ class QtTagManager(QWidget):
         self.allow_action = allow_action
 
         self._layout = QtFlowLayout(self) if flow else QHBoxLayout(self)
-        self._layout.setSpacing(-2)
+        if flow:
+            self._layout.setHorizontalSpacing(2)
+            self._layout.setVerticalSpacing(2)
+        self._layout.setSpacing(2)
         self._layout.setContentsMargins(2, 2, 2, 2)
         self.widgets: dict[str, QtTagButton] = {}
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -236,7 +239,7 @@ class QtTagManager(QWidget):
         """Handle add click."""
         text = hp.get_text(self, "Type-in new label.", "New label")
         if text:
-            self.add_tag(text)
+            self.add_tag(text, allow_action=self.allow_action)
             self.evt_plus_clicked.emit()
 
     @Slot(str, bool)  # type: ignore[misc]

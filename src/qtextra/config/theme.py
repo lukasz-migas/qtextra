@@ -595,6 +595,10 @@ class Themes(ConfigBase):
         """Set stylesheet on widget."""
         widget.setStyleSheet(self.get_theme_stylesheet(theme_name))
 
+    def apply(self, widget: QWidget) -> None:
+        """Apply theme on widget."""
+        self.set_theme_stylesheet(widget)
+
     @staticmethod
     def get_theme_path(theme_name: str) -> Path:
         """Get path of directory for a given theme name."""

@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QDialog, QWidget
 import qtextra.helpers as hp
 
 
-class ConfirmWithTextDialog(QDialog):
+class QtConfirmWithTextDialog(QDialog):
     """Confirm action by typing requested text."""
 
     def __init__(
@@ -34,7 +34,7 @@ class ConfirmWithTextDialog(QDialog):
         layout.addLayout(
             hp.make_h_layout(
                 self.ok_btn,
-                hp.make_btn(self, "No", func=self.reject),
+                hp.make_btn(self, "No", func=self.reject, tooltip="Cancel and return to the app."),
             )
         )
         self.setLayout(layout)
@@ -43,4 +43,6 @@ class ConfirmWithTextDialog(QDialog):
 
     def validate(self) -> None:
         """Validate the input."""
-        self.ok_btn.setEnabled(self.request_edit.text() == self.request)
+        enabled = self.request_edit.text() == self.request
+        self.ok_btn.setEnabled(enabled)
+        hp.update_widget_style(self.ok_btn, "success_btn" if enabled else "")

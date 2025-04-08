@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 from copy import deepcopy
+from functools import partial
 
 import qtawesome
 from qtpy.QtCore import (  # type: ignore[attr-defined]
@@ -42,7 +44,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
         super().__init__()
         self.setProperty("transparent", False)
         self.transparent = False
-        THEMES.evt_theme_icon_changed.connect(self._update_qta)
+        with suppress(RuntimeError):
+            THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
     def set_count(self, count: int, enabled: bool = True) -> None:
         """Enable count indicator."""
@@ -502,12 +505,20 @@ class QtMultiStatePushButton(QtImagePushButton):
         self.set_qta(self.STATE_TO_ICON[state])
         self.evt_changed.emit(state)
 
+    def set_state(self, state: bool) -> None:
+        """Set state."""
+        self.state = state
+
     def set_menu(self) -> None:
         """Set menu."""
         menu = hp.make_menu(self)
         for state, label in self.STATE_TO_OPTION.items():
             hp.make_menu_item(
-                self, label, icon=self.STATE_TO_ICON[state], func=lambda: setattr(self, "state", state), menu=menu
+                self,
+                label,
+                icon=self.STATE_TO_ICON[state],
+                func=partial(self.set_state, state=state),
+                menu=menu,
             )
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)

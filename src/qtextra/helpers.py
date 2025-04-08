@@ -1505,7 +1505,7 @@ def make_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = Qw.QSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1534,7 +1534,7 @@ def make_slider_with_text(
     """Make QSlider."""
     from superqt import QLabeledSlider
 
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = QLabeledSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setValue(value)
@@ -1562,7 +1562,7 @@ def make_double_slider_with_text(
     """Make QSlider."""
     from superqt import QLabeledDoubleSlider
 
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = QLabeledDoubleSlider(orientation, parent)
     widget.setRange(min_value, max_value)
     widget.setDecimals(n_decimals)
@@ -1576,7 +1576,8 @@ def make_double_slider_with_text(
     return widget
 
 
-def _get_orientation(orientation: str | Qt.Orientation) -> Qt.Orientation:
+def get_orientation(orientation: Orientation | Qt.Orientation) -> Qt.Orientation:
+    """Get Qt orientation"""
     if isinstance(orientation, str):
         orientation = Qt.Orientation.Horizontal if orientation.lower() == "horizontal" else Qt.Orientation.Vertical
     return orientation
@@ -1599,7 +1600,7 @@ def make_labelled_slider(
     if value is None:
         value = default
     tooltip = kwargs.get("description", tooltip)
-    orientation = _get_orientation(orientation)
+    orientation = get_orientation(orientation)
     widget = QLabeledSlider(parent=parent)
     widget.setRange(minimum, maximum)
     widget.setOrientation(orientation)
@@ -1746,7 +1747,7 @@ def make_toggle_group(
     if orientation == "flow":
         layout = make_animated_flow_layout()
     else:
-        orientation = _get_orientation(orientation)
+        orientation = get_orientation(orientation)
         layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
     layout.setSpacing(2)
     for btn_id, btn_label in enumerate(label):
@@ -2067,17 +2068,12 @@ def make_advanced_collapsible(
     """Make collapsible widget."""
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
 
-    content = Qw.QWidget()
-    layout = make_form_layout()
-    layout.setContentsMargins(2, 2, 2, 2)
-    content.setLayout(layout)
     advanced_widget = QtCheckCollapsible(title, parent, icon=icon, warning_icon=warning_icon)
     advanced_widget.set_checkbox_visible(allow_checkbox)
     advanced_widget.set_icon_visible(allow_icon)
     advanced_widget.set_warning_visible(allow_warning)
     if icon_func:
-        [advanced_widget.icon_btn.clicked.connect(func_) for func_ in _validate_func(icon_func)]
-    advanced_widget.setContent(content)
+        [advanced_widget.action_btn.clicked.connect(func_) for func_ in _validate_func(icon_func)]
     advanced_widget.collapse() if collapsed else advanced_widget.expand()
     return advanced_widget
 
@@ -2655,13 +2651,13 @@ def confirm_with_text(
     title: str = "Please confirm...",
 ) -> bool:
     """Confirm action."""
-    from qtextra.dialogs.qt_confirm import ConfirmWithTextDialog
+    from qtextra.dialogs.qt_confirm import QtConfirmWithTextDialog
 
     if request not in message:
         if "<b>confirm</b>" not in message:
             raise ValueError(f"Request string ({request}) must be part of the message.")
         message = message.replace("<b>confirm</b>", f"<b>{request}</b>")
-    dlg = ConfirmWithTextDialog(parent, title, message, request)
+    dlg = QtConfirmWithTextDialog(parent, title, message, request)
     return bool(dlg.exec_())
 
 
@@ -2899,7 +2895,7 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 def make_loading_gif(
     parent: Qw.QWidget | None,
-    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "confirm_close",
+    which: str | ty.Literal["dots", "infinity", "oval", "circle", "square"] = "infinity",
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,

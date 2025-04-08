@@ -8,6 +8,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
+from qtextra.typing import Orientation
 from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 
@@ -17,22 +18,22 @@ class QtMiniToolbar(QFrame):
     def __init__(
         self,
         parent: QWidget | None,
-        orientation: Qt.Orientation = Qt.Orientation.Horizontal,
+        orientation: Orientation | Qt.Orientation = Qt.Orientation.Horizontal,
         add_spacer: bool = True,
         icon_size: ty.Literal["small", "average", "medium", "normal"] | str | None = None,
         spacing: int = 0,
     ):
         super().__init__(parent)
         self._tools: dict[str, QtImagePushButton] = {}
-        self.orientation = orientation
+        self.orientation = hp.get_orientation(orientation)
 
-        self.layout_ = QHBoxLayout(self) if orientation == Qt.Orientation.Horizontal else QVBoxLayout(self)
+        self.layout_ = QHBoxLayout(self) if self.orientation == Qt.Orientation.Horizontal else QVBoxLayout(self)
         self.layout_.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout_.setSpacing(spacing)
         self.layout_.setContentsMargins(0, 0, 0, 0)
         if add_spacer:
             self.layout_.addSpacerItem(
-                hp.make_h_spacer() if orientation == Qt.Orientation.Horizontal else hp.make_v_spacer()
+                hp.make_h_spacer() if self.orientation == Qt.Orientation.Horizontal else hp.make_v_spacer()
             )
 
         self.max_size = 28
@@ -174,6 +175,7 @@ class QtMiniToolbar(QFrame):
     def insert_qta_tool(
         self,
         name: str,
+        index: int = 0,
         flat: bool = False,
         func: ty.Callable | None = None,
         func_menu: ty.Callable | None = None,
@@ -202,7 +204,7 @@ class QtMiniToolbar(QFrame):
             normal=normal,
             checked_icon_name=checked_icon_name,
         )
-        self.insert_button(btn)
+        self.insert_button(btn, index)
         if hidden:
             btn.hide()
         return btn
@@ -224,7 +226,7 @@ class QtMiniToolbar(QFrame):
         )  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
         self.layout_.insertWidget(0, spacer, stretch=True)
 
-    def append_spacer(self) -> None:
+    def add_spacer(self) -> None:
         """Insert spacer item."""
         spacer = hp.make_spacer_widget()
         self.layout_.insertWidget(self.layout_.count(), spacer, stretch=True)
@@ -248,16 +250,19 @@ class QtMiniToolbar(QFrame):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtpy.QtWidgets import QApplication
+    from qtextra.utils.dev import qframe, theme_toggle_btn
 
-    app = QApplication(sys.argv)
-    frame = QWidget()
-    ha = QHBoxLayout()
-    frame.setLayout(ha)
+    app, frame, ha = qframe(False)
+    ha.addWidget(theme_toggle_btn(frame))
 
-    h = QtMiniToolbar(None, orientation=Qt.Orientation.Horizontal)
-    ha.addWidget(h)
-    v = QtMiniToolbar(None, orientation=Qt.Orientation.Vertical)
-    ha.addWidget(v)
+    wdg = QtMiniToolbar(None, orientation=Qt.Orientation.Horizontal)
+    for icon in ["home", "settings", "help", "info", "warning", "error"]:
+        wdg.add_qta_tool(icon, tooltip=icon, func=None)
+    ha.addWidget(wdg)
+
+    wdg = QtMiniToolbar(None, orientation=Qt.Orientation.Vertical)
+    for icon in ["home", "settings", "help", "info", "warning", "error"]:
+        wdg.add_qta_tool(icon, tooltip=icon, func=None)
+    ha.addWidget(wdg)
     frame.show()
     sys.exit(app.exec_())

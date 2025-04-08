@@ -41,7 +41,7 @@ class ImagePosition(Enum):
     RIGHT = 3
 
 
-class ToolTipView(PopoutView):
+class QtToolTipView(PopoutView):
     """tool tip view."""
 
     def __init__(
@@ -123,7 +123,7 @@ class ToolTipBubble(QWidget):
         self.manager.draw(self, painter)
 
 
-class ToolTip(QWidget):
+class QtToolTip(QWidget):
     """tool tip."""
 
     def __init__(
@@ -276,8 +276,8 @@ class ToolTip(QWidget):
         target: QWidget,
         title: str,
         content: str,
-        icon: ty.Union[QIcon, str] = None,
-        image: ty.Union[str, QPixmap, QImage] = None,
+        icon: ty.Union[QIcon, str] | None = None,
+        image: ty.Union[str, QPixmap, QImage] | None = None,
         is_closable: bool = True,
         duration: int = 1000,
         tail_position=TipPosition.BOTTOM,
@@ -315,13 +315,13 @@ class ToolTip(QWidget):
         delete_on_close: bool
             whether delete flyout automatically when flyout is closed
         """
-        view = ToolTipView(title, content, icon, image, is_closable, tail_position)
+        view = QtToolTipView(title, content, icon, image, is_closable, tail_position)
         w = cls._init(view, target, duration, tail_position, parent, delete_on_close)
         view.evt_closed.connect(w.close)
         return w
 
 
-class PopupToolTip(ToolTip):
+class PopupToolTip(QtToolTip):
     """Pop up tool tip."""
 
     def __init__(
@@ -352,7 +352,7 @@ class ToolTipManager(QObject):
     def _get_image_position(self):
         return ImagePosition.TOP
 
-    def _get_position(self, tip: ToolTip) -> QPoint:
+    def _get_position(self, tip: QtToolTip) -> QPoint:
         pos = self._pos(tip)
         rect = hp.get_current_screen_geometry()
         x = max(rect.left(), min(pos.x(), rect.right() - tip.width() - 4))
@@ -364,7 +364,7 @@ class ToolTipManager(QObject):
         rect = tip.rect().adjusted(1, 1, -1, -1)
         painter.drawRoundedRect(rect, 8, 8)
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         """Return the poisition of tip."""
         return tip.pos()
 
@@ -412,7 +412,7 @@ class TopTailToolTipManager(ToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         pos = target.mapToGlobal(QPoint(0, target.height()))
         x = pos.x() + target.width() // 2 - tip.sizeHint().width() // 2
@@ -436,7 +436,7 @@ class BottomTailToolTipManager(ToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         pos = target.mapToGlobal(QPoint())
         x = pos.x() + target.width() // 2 - tip.sizeHint().width() // 2
@@ -463,7 +463,7 @@ class LeftTailToolTipManager(ToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         m = tip.layout().contentsMargins()
         pos = target.mapToGlobal(QPoint(target.width(), 0))
@@ -491,7 +491,7 @@ class RightTailToolTipManager(ToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         m = tip.layout().contentsMargins()
         pos = target.mapToGlobal(QPoint(0, 0))
@@ -513,7 +513,7 @@ class TopLeftTailTeachingTipManager(TopTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         pos = target.mapToGlobal(QPoint(0, target.height()))
         x = pos.x() - tip.layout().contentsMargins().left()
@@ -534,7 +534,7 @@ class TopRightTailTeachingTipManager(TopTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         pos = target.mapToGlobal(QPoint(target.width(), target.height()))
         x = pos.x() - tip.sizeHint().width() + tip.layout().contentsMargins().left()
@@ -555,7 +555,7 @@ class BottomLeftTailTeachingTipManager(BottomTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         pos = target.mapToGlobal(QPoint())
         x = pos.x() - tip.layout().contentsMargins().left()
@@ -576,7 +576,7 @@ class BottomRightTailTeachingTipManager(BottomTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         pos = target.mapToGlobal(QPoint(target.width(), 0))
         x = pos.x() - tip.sizeHint().width() + tip.layout().contentsMargins().left()
@@ -600,7 +600,7 @@ class LeftTopTailTeachingTipManager(LeftTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         m = tip.layout().contentsMargins()
         pos = target.mapToGlobal(QPoint(target.width(), 0))
@@ -625,7 +625,7 @@ class LeftBottomTailTeachingTipManager(LeftTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         m = tip.layout().contentsMargins()
         pos = target.mapToGlobal(QPoint(target.width(), target.height()))
@@ -650,7 +650,7 @@ class RightTopTailTeachingTipManager(RightTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         m = tip.layout().contentsMargins()
         pos = target.mapToGlobal(QPoint(0, 0))
@@ -675,7 +675,7 @@ class RightBottomTailTeachingTipManager(RightTailToolTipManager):
 
         painter.drawPath(path.simplified())
 
-    def _pos(self, tip: ToolTip):
+    def _pos(self, tip: QtToolTip):
         target = tip.target
         m = tip.layout().contentsMargins()
         pos = target.mapToGlobal(QPoint(0, target.height()))
@@ -695,7 +695,7 @@ if __name__ == "__main__":  # pragma: no cover
         app, frame, ha = qframe()
 
         def _popup():
-            ToolTip.init(
+            QtToolTip.init(
                 btn,
                 title="Title",
                 content="Here is some text that should be displayed below the title",

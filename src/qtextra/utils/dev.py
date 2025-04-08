@@ -131,25 +131,25 @@ def qframe(
 
     app = qapplication()
     frame = QtWidgets.QWidget()
-    ha = None
+    layout = None
     if with_layout:
         if horz:
-            ha = QtWidgets.QHBoxLayout()
-            ha.addWidget(theme_toggle_btn(frame))
+            layout = QtWidgets.QHBoxLayout()
+            layout.addWidget(theme_toggle_btn(frame))
         else:
-            ha = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
+            layout = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
             w = qdev(modules=modules)
             # w.setMaximumHeight(300)
-            ha.addWidget(w)
-        frame.setLayout(ha)
+            layout.addWidget(w)
+        frame.setLayout(layout)
     if set_style:
         apply_style(frame)
     if dev:
         from koyo.hooks import install_debugger_hook
 
         install_debugger_hook()
-    return app, frame, ha
+    return app, frame, layout
 
 
 def _apply_style_on_widget(widget: QWidget) -> None:

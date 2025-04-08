@@ -276,7 +276,7 @@ def update_icons(mapping: ty.Dict[str, str], append: bool = True) -> None:
         ICONS = mapping
 
 
-def get_icon(name: str | tuple[str, dict]) -> tuple[str | dict]:
+def get_icon(name: str | tuple[str, dict]) -> tuple[str, dict]:
     """Return icon."""
     kwargs = None
     if isinstance(name, tuple):

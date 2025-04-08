@@ -290,7 +290,7 @@ QtTagButton:hover {
     background-color: {{ darken(foreground, 5) }}
 }
 QtTagButton[active=True]{
-    background-color: {{ darken(foreground, 15) }}
+    background-color: {{ darken(success, 5) }}
 }
 QtTagButton[active=False]{
     background-color: {{ darken(foreground, 5) }}
