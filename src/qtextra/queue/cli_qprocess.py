@@ -274,8 +274,12 @@ class QProcessWrapper(QObject):
             # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments
             # incorrect. It's safer to simply join the arguments  together and set them as one long string. The
             # assumption is that the arguments were properly setup in the first place!
-            if IS_WIN and hasattr(self.process, "setNativeArguments"):
-                self.process.setNativeArguments(" ".join(args))  # type: ignore[attr-defined]
+            if IS_WIN:
+                if hasattr(self.process, "setNativeArguments"):
+                    self.process.setNativeArguments(" ".join(args))  # type: ignore[attr-defined]
+                else:
+                    self.logger.error("QProcess does not support setNativeArguments. Using setArguments instead.")
+                    self.process.setArguments(args)
             else:
                 self.process.setArguments(args)
             # update task info
