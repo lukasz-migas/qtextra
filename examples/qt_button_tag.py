@@ -1,4 +1,4 @@
-"""QtCheckCollapsible"""
+"""QtCheckCollapsible."""
 
 from qtpy.QtWidgets import QApplication
 

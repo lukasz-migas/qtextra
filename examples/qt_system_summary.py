@@ -1,4 +1,4 @@
-"""QtStepProgressBar"""
+"""QtStepProgressBar."""
 
 from qtpy.QtWidgets import QApplication
 

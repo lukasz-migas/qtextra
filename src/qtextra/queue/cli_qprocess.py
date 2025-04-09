@@ -31,7 +31,7 @@ def run_command(command: list[str]) -> None:
     # incorrect. It's safer to simply join the arguments  together and set them as one long string. The
     # assumption is that the arguments were properly setup in the first place!
     if IS_WIN and hasattr(process, "setNativeArguments"):
-        process.setNativeArguments(" ".join(arguments))
+        process.setNativeArguments(" ".join(args))
     else:
         process.setArguments(args)
     process.start()

@@ -1,4 +1,4 @@
-"""QtIconButtons"""
+"""QtIconButtons."""
 
 from qtpy.QtWidgets import QApplication, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 

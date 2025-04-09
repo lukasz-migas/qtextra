@@ -1577,7 +1577,7 @@ def make_double_slider_with_text(
 
 
 def get_orientation(orientation: Orientation | Qt.Orientation) -> Qt.Orientation:
-    """Get Qt orientation"""
+    """Get Qt orientation."""
     if isinstance(orientation, str):
         orientation = Qt.Orientation.Horizontal if orientation.lower() == "horizontal" else Qt.Orientation.Vertical
     return orientation

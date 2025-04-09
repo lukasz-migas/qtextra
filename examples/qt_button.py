@@ -1,4 +1,4 @@
-"""QtActiveProgressBarButton"""
+"""QtActiveProgressBarButton."""
 
 from qtpy.QtWidgets import QApplication, QVBoxLayout, QWidget
 

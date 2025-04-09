@@ -1,4 +1,4 @@
-"""QtQtaLabel"""
+"""QtQtaLabel."""
 
 from qtpy.QtWidgets import QApplication, QWidget
 
