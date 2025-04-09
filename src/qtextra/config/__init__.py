@@ -1,7 +1,7 @@
 """Init."""
 
-from qtextra.config.theme import THEMES, CANVAS, CanvasThemes, Themes, is_dark  # noqa
 from qtextra.config.events import EVENTS
+from qtextra.config.theme import CANVAS, THEMES, CanvasThemes, Themes, is_dark
 
 
 def get_settings():
