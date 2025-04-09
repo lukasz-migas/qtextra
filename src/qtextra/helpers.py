@@ -2144,15 +2144,30 @@ def make_labelled_h_line(parent: Qw.QWidget | None, title: str) -> Qw.QHBoxLayou
     return layout
 
 
-def make_menu(parent: Qw.QWidget | None, title: str = "") -> Qw.QMenu:
+def make_menu(
+    parent: Qw.QWidget | None,
+    title: str = "",
+    menu: Qw.QMenu | None = None,
+    func: Callback | None = None,
+    func_hover: Callback | None = None,
+) -> Qw.QMenu:
     """Make menu."""
     widget = Qw.QMenu(parent)
     widget.setTitle(title)
+    if func:
+        [widget.triggered.connect(func_) for func_ in _validate_func(func)]
+    if func_hover:
+        [widget.hovered.connect(func_) for func_ in _validate_func(func_hover)]
+    if menu:
+        menu.addMenu(widget)
     return widget
 
 
 def make_menu_from_options(
-    parent: Qw.QWidget, menu: Qw.QMenu, options: list[str | None], func: Callback | None
+    parent: Qw.QWidget,
+    menu: Qw.QMenu,
+    options: list[str | None],
+    func: Callback | None,
 ) -> None:
     """Make menu of options."""
     func = _validate_func(func)
@@ -2168,7 +2183,7 @@ def make_menu_item(
     title: str,
     shortcut: str | None = None,
     icon: str | QPixmap | None = None,
-    menu: Qw.QMenu = None,
+    menu: Qw.QMenu | None = None,
     status_tip: str | None = None,
     tooltip: str | None = None,
     checkable: bool = False,
