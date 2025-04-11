@@ -62,7 +62,7 @@ class QtFilterEdit(QWidget):
             )
             self._main_layout.addRow(self._filter_layout)
         self.setLayout(self._main_layout)
-        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
     def on_add_action(self) -> None:
         """This is a workaround some minor issues with action being triggered twice."""

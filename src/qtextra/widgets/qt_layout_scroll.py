@@ -37,6 +37,10 @@ class QtScrollableLayoutWidget(QScrollArea):
         widget = item.widget()
         return widget
 
+    def setSpacing(self, spacing: int) -> None:
+        """Set spacing."""
+        self._main_layout.setSpacing(spacing)
+
     def addWidget(self, widget: QWidget, **kwargs: ty.Any) -> None:
         """Add widget."""
         self._main_layout.addWidget(widget, **kwargs)

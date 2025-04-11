@@ -252,7 +252,8 @@ class QtFlowLayout(QFlowLayout):
         super().__init__(parent)
         if isinstance(margin, int):
             margin = (margin, margin, margin, margin)
-        self.setContentsMargins(*margin)
+        if margin:
+            self.setContentsMargins(*margin)
         if spacing >= 0:
             self.setSpacing(spacing)
 

@@ -286,10 +286,15 @@ QtTagButton {
     color: {{ text }};
 }
 
+QtTagButton[hide_check="True"] {
+    border-radius: 0px;
+}
+
 QtTagButton:hover {
     background-color: {{ darken(foreground, 5) }}
 }
 QtTagButton[active=True]{
+    border: 3px solid {{ darken(success, 5) }};
     background-color: {{ darken(success, 5) }}
 }
 QtTagButton[active=False]{
@@ -528,7 +533,8 @@ QMainWindow::separator:vertical {
     padding: 2 1 2 1;
 }
 
-QtScrollableHLayout QScrollBar:horizontal {
+/* ------------- QtScrollableHLayoutWidget --------- */
+QtScrollableHLayoutWidget QScrollBar:horizontal {
     height: 0px;
     margin: 0px;
     padding: 0px;
@@ -537,16 +543,42 @@ QtScrollableHLayout QScrollBar:horizontal {
     max-height: 8px;
 }
 
-QtScrollableHLayout QScrollBar:up-arrow,
-QtScrollableHLayout QScrollBar:down-arrow {
+QtScrollableHLayoutWidget QScrollBar:up-arrow,
+QtScrollableHLayoutWidget QScrollBar:down-arrow {
     min-height: 0px;
     min-width: 0px;
     max-height: 0px;
     max-width: 0px;
 }
 
-QtScrollableHLayout QScrollBar::add-line:horizontal,
-QtScrollableHLayout QScrollBar::sub-line:horizontal {
+QtScrollableHLayoutWidget QScrollBar::add-line:horizontal,
+QtScrollableHLayoutWidget QScrollBar::sub-line:horizontal {
+    border: none;
+    background: none;
+    height: 0px;
+    width: 0px;
+}
+
+/* ------------- QtScrollableVLayoutWidget --------- */
+QtScrollableVLayoutWidget QScrollBar:vertical {
+    height: 2px;
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+    min-width: 5px;
+    max-width: 5px;
+}
+
+QtScrollableVLayoutWidget QScrollBar:up-arrow,
+QtScrollableVLayoutWidget QScrollBar:down-arrow {
+    min-height: 0px;
+    min-width: 0px;
+    max-height: 0px;
+    max-width: 0px;
+}
+
+QtScrollableVLayoutWidget QScrollBar::add-line:vertical,
+QtScrollableVLayoutWidget QScrollBar::sub-line:vertical {
     border: none;
     background: none;
     height: 0px;

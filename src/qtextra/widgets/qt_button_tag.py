@@ -11,7 +11,7 @@ from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_button_icon import QtImagePushButton
-from qtextra.widgets.qt_layout_flow import QtFlowLayout
+from qtextra.widgets.qt_layout_scroll import QtScrollableHLayoutWidget
 
 # FIXME: There is a bug that only occurs when:
 #       1. Remove single widget. Dont check any of the existing widgets.
@@ -76,13 +76,17 @@ class QtTagButton(QFrame):
         action_type: str = "delete",
         action_icon: str = "cross",
         allow_selected: bool = True,
+        hide_check: bool = False,
     ):
         super().__init__(parent=parent)
         self.setMaximumHeight(28)
         self.setMouseTracking(True)
         self.hash_id = hash_id
+        self.hide_check = hide_check
         self._allow_selected = allow_selected
         self._label = label
+        if hide_check:
+            self.setProperty("hide_check", "True")
 
         self.selected = hp.make_qta_label(self, "check")
         self.selected.set_small()
@@ -139,7 +143,7 @@ class QtTagButton(QFrame):
     @active.setter
     def active(self, state: bool) -> None:
         self.setProperty("active", str(state))
-        self.selected.setVisible(state)
+        self.selected.setVisible(False if self.hide_check else state)
         hp.polish_widget(self)
         self._active = state
         self.evt_checked.emit(self.hash_id, state)
@@ -168,17 +172,41 @@ class QtTagManager(QWidget):
     """Manager class that contains multiple QtTagButtons."""
 
     evt_changed = Signal(str, bool)
+    evt_checked = Signal(list)
     evt_plus_clicked = Signal()
-    _action_btn = None
 
-    def __init__(self, parent: QWidget | None = None, allow_action: bool = False, flow: bool = True):
+    # Widgets
+    has_action = True
+    _plus_btn = None
+    _clear_btn = None
+
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        allow_action: bool = False,
+        flow: bool = True,
+        split_actions: bool = False,
+    ):
         super().__init__(parent=parent)
         self.allow_action = allow_action
+        self.split_actions = split_actions
 
-        self._layout = QtFlowLayout(self) if flow else QHBoxLayout(self)
+        layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
+        self._layout = hp.make_flow_layout() if flow else QtScrollableHLayoutWidget()
         if flow:
             self._layout.setHorizontalSpacing(2)
             self._layout.setVerticalSpacing(2)
+            layout.addLayout(self._layout)
+        else:
+            self._layout.setSpacing(2)
+            layout.addWidget(self._layout)
+
+        if split_actions:
+            self._action_layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
+            layout.addLayout(self._action_layout)
+        else:
+            self._action_layout = self._layout
+
         self._layout.setSpacing(2)
         self._layout.setContentsMargins(2, 2, 2, 2)
         self.widgets: dict[str, QtTagButton] = {}
@@ -190,23 +218,54 @@ class QtTagManager(QWidget):
         hash_id: str | None = None,
         allow_action: bool | None = None,
         active: bool = False,
-        allow_selected: bool = True,
+        allow_check: bool = True,
+        hide_check: bool = False,
     ) -> str:
         """Add tag to ."""
         if not hash_id:
             hash_id = get_short_hash()
         allow_action = self.allow_action if allow_action is None else allow_action
-        widget = QtTagButton(text, hash_id, allow_action=allow_action, parent=self, allow_selected=allow_selected)
+        widget = QtTagButton(
+            text,
+            hash_id,
+            allow_action=allow_action,
+            parent=self,
+            allow_selected=allow_check,
+            hide_check=hide_check,
+        )
         widget.active = active
         widget.evt_action.connect(self.remove_tag)
         widget.evt_checked.connect(self._tag_changed)
 
-        if self._action_btn is None:
-            self._layout.addWidget(widget)
-        else:
+        if self.has_action and self.split_actions:
             self._layout.insertWidget(len(self.widgets), widget)
+        else:
+            self._layout.addWidget(widget)
         self.widgets[hash_id] = widget
         return hash_id
+
+    def add_tags(
+        self,
+        options: list[str],
+        allow_action: bool | None = None,
+        allow_check: bool = True,
+        hide_check: bool = False,
+    ) -> None:
+        """Add tags."""
+        for tag in options:
+            self.add_tag(tag, allow_action=allow_action, allow_check=allow_check, hide_check=hide_check)
+
+    def clear_options(self) -> None:
+        """Clear all options."""
+        for widget in self.widgets.values():
+            widget.deleteLater()
+        self.widgets.clear()
+
+    def clear_selection(self) -> None:
+        """Clear selections."""
+        for widget in self.widgets.values():
+            if widget.active:
+                widget.active = False
 
     @Slot(str)  # type: ignore[misc]
     def remove_tag(self, hash_id: str) -> None:
@@ -225,27 +284,39 @@ class QtTagManager(QWidget):
 
     def add_button(self, object_type: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
-        self._action_btn = hp.make_qta_btn(self, object_type, tooltip=tooltip)
-        self._layout.addWidget(self._action_btn)
-        return self._action_btn
+        button = hp.make_qta_btn(self, object_type, tooltip=tooltip, small=True, standout=True)
+        if self.split_actions:
+            self._action_layout.addWidget(button)
+        else:
+            self._layout.addWidget(button)
+        return button
 
     def add_plus(self) -> QtImagePushButton:
         """Add plus button."""
-        button = self.add_button("add")
-        button.clicked.connect(self.on_add_click)
-        return button
+        self._plus_btn = self.add_button("add")
+        self._plus_btn.clicked.connect(self._handle_add_click)
+        self.has_action = True
+        return self._plus_btn
 
-    def on_add_click(self) -> None:
+    def _handle_add_click(self) -> None:
         """Handle add click."""
         text = hp.get_text(self, "Type-in new label.", "New label")
         if text:
             self.add_tag(text, allow_action=self.allow_action)
             self.evt_plus_clicked.emit()
 
+    def add_clear(self) -> QtImagePushButton:
+        """Add plus button."""
+        self._clear_btn = self.add_button("cross")
+        self._clear_btn.clicked.connect(self.clear_selection)
+        self.has_action = True
+        return self._clear_btn
+
     @Slot(str, bool)  # type: ignore[misc]
     def _tag_changed(self, hash_id: str, state: bool) -> None:
         """Tag was checked or unchecked."""
         self.evt_changed.emit(hash_id, state)
+        self.evt_checked.emit(self.selected_options)
 
     @property
     def selected(self) -> list[str]:
@@ -254,6 +325,15 @@ class QtTagManager(QWidget):
         for hash_id, tag in self.widgets.items():
             if tag.active:
                 selected.append(hash_id)
+        return selected
+
+    @property
+    def selected_options(self) -> list[str]:
+        """Get list of selected tags."""
+        selected = []
+        for _hash_id, tag in self.widgets.items():
+            if tag.active:
+                selected.append(tag.label.text())
         return selected
 
 
@@ -272,14 +352,21 @@ if __name__ == "__main__":  # pragma: no cover
         for i in range(5):
             mgr.add_tag(f"Tag number: {i}")
         mgr.add_plus()
-        mgr.add_tag("Tag number: 10", allow_selected=False)
+        mgr.add_tag("Tag number: 10", allow_check=False)
         va.addWidget(mgr, stretch=True)
 
         mgr = QtTagManager(allow_action=False)
         for i in range(5):
+            mgr.add_tag(f"Tag number: {i}", hide_check=False)
+        mgr.add_plus()
+        mgr.add_tag("Tag number: 10", allow_check=False)
+        va.addWidget(mgr, stretch=True)
+
+        mgr = QtTagManager(allow_action=False, flow=False)
+        for i in range(5):
             mgr.add_tag(f"Tag number: {i}")
         mgr.add_plus()
-        mgr.add_tag("Tag number: 10", allow_selected=False)
+        mgr.add_tag("Tag number: 10", allow_check=False)
         va.addWidget(mgr, stretch=True)
 
         widget = QtTagButton("Tag 1", "TEST", frame)
