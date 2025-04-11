@@ -1873,6 +1873,7 @@ def make_h_layout(
     spacing: int | None = None,
     margin: int | tuple[int, int, int, int] | None = None,
     alignment: Qt.AlignmentFlag | None = None,
+    widget_alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
     parent: Qw.QWidget | None = None,
@@ -1891,6 +1892,7 @@ def make_h_layout(
         stretch_id=stretch_id,
         stretch_ratio=stretch_ratio,
         alignment=alignment,
+        widget_alignment=widget_alignment,
         stretch_before=stretch_before,
         stretch_after=stretch_after,
     )
