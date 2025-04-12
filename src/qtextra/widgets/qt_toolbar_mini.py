@@ -151,8 +151,8 @@ class QtMiniToolbar(QFrame):
 
     def insert_button(self, button: QtImagePushButton, index: int = 0, set_size: bool = True) -> QtImagePushButton:
         """Insert any button at specified position."""
-        if hasattr(button, "set_size") and set_size:
-            button.set_size((26, 26))
+        if hasattr(button, "set_qta_size") and set_size:
+            button.set_qta_size((26, 26))
         self.layout_.insertWidget(index, button, alignment=Qt.AlignmentFlag.AlignCenter)
         self._update_max_size(button)
         return button

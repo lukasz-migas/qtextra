@@ -49,16 +49,16 @@ class QtCheckCollapsible(QCollapsible):
         self.layout().addLayout(layout)
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self._set_icon()
+        self._update_icon()
 
         content = QWidget()
         layout = hp.make_form_layout(parent=content)
         layout.setContentsMargins(2, 2, 2, 2)
         self.setContent(content)
         with suppress(RuntimeError):
-            THEMES.evt_theme_icon_changed.connect(self._set_icon)
+            THEMES.evt_theme_icon_changed.connect(self._update_icon)
 
-    def _set_icon(self) -> None:
+    def _update_icon(self) -> None:
         self.setExpandedIcon(hp.make_qta_icon("chevron_down"))
         self.setCollapsedIcon(hp.make_qta_icon("chevron_up"))
 
@@ -98,6 +98,11 @@ class QtCheckCollapsible(QCollapsible):
             self._content.layout().addRow(label, widget)
         else:
             self._content.layout().addRow(label)
+
+    # Alias methods to offer Qt-like interface
+    setCheckboxVisible = set_checkbox_visible
+    setIconVisible = set_icon_visible
+    setWarningVisible = set_warning_visible
 
 
 if __name__ == "__main__":  # pragma: no cover

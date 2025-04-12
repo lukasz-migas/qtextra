@@ -38,7 +38,6 @@ from qtpy.QtWidgets import (
 from superqt.sliders import QRangeSlider
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_button_radio import QtModePushButton
 
 blurb = """
 <h3>Heading</h3>
@@ -171,9 +170,5 @@ class QtSampleWidget(QWidget):
         lay.addLayout(hbox)
 
         hbox = QHBoxLayout()
-        hbox.addWidget(QtModePushButton(None, "move_back"))
-        hbox.addWidget(QtModePushButton(None, "shuffle"))
-        hbox.addWidget(QtModePushButton(None, "delete_shape"))
-        hbox.addWidget(QtModePushButton(None, "move_front"))
         hbox.addStretch(1)
         lay.addLayout(hbox)

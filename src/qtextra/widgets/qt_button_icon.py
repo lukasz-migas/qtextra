@@ -148,6 +148,15 @@ class QtImagePushButton(QPushButton, QtaMixin):
             paint.setFont(font)
             paint.drawText(rect, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft, text)
 
+    # Alias methods to offer Qt-like interface
+    _onToggle = _on_toggle
+    setCount = set_count
+    setTransparent = set_transparent
+    setToggleQta = set_toggle_qta
+    onClick = on_click
+    onRightClick = on_right_click
+    connectToRightClick = connect_to_right_click
+
 
 class QtTogglePushButton(QtImagePushButton):
     """Toggle button."""
@@ -178,6 +187,11 @@ class QtTogglePushButton(QtImagePushButton):
         if changed:
             self.evt_toggled.emit(value)
 
+    def set_state(self, state: bool, trigger: bool = True) -> None:
+        """Set state."""
+        with hp.qt_signals_blocked(self, block_signals=not trigger):
+            self.state = state
+
     def auto_connect(self) -> None:
         """Automatically connect."""
         self.evt_click.connect(self.toggle_state)
@@ -186,10 +200,10 @@ class QtTogglePushButton(QtImagePushButton):
         """Toggle state."""
         self.state = not self.state
 
-    def set_state(self, state: bool, trigger: bool = True) -> None:
-        """Set state."""
-        with hp.qt_signals_blocked(self, block_signals=not trigger):
-            self.state = state
+    # Alias methods to offer Qt-like interface
+    setState = set_state
+    autoConnect = auto_connect
+    toggleState = toggle_state
 
 
 class QtAnimationPlayButton(QtTogglePushButton):
@@ -200,8 +214,6 @@ class QtAnimationPlayButton(QtTogglePushButton):
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        # self._reverse = False
-        # self.reverse = False
 
     @property
     def playing(self) -> bool:
@@ -211,20 +223,6 @@ class QtAnimationPlayButton(QtTogglePushButton):
     @playing.setter
     def playing(self, state: bool) -> None:
         self.state = state
-
-    # @property
-    # def reverse(self) -> bool:
-    #     """Get reverse state."""
-    #     return self._reverse
-    #
-    # @reverse.setter
-    # def reverse(self, state: bool) -> None:
-    #     from qtextra.helpers import polish_widget
-    #
-    #     self._reverse = state
-    #     self.set_qta("arrow_left" if state else "arrow_right")
-    #     self.setProperty("reverse", str(state))
-    #     polish_widget(self)
 
 
 class QtPauseButton(QtTogglePushButton):
@@ -469,6 +467,8 @@ class QtMinimizeButton(QtTogglePushButton):
 
 
 class QtBoolButton(QtTogglePushButton):
+    """Boolean button."""
+
     ICON_ON = "true"
     ICON_OFF = "false"
 
@@ -509,7 +509,7 @@ class QtMultiStatePushButton(QtImagePushButton):
         """Set state."""
         self.state = state
 
-    def set_menu(self) -> None:
+    def set_and_show_menu(self) -> None:
         """Set menu."""
         menu = hp.make_menu(self)
         for state, label in self.STATE_TO_OPTION.items():
@@ -525,7 +525,7 @@ class QtMultiStatePushButton(QtImagePushButton):
 
     def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
-        self.set_menu()
+        self.set_and_show_menu()
         super().enterEvent(event)  # type: ignore[arg-type]
 
     def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
@@ -533,6 +533,10 @@ class QtMultiStatePushButton(QtImagePushButton):
         self._menu.close()  # type: ignore[union-attr]
         self._menu = None
         super().leaveEvent(event)
+
+    # Alias methods to offer Qt-like interface
+    setAndShowMenu = set_and_show_menu
+    setState = set_state
 
 
 class QtPriorityButton(QtMultiStatePushButton):
@@ -585,8 +589,6 @@ class QtToolbarPushButton(QtImagePushButton):
 
     panel_widget: QWidget | None = None
     about_widget: QWidget | None = None
-
-    # evt_hover = Signal(bool)
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
@@ -685,6 +687,12 @@ class QtToolbarPushButton(QtImagePushButton):
         self.opacity_anim.stop()
         self.opacity.setOpacity(1.0)
 
+    # Alias methods to offer Qt-like interface
+    setIndicator = set_indicator
+    _getPosition = _get_position
+    startPulse = start_pulse
+    stopPulse = stop_pulse
+
 
 class QtLabelledToolbarPushButton(QWidget):
     """Push button with label."""
@@ -707,6 +715,10 @@ class QtLabelledToolbarPushButton(QWidget):
     def set_qta(self, name: str, **kwargs: ty.Any) -> None:
         """Set icon."""
         self.image_btn.set_qta(name, **kwargs)
+
+    # Alias methods to offer Qt-like interface
+    setQta = set_qta
+    setLabel = set_label
 
 
 if __name__ == "__main__":  # pragma: no cover

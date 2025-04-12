@@ -34,11 +34,11 @@ if __name__ == "__main__":  # pragma: no cover
 
         from qtextra.utils.dev import qframe
 
-        app, frame, ha = qframe()
+        app, frame, ha = qframe(False)
 
         widget = QtElidingLabel(
             parent=frame,
-            text="This is a lot of text that should be cut because its way too long for such a short label",
+            text="This is a lot of text that should be cut because its way too long for such a short label\n" * 5,
             multiline=True,
         )
 

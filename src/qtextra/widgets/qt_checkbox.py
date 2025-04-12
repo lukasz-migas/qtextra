@@ -13,5 +13,4 @@ class QtTriCheckBox(QCheckBox):
         """On clicked."""
         state = self.checkState()
         new_state = Qt.CheckState.Unchecked if state == Qt.CheckState.Checked else Qt.CheckState.Checked
-        print("current", state, new_state)
         self.setCheckState(new_state)

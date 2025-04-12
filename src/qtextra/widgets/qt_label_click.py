@@ -114,11 +114,11 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qframe
 
     def _test():
-        pass
+        print("clicked")
 
     app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
-    btn1 = QtClickableLabel("test text", frame)
+    btn1 = QtClickableLabel("Test that will be underlined when hovered over", frame)
     btn1.evt_clicked.connect(_test)
     ha.addWidget(btn1, stretch=True)
 

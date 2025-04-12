@@ -47,8 +47,12 @@ class QtSearchableComboBox(QComboBox):
         super().removeItem(index)
         self.completer_object.setModel(self.model())
 
+    # Alias methods to offer Qt-like interface
+    _textActivated = _text_activated
+    onActivated = on_activated
 
-def add_search_to_combobox(combo: QComboBox) -> QComboBox:
+
+def add_search_to_combobox(combo: QComboBox) -> None:
     """Add search to combobox."""
     combo.setEditable(True)
     completer_object = QCompleter()

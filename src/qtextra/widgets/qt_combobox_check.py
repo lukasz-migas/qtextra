@@ -80,6 +80,12 @@ class QtCheckableComboBox(QComboBox):
                 if index != -1:
                     self.setItemChecked(index, True)
 
+    # Alias methods to offer Qt-like interface
+    checkedData = checked_data
+    checkedTexts = checked_texts
+    getChecked = get_checked
+    setCheckedTexts = set_checked_texts
+
 
 if __name__ == "__main__":  # pragma: no cover
     import sys

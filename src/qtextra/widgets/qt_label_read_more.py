@@ -30,7 +30,7 @@ class QReadMoreLessLabel(QWidget):
 
         self.explanation_text_left = QLabel(text_left, self)
         self.explanation_text_left.setWordWrap(True)
-        self.explanation_text_left.setTextFormat(Qt.RichText)
+        self.explanation_text_left.setTextFormat(Qt.TextFormat.RichText)
         self.explanation_layout.addWidget(self.explanation_text_left, 50)
 
         # Vertical Line Break
@@ -39,7 +39,7 @@ class QReadMoreLessLabel(QWidget):
 
         self.explanation_text_right = QLabel(text_right, self)
         self.explanation_text_right.setWordWrap(True)
-        self.explanation_text_right.setTextFormat(Qt.RichText)
+        self.explanation_text_right.setTextFormat(Qt.TextFormat.RichText)
         self.explanation_layout.addWidget(self.explanation_text_right, 50)
 
         if self.readmore_text is not None and self.readmore_text.strip() == "":
@@ -63,13 +63,13 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _make_text():
         return """
-    Now it is time to denoise the previously selected and cropped images.
+    You can use this widget to create a label that can be expanded or collapsed.
     <br><br>
-    Some info
+    Some info which can take a little bit of space
     <moreless>
-    Some more text
+    Some more text that will be hidden
     <split>
-    Even some more text
+    Even some more text and even more text
     """
 
     def _main():  # type: ignore[no-untyped-def]

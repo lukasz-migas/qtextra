@@ -85,10 +85,10 @@ class QtFilterEdit(QWidget):
         self.evt_filters_changed.emit(self.get_filters(), self.mode)
         self.text_edit.setText("")
 
-    def on_remove(self, hash_id: str) -> None:
+    def on_remove(self, text: str) -> None:
         """Remove filter."""
         filters = self.get_filters()
-        index = filters.index(hash_id)
+        index = filters.index(text)
         self._filter_layout.removeWidgetOrLayout(index)
         self.evt_filters_changed.emit(self.get_filters(), self.mode)
 
@@ -121,6 +121,14 @@ class QtFilterEdit(QWidget):
     def emit_current_filters(self) -> None:
         """Emit current filters."""
         self.evt_filters_changed.emit(self.get_filters(current=True), self.mode)
+
+    # Alias methods to offer Qt-like interface
+    getFilters = get_filters
+    addFilter = add_filter
+    onAdd = on_add
+    onRemove = on_remove
+    onRemoveAll = on_remove_all
+    emitCurrentFilters = emit_current_filters
 
 
 if __name__ == "__main__":  # pragma: no cover

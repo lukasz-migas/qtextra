@@ -3,6 +3,7 @@
 This module is heavily inspired by napari's implementation which minimised size of the title bar while making it quite
 visually appealing.
 """
+
 from functools import reduce
 from operator import ior
 from typing import List, Optional
@@ -46,10 +47,10 @@ class QtDockedWidget(QDockWidget):
         self.name = name
 
         areas = {
-            "left": Qt.LeftDockWidgetArea,
-            "right": Qt.RightDockWidgetArea,
-            "top": Qt.TopDockWidgetArea,
-            "bottom": Qt.BottomDockWidgetArea,
+            "left": Qt.DockWidgetArea.LeftDockWidgetArea,
+            "right": Qt.DockWidgetArea.RightDockWidgetArea,
+            "top": Qt.DockWidgetArea.TopDockWidgetArea,
+            "bottom": Qt.DockWidgetArea.BottomDockWidgetArea,
         }
         if area not in areas:
             raise ValueError(f"area argument must be in {list(areas.keys())}")

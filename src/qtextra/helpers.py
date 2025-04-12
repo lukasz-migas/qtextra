@@ -1179,7 +1179,7 @@ def make_qta_btn(
     if tooltip:
         widget.setToolTip(tooltip)
     if size and len(size) == 2:
-        widget.set_size(size)
+        widget.set_qta_size(size)
     if flat:
         widget.setFlat(flat)
         widget.setProperty("flat", True)
@@ -1239,7 +1239,7 @@ def make_lock_btn(
     elif large:
         widget.set_large()
     if size and len(size) == 2:
-        widget.set_size(size)
+        widget.set_qta_size(size)
     if tooltip:
         widget.setToolTip(tooltip)
     if standout:

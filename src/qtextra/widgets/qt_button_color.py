@@ -145,12 +145,12 @@ class QtColorSwatch(QFrame):
         if initial_color is not None:
             self.set_color(initial_color)
         if add_frame:
-            self.setFrameShape(QFrame.Box)
+            self.setFrameShape(QFrame.Shape.Box)
             self.setLineWidth(2)
 
-    def set_enabled(self, enabled: bool) -> None:
+    def setEnabled(self, enabled: bool) -> None:
         """Set the enabled state of the widget."""
-        self.setEnabled(enabled)
+        super().setEnabled(enabled)
         self.setCursor(Qt.CursorShape.PointingHandCursor if enabled else Qt.CursorShape.ArrowCursor)
 
     @property
@@ -211,6 +211,10 @@ class QtColorSwatch(QFrame):
             self.evt_color_changed.emit(_color)
         if force:
             self._update_swatch_style(_color)
+
+    # Alias methods to offer Qt-like interface
+    hexColor = hex_color
+    setColor = set_color
 
 
 if __name__ == "__main__":  # pragma: no cover

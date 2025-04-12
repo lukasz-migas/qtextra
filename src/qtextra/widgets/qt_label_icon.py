@@ -29,10 +29,10 @@ class QKeepAspectLabel(QLabel):
     def __init__(self, parent: QWidget | None, path: PathLike):
         super().__init__(parent)
         self.path = path
-        self._set_pixmap()
+        self._setPixmap()
 
     @qdebounced(timeout=100, leading=False)
-    def _set_pixmap(self) -> None:
+    def _setPixmap(self) -> None:
         img = QPixmap(self.path)
         size = self.size()
         pix = img.scaled(size, Qt.AspectRatioMode.KeepAspectRatio)
@@ -40,7 +40,7 @@ class QKeepAspectLabel(QLabel):
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore[override]
         """Resize event."""
-        self._set_pixmap()
+        self._setPixmap()
         return super().resizeEvent(event)
 
 
@@ -75,6 +75,9 @@ class QtActiveIcon(QLabel):
     def set_active(self, active: bool) -> None:
         """Set active state."""
         self.active = active
+
+    # Alias methods to offer Qt-like interface
+    setActive = set_active
 
 
 class QtIconLabel(QLabel):
@@ -162,11 +165,6 @@ class QtQtaTooltipLabel(QtQtaLabel):
             QToolTip.showText(pos, self.toolTip(), self)
         super().enterEvent(event)
 
-    def _remove_dialog(self) -> None:
-        """Remove dialog."""
-        if self._dlg:
-            self._dlg = None
-
 
 class QtQtaHelpLabel(QtQtaLabel):
     """Label."""
@@ -182,11 +180,11 @@ class QtQtaHelpLabel(QtQtaLabel):
         """Override to show tooltips instantly."""
         if self.toolTip() and not self._dlg:
             self._dlg = InfoDialog(self, self.toolTip())
-            self._dlg.evt_close.connect(self._remove_dialog)
+            self._dlg.evt_close.connect(self._removeDialog)
             self._dlg.show_right_of_widget(self)
         super().enterEvent(event)
 
-    def _remove_dialog(self) -> None:
+    def _removeDialog(self) -> None:
         """Remove dialog."""
         if self._dlg:
             self._dlg = None
@@ -238,14 +236,15 @@ class QtStateLabel(QtQtaLabel):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtpy.QtWidgets import QVBoxLayout
+    from qtpy.QtWidgets import QHBoxLayout
 
     from qtextra.assets import QTA_MAPPING, get_icon
-    from qtextra.utils.dev import qframe
+    from qtextra.utils.dev import qframe, theme_toggle_btn
 
-    app, frame, ha = qframe()
+    app, frame, ha = qframe(False)
+    ha.addWidget(theme_toggle_btn(frame))
 
-    lay = QVBoxLayout()
+    lay = QHBoxLayout()
     for i, name in enumerate(QTA_MAPPING.keys()):
         qta_name, qta_kws = get_icon(name)
         qta_kws["scale_factor"] = 1
@@ -254,9 +253,9 @@ if __name__ == "__main__":  # pragma: no cover
         label.setToolTip(f"{name} :: {qta_name}")
         label.set_large()
         lay.addWidget(label)
-        if i % 10 == 0:
+        if i % 20 == 0:
             ha.addLayout(lay)
-            lay = QVBoxLayout()
+            lay = QHBoxLayout()
 
     frame.show()
     frame.setMaximumHeight(400)

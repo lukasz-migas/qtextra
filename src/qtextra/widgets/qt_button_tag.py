@@ -210,6 +210,7 @@ class QtTagManager(QWidget):
         self._layout.setSpacing(2)
         self._layout.setContentsMargins(2, 2, 2, 2)
         self.widgets: dict[str, QtTagButton] = {}
+        self.buttons: dict[str, QWidget] = {}
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def add_tag(
@@ -282,13 +283,14 @@ class QtTagManager(QWidget):
         tag = self.widgets[hash_id]
         tag.tag = new_label
 
-    def add_button(self, object_type: str, tooltip: str = "") -> QtImagePushButton:
+    def add_button(self, icon_name: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
-        button = hp.make_qta_btn(self, object_type, tooltip=tooltip, small=True, standout=True)
+        button = hp.make_qta_btn(self, icon_name, tooltip=tooltip, small=True, standout=True)
         if self.split_actions:
             self._action_layout.addWidget(button)
         else:
             self._layout.addWidget(button)
+        self.buttons[icon_name] = button
         return button
 
     def add_plus(self) -> QtImagePushButton:
@@ -335,6 +337,17 @@ class QtTagManager(QWidget):
             if tag.active:
                 selected.append(tag.label.text())
         return selected
+
+    # Alias methods to offer Qt-like interface
+    addTag = add_tag
+    addTags = add_tags
+    removeTag = remove_tag
+    clearOptions = clear_options
+    clearSelection = clear_selection
+    updateLabel = update_label
+    addButton = add_button
+    addPlus = add_plus
+    addClear = add_clear
 
 
 if __name__ == "__main__":  # pragma: no cover

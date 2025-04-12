@@ -90,7 +90,7 @@ class QtaMixin:
         elif xxlarge:
             self.set_xxlarge()
 
-    def set_size(self, size: ty.Tuple[int, int]) -> None:
+    def set_qta_size(self, size: ty.Tuple[int, int]) -> None:
         """Set maximum size of the icon."""
         size = QSize(*size)  # type: ignore[assignment]
         self.setMinimumSize(size)
@@ -183,3 +183,21 @@ class QtaMixin:
         """Update theme based on event."""
         if event.type == "icon":
             self._update_qta()
+
+    # Alias methods to offer Qt-like interface
+    _setIcon = _set_icon
+    setQta = set_qta
+    _setQtaIcon = _set_qta_icon
+    getIconSizeForName = get_icon_size_for_name
+    setDefaultSize = set_default_size
+    setQtaSize = set_qta_size
+    setXXSmall = set_xxsmall
+    setXSmall = set_xsmall
+    setSmall = set_small
+    setNormal = set_normal
+    setAverage = set_average
+    setMedium = set_medium
+    setLarge = set_large
+    setXLarge = set_xlarge
+    setXXLarge = set_xxlarge
+    setXXXLarge = set_xxxlarge

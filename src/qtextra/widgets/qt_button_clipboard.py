@@ -49,3 +49,6 @@ class QtCopyToClipboardButton(QtImagePushButton):
 
         copy_text_to_clipboard(str(self.text_edit.toPlainText()))
         add_flash_animation(self.text_edit, color=THEMES.get_hex_color("foreground"), duration=500)
+
+    # Alias methods to offer Qt-like interface
+    copyToClipboard = copy_to_clipboard
