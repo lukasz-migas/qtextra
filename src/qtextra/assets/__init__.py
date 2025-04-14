@@ -240,6 +240,9 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "fullscreen": "fa5s.expand",
     "random": "fa5s.random",
     "color_palette": "fa5s.palette",
+    "magic": "mdi6.auto-fix",
+    "approve": "fa5s.thumbs-up",
+    "reject": "fa5s.thumbs-down",
 }
 
 
