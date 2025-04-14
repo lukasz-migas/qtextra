@@ -2296,6 +2296,7 @@ def notification(
     is_closable: bool = False,
     duration: int = 5000,
     icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "info",
+    min_width: int = 0,
 ) -> None:
     """Show notification."""
     from qtextra.widgets.qt_toast_info import TOAST_POSITION_DICT, QtInfoToast
@@ -2308,6 +2309,7 @@ def notification(
         is_closable=is_closable,
         duration=duration,
         parent=parent,
+        min_width=min_width,
     )
 
 

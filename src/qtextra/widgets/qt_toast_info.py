@@ -100,10 +100,8 @@ class QtInfoToast(QFrame):
         self.is_closable = is_closable
         self.position = position
 
-        self.titleLabel = QLabel(self)
-        self.titleLabel.setObjectName("titleLabel")
-        self.contentLabel = QLabel(self)
-        self.contentLabel.setObjectName("contentLabel")
+        self.titleLabel = hp.make_label(self, object_name="titleLabel", bold=True)
+        self.contentLabel = hp.make_label(self, object_name="contentLabel", wrap=True, enable_url=True)
 
         self.closeButton = hp.make_qta_btn(self, "cross", func=self.close)
         self.closeButton.set_normal()
@@ -152,7 +150,7 @@ class QtInfoToast(QFrame):
 
         self.textLayout.addWidget(self.contentLabel, 1, Qt.AlignmentFlag.AlignTop)
         self.contentLabel.setVisible(bool(self.content))
-        self.hBoxLayout.addLayout(self.textLayout)
+        self.hBoxLayout.addLayout(self.textLayout, stretch=True)
 
         # add widget layout
         if self.orientation == Qt.Orientation.Horizontal:
@@ -160,6 +158,7 @@ class QtInfoToast(QFrame):
             self.widgetLayout.setSpacing(10)
         else:
             self.textLayout.addLayout(self.widgetLayout)
+            self.textLayout.addStretch(True)
 
         # add close button to layout
         self.hBoxLayout.addSpacing(12)
@@ -261,9 +260,12 @@ class QtInfoToast(QFrame):
         duration: int = 3000,
         position=ToastPosition.TOP_RIGHT,
         parent=None,
+        min_width: int = 0,
     ):
         """Create new toast."""
         w = QtInfoToast(icon, title, content, orientation, is_closable, duration, position, parent)
+        if min_width > 0:
+            w.setMinimumWidth(min_width)
         w.show()
         return w
 
