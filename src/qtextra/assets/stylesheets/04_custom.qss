@@ -591,3 +591,8 @@ QtOverlay {
     border: 2px solid {{ secondary }};
         border-radius: 10px;
 }
+
+
+QListWidget::item:hover, QListWidget::item:focus {
+    background-color: {{ lighten(highlight, 20) }};
+}

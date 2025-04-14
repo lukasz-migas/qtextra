@@ -147,6 +147,7 @@ class QtSelectionList(QWidget):
 
         self.list_widget = QListWidget(self)
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.list_widget.setWordWrap(True)
         self.list_widget.itemChanged.connect(self.on_selection_changed)
         if self.double_click_to_select:
             self.list_widget.itemDoubleClicked.connect(

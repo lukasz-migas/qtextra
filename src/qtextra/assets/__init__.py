@@ -243,6 +243,7 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "magic": "mdi6.auto-fix",
     "approve": "fa5s.thumbs-up",
     "reject": "fa5s.thumbs-down",
+    "target": "mdi.target",
 }
 
 
