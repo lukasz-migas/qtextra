@@ -249,6 +249,7 @@ class QImageLabel(QLabel):
             self.movie().setScaledSize(QSize(width, h))
 
     def scaledToHeight(self, height: int):
+        """Scale the image to a specific height."""
         if self.isNull():
             return
 
@@ -332,7 +333,7 @@ class QImageLabel(QLabel):
             Qt.TransformationMode.SmoothTransformation,
         )
 
-        painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setClipPath(path)
         painter.drawImage(self.rect(), image)
 

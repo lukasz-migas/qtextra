@@ -185,11 +185,9 @@ class QtTagManager(QWidget):
         parent: QWidget | None = None,
         allow_action: bool = False,
         flow: bool = True,
-        split_actions: bool = False,
     ):
         super().__init__(parent=parent)
         self.allow_action = allow_action
-        self.split_actions = split_actions
 
         layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
         self._layout = hp.make_flow_layout() if flow else QtScrollableHLayoutWidget()
@@ -201,11 +199,8 @@ class QtTagManager(QWidget):
             self._layout.setSpacing(2)
             layout.addWidget(self._layout)
 
-        if split_actions:
-            self._action_layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
-            layout.addLayout(self._action_layout)
-        else:
-            self._action_layout = self._layout
+        self._action_layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
+        layout.addLayout(self._action_layout)
 
         self._layout.setSpacing(2)
         self._layout.setContentsMargins(2, 2, 2, 2)
@@ -238,10 +233,7 @@ class QtTagManager(QWidget):
         widget.evt_action.connect(self.remove_tag)
         widget.evt_checked.connect(self._tag_changed)
 
-        if self.has_action and self.split_actions:
-            self._layout.insertWidget(len(self.widgets), widget)
-        else:
-            self._layout.addWidget(widget)
+        self._layout.addWidget(widget)
         self.widgets[hash_id] = widget
         return hash_id
 
@@ -286,10 +278,7 @@ class QtTagManager(QWidget):
     def add_button(self, icon_name: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
         button = hp.make_qta_btn(self, icon_name, tooltip=tooltip, small=True, standout=True)
-        if self.split_actions:
-            self._action_layout.addWidget(button)
-        else:
-            self._layout.addWidget(button)
+        self._action_layout.addWidget(button)
         self.buttons[icon_name] = button
         return button
 
@@ -379,6 +368,7 @@ if __name__ == "__main__":  # pragma: no cover
         for i in range(5):
             mgr.add_tag(f"Tag number: {i}")
         mgr.add_plus()
+        mgr.add_clear()
         mgr.add_tag("Tag number: 10", allow_check=False)
         va.addWidget(mgr, stretch=True)
 

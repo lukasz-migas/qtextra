@@ -11,11 +11,7 @@ from qtpy.QtCore import Qt
 class QIntOrNoneValidator(QtGui.QIntValidator):
     """Validator that accepts '' as None, and otherwise behaves as QIntValidator."""
 
-    def validate(
-        self,
-        a0: str | None,
-        a1: int,
-    ) -> tuple[QtGui.QValidator.State, str, int]:
+    def validate(self, a0: str | None, a1: int) -> tuple[QtGui.QValidator.State, str, int]:
         if a0 == "":
             return QtGui.QValidator.State.Acceptable, "", a1
         return super().validate(a0, a1)
@@ -24,11 +20,7 @@ class QIntOrNoneValidator(QtGui.QIntValidator):
 class QDoubleOrNoneValidator(QtGui.QDoubleValidator):
     """Validator that accepts '' as None, and otherwise behaves as QDoubleValidator."""
 
-    def validate(
-        self,
-        a0: str | None,
-        a1: int,
-    ) -> tuple[QtGui.QValidator.State, str, int]:
+    def validate(self, a0: str | None, a1: int) -> tuple[QtGui.QValidator.State, str, int]:
         if a0 == "":
             return QtGui.QValidator.State.Acceptable, "", a1
         return super().validate(a0, a1)
@@ -37,11 +29,7 @@ class QDoubleOrNoneValidator(QtGui.QDoubleValidator):
 class QCommaSeparatedValidator(QtGui.QValidator):
     _ChildValidator: QtGui.QValidator
 
-    def validate(
-        self,
-        a0: str | None,
-        a1: int,
-    ) -> tuple[QtGui.QValidator.State, str, int]:
+    def validate(self, a0: str | None, a1: int) -> tuple[QtGui.QValidator.State, str, int]:
         if a0 == "" or a0 is None:
             return QtGui.QValidator.State.Acceptable, "", a1
         if a0.strip().endswith(","):
