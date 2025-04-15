@@ -539,8 +539,8 @@ QtScrollableHLayoutWidget QScrollBar:horizontal {
     margin: 0px;
     padding: 0px;
     border: 0px;
-    min-height: 8px;
-    max-height: 8px;
+    min-height: 10px;
+    max-height: 10px;
 }
 
 QtScrollableHLayoutWidget QScrollBar:up-arrow,
