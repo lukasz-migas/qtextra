@@ -63,7 +63,7 @@ class QtTagButton(QFrame):
     """
 
     evt_action = Signal(str)
-    evt_clicked = Signal()
+    evt_clicked = Signal(str)
     evt_checked = Signal(str, bool)
     _active: bool = False
 
@@ -91,7 +91,7 @@ class QtTagButton(QFrame):
         self.selected = hp.make_qta_label(self, "check")
         self.selected.set_small()
         if not self._allow_selected:
-            self.selected.evt_clicked.connect(self.evt_clicked.emit)
+            self.selected.evt_clicked.connect(self._handle_click)
         self.selected.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.label = QtLeftPillLabel(parent=self, text=label)
@@ -154,8 +154,11 @@ class QtTagButton(QFrame):
             if self._allow_selected:
                 self.active = not self._active
             else:
-                self.evt_clicked.emit()
+                self._handle_click()
         super().mousePressEvent(event)
+
+    def _handle_click(self) -> None:
+        self.evt_clicked.emit(self.hash_id)
 
     def sizeHint(self) -> QSize:
         """Get size hint."""
@@ -173,6 +176,7 @@ class QtTagManager(QWidget):
 
     evt_changed = Signal(str, bool)
     evt_checked = Signal(list)
+    evt_clicked = Signal(str)
     evt_plus_clicked = Signal()
 
     # Widgets
@@ -233,6 +237,7 @@ class QtTagManager(QWidget):
         widget.active = active
         widget.evt_action.connect(self.remove_tag)
         widget.evt_checked.connect(self._tag_changed)
+        widget.evt_clicked.connect(self.evt_clicked.emit)
 
         self._layout.addWidget(widget)
         self.widgets[hash_id] = widget

@@ -81,9 +81,16 @@ class QtFilterEdit(QWidget):
             return
         button = QtTagButton(text, text, allow_selected=False, action_type="delete", action_icon="cross")
         button.evt_action.connect(self.on_remove)
+        button.evt_clicked.connect(self.on_update)
         self._filter_layout.insertWidget(0, button)
         self.evt_filters_changed.emit(self.get_filters(), self.mode)
         self.text_edit.setText("")
+
+    def on_update(self, text: str) -> None:
+        """Update filter."""
+        self.text_edit.setText(text)
+        self.text_edit.setFocus()
+        self.on_remove(text)
 
     def on_remove(self, text: str) -> None:
         """Remove filter."""
@@ -104,7 +111,7 @@ class QtFilterEdit(QWidget):
         for i in range(self._filter_layout.count() - self._n):
             widget = self._filter_layout.get_widget(i)
             if widget:
-                tags.append(widget.tag)
+                tags.append(widget.text)
         if current:
             text = self.text_edit.text()
             if text and text not in tags:
