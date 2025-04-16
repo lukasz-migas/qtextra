@@ -126,12 +126,12 @@ class QtTagButton(QFrame):
         self.active = self._active
 
     @property
-    def tag(self) -> str:
+    def text(self) -> str:
         """Get name of the tag."""
         return self.label.text()
 
-    @tag.setter
-    def tag(self, value: str) -> None:
+    @text.setter
+    def text(self, value: str) -> None:
         self.label.setText(value)
         self.label.setVisible(len(value) > 0)
 
@@ -176,9 +176,9 @@ class QtTagManager(QWidget):
     evt_plus_clicked = Signal()
 
     # Widgets
-    has_action = True
     _plus_btn = None
     _clear_btn = None
+    _filter_edit = None
 
     def __init__(
         self,
@@ -199,7 +199,7 @@ class QtTagManager(QWidget):
             self._layout.setSpacing(2)
             layout.addWidget(self._layout)
 
-        self._action_layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
+        self._action_layout = hp.make_h_layout(parent=self, margin=(2, 0, 0, 0), spacing=0)
         layout.addLayout(self._action_layout)
 
         self._layout.setSpacing(2)
@@ -248,18 +248,6 @@ class QtTagManager(QWidget):
         for tag in options:
             self.add_tag(tag, allow_action=allow_action, allow_check=allow_check, hide_check=hide_check)
 
-    def clear_options(self) -> None:
-        """Clear all options."""
-        for widget in self.widgets.values():
-            widget.deleteLater()
-        self.widgets.clear()
-
-    def clear_selection(self) -> None:
-        """Clear selections."""
-        for widget in self.widgets.values():
-            if widget.active:
-                widget.active = False
-
     @Slot(str)  # type: ignore[misc]
     def remove_tag(self, hash_id: str) -> None:
         """Remove tag."""
@@ -270,10 +258,16 @@ class QtTagManager(QWidget):
             self._layout.removeWidget(widget)
             widget.deleteLater()
 
+    def remove_tags(self) -> None:
+        """Clear all options."""
+        for widget in self.widgets.values():
+            widget.deleteLater()
+        self.widgets.clear()
+
     def update_label(self, hash_id: str, new_label: str) -> None:
         """Update label of specified tag."""
         tag = self.widgets[hash_id]
-        tag.tag = new_label
+        tag.text = new_label
 
     def add_button(self, icon_name: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
@@ -286,7 +280,6 @@ class QtTagManager(QWidget):
         """Add plus button."""
         self._plus_btn = self.add_button("add")
         self._plus_btn.clicked.connect(self._handle_add_click)
-        self.has_action = True
         return self._plus_btn
 
     def _handle_add_click(self) -> None:
@@ -300,8 +293,21 @@ class QtTagManager(QWidget):
         """Add plus button."""
         self._clear_btn = self.add_button("cross")
         self._clear_btn.clicked.connect(self.clear_selection)
-        self.has_action = True
         return self._clear_btn
+
+    def add_filter(self, placeholder: str = "Type-in tag name...", max_width: int = 150) -> None:
+        """Add filter."""
+        self._filter_edit = hp.make_line_edit(
+            self, placeholder=placeholder, func_changed=self._handle_filter_by, func_clear=self._handle_filter_by
+        )
+        if max_width:
+            self._filter_edit.setMaximumWidth(max_width)
+        self._action_layout.addWidget(self._filter_edit)
+
+    def _handle_filter_by(self) -> None:
+        text = self._filter_edit.text()
+        for widget in self.widgets.values():
+            widget.setHidden(text not in widget.text)
 
     @Slot(str, bool)  # type: ignore[misc]
     def _tag_changed(self, hash_id: str, state: bool) -> None:
@@ -310,7 +316,7 @@ class QtTagManager(QWidget):
         self.evt_checked.emit(self.selected_options)
 
     @property
-    def selected(self) -> list[str]:
+    def selected_ids(self) -> list[str]:
         """Get list of selected tags."""
         selected = []
         for hash_id, tag in self.widgets.items():
@@ -324,14 +330,20 @@ class QtTagManager(QWidget):
         selected = []
         for _hash_id, tag in self.widgets.items():
             if tag.active:
-                selected.append(tag.label.text())
+                selected.append(tag.text)
         return selected
+
+    def clear_selection(self) -> None:
+        """Clear selections."""
+        for widget in self.widgets.values():
+            if widget.active:
+                widget.active = False
 
     # Alias methods to offer Qt-like interface
     addTag = add_tag
     addTags = add_tags
     removeTag = remove_tag
-    clearOptions = clear_options
+    removeTags = remove_tags
     clearSelection = clear_selection
     updateLabel = update_label
     addButton = add_button
@@ -353,6 +365,7 @@ if __name__ == "__main__":  # pragma: no cover
         mgr = QtTagManager(allow_action=True)
         for i in range(5):
             mgr.add_tag(f"Tag number: {i}")
+        mgr.add_filter()
         mgr.add_plus()
         mgr.add_tag("Tag number: 10", allow_check=False)
         va.addWidget(mgr, stretch=True)
@@ -367,6 +380,7 @@ if __name__ == "__main__":  # pragma: no cover
         mgr = QtTagManager(allow_action=False, flow=False)
         for i in range(5):
             mgr.add_tag(f"Tag number: {i}")
+        mgr.add_filter()
         mgr.add_plus()
         mgr.add_clear()
         mgr.add_tag("Tag number: 10", allow_check=False)

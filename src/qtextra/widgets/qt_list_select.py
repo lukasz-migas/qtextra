@@ -95,11 +95,14 @@ class QtSelectionList(QWidget):
         self.double_click_to_select = double_click_to_select
         self.init_ui()
 
+    # noinspection PyAttributeOutsideInit
     def init_ui(self) -> None:
         """Initialize the user interface."""
         self._layout = hp.make_form_layout(parent=self)
 
-        self.filter_by = hp.make_line_edit(self, placeholder="Type in text to filter...", func_changed=self.on_filter)
+        self.filter_by = hp.make_line_edit(
+            self, placeholder="Type in text to filter...", func_changed=self.on_filter, func_clear=self.on_filter
+        )
         self.filter_by.setMinimumWidth(200)
         hp.set_expanding_sizer_policy(self.filter_by, horz=True)
         if not self.allow_filter:

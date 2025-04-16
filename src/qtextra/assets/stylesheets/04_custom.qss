@@ -290,11 +290,10 @@ QtTagButton[hide_check="True"] {
     border-radius: 0px;
 }
 
-QtTagButton:hover {
+QtTagButton::hover {
     background-color: {{ darken(foreground, 5) }}
 }
 QtTagButton[active=True]{
-    border: 3px solid {{ darken(success, 5) }};
     background-color: {{ darken(success, 5) }}
 }
 QtTagButton[active=False]{
