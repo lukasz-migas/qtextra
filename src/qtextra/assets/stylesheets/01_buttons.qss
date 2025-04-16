@@ -58,7 +58,7 @@ QtImagePushButton[no_menu=true]:menu-indicator {
 /*  border: 2px solid {{ success }};*/
 /*}*/
 
-QtImagePushButton[with_text=true]{
+QtImagePushButton[with_text="true"]{
     min-width : 60px;
     max-width : 500px;
     max-height : 500px;

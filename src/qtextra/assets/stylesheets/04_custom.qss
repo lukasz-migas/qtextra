@@ -592,3 +592,9 @@ QtOverlay {
 QListWidget::item:hover, QListWidget::item:focus {
     background-color: {{ lighten(highlight, 20) }};
 }
+
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+}

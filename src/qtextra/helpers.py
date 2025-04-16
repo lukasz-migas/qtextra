@@ -2130,7 +2130,7 @@ def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
     widget.setSizePolicy(policy)
 
 
-def make_group_box(parent: Qw.QWidget | None, title: str, is_flat: bool = True) -> Qw.QGroupBox:
+def make_group_box(parent: Qw.QWidget | None, title: str, is_flat: bool = True, bold: bool = False) -> Qw.QGroupBox:
     """Make group box."""
     widget = Qw.QGroupBox(parent)
     widget.setFlat(is_flat)
