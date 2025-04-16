@@ -291,13 +291,13 @@ QtTagButton[hide_check="True"] {
 }
 
 QtTagButton::hover {
-    background-color: {{ darken(foreground, 5) }}
+    background-color: {{ darken(foreground, 5) }};
 }
 QtTagButton[active=True]{
-    background-color: {{ darken(success, 5) }}
+    background-color: {{ darken(success, 5) }};
 }
 QtTagButton[active=False]{
-    background-color: {{ darken(foreground, 5) }}
+    background-color: {{ darken(foreground, 5) }};
 }
 
 QtTagButton > QtIconLabel, QtLeftPillLabel, QtPillActionButton, QtTagButton{
@@ -584,13 +584,10 @@ QtScrollableVLayoutWidget QScrollBar::sub-line:vertical {
     width: 0px;
 }
 
-
-
 QtOverlay {
     border: 2px solid {{ secondary }};
         border-radius: 10px;
 }
-
 
 QListWidget::item:hover, QListWidget::item:focus {
     background-color: {{ lighten(highlight, 20) }};

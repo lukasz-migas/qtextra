@@ -111,37 +111,27 @@ class QtSelectionList(QWidget):
         self.info_label = hp.make_label(self, "")
 
         self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2, icon_size="average")
-        self.toolbar.add_widget(hp.make_qta_btn(self, "toggle_on", "Select all", func=self.on_select_all, average=True))
-        self.toolbar.add_widget(
-            hp.make_qta_btn(self, "toggle_off", "Deselect all", func=self.on_deselect_all, average=True)
+        self.toolbar.add_qta_tool("toggle_on", func=self.on_select_all, average=True, tooltip="Select all items")
+        self.toolbar.add_qta_tool("toggle_off", func=self.on_deselect_all, average=True, tooltip="Deselect all items")
+        self.toolbar.add_qta_tool(
+            "invert_selection",
+            func=self.on_invert_selection,
+            average=True,
+            tooltip="Invert selection",
+            hide=not self.allow_visible_toggle,
         )
-        self.toolbar.add_widget(
-            hp.make_qta_btn(
-                self,
-                "invert_selection",
-                "Invert selection",
-                func=self.on_invert_selection,
-                average=True,
-                hide=not self.allow_visible_toggle,
-            )
+        self.toolbar.add_qta_tool("visible", func=self.on_show_all, average=True, tooltip="Show all items")
+        self.toolbar.add_qta_tool(
+            "visible_off",
+            func=self.on_hide_deselected,
+            average=True,
+            tooltip="Hide deselected items",
+            hide=not self.allow_visible_toggle,
         )
-        self.toolbar.add_widget(
-            hp.make_qta_btn(
-                self, "visible", "Show all", func=self.on_show_all, average=True, hide=not self.allow_visible_toggle
-            ),
-        )
-        self.toolbar.add_widget(
-            hp.make_qta_btn(
-                self,
-                "visible_off",
-                "Hide deselected",
-                func=self.on_hide_deselected,
-                average=True,
-            ),
-        )
-
         self.toolbar.add_widget(self.filter_by, stretch=True)
         self.toolbar.add_widget(self.info_label)
+        self.toolbar.max_size = self.filter_by.minimumHeight() + 2
+
         if not self.allow_filter:
             self.toolbar.add_spacer()
         if not self.allow_toolbar:

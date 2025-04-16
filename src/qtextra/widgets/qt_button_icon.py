@@ -263,7 +263,7 @@ class QtLockButton(QtTogglePushButton):
         self.state = state
 
 
-class QtThemeButton(QtTogglePushButton):
+class QtToggleThemeButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
     ICON_ON = "dark_theme"
@@ -576,6 +576,34 @@ class QtStateButton(QtMultiStatePushButton):
     }
 
 
+class QtThemeButton(QtMultiStatePushButton):
+    """Multi-state button."""
+
+    ICON_ON = "dark_theme"
+    ICON_OFF = "light_theme"
+
+    DEFAULT_STATE = "light"
+    STATE_TO_ICON: ty.ClassVar[dict] = {
+        "light": "light_theme",
+        "dark": "dark_theme",
+    }
+    STATE_TO_OPTION: ty.ClassVar[dict] = {
+        "light": "Light",
+        "dark": "Dark",
+    }
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        THEMES.evt_theme_added.connect(self._update_states)
+
+    def _update_states(self) -> None:
+        """Update states."""
+        for theme in THEMES.available_themes():
+            if theme not in self.STATE_TO_OPTION:
+                self.STATE_TO_OPTION[theme] = theme.capitalize()
+                self.STATE_TO_ICON[theme] = theme
+
+
 class QtToolbarPushButton(QtImagePushButton):
     """Image button."""
 
@@ -763,6 +791,7 @@ if __name__ == "__main__":  # pragma: no cover
         # multi-state
         lay.addWidget(QtPriorityButton(parent=frame, auto_connect=True))
         lay.addWidget(QtStateButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtThemeButton(parent=frame, auto_connect=True))
 
         ha.addWidget(hp.make_v_line())
 

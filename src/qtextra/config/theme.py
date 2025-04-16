@@ -551,7 +551,7 @@ class Themes(ConfigBase):
         if register:
             self.register_themes([name])
 
-    def add_resource(self, name: str):
+    def add_resource(self, name: str) -> None:
         """Add resources to QDir."""
         from qtpy.QtCore import QDir
 

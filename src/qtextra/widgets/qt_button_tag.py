@@ -188,6 +188,7 @@ class QtTagManager(QWidget):
     ):
         super().__init__(parent=parent)
         self.allow_action = allow_action
+        self.case_sensitive = False
 
         layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
         self._layout = hp.make_flow_layout() if flow else QtScrollableHLayoutWidget()
@@ -235,6 +236,7 @@ class QtTagManager(QWidget):
 
         self._layout.addWidget(widget)
         self.widgets[hash_id] = widget
+        self._handle_filter_by()
         return hash_id
 
     def add_tags(
@@ -278,6 +280,9 @@ class QtTagManager(QWidget):
 
     def add_plus(self) -> QtImagePushButton:
         """Add plus button."""
+        if self._plus_btn is not None:
+            raise ValueError("Add button already exists.")
+
         self._plus_btn = self.add_button("add")
         self._plus_btn.clicked.connect(self._handle_add_click)
         return self._plus_btn
@@ -291,12 +296,21 @@ class QtTagManager(QWidget):
 
     def add_clear(self) -> QtImagePushButton:
         """Add plus button."""
+        if self._clear_btn is not None:
+            raise ValueError("Clear button already exists.")
+
         self._clear_btn = self.add_button("cross")
         self._clear_btn.clicked.connect(self.clear_selection)
         return self._clear_btn
 
-    def add_filter(self, placeholder: str = "Type-in tag name...", max_width: int = 150) -> None:
+    def add_filter(
+        self, placeholder: str = "Type-in tag name...", max_width: int = 150, case_sensitive: bool = False
+    ) -> None:
         """Add filter."""
+        if self._filter_edit is not None:
+            raise ValueError("Filter edit already exists.")
+
+        self.case_sensitive = case_sensitive
         self._filter_edit = hp.make_line_edit(
             self, placeholder=placeholder, func_changed=self._handle_filter_by, func_clear=self._handle_filter_by
         )
@@ -305,9 +319,23 @@ class QtTagManager(QWidget):
         self._action_layout.addWidget(self._filter_edit)
 
     def _handle_filter_by(self) -> None:
+        if self._filter_edit is None:
+            return
+
+        if self.case_sensitive:
+            self._handle_case_sensitive_filter_by()
+        else:
+            self._handle_case_insensitive_filter_by()
+
+    def _handle_case_sensitive_filter_by(self) -> None:
         text = self._filter_edit.text()
         for widget in self.widgets.values():
             widget.setHidden(text not in widget.text)
+
+    def _handle_case_insensitive_filter_by(self) -> None:
+        text = self._filter_edit.text().lower()
+        for widget in self.widgets.values():
+            widget.setHidden(text not in widget.text.lower())
 
     @Slot(str, bool)  # type: ignore[misc]
     def _tag_changed(self, hash_id: str, state: bool) -> None:
