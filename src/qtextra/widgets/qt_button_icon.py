@@ -263,7 +263,7 @@ class QtLockButton(QtTogglePushButton):
         self.state = state
 
 
-class QtToggleThemeButton(QtTogglePushButton):
+class QtThemeButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
     ICON_ON = "dark_theme"
@@ -576,7 +576,7 @@ class QtStateButton(QtMultiStatePushButton):
     }
 
 
-class QtThemeButton(QtMultiStatePushButton):
+class QtMultiThemeButton(QtMultiStatePushButton):
     """Multi-state button."""
 
     ICON_ON = "dark_theme"
@@ -786,12 +786,14 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtPinButton(parent=frame, auto_connect=True))
         lay.addWidget(QtFullscreenButton(parent=frame, auto_connect=True))
         lay.addWidget(QtMinimizeButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtThemeButton(parent=frame, auto_connect=True))
         lay.addWidget(QtBoolButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtAndOrButton(parent=frame, auto_connect=True))
 
         # multi-state
         lay.addWidget(QtPriorityButton(parent=frame, auto_connect=True))
         lay.addWidget(QtStateButton(parent=frame, auto_connect=True))
-        lay.addWidget(QtThemeButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtMultiThemeButton(parent=frame, auto_connect=True))
 
         ha.addWidget(hp.make_v_line())
 
