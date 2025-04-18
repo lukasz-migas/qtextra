@@ -74,7 +74,7 @@ dev = [
 ]
 docs = [
     "mkdocs-macros-plugin ==1.3.7",
-    "mkdocs-material ==9.5.49",
+    "mkdocs-material ==9.6.12",
     "mkdocstrings ==0.27.0",
     "mkdocstrings-python ==1.13.0",
     "qtextra[console,sentry]",
