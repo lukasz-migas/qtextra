@@ -104,7 +104,7 @@ class QtFilterEdit(QWidget):
         for i in range(self._filter_layout.count() - self._n):
             widget = self._filter_layout.get_widget(i)
             if widget:
-                tags.append(widget.tag)
+                tags.append(widget.text)
         if current:
             text = self.text_edit.text()
             if text and text not in tags:
