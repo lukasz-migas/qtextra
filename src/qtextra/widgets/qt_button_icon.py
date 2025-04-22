@@ -756,14 +756,13 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main() -> None:  # type: ignore[no-untyped-def]
         from qtextra.assets import QTA_MAPPING
-        from qtextra.utils.dev import qdev, qmain, theme_toggle_btn
+        from qtextra.utils.dev import qdev, qmain
 
         app, frame, va = qmain(False)
         frame.setMinimumSize(600, 600)
 
         dev = qdev(frame)
         va.addWidget(dev)
-        va.addWidget(theme_toggle_btn(frame))
 
         ha = QHBoxLayout()
         va.addLayout(ha)

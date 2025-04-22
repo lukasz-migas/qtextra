@@ -239,10 +239,9 @@ if __name__ == "__main__":  # pragma: no cover
     from qtpy.QtWidgets import QHBoxLayout
 
     from qtextra.assets import QTA_MAPPING, get_icon
-    from qtextra.utils.dev import qframe, theme_toggle_btn
+    from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe(False)
-    ha.addWidget(theme_toggle_btn(frame))
 
     lay = QHBoxLayout()
     for i, name in enumerate(QTA_MAPPING.keys()):

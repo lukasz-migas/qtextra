@@ -49,7 +49,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
     from qtextra.widgets.qt_select_multi import QtMultiSelect
-    from qtextra.widgets.qt_separator import QtHorzLine, QtVertLine
+    from qtextra.widgets.qt_separator import QtHorzLine, QtHorzLineWithText, QtVertLine
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
 
@@ -369,19 +369,25 @@ def make_label(
     activated_func: Callback | None = None,
     click_func: Callback | None = None,
     elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
+    vertical: bool = False,
     **kwargs: ty.Any,
 ) -> QtClickLabel:
     """Make QLabel element."""
     from qtextra.widgets.qt_label_click import QtClickLabel
+    from qtextra.widgets.qt_label_vertical import QtVerticalLabel
 
     tooltip = kwargs.get("description", tooltip)
     text = kwargs.get("default", text)
 
-    widget = QtClickLabel(parent)
+    if vertical:
+        widget = QtVerticalLabel(parent)
+        click_func = None
+    else:
+        widget = QtClickLabel(parent)
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
-        widget.setTextFormat(Qt.RichText)  # type: ignore[attr-defined]
+        widget.setTextFormat(Qt.TextFormat.RichText)
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)
         if not activated_func:
             widget.setOpenExternalLinks(True)
@@ -1779,23 +1785,12 @@ def make_toggle(
 
 def make_h_line_with_text(
     label: str, parent: Qw.QWidget | None = None, bold: bool = False, position: str = "center", **kwargs: ty.Any
-):
+) -> QtHorzLineWithText:
     """Make horizontal line with text."""
-    label_widget = make_label(parent, label, bold=bold, **kwargs)
-    if position == "center":
-        widgets = (make_h_line(parent), label_widget, make_h_line(parent))
-        stretch_ids = (0, 2)
-    elif position == "left":
-        widgets = (label_widget, make_h_line(parent))
-        stretch_ids = (1,)
-    else:
-        widgets = (make_h_line(parent), label_widget)
-        stretch_ids = (0,)
-    return make_h_layout(
-        *widgets,
-        stretch_id=stretch_ids,
-        spacing=2,
-    )
+    from qtextra.widgets.qt_separator import QtHorzLineWithText
+
+    widget = QtHorzLineWithText(parent=parent, label=label, bold=bold, position=position, **kwargs)
+    return widget
 
 
 def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzLine:

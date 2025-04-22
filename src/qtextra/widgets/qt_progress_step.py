@@ -138,11 +138,10 @@ if __name__ == "__main__":  # pragma: no cover
 
     from qtpy.QtWidgets import QPushButton
 
-    from qtextra.utils.dev import qframe, theme_toggle_btn
+    from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
-    ha.addWidget(theme_toggle_btn(frame))
 
     progressbar = QtStepProgressBar()
     progressbar.labels = [

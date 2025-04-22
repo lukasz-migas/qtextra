@@ -389,11 +389,10 @@ if __name__ == "__main__":  # pragma: no cover
     def _main():  # type: ignore[no-untyped-def]
         import sys
 
-        from qtextra.utils.dev import qframe, theme_toggle_btn
+        from qtextra.utils.dev import qframe
 
         app, frame, va = qframe(False)
         frame.setMinimumSize(400, 400)
-        va.addWidget(theme_toggle_btn(frame), stretch=True)
 
         mgr = QtTagManager(allow_action=True)
         for i in range(5):

@@ -254,10 +254,9 @@ class QtMiniToolbar(QFrame):
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.utils.dev import qframe, theme_toggle_btn
+    from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe(False)
-    ha.addWidget(theme_toggle_btn(frame))
 
     wdg = QtMiniToolbar(None, orientation=Qt.Orientation.Horizontal)
     for icon in ["home", "settings", "help", "info", "warning", "error"]:

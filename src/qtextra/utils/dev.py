@@ -125,6 +125,7 @@ def qframe(
     set_style: bool = True,
     modules: tuple[str, ...] = DEFAULT_MODULES,
     dev: bool = True,
+    toggle: bool = True,
 ) -> tuple[QApplication, QWidget, QLayout]:
     """Create frame widget."""
     from qtpy import QtWidgets
@@ -149,6 +150,8 @@ def qframe(
         from koyo.hooks import install_debugger_hook
 
         install_debugger_hook()
+    if toggle and layout is not None:
+        layout.addWidget(theme_toggle_btn(frame))
     return app, frame, layout
 
 

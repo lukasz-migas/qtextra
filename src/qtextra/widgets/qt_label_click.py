@@ -17,6 +17,35 @@ class QtClickLabel(QtW.QLabel):
         return super().mouseReleaseEvent(ev)
 
 
+class QtVerticalLabel(QtW.QLabel):
+    """Rotated label."""
+
+    def __init__(self, *args):
+        QtW.QLabel.__init__(self, *args)
+
+    def paintEvent(self, event) -> None:
+        painter = QtGui.QPainter(self)
+        painter.translate(0, self.height())
+        painter.rotate(-90)
+        # calculate the size of the font
+        fm = QtGui.QFontMetrics(painter.font())
+        xoffset = int(fm.boundingRect(self.text()).width() / 2)
+        yoffset = int(fm.boundingRect(self.text()).height() / 2)
+        x = int(self.width() / 2) + yoffset
+        y = int(self.height() / 2) - xoffset
+        # because we rotated the label, x affects the vertical placement, and y affects the horizontal
+        painter.drawText(y, x, self.text())
+        painter.end()
+
+    def minimumSizeHint(self):
+        size = super().minimumSizeHint()
+        return QtCore.QSize(size.height(), size.width())
+
+    def sizeHint(self):
+        size = super().sizeHint()
+        return QtCore.QSize(size.height(), size.width())
+
+
 class QtClickableLabel(QtW.QLabel):
     """A label widget that behaves like a button."""
 
@@ -118,9 +147,9 @@ if __name__ == "__main__":  # pragma: no cover
 
     app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
-    btn1 = QtClickableLabel("Test that will be underlined when hovered over", frame)
-    btn1.evt_clicked.connect(_test)
-    ha.addWidget(btn1, stretch=True)
+    widget = QtClickableLabel("Test that will be underlined when hovered over", frame)
+    widget.evt_clicked.connect(_test)
+    ha.addWidget(widget, stretch=True)
 
     frame.show()
     sys.exit(app.exec_())
