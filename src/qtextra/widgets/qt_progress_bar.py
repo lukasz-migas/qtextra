@@ -139,11 +139,10 @@ if __name__ == "__main__":  # pragma: no cover
     def _main():  # type: ignore[no-untyped-def]
         import sys
 
-        from qtextra.utils.dev import qmain, theme_toggle_btn
+        from qtextra.utils.dev import qframe
 
-        app, frame, ha = qmain(False)
+        app, frame, ha = qframe(False)
         frame.setMinimumSize(600, 600)
-        ha.addWidget(theme_toggle_btn(frame))
 
         widget = QtLineProgressBar(parent=frame)
         widget.start(height=50)

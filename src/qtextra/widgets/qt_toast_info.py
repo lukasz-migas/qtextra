@@ -619,7 +619,7 @@ if __name__ == "__main__":  # pragma: no cover
         from random import choice
 
         from qtextra.config import THEMES
-        from qtextra.utils.dev import qframe, theme_toggle_btn
+        from qtextra.utils.dev import qframe
 
         def _popup_notif() -> None:
             pop = [QtInfoToast.info, QtInfoToast.success, QtInfoToast.warning, QtInfoToast.error, QtInfoToast.critical]
@@ -641,7 +641,6 @@ if __name__ == "__main__":  # pragma: no cover
         btn2 = hp.make_btn(frame, "Create random notification")
         btn2.clicked.connect(_popup_notif)
         ha.addWidget(btn2)
-        ha.addWidget(theme_toggle_btn(frame))
         ha.addStretch(1)
 
         frame.show()

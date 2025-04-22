@@ -261,12 +261,12 @@ class QtSelectionList(QWidget):
             item.setCheckState(Qt.CheckState.Checked if item.text() in checked else current_state)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from qtextra.utils.dev import qmain
+    from qtextra.utils.dev import qframe
 
-    app, frame, ha = qmain(False)
+    app, frame, ha = qframe(False)
     frame.setMinimumSize(600, 600)
 
     wdg = QtSelectionList(frame)
