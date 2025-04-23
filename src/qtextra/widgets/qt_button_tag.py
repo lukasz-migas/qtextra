@@ -204,7 +204,7 @@ class QtTagManager(QWidget):
             self._layout.setSpacing(2)
             layout.addWidget(self._layout)
 
-        self._action_layout = hp.make_h_layout(parent=self, margin=(2, 0, 0, 0), spacing=0)
+        self._action_layout = hp.make_h_layout(margin=(2, 0, 0, 0), spacing=0)
         layout.addLayout(self._action_layout)
 
         self._layout.setSpacing(2)

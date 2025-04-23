@@ -728,7 +728,7 @@ def make_line_edit(
         action = widget.findChild(Qw.QAction)
         if action:
             widget.hide_action = action
-            [action.triggered.connect(func_clear) for func_ in _validate_func(func_clear)]
+            [action.triggered.connect(func_) for func_ in _validate_func(func_clear)]
     if func_changed:
         [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     return widget
