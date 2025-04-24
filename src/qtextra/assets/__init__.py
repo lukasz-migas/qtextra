@@ -89,6 +89,8 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "copy": "fa6.copy",
     "copy_all": "fa6s.copy",
     "sort": "fa5s.sort-amount-up",
+    "sort_ascending": "fa5s.sort-amount-up",
+    "sort_descending": "fa5s.sort-amount-down",
     "graph": "mdi.graph",
     "reload": "mdi6.cached",
     "replace": "msc.replace",

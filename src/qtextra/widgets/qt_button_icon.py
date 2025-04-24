@@ -320,6 +320,16 @@ class QtExpandButton(QtTogglePushButton):
         self.state = state
 
 
+class QtSortButton(QtTogglePushButton):
+    """Button that has chevron point up or down."""
+
+    ICON_ON = "sort_ascending"
+    ICON_OFF = "sort_descending"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+
 class QtToggleButton(QtTogglePushButton):
     """Lock button with open/closed state to indicate current state."""
 
@@ -477,7 +487,7 @@ class QtBoolButton(QtTogglePushButton):
 
 
 class QtMultiStatePushButton(QtImagePushButton):
-    """Play button with multiple states to indicate current state."""
+    """Base class for a multi-state button where options are shown as a QMenu."""
 
     DEFAULT_STATE: str = ""
     STATE_TO_ICON: ty.ClassVar[dict[str, str]]
@@ -540,7 +550,7 @@ class QtMultiStatePushButton(QtImagePushButton):
 
 
 class QtPriorityButton(QtMultiStatePushButton):
-    """Multi-state button."""
+    """Priority button."""
 
     DEFAULT_STATE = "normal"
     STATE_TO_ICON: ty.ClassVar[dict] = {"low": "priority_low", "normal": "priority_normal", "high": "priority_high"}
@@ -557,7 +567,7 @@ class QtPriorityButton(QtMultiStatePushButton):
 
 
 class QtStateButton(QtMultiStatePushButton):
-    """Multi-state button."""
+    """State button."""
 
     DEFAULT_STATE = "info"
     STATE_TO_ICON: ty.ClassVar[dict] = {
@@ -577,7 +587,7 @@ class QtStateButton(QtMultiStatePushButton):
 
 
 class QtMultiThemeButton(QtMultiStatePushButton):
-    """Multi-state button."""
+    """Theme button button."""
 
     ICON_ON = "dark_theme"
     ICON_OFF = "light_theme"
@@ -782,6 +792,7 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtVisibleButton(parent=frame, auto_connect=True))
         lay.addWidget(QtToggleButton(parent=frame, auto_connect=True))
         lay.addWidget(QtExpandButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtSortButton(parent=frame, auto_connect=True))
         lay.addWidget(QtPinButton(parent=frame, auto_connect=True))
         lay.addWidget(QtFullscreenButton(parent=frame, auto_connect=True))
         lay.addWidget(QtMinimizeButton(parent=frame, auto_connect=True))
