@@ -1,4 +1,5 @@
 """Events emitter."""
+
 from qtpy.QtCore import QObject, Signal
 
 try:

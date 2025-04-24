@@ -12,6 +12,7 @@ include LICENSE
 recursive-include tests *
 recursive-include src/qtextra/assets *
 recursive-include src *.typed
+recursive-include examples *
 
 # Always include
 global-include *.pyx

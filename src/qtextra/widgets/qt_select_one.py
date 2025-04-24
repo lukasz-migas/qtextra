@@ -106,7 +106,6 @@ class QtScrollablePickOption(QtPickOptionBase):
 
 if __name__ == "__main__":  # pragma: no cover
     import sys
-    from functools import partial
 
     from qtextra.utils.dev import apply_style, qapplication
 

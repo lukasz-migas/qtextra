@@ -17,12 +17,12 @@ INSTALLED = False
 
 
 __all__ = [
+    "FeedbackDialog",
+    "TelemetryOptInDialog",
     "ask_opt_in",
     "capture_exception",
     "get_sample_event",
     "install_error_monitor",
-    "TelemetryOptInDialog",
-    "FeedbackDialog",
 ]
 
 capture_exception = sentry_sdk.capture_exception

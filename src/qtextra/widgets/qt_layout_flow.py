@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from qtpy.QtCore import (
     QEasingCurve,
     QEvent,
@@ -16,7 +14,7 @@ from qtpy.QtCore import (
     Qt,
     QTimer,
 )
-from qtpy.QtWidgets import QLayout, QLayoutItem, QWidget, QWidgetItem
+from qtpy.QtWidgets import QLayout, QWidget, QWidgetItem
 from superqt import QFlowLayout
 
 

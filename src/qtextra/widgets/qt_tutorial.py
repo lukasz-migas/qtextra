@@ -80,7 +80,7 @@ class QtTutorial(QDialog):
 
     _current = -1
     steps: ty.List[TutorialStep]
-    chevrons: ty.Dict[str, ty.Optional[QWidget]
+    chevrons: ty.Dict[str, ty.Optional[QWidget]]
 
     def __init__(self, parent: ty.Optional[QWidget] = None):
         super().__init__(parent=parent)

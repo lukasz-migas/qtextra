@@ -102,7 +102,7 @@ class QtIndicator(QWidget):
         self.opacity_anim.setDuration(pulse)
         self.opacity_anim.setStartValue(self.START_OPACITY)
         self.opacity_anim.setEndValue(self.END_OPACITY)
-        self.opacity_anim.setLoopCount(max(1, int(round(duration / pulse))))
+        self.opacity_anim.setLoopCount(max(1, round(duration / pulse)))
         self.opacity_anim.finished.connect(self.hide)
         self.opacity_anim.start()
         self.show()

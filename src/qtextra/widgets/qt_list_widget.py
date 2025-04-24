@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 import typing as ty
 from contextlib import contextmanager
 

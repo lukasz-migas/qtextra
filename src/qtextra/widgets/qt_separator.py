@@ -2,7 +2,6 @@
 
 import typing as ty
 
-from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFrame, QWidget
 
 import qtextra.helpers as hp

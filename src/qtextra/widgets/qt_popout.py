@@ -16,7 +16,7 @@ from qtpy.QtCore import (
     Signal,
 )
 from qtpy.QtGui import QColor, QCursor, QIcon, QImage, QPainter, QPixmap
-from qtpy.QtWidgets import QApplication, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QApplication, QGraphicsDropShadowEffect, QHBoxLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.config import is_dark

@@ -89,8 +89,8 @@ class QtStepProgressBar(QWidget):
             return
 
         step_width = busy_rect.width() / number_of_steps
-        x = int(round(self.HORIZONTAL_PADDING + step_width / 2))
-        y = int(round(busy_rect.center().y()))
+        x = round(self.HORIZONTAL_PADDING + step_width / 2)
+        y = round(busy_rect.center().y())
 
         r = QRect(0, 0, round(1.5 * self.RADIUS), round(1.5 * self.RADIUS))
 
@@ -127,7 +127,7 @@ class QtStepProgressBar(QWidget):
                 painter.setPen(progress_color if is_active else text_color)
 
             rect = fm.boundingRect(text)
-            rect.moveCenter(QPoint(int(x), int(round(y + 2 * self.RADIUS))))
+            rect.moveCenter(QPoint(int(x), round(y + 2 * self.RADIUS)))
             painter.setFont(font_text)
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
             x = int(x + step_width)

@@ -1,4 +1,3 @@
-from typing import List
 
 from qtpy.QtCore import QAbstractAnimation, QEasingCurve, QPoint, QPropertyAnimation, pyqtSignal
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QStackedWidget, QWidget

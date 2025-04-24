@@ -6,7 +6,7 @@ import typing as ty
 from contextlib import suppress
 
 from koyo.typing import PathLike
-from qtpy.QtCore import QPoint, QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
 from qtpy.QtGui import QEnterEvent, QPixmap, QResizeEvent
 from qtpy.QtWidgets import QLabel, QToolTip, QWidget
 from superqt.utils import qdebounced

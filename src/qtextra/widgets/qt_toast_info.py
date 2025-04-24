@@ -19,7 +19,7 @@ from qtpy.QtCore import (
     Signal,
 )
 from qtpy.QtGui import QColor, QIcon, QPainter
-from qtpy.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QFrame, QGraphicsOpacityEffect, QHBoxLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.config import is_dark
