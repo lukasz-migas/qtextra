@@ -14,6 +14,14 @@ on:
     - cron: "0 0 * * 0" # every week (for --pre release tests)
 
 jobs:
+  check-manifest:
+    name: Check Manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx run check-manifest
+
+
   test:
     name: Test
     uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@v2
@@ -28,7 +36,7 @@ jobs:
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-        backend: [pyqt5, pyside2]
+        backend: [pyqt5, pyside2, pyqt6]
         exclude:
           # Abort (core dumped) on linux pyqt6, unknown reason
           - platform: ubuntu-latest
@@ -81,12 +89,15 @@ jobs:
             platform: ubuntu-latest
             backend: "pyqt5==5.14.*"
 
-  check-manifest:
-    name: Check Manifest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pipx run check-manifest
+  # now add another job to combine and upload the coverage
+  upload_coverage:
+    if: always()
+    needs: [test]
+    uses: pyapp-kit/workflows/.github/workflows/upload-coverage.yml@v2
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
+
+
 
   deploy_test:
     name: Deploy to PyPI (test)

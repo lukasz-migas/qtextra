@@ -61,8 +61,7 @@ class TutorialStep(BaseModel):
     func: ty.Optional[tuple[ty.Callable, ...]] = None
 
     @field_validator("widget", mode="before")
-    @classmethod
-    def validate_widget(cls, widget: QWidget) -> QWidget:
+    def validate_widget(widget: QWidget) -> QWidget:
         """Validate widget."""
         if not isinstance(widget, QWidget):
             raise ValueError(f"Invalid widget '{widget}'.")
