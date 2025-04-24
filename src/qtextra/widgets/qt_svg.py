@@ -28,14 +28,14 @@ class QtColoredSVGIcon(QIcon):
 
     # Create icon with specific color
     >>> label = QLabel()
-    >>> icon = QtColoredSVGIcon.from_resources('new_points')
-    >>> label.setPixmap(icon.colored('#0934e2', opacity=0.7).pixmap(300, 300))
+    >>> icon = QtColoredSVGIcon.from_resources("new_points")
+    >>> label.setPixmap(icon.colored("#0934e2", opacity=0.7).pixmap(300, 300))
     >>> label.show()
 
     # Create colored icon using theme
     >>> label = QLabel()
-    >>> icon = QtColoredSVGIcon.from_resources('new_points')
-    >>> label.setPixmap(icon.colored(theme='light').pixmap(300, 300))
+    >>> icon = QtColoredSVGIcon.from_resources("new_points")
+    >>> label.setPixmap(icon.colored(theme="light").pixmap(300, 300))
     >>> label.show()
     """
 

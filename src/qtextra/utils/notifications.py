@@ -5,10 +5,11 @@ from __future__ import annotations
 import sys
 import threading
 import warnings
+from collections.abc import Sequence
 from datetime import datetime
 from enum import auto
 from types import TracebackType
-from typing import Callable, List, Optional, Sequence, Tuple, Type, Union
+from typing import Callable, List, Optional, Tuple, Type, Union
 
 from loguru import logger
 from napari.utils.misc import StringEnum

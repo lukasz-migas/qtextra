@@ -97,8 +97,7 @@ jobs:
     secrets:
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
-
-
+  # before we submit to PyPi, let's test that it gets built correctly and we can submit to TestPyPi
   deploy_test:
     name: Deploy to PyPI (test)
     needs: [test, check-manifest]
