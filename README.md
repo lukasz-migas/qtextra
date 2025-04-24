@@ -20,7 +20,7 @@ Components are tested on:
 
 
 This repository is fairly similar in scope to [superqt](https://github.com/pyapp-kit/superqt) which aims to provide a number of useful 
-widgets (in fact we use a couple of them in this library). The main difference is that we aimed to provide a more opinionated 
+widgets (in fact, we use a couple of them in this library). The main difference is that we aim to provide a more opinionated 
 style (with stylesheets available in the [assets](src/qtextra/assets/stylesheets) directory) and focus on providing a wider
 range of widgets.
 
@@ -29,7 +29,7 @@ range of widgets.
 Contributions are always welcome. Please feel free to submit PRs with new features, bug fixes, or documentation improvements.
 
 ```bash
-git clone https://github.com/illumion-io/qtextra.git
+git clone https://github.com/lukasz-migas/qtextra.git
 
 pip install -e .[dev]
 ```
