@@ -199,7 +199,7 @@ pretty = true
 
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.run]
-source = ["qtextra"]
+source = ["src"]
 omit = [
     "**/*_version.py"
 ]
@@ -231,4 +231,6 @@ ignore = [
     "mkdocs.yml",
     "renovate.json",
     "docs/**/*",
+    "examples/**/*",
+    "MANIFEST.in",
 ]
