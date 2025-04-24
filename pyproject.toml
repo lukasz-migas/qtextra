@@ -84,8 +84,8 @@ docs = [
 ]
 
 [project.urls]
-homepage = "https://github.com/illumion-io/qtextra"
-repository = "https://github.com/illumion-io/qtextra"
+homepage = "https://github.com/lukasz-migas/qtextra"
+repository = "https://github.com/lukasz-migas/qtextra"
 
 # same as console_scripts entry point
 # [project.scripts]

@@ -30,7 +30,7 @@ jobs:
       python-version: ${{ matrix.python-version }}
       qt: ${{ matrix.backend }}
       pip-install-pre-release: ${{ github.event_name == 'schedule' }}
-      coverage-upload: artifact
+#      coverage-upload: artifact
     strategy:
       fail-fast: false
       matrix:
@@ -89,13 +89,13 @@ jobs:
             platform: ubuntu-latest
             backend: "pyqt5==5.14.*"
 
-  # now add another job to combine and upload the coverage
-  upload_coverage:
-    if: always()
-    needs: [test]
-    uses: pyapp-kit/workflows/.github/workflows/upload-coverage.yml@v2
-    secrets:
-      codecov_token: ${{ secrets.CODECOV_TOKEN }}
+#  # now add another job to combine and upload the coverage
+#  upload_coverage:
+#    if: always()
+#    needs: [test]
+#    uses: pyapp-kit/workflows/.github/workflows/upload-coverage.yml@v2
+#    secrets:
+#      codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   # before we submit to PyPi, let's test that it gets built correctly and we can submit to TestPyPi
   deploy_test:
