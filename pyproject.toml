@@ -185,20 +185,6 @@ filterwarnings = [
   "ignore:There is no current event loop:DeprecationWarning:",
 ]
 
-# https://mypy.readthedocs.io/en/stable/config_file.html
-[tool.mypy]
-files = "src/**/"
-strict = true
-disallow_any_generics = false
-disallow_subclassing_any = false
-show_error_codes = true
-pretty = true
-
-# # module specific overrides
-# [[tool.mypy.overrides]]
-# module = ["numpy.*",]
-# ignore_errors = true
-
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.run]
 source = ["src"]
@@ -216,6 +202,20 @@ exclude_lines = [
     "\\.\\.\\.",
     "raise NotImplementedError()",
 ]
+# https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+files = "src/**/"
+strict = true
+disallow_any_generics = false
+disallow_subclassing_any = false
+show_error_codes = true
+pretty = true
+
+# # module specific overrides
+# [[tool.mypy.overrides]]
+# module = ["numpy.*",]
+# ignore_errors = true
+
 
 # https://github.com/mgedmin/check-manifest#configuration
 [tool.check-manifest]

@@ -62,7 +62,7 @@ class TaskWidget(QFrame):
             self,
             "",
             alignment=Qt.AlignmentFlag.AlignCenter,
-            object_name="task_info",
+            object_name="task_state",
         )
         self.task_state.setMaximumWidth(90)
 
