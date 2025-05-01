@@ -210,7 +210,7 @@ class TaskInfoDialog(QtDialog):
         """Make panel."""
         self.task_title = hp.make_label(self, "")
         self.task_id = hp.make_label(self, "")
-        self.task_state = hp.make_label(self, "", object_name="task_info")
+        self.task_state = hp.make_label(self, "", object_name="task_state")
 
         self.started_label = hp.make_label(self, "")
         self.finished_label = hp.make_label(self, "")
