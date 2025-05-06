@@ -46,26 +46,35 @@ dependencies = [
 # extras
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
-all = ["console", "sentry", "pyqt6"]
-#notify = ["pyqt-toast-notification"]
+all = [
+    "qtextra[console,sentry,pyqt6]"
+]
 sentry = ["sentry-sdk>2"]
 console = [
     "qtconsole>=4.5.1,!=4.7.6,!=5.4.2",
     "ipykernel>=5.2.0",
 ]
-palette = ["qt-command-palette"]
-reload = ["qtreload"]
 pyside2 = ["pyside2"]
 pyside6 = ["pyside6"]
 pyqt5 = ["pyqt5"]
 pyqt6 = ["pyqt6"]
+# to be removed
+#palette = ["qt-command-palette"]
+#notify = ["pyqt-toast-notification"]
+
+[dependency-groups]
 test = [
     "pytest>=8.1",
     "pytest-cov",
     "pytest-qt",
     "pytest-pretty",
 ]
+reload = [
+    "qtreload"
+]
 dev = [
+    { include-group = "test" },
+    { include-group = "reload" },
     "ipython",
     "mypy",
     "pdbpp",
@@ -73,14 +82,14 @@ dev = [
     "rich",
     "ruff",
     "check-manifest",
-    "qtextra[test,reload]",
 ]
 docs = [
+    "qtextra[console,sentry]",
     "mkdocs-macros-plugin ==1.3.7",
     "mkdocs-material ==9.6.12",
     "mkdocstrings ==0.29.1",
     "mkdocstrings-python ==1.16.10",
-    "qtextra[console,sentry]",
+    "mkdocs-video>=1.5.0",
 ]
 
 [project.urls]
