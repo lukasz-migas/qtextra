@@ -244,4 +244,5 @@ ignore = [
     "docs/**/*",
     "examples/**/*",
     "MANIFEST.in",
+    "uv.lock",
 ]
