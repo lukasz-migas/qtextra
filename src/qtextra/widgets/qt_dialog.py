@@ -49,30 +49,42 @@ class ScreenManager:
         self.widths = [screen.geometry().width() for screen in self.screens]
         self.width = sum(self.widths)
         self.heights = [screen.geometry().height() for screen in self.screens]
-        self.height = sum(self.heights)
+        self.height = max(self.heights)
 
-    def get_minimum_size(self, width: int, height: int) -> tuple[int, int]:
+    @classmethod
+    def get_minimum_size(cls, width: int, height: int) -> tuple[int, int]:
         """Get size that is suggested for current screen sizes."""
-        self.widths.append(width)
-        self.heights.append(height)
-        return np.min(self.widths), np.min(self.heights)
+        obj = cls()
+        obj.widths.append(width)
+        obj.heights.append(height)
+        return np.min(obj.widths), np.min(obj.heights)
 
-    def verify_position(self, point: QPoint, width: int, height: int) -> QPoint:
+    @classmethod
+    def trim_size(cls, width: int, height: int) -> tuple[int, int]:
+        """Trim size of widget/dialog so that it's never bigger than the screen size."""
+        obj = cls()
+        width = min(width, obj.width)
+        height = min(height, obj.height)
+        return width, height
+
+    @classmethod
+    def verify_position(cls, point: QPoint, width: int, height: int) -> QPoint:
         """Verify widget position is within the available geometry."""
+        obj = cls()
         x_left, y_top = point.x(), point.y()
         # verify position horizontally
         if x_left < 0:
             x_left = 0
         x_right = x_left + width
-        if x_right > self.width:
-            x_right = self.width
+        if x_right > obj.width:
+            x_right = obj.width
             x_left = x_right - width
         # verify position vertically
         if y_top < 0:
             y_top = 0
         y_bottom = y_top - height
-        if y_bottom > self.height:
-            y_bottom = self.height
+        if y_bottom > obj.height:
+            y_bottom = obj.height
             y_top = y_bottom - height
         return QPoint(x_left, y_top)
 
