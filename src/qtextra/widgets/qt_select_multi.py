@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typing as ty
 
+from natsort import natsorted
 from qtpy.QtCore import QEvent, QObject, Qt, Signal
 from qtpy.QtGui import QAction
 from qtpy.QtWidgets import QFormLayout, QWidget
@@ -249,6 +250,7 @@ class QtMultiSelect(QWidget):
         func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
         items: dict[str, ty.Any] | None = None,
         n_max: int = 0,
+        sort: bool = False,
         **_kwargs: ty.Any,
     ) -> QtMultiSelect:
         """Init."""
@@ -262,6 +264,9 @@ class QtMultiSelect(QWidget):
             values = value.split(";") if value else []
         else:
             values = value
+
+        if sort:
+            options = natsorted(options) if options else []
 
         obj = cls(parent, n_max=n_max)
         obj.text_edit.setPlaceholderText(placeholder)

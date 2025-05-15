@@ -2577,6 +2577,15 @@ def _get_confirm_dlg(parent: ty.Optional[QObject], message: str, title: str = "A
     return dlg
 
 
+def is_valid(widget: Qw.QWidget) -> bool:
+    """Is valid."""
+    try:
+        widget
+    except RuntimeError:
+        return False
+    return True
+
+
 def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
     """Confirm action."""
     dlg = _get_confirm_dlg(parent, message, title)
