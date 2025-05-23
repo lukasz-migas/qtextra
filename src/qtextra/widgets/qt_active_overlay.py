@@ -64,7 +64,6 @@ class QtActiveOverlay(QWidget):
             painter.setBrush(QBrush(THEMES.get_qt_color(color)))
             x = horizontal_offset + i * self.SPACING
             painter.drawEllipse(x, height, self.SIZE, self.SIZE)
-        painter.end()
 
     def showEvent(self, event):
         """Show event."""

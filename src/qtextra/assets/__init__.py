@@ -203,14 +203,14 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "priority_normal": "ph.equals-fill",
     "priority_low": "mdi6.chevron-triple-down",
     # viewer
-    "new_line": "msc.pulse",
-    "new_surface": "ei.star",
-    "new_labels": "fa5s.tag",
-    "new_points": "mdi.scatter-plot",
-    "new_shapes": "fa5s.shapes",
-    "new_inf_line": "mdi.infinity",
-    "new_centroids": "ri.bar-chart-fill",
-    "new_region": "ri.bar-chart-horizontal-fill",
+    # "new_line": "msc.pulse",
+    # "new_surface": "ei.star",
+    # "new_labels": "fa5s.tag",
+    # "new_points": "mdi.scatter-plot",
+    # "new_shapes": "fa5s.shapes",
+    # "new_inf_line": "mdi.infinity",
+    # "new_centroids": "ri.bar-chart-fill",
+    # "new_region": "ri.bar-chart-horizontal-fill",
     "ndisplay_off": "ph.square",
     "ndisplay_on": "ph.cube",
     "roll": "mdi6.rotate-right-variant",
@@ -218,7 +218,7 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "grid_off": "mdi6.grid-off",
     "grid_on": "mdi6.grid",
     "home": "fa5s.home",
-    "pan_zoom": "ei.move",
+    "pan_zoom": "ri.drag-move-line",
     "select": "fa5s.location-arrow",
     "add_points": "ri.add-circle-fill",
     "select_points": "fa5s.location-arrow",
@@ -235,6 +235,7 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "rectangle": "ph.rectangle-bold",
     "ellipse": "mdi6.ellipse-outline",
     "polygon": "mdi.pentagon-outline",
+    "transform": "ph.selection-plus-fill",
     # selection
     "invert_selection": "fa5s.exchange-alt",
     "pin_on": ("ph.push-pin-fill", {"rotated": -45}),
@@ -251,13 +252,13 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
 }
 
 
-def update_icon_mapping(mapping: ty.Dict[str, str]) -> None:
+def update_icon_mapping(mapping: ty.Dict[str, str], silent: bool = False) -> None:
     """Update icon mapping."""
     global QTA_MAPPING
     for k, v_new in mapping.items():
         v_exist = QTA_MAPPING.get(k, None)
         v_new = mapping[k]
-        if v_exist and v_exist == v_new:
+        if v_exist and v_exist == v_new and not silent:
             print(f"Warning: Icon mapping already exists for '{k}'")
         QTA_MAPPING[k] = v_new
 

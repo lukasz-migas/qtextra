@@ -22,7 +22,6 @@ class QtVerticalLabel(QtW.QLabel):
         y = int(self.height() / 2) - xoffset
         # because we rotated the label, x affects the vertical placement, and y affects the horizontal
         painter.drawText(y, x, self.text())
-        painter.end()
 
     def minimumSizeHint(self):
         size = super().minimumSizeHint()

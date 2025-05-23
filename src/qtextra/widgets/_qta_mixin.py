@@ -38,9 +38,9 @@ class QtaMixin:
 
     def set_qta(self, name: str | tuple[str, dict], **kwargs: ty.Any) -> None:
         """Set QtAwesome icon."""
-        name, kwargs_ = get_icon(name)  # type: ignore[misc]
+        name_, kwargs_ = get_icon(name)  # type: ignore[misc]
         kwargs.update(kwargs_)
-        self._qta_data = (name, kwargs)
+        self._qta_data = (name_, kwargs)
         color_ = kwargs.pop("color", None)
         if color_:
             self._icon_color = color_
@@ -51,7 +51,7 @@ class QtaMixin:
         if "pulse" in kwargs:
             kwargs["animation"] = qtawesome.Pulse(self, autostart=True)
             kwargs.pop("pulse")
-        self._set_icon(name, **self._qta_data[1], color=color)
+        self._set_icon(name_, **self._qta_data[1], color=color)
 
     def _set_qta_icon(self, name: str, **kwargs: ty.Any) -> None:
         """Update icon without setting any attributes."""
