@@ -195,10 +195,12 @@ class QtTagManager(QWidget):
         self.case_sensitive = False
 
         layout = hp.make_h_layout(parent=self, margin=0, spacing=0)
-        self._layout = hp.make_flow_layout() if flow else QtScrollableHLayoutWidget()
+        self._layout = (
+            hp.make_flow_layout(horizontal_spacing=1, vertical_spacing=1, margin=0)
+            if flow
+            else QtScrollableHLayoutWidget()
+        )
         if flow:
-            self._layout.setHorizontalSpacing(2)
-            self._layout.setVerticalSpacing(2)
             layout.addLayout(self._layout)
         else:
             self._layout.setSpacing(2)
