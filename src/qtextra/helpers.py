@@ -3303,7 +3303,7 @@ def show_right_of_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(rect.right(), (rect.top() - rect.height() / 2)))
+    pos = parent.mapToGlobal(QPoint(int(rect.right()), int(rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
     widget_height = sz_hint.height() / 2
     pos -= QPoint(int(x_offset), int(widget_height - y_offset))
@@ -3318,7 +3318,7 @@ def show_left_of_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(rect.left(), (rect.top() - rect.height() / 2)))
+    pos = parent.mapToGlobal(QPoint(int(rect.left()), int(rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
     widget_width = max(sz_hint.width(), widget_to_show.minimumWidth())
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 2
@@ -3334,7 +3334,7 @@ def show_above_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.top()))
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top())))
     sz_hint = widget_to_show.sizeHint()
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight())
     widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
@@ -3350,7 +3350,7 @@ def show_below_widget(
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
-    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), rect.bottom()))
+    pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.bottom())))
     sz_hint = widget_to_show.sizeHint()
     widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
     pos -= QPoint(int(widget_width - x_offset), -y_offset)  # type: ignore[call-overload]
