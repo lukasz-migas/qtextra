@@ -5,6 +5,7 @@ from pathlib import Path
 
 from koyo.utilities import running_as_pyinstaller_app
 from loguru import logger
+from qtextra.typing import Connectable
 
 
 def running_under_pytest() -> bool:
@@ -146,16 +147,6 @@ def get_system_info(as_html=False) -> str:
     if not as_html:
         text = text.replace("<br>", "\n").replace("<b>", "").replace("</b>", "")
     return text
-
-
-class Connectable(ty.Protocol):
-    """Protocol for connectable objects."""
-
-    def connect(self, func: ty.Callable) -> ty.Any:
-        """Connect function."""
-
-    def disconnect(self, func: ty.Callable) -> ty.Any:
-        """Disconnect function."""
 
 
 def connect(

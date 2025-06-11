@@ -1,0 +1,43 @@
+QStatusBar {
+    background-color: {{ foreground }};
+    color: {{ text }};
+    max-height: 28px;
+}
+
+QStatusBar::item{
+    border: none;
+}
+
+/* ------------ QtStatusbarWidget ------------ */
+QtStatusbarIconWidget > QtIconLabel {
+    background-color: {{ darken(background, 5) }};
+}
+
+QtStatusbarIconWidget > QtIconLabel::hover {
+    border-radius: 5px;
+    background-color: {{ darken(foreground, 5) }};
+}
+
+QtStatusbarIconWidget > QtIconLabel::pressed {
+    border-radius: 5px;
+    background-color: {{ darken(foreground, 5) }};
+}
+
+QtStatusbarWidget > QLabel, QtStatusbarLabel {
+    background-color: {{ darken(background, 5) }};
+}
+
+
+QtStatusbarWidget > QtIconLabel::hover {
+    border-radius: 5px;
+    background-color: {{ darken(foreground, 5) }};
+}
+
+QtStatusbarWidget > QtIconLabel::pressed {
+    border-radius: 5px;
+    background-color: {{ darken(foreground, 5) }};
+}
+
+QQtStatusbarSpinner {
+    background: none;
+}

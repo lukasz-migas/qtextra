@@ -30,3 +30,13 @@ class WorkerState(str, Enum):
 
     FINISHED = "finished"
     NOT_ENOUGH_SPACE = "not_enough_space"
+
+
+class Connectable(ty.Protocol):
+    """Protocol for connectable objects."""
+
+    def connect(self, func: ty.Callable) -> ty.Any:
+        """Connect function."""
+
+    def disconnect(self, func: ty.Callable) -> ty.Any:
+        """Disconnect function."""

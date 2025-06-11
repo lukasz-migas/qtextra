@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from enum import Enum
 from functools import partial
 from pathlib import Path
+from loguru import logger
 
 import numpy as np
 import qtawesome as qta
@@ -31,6 +32,7 @@ from superqt import QElidingLabel, QLabeledSlider
 
 from qtextra.typing import Callback, IconType, Orientation
 from qtextra.utils.table_config import TableConfig
+from qtextra.typing import Connectable
 
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
@@ -75,6 +77,8 @@ def make_form_layout(
     stretch_after: bool = False,
     margin: int | tuple[int, int, int, int] | None = None,
     parent: ty.Optional[Qw.QWidget] = None,
+    spacing: int | None = None,
+    label_alignment: Qt.AlignmentFlag | None = None,
 ) -> Qw.QFormLayout:
     """Make form layout."""
     layout = Qw.QFormLayout(parent)
@@ -91,6 +95,10 @@ def make_form_layout(
         layout.addRow(*widget_)
     if stretch_after:
         layout.addRow(make_spacer_widget())
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if label_alignment is not None:
+        layout.setLabelAlignment(label_alignment)
     return layout
 
 
@@ -3452,3 +3460,21 @@ def show_image(widget: Qw.QLabel, path: PathLike) -> None:
     pixmap = pixmap.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
     widget.setPixmap(pixmap)
     # widget.setScaledContents(False)
+
+
+def connect(
+    connectable: Connectable, func: ty.Callable, state: bool = True, source: str = "", silent: bool = False
+) -> None:
+    """Function that connects/disconnects."""
+    try:
+        connectable_func = connectable.connect if state else connectable.disconnect
+        connectable_func(func)
+    except Exception as exc:
+        if not silent:
+            text = (
+                f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func};"
+                f" connectable={connectable}"
+            )
+            if source:
+                text += f"; source={source}"
+            logger.debug(text)

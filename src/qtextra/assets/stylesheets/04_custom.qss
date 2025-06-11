@@ -47,21 +47,20 @@ QtListView::item {
   border: 1px solid {{ foreground }};
 }
 
-/*QtListView::item:hover {*/
-/*  background-color: {{ lighten(foreground, 3) }};*/
-/*}*/
+QtListView::item:hover {
+  background-color: {{ lighten(foreground, 3) }};
+}
 
+/* ------------- Narrow scrollbar for qtlayer list --------- */
 /* in the QSS context "active" means the window is active */
 /* (as opposed to focused on another application) */
-/*QtListView::item:selected:active{*/
-/*  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ current }}, stop: 1 {{ darken(current, 15) }});*/
-/*}*/
+QtListView::item:selected:active{
+  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ current }}, stop: 1 {{ darken(current, 15) }});
+}
 
-
-/*QtListView::item:selected:!active {*/
-/*  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});*/
-/*  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});*/
-/*}*/
+QtListView::item:selected:!active {
+  background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 {{ darken(current, 10) }}, stop: 1 {{ darken(current, 25) }});
+}
 
 
 QtListView QLineEdit {
@@ -76,7 +75,6 @@ QtLayerList::item {
   border-bottom-right-radius: 2px;
   border: 0;
 }
-
 
 /* controls the area around the canvas */
 QSplitter {
@@ -148,55 +146,18 @@ QtFramelessPopup {
     border: 2px solid {{ highlight }};
 }
 
-QtFramelessPopup #move_handle:focus {
+QtFramelessPopup#move_handle:focus {
     background-color: {{ darken(background, 10) }};
 }
 
+/* ----------------- QtFramelessTool ----------------- */
+QtFramelessTool {
+    border: 2px solid {{ foreground }};
+}
+
+/* ----------------- QDialog ----------------- */
 QDialog#confirm_dialog > QLabel {
     font-size: {{ increase(font_size, 3) }};
-}
-
-QStatusBar {
-    background-color: {{ foreground }};
-    max-height: 28px;
-}
-
-
-/* ----------------- QLabel ----------------- */
-QLabel#error_label {
-    font-size: {{ increase(font_size, 4) }};
-}
-QLabel#title_label {
-    font-size: {{ increase(font_size, 3) }};
-}
-QLabel#header_label {
-    font-size: {{ increase(font_size, 6) }};
-    font-weight: bold;
-}
-QLabel#large_text {
-    font-size: {{ increase(font_size, 4) }};
-}
-QLabel#medium_text {
-    font-size: {{ increase(font_size, 2) }};
-}
-QLabel#tip_label {
-    color: {{ lighten(text, 30) }};
-}
-QLabel#watch_dir {
-    font-size: {{ increase(font_size, 2) }};
-    font-weight: bold;
-    min-height: 80px;
-}
-QLabel#h1 {
-  font-size: 28px;
-}
-QLabel#h2 {
-  font-size: 22px;
-  color: {{ secondary }};
-}
-QLabel#h3 {
-  font-size: 18px;
-  color: {{ secondary }};
 }
 
 /* ----------------- QLineEdit ----------------- */
@@ -205,9 +166,6 @@ QLineEdit#discreet_line_edit {
     background-color: {{ background }};
     border: 2px solid {{ foreground }};
 }
-
-
-
 
 /* ----------------- QWidget ----------------- */
 QWidget#error {
@@ -220,8 +178,6 @@ QWidget#warning {
     border-radius: 2px;
 }
 
-
-
 QtCheckableTableView{
     background-color: {{ darken(background, 10) }};
     border: 2px solid {{ foreground }};
@@ -233,8 +189,6 @@ QtCheckableTableView QHeaderView {
     font-weight: bold;
 }
 
-
-
 QComboBox#filter_combo {
     max-height: 14px;
     background-color: {{ darken(background, 10) }};
@@ -244,12 +198,10 @@ QComboBox#filter_combo {
     font-weight: bold;
 }
 
-
 QtPushButton#pick_option_button {
     font-size: {{ increase(font_size, 4) }};
     font-weight: bold;
 }
-
 
 QtConfirmCloseDialog QLabel {
     font-size: {{ increase(font_size, 4) }};
@@ -263,63 +215,6 @@ QPushButton[type="warning"], QLabel[type="warning"] {
 }
 QPushButton[type="success"], QLabel[type="success"] {
     color: {{ success }};
-}
-
-/* ------------ QtTagButton ------------ */
-QtTagManager QtImagePushButton{
-    min-width : 24px;
-    min-height : 24px;
-    max-width : 28px;
-    max-height : 28px;
-    padding: 1px;
-    border: 1px;
-    margin: 1px;
-}
-QtTagManager QtImagePushButton#add:hover{
-    background-color: {{ lighten(success, 25) }};
-}
-
-QtTagButton {
-    border: 3px solid {{ background }};
-    border-radius: 10px;
-    background-color: {{ foreground }};
-    color: {{ text }};
-}
-
-QtTagButton[hide_check="True"] {
-    border-radius: 0px;
-}
-
-QtTagButton::hover {
-    background-color: {{ darken(foreground, 5) }};
-}
-QtTagButton[active=True]{
-    background-color: {{ darken(success, 5) }};
-}
-QtTagButton[active=False]{
-    background-color: {{ darken(foreground, 5) }};
-}
-
-QtTagButton > QtIconLabel, QtLeftPillLabel, QtPillActionButton, QtTagButton{
-    background: none;
-}
-QtTagButton > QtLeftPillLabel{
-    font-size: {{ increase(font_size, 2) }};
-}
-
-QtPillActionButton::hover {
-    border-radius: 10px;
-    background-color: {{ lighten(success, 25) }};
-}
-
-QtPillActionButton[mode=delete]::hover {
-    border-radius: 10px;
-    background-color: {{ lighten(warning, 25) }};
-}
-
-QtPillActionButton[mode=add]::hover {
-    border-radius: 10px;
-    background-color: {{ lighten(success, 25) }};
 }
 
 /* ----------------- QtIndicator ----------------- */
@@ -388,7 +283,6 @@ QAbstractItemView#search_box_popup::item:hover
     background-color:lightGrey;
 }
 
-
 QtViewer {
    padding-top: 0px;
 }
@@ -401,11 +295,6 @@ QtLayerButtons, QtViewerButtons, QtLayerList {
 /* QDockWidgets will use the MainWindow styles
 as long as they are docked (though they use the
 style of QDockWidget when undocked) */
-
-QStatusBar {
-  background: {{ background }};
-  color: {{ text }};
-}
 
 /* ------------- Window separator --------- */
 
@@ -597,4 +486,11 @@ QListWidget::item:hover, QListWidget::item:focus {
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top center; /* position at the top center */
+}
+
+/* ------------ DialogSystemInfo ------------ */
+DialogSystemInfo > QTextEdit{
+  margin: 0px;
+  border: 0px;
+  padding: 2px;
 }

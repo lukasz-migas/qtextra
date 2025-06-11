@@ -1,0 +1,56 @@
+/* ------------ QtTagButton ------------ */
+QtTagManager QtImagePushButton{
+    min-width : 24px;
+    min-height : 24px;
+    max-width : 28px;
+    max-height : 28px;
+    padding: 1px;
+    border: 1px;
+    margin: 1px;
+}
+QtTagManager QtImagePushButton#add:hover{
+    background-color: {{ lighten(success, 25) }};
+}
+
+QtTagButton {
+    border: 3px solid {{ background }};
+    border-radius: 10px;
+    background-color: {{ foreground }};
+    color: {{ text }};
+}
+
+QtTagButton[hide_check="True"] {
+    border-radius: 0px;
+}
+
+QtTagButton::hover {
+    background-color: {{ darken(foreground, 5) }};
+}
+QtTagButton[active=True]{
+    background-color: {{ darken(success, 5) }};
+}
+QtTagButton[active=False]{
+    background-color: {{ darken(foreground, 5) }};
+}
+
+QtTagButton > QtIconLabel, QtLeftPillLabel, QtPillActionButton, QtTagButton{
+    background: none;
+}
+QtTagButton > QtLeftPillLabel{
+    font-size: {{ increase(font_size, 2) }};
+}
+
+QtPillActionButton::hover {
+    border-radius: 10px;
+    background-color: {{ lighten(success, 25) }};
+}
+
+QtPillActionButton[mode=delete]::hover {
+    border-radius: 10px;
+    background-color: {{ lighten(warning, 25) }};
+}
+
+QtPillActionButton[mode=add]::hover {
+    border-radius: 10px;
+    background-color: {{ lighten(success, 25) }};
+}

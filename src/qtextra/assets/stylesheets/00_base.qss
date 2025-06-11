@@ -774,14 +774,7 @@ QTableView::indicator:indeterminate {
   height: 14px;
 }
 
-
-QMainWindow::separator:horizontal {
-    image: url("theme_{{ id }}://horizontal_separator.svg");
-}
-
-QMainWindow::separator:vertical {
-    image: url("theme_{{ id }}://vertical_separator.svg");
-}
+/* ----------------- QSplitter ----------------- */
 
 QSplitter::handle:vertical {
     image: url("theme_{{ id }}://horizontal_separator.svg");

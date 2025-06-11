@@ -1,0 +1,44 @@
+/* ------------ QtNotification ------------ */
+QtNotification {
+    background: {{ foreground }};
+}
+
+QtNotification > QWidget {
+    background: none;
+}
+
+QtNotification::hover {
+    background: {{ darken(foreground, 10) }};
+}
+
+QtNotification QElidingLabel, QtNotification QLabel {
+    background: none;
+    color: {{ icon }};
+    font-size: 14px;
+}
+
+QtNotification QtImagePushButton {
+    background-color: none;
+}
+
+QtNotification QtImagePushButton::hover {
+    background-color: {{ lighten(foreground, 15) }};
+}
+
+QtNotification #actionButtons > QPushButton {
+    padding: 4px 12px 4px 12px;
+    font-size: 11px;
+    min-height: 18px;
+    border-radius: 0;
+    background-color: {{ current }};
+}
+
+QtNotification #actionButtons > QPushButton::hover {
+    background-color: {{ darken(current, 20) }};
+}
+
+QtNotification #source_label {
+    color: {{ opacity(text, 25) }};
+    font-size: 11px;
+    background: none;
+}

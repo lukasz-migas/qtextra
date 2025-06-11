@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import typing as ty
+from functools import partial
 
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout, QWidget
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import QDialog, QFormLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
+from qtextra.widgets.qt_dialog import QtFramelessTool
 
 Orientation = ty.Literal["horizontal", "vertical"]
 
@@ -102,6 +104,46 @@ class QtScrollablePickOption(QtPickOptionBase):
         """Get layout widget."""
         scroll_area, scroll_widget = hp.make_scroll_area(self)
         return scroll_area, scroll_widget
+
+
+class QtChoosePopup(QtFramelessTool):
+    """Choose from one of available options."""
+
+    evt_option = Signal(str, int)
+    choice: tuple[str, int] = (None, None)
+
+    def __init__(
+        self,
+        options: list[tuple[str, str]],
+        parent,
+        title="Please choose one of the following options...",
+    ):
+        self.options = options
+        super().__init__(parent=parent, title=title)
+        self.title_label.setText(title)
+        self.setMaximumWidth(400)
+
+    # noinspection PyAttributeOutsideInit
+    def make_panel(self) -> QFormLayout:
+        """Make panel."""
+        layout = hp.make_form_layout()
+
+        self.title_label = hp.make_label(self, "", bold=True, wrap=True, font_size=14)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignHCenter)
+        layout.addRow(self.title_label)
+
+        for index, (title, message) in enumerate(self.options):
+            btn = hp.make_rich_btn(self, message)
+            btn.clicked.connect(partial(self.on_choose, title, index))
+            btn.setMinimumHeight(40)
+            layout.addWidget(btn)
+        return layout
+
+    def on_choose(self, title: str, index: int):
+        """Chosen message."""
+        self.evt_option.emit(title, index)
+        self.choice = title, index
+        self.accept()
 
 
 if __name__ == "__main__":  # pragma: no cover
