@@ -188,13 +188,6 @@ class CanvasThemes(ConfigBase):
         self.integrate_canvas = self._integrate_canvas
         self.evt_theme_changed.emit()
 
-    # def as_array(self, name: str) -> np.ndarray:
-    #     """Return color array."""
-    #     from napari.utils.colormaps.standardize_color import transform_color
-    #
-    #     color: Color = getattr(self.active, name)
-    #     return transform_color(color.as_hex())[0]
-
     def as_hex(self, name: str) -> str:
         """Return color as hex."""
         color: Color = getattr(self.active, name)
