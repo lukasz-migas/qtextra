@@ -16,7 +16,7 @@ ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == ".svg"}
 
 STYLE_PATH = HERE / "stylesheets"
 STYLE_PATH.mkdir(exist_ok=True)
-STYLES = {x.stem: str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
+STYLES = {f"{x.stem}-qtextraplot": str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
 
 # Some gifs were made using https://loading.io/
 # orange color = #ff4500
@@ -306,7 +306,7 @@ def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[st
     """
     stylesheet = ""
     try:
-        for key in sorted(STYLES):
+        for key in sorted(set(STYLES)):
             file = STYLES[key]
             with open(file) as f:
                 stylesheet += f.read()
