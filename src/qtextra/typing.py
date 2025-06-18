@@ -4,6 +4,7 @@ import typing as ty
 from enum import Enum
 
 Callback = ty.Union[ty.Callable, ty.Sequence[ty.Callable]]
+OptionalCallback = ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]]
 Orientation = ty.Literal["horizontal", "vertical"]
 IconType = ty.Union[str, tuple[str, dict[str, ty.Any]]]
 

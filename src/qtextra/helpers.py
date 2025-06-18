@@ -8,13 +8,13 @@ from contextlib import contextmanager
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from loguru import logger
 
 import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
 from koyo.system import IS_MAC, IS_WIN
 from koyo.typing import PathLike
+from loguru import logger
 from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, QUrl
 from qtpy.QtGui import (
     QColor,
@@ -30,9 +30,8 @@ from qtpy.QtGui import (
 )
 from superqt import QElidingLabel, QLabeledSlider
 
-from qtextra.typing import Callback, IconType, Orientation
+from qtextra.typing import Callback, Connectable, IconType, OptionalCallback, Orientation
 from qtextra.utils.table_config import TableConfig
-from qtextra.typing import Connectable
 
 if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
@@ -378,6 +377,7 @@ def make_label(
     click_func: Callback | None = None,
     elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
     vertical: bool = False,
+    min_width: int = 0,
     **kwargs: ty.Any,
 ) -> QtClickLabel:
     """Make QLabel element."""
@@ -419,6 +419,8 @@ def make_label(
         widget.setElideMode(elide_mode)
     widget.setWordWrap(wrap)
     widget.setVisible(visible)
+    if min_width > 0:
+        widget.setMinimumWidth(min_width)
     if hide:
         widget.hide()
     return widget
@@ -472,9 +474,18 @@ def make_warning_label(
     return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
 
 
-def make_help_label(parent: Qw.QWidget | None, tooltip: str, **kwargs: ty.Any) -> QtQtaTooltipLabel:
+def make_help_label(
+    parent: Qw.QWidget | None, tooltip: str, icon_name: IconType = "help", **kwargs: ty.Any
+) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
-    return make_tooltip_label(parent, "help", tooltip, **kwargs)
+    return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
+
+
+def make_info_label(
+    parent: Qw.QWidget | None, tooltip: str, icon_name: IconType = "info", **kwargs: ty.Any
+) -> QtQtaTooltipLabel:
+    """Create Qta icon with immediate tooltip."""
+    return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
 
 
 def make_url_btn(
@@ -1399,6 +1410,14 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
         widget.setMinimumSize(QSize(55, 32))
     else:
         widget.setStyleSheet("QPushButton::menu-indicator { image: none; width : 0px; left:}")
+
+
+def show_menu(menu_func: ty.Callable | None = None, menu: Qw.QMenu | None = None) -> None:
+    """Set menu on widget."""
+    if menu is None:
+        menu = menu_func()
+    if menu:
+        show_below_mouse(menu, show=True)
 
 
 def make_bitmap_tool_btn(
@@ -3478,3 +3497,138 @@ def connect(
             if source:
                 text += f"; source={source}"
             logger.debug(text)
+
+
+def guess_widget_cls(schema: dict) -> str:
+    """Guess widget class."""
+    if "type" in schema:
+        item_type = schema["type"]
+    else:
+        item_type = schema["anyOf"][0]["type"]
+    if item_type in ["string", "array"]:
+        if schema.get("enum"):
+            return "combo_box"
+        return "line_edit"
+    elif item_type == "boolean":
+        return "checkbox"
+    elif item_type == "integer":
+        return "int_spin_box"
+    elif item_type == "number":
+        return "double_spin_box"
+    raise ValueError(f"Could not parse '{item_type}'")
+
+
+def get_widget_for_schema(
+    parent: Qw.QWidget, schema: dict, func: OptionalCallback = None
+) -> tuple[
+    Qw.QLabel | Qw.QLineEdit | Qw.QCheckBox | Qw.QSpinBox | Qw.QDoubleSpinBox | Qw.QComboBox | QtMultiSelect,
+    QtToggleGroup | Qw.QHBoxLayout | None,
+]:
+    """Get widget for specified field."""
+    widget_cls = schema.get("widget_cls", None)
+    if widget_cls is None:
+        widget_cls = guess_widget_cls(schema)
+    if isinstance(widget_cls, tuple):
+        widget_cls, related_field = widget_cls
+
+    layout: Qw.QLayout | None = None
+    widget: (
+        Qw.QLabel
+        | Qw.QLineEdit
+        | Qw.QCheckBox
+        | Qw.QSpinBox
+        | Qw.QDoubleSpinBox
+        | Qw.QComboBox
+        | QtMultiSelect
+        | QtToggleGroup
+    )
+    if widget_cls == "line_edit":
+        widget = make_line_edit(parent, func=func, func_clear=func, **schema)
+    elif widget_cls == "line_edit_changed":
+        widget = make_line_edit(parent, func_changed=func, func_clear=func, **schema)
+    elif widget_cls == "disabled_line_edit":
+        widget = make_line_edit(parent, func=func, disabled=True, **schema)
+    elif widget_cls == "disabled_line_edit_changed":
+        widget = make_line_edit(parent, func_changed=func, disabled=True, **schema)
+    elif widget_cls == "disabled_label":
+        widget = make_label(parent, disabled=True, **schema)
+    elif widget_cls == "checkbox":
+        widget = make_checkbox(parent, "", func=func, **schema)
+    elif widget_cls == "int_spin_box":
+        widget = make_int_spin_box(parent, func=func, **schema)
+    elif widget_cls == "double_spin_box":
+        widget = make_double_spin_box(parent, func=func, **schema)
+    elif widget_cls == "combo_box":
+        widget = make_combobox(parent, func=func, **schema)
+    elif widget_cls == "searchable_combo_box":
+        widget = make_searchable_combobox(parent, func_index=func, **schema)
+    # elif widget_cls == "colormap_combo_box":
+    #     from qtextra.widgets.qt_searchable_combobox import add_search_to_combobox
+    #     from superqt import QColormapComboBox
+    #
+    #     widget = QColormapComboBox(parent)
+    #     widget.addColormaps(schema["enum"])
+    #     add_search_to_combobox(widget)
+    elif widget_cls == "multi_combo_box":
+        widget = make_checkable_combobox(parent, func=func, **schema)
+    elif widget_cls == "multi_select":
+        widget = QtMultiSelect.from_schema(parent, func_changed=func, sort=True, **schema)
+    elif widget_cls == "single_select":
+        widget = QtMultiSelect.from_schema(parent, func_changed=func, n_max=1, sort=True, **schema)
+    elif widget_cls == "single_toggle":
+        widget = QtToggleGroup.from_schema(parent, func=func, **schema)
+    elif widget_cls == "single_toggle_multiline":
+        widget = QtToggleGroup.from_schema(parent, func=func, multiline=True, **schema)
+    elif widget_cls == "multi_toggle":
+        widget = QtToggleGroup.from_schema(parent, func=func, exclusive=False, **schema)
+    else:
+        raise ValueError(f"Unknown widget class {widget_cls}")
+    # hide widget if needed
+    if not schema.get("show", True):
+        widget.hide()
+    # check whether 'warning' is included with the widget, if so, add it into a layout
+    if schema.get("warning"):
+        warning_label = make_warning_label(parent, schema["warning"], normal=True)
+        layout = make_h_layout(warning_label, widget, spacing=1, stretch_id=(1,))
+    if schema.get("help"):
+        help_label = make_help_label(parent, schema["help"], normal=True)
+        if layout is None:
+            layout = make_h_layout(help_label, widget, spacing=1, stretch_id=(1,))
+        else:
+            layout.insertWidget(0, help_label)
+    return widget, layout
+
+
+def get_value_from_widget(widget: Qw.QWidget) -> ty.Any:
+    """Get value from widget."""
+    if isinstance(widget, Qw.QLineEdit):
+        return widget.text()
+    elif isinstance(widget, Qw.QCheckBox):
+        return widget.isChecked()
+    elif isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
+        return widget.value()
+    elif isinstance(widget, Qw.QtCheckableComboBox):
+        return widget.checked_texts()
+    elif isinstance(widget, Qw.QComboBox):
+        return widget.currentText()
+    elif isinstance(widget, QtMultiSelect):
+        checked = widget.get_checked()
+        if widget.n_max == 1:
+            return checked[0] if checked else None
+        return checked
+    elif isinstance(widget, Qw.QLabel):
+        return widget.text()
+    elif isinstance(widget, QtToggleGroup):
+        return widget.value
+    raise ValueError(f"Unknown widget class {widget}")
+
+
+def get_data_for_widgets(widgets: dict[str, Qw.QWidget], **kwargs: ty.Any) -> dict[str, ty.Any]:
+    """Get config for widgets."""
+    data = {}
+    for key, widget in widgets.items():
+        if key.startswith("_"):
+            continue
+        data[key] = get_value_from_widget(widget)
+    data.update(kwargs)
+    return data

@@ -245,10 +245,8 @@ class SystemSummaryPopup(QtFramelessPopup):
 
     def make_panel(self) -> QVBoxLayout:
         """Create widget."""
-        layout = QVBoxLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(QtSystemSummaryWidget(self))
+        layout = hp.make_v_layout(spacing=0, margin=0)
+        layout.addWidget(QtSystemSummaryWidget(self), stretch=True)
         return layout
 
 
@@ -259,11 +257,16 @@ if __name__ == "__main__":  # pragma: no cover
 
         from qtextra.utils.dev import qframe
 
+        def _make_popup():
+            """Create a popup."""
+            popup = SystemSummaryPopup(frame)
+            popup.exec()
+
         app, frame, ha = qframe(False)
         frame.setMinimumSize(600, 600)
 
-        wdg = QtSystemSummaryWidget(parent=frame)
-        ha.addWidget(wdg)
+        ha.addWidget(QtSystemSummaryWidget(parent=frame))
+        ha.addWidget(hp.make_btn(parent=frame, text="Open popup", func=_make_popup))
 
         frame.show()
         sys.exit(app.exec_())

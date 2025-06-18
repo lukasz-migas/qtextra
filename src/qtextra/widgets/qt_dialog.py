@@ -96,13 +96,13 @@ class DialogMixin:
         """Show popup dialog in the center of mouse cursor position."""
         hp.show_on_mouse(self, show)
 
-    def show_right_of_mouse(self, show: bool = True) -> None:
-        """Show popup dialog on the right hand side of the mouse cursor position."""
-        hp.show_right_of_mouse(self, show)
+    def show_right_of_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
+        """Show popup dialog on the right-hand side of the mouse cursor position."""
+        hp.show_right_of_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
 
-    def show_left_of_mouse(self, show: bool = True) -> None:
-        """Show popup dialog on the left hand side of the mouse cursor position."""
-        hp.show_left_of_mouse(self, show)
+    def show_left_of_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
+        """Show popup dialog on the left-hand side of the mouse cursor position."""
+        hp.show_left_of_mouse(self, show, x_offset=x_offset, y_offset=y_offset)
 
     def show_above_mouse(self, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
         """Show popup dialog above the mouse cursor position."""
@@ -125,17 +125,17 @@ class DialogMixin:
         hp.show_above_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
     def show_below_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-        """Show popup dialog above the widget."""
+        """Show popup dialog below the widget."""
         hp.show_below_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
     def show_right_of_widget(self, parent: QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-        """Show popup dialog above the widget."""
+        """Show popup dialog right of the widget."""
         hp.show_right_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
     def show_left_of_widget(
         self, parent: QObject | None, show: bool = True, x_offset: int = 0, y_offset: int = 0
     ) -> None:
-        """Show popup dialog above the widget."""
+        """Show popup dialog left of the widget."""
         hp.show_left_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
     def move_to(self, position="top", *, win_ratio=0.9, min_length=0) -> None:

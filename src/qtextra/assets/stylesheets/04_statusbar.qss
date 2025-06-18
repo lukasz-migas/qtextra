@@ -1,5 +1,5 @@
 QStatusBar {
-    background-color: {{ foreground }};
+    background-color: {{ darken(background, 5) }};
     color: {{ text }};
     max-height: 28px;
 }
