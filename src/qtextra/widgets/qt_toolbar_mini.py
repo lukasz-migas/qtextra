@@ -125,6 +125,7 @@ class QtMiniToolbar(QFrame):
         normal: bool = False,
         is_menu: bool = False,
         hide: bool = False,
+        func_menu: ty.Callable | None = None,
     ) -> QtImagePushButton:
         """Insert tool."""
         btn = self._make_qta_button(
@@ -139,6 +140,7 @@ class QtMiniToolbar(QFrame):
             normal=normal,
             is_menu=is_menu,
             hide=hide,
+            func_menu=func_menu,
         )
         self.add_button(btn)
         return btn

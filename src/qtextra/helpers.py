@@ -1920,6 +1920,28 @@ def make_h_layout(
     )
 
 
+def make_grid_layout(
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    parent: Qw.QWidget | None = None,
+    column_to_stretch: int | dict[int, int] | None = None,
+) -> Qw.QGridLayout:
+    """Make grid layout."""
+    layout = Qw.QGridLayout(parent)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    if column_to_stretch:
+        if isinstance(column_to_stretch, int):
+            column_to_stretch = {column_to_stretch: 1}
+        for column, stretch in column_to_stretch.items():
+            layout.setColumnStretch(column, stretch)
+    return layout
+
+
 def make_flow_layout(
     *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
     stretch_id: int | tuple[int, ...] | None = None,
