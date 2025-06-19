@@ -486,6 +486,16 @@ class QtBoolButton(QtTogglePushButton):
         super().__init__(*args, **kwargs)
 
 
+class QtImageButton(QtTogglePushButton):
+    """Boolean button."""
+
+    ICON_ON = "images"
+    ICON_OFF = "image"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+
 class QtMultiStatePushButton(QtImagePushButton):
     """Base class for a multi-state button where options are shown as a QMenu."""
 
@@ -786,10 +796,11 @@ if __name__ == "__main__":  # pragma: no cover
 
         lay.addWidget(QtAnimationPlayButton(parent=frame, auto_connect=True))
         lay.addWidget(QtPauseButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtImageButton(parent=frame, auto_connect=True))
         lay.addWidget(QtLockButton(parent=frame, auto_connect=True))
-        lay.addWidget(QtVerticalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtHorizontalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtVisibleButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtVerticalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtToggleButton(parent=frame, auto_connect=True))
         lay.addWidget(QtExpandButton(parent=frame, auto_connect=True))
         lay.addWidget(QtSortButton(parent=frame, auto_connect=True))

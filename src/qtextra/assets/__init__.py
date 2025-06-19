@@ -56,6 +56,9 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "ipython": "mdi.console",
     "cli": "mdi6.console-line",
     "template": "ei.file-new",
+    "image": "fa6.image",
+    "images": "fa5s.images",
+    "tutorial": "mdi.tooltip-check",
     # "log": "mdi6.file-document",
     "log": "mdi6.clipboard-text",
     "filter_and": "mdi6.filter-plus",
@@ -237,9 +240,6 @@ def update_icon_mapping(mapping: ty.Dict[str, str], silent: bool = False, key: s
         v_new = mapping[k]
         if v_exist and v_exist == v_new and not silent:
             print(f"Warning: Icon mapping already exists for '{k}'")
-        # for duplicate keys
-        if key and k in QTA_MAPPING:
-            print(key, k)
         QTA_MAPPING[k] = v_new
 
 

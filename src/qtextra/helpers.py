@@ -1412,7 +1412,7 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
         widget.setStyleSheet("QPushButton::menu-indicator { image: none; width : 0px; left:}")
 
 
-def show_menu(menu_func: ty.Callable | None = None, menu: Qw.QMenu | None = None) -> None:
+def show_menu(menu: Qw.QMenu | None = None, menu_func: ty.Callable | None = None) -> None:
     """Set menu on widget."""
     if menu is None:
         menu = menu_func()
@@ -2583,7 +2583,12 @@ def get_color(
     return new_color
 
 
-def _get_confirm_dlg(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
+def _get_confirm_dlg(
+    parent: ty.Optional[QObject],
+    message: str,
+    title: str = "Are you sure?",
+    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+) -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
 
@@ -2593,7 +2598,7 @@ def _get_confirm_dlg(parent: ty.Optional[QObject], message: str, title: str = "A
     dlg.setMinimumSize(350, 200)
     dlg.setWindowTitle(title)
     layout = make_v_layout()
-    layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True), stretch=True)
+    layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True, alignment=alignment), stretch=True)
     layout.addLayout(
         make_h_layout(
             make_btn(dlg, "Yes", func=dlg.accept),
@@ -2613,14 +2618,24 @@ def is_valid(widget: Qw.QWidget) -> bool:
     return True
 
 
-def confirm(parent: ty.Optional[QObject], message: str, title: str = "Are you sure?") -> bool:
+def confirm(
+    parent: ty.Optional[QObject],
+    message: str,
+    title: str = "Are you sure?",
+    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+) -> bool:
     """Confirm action."""
-    dlg = _get_confirm_dlg(parent, message, title)
+    dlg = _get_confirm_dlg(parent, message, title, alignment=alignment)
     return bool(dlg.exec_())
 
 
 def confirm_dont_ask_again(
-    parent: ty.Optional[QObject], message: str, title: str = "Are you sure?", config: ty.Any = None, attr: str = ""
+    parent: ty.Optional[QObject],
+    message: str,
+    title: str = "Are you sure?",
+    config: ty.Any = None,
+    attr: str = "",
+    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
 ) -> bool:
     """Confirm action."""
     if not config or not attr:
@@ -2633,7 +2648,7 @@ def confirm_dont_ask_again(
         func = partial(lambda value: config.update(**{attr: bool(value)}))
         value = getattr(config, attr, False)
 
-    dlg = _get_confirm_dlg(parent, message, title)
+    dlg = _get_confirm_dlg(parent, message, title, alignment=alignment)
     layout = dlg.layout()
     layout.addWidget(make_checkbox(dlg, "Don't ask again", func=func, value=value))
     return bool(dlg.exec_())

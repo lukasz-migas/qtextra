@@ -29,6 +29,11 @@ class DocumentationMixin:
 
     parent: ty.Callable[..., QWidget]
 
+    ENABLE_TUTORIAL: bool = False
+    _docs_tutorial_btn: QPushButton | None = None
+    ENABLE_HTML: bool = True
+    _docs_info_btn: QPushButton | None = None
+
     def _make_info_layout(
         self, align_right: bool = True, html_link: str = "", parent: QWidget | None = None
     ) -> ty.Tuple[QPushButton, QHBoxLayout]:
@@ -36,15 +41,24 @@ class DocumentationMixin:
         if not html_link:
             html_link = self.DOC_HTML_LINK
 
-        info_btn = hp.make_qta_btn(
+        self._docs_tutorial_btn = hp.make_qta_btn(
+            parent if parent is not None else self.parent(),
+            "tutorial",
+            tooltip="Click here to launch tutorial for this panel...",
+            func=self._open_tutorial,
+            hide=not self.ENABLE_TUTORIAL,
+        )
+        self._docs_info_btn = info_btn = hp.make_qta_btn(
             parent if parent is not None else self.parent(),
             "help",
             tooltip="Click here to see more information about this panel...",
+            func=partial(self._open_info_link, html_link),
+            hide=not self.ENABLE_HTML,
         )
-        info_btn.clicked.connect(partial(self._open_info_link, html_link))
 
         layout = QHBoxLayout()
-        layout.addWidget(info_btn)
+        layout.addWidget(self._docs_tutorial_btn)
+        layout.addWidget(self._docs_info_btn)
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         if align_right:
@@ -52,6 +66,9 @@ class DocumentationMixin:
         else:
             layout.addSpacerItem(hp.make_h_spacer())
         return info_btn, layout
+
+    def _open_tutorial(self) -> None:
+        """Launch tutorial for this panel."""
 
     @staticmethod
     def _open_info_link(html_link: str) -> None:

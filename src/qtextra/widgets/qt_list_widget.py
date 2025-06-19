@@ -206,6 +206,20 @@ class QtListWidget(QListWidget):
             hash_ids.append(item.item_model.name)  # type: ignore[union-attr]
         return hash_ids
 
+    def get_attr(self, indices: ty.Iterator[int], attr: str, default: ty.Any = None) -> list[ty.Any]:
+        """Get a list of attributes."""
+        values = []
+        for item_id in indices:
+            item = self.item(item_id)
+            item_model = item.item_model  # type: ignore[union-attr]
+            if hasattr(item_model, attr):
+                values.append(getattr(item_model, attr))
+            elif hasattr(item, attr):
+                values.append(getattr(item, attr))
+            else:
+                values.append(default)
+        return values
+
     def get_item_widget_for_index(self, index: int) -> tuple[QListWidgetItem, _W]:
         """Get widget for specified item."""
         item = self.item(index)
