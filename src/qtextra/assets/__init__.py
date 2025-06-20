@@ -109,6 +109,8 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "critical": "fa5s.times-circle",
     "debug": "ph.megaphone",
     "success": "fa5s.check",
+    "date": "mdi6.calendar",
+    "message": "fa5s.comment-alt",
     "true": "mdi6.check-circle-outline",
     "false": "mdi6.close-circle-outline",
     "axes_label": "mdi.axis-arrow",
