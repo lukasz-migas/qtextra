@@ -1,3 +1,7 @@
+"""Extra utilities for qtextra."""
+
+from __future__ import annotations
+
 import sys
 import typing as ty
 from functools import lru_cache
@@ -5,6 +9,7 @@ from pathlib import Path
 
 from koyo.utilities import running_as_pyinstaller_app
 from loguru import logger
+
 from qtextra.typing import Connectable
 
 
@@ -165,3 +170,21 @@ def connect(
             if source:
                 text += f"; source={source}"
             logger.debug(text)
+
+
+def s(path: Path) -> str:
+    """Return a short path."""
+    return f"{path.parent.name}/{path.name}"
+
+
+def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto") -> str:
+    """Parse into a hyperlink."""
+    if value is None:
+        value = link
+    if isinstance(link, Path):
+        ret = f"<a href='{link.as_uri()}'>{value}</a>"
+    elif prefix:
+        ret = f"<a href='{prefix}:{link}'>{value}</a>"
+    else:
+        ret = f"<a href='{link}'>{value}</a>"
+    return ret
