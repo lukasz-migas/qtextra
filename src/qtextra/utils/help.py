@@ -16,17 +16,19 @@ COLORS = {
 def _make_message(
     kind: ty.Literal["error", "warning", "success", "normal", "hint"],
     message: str,
-    add_dash: bool = True,
     small: bool = False,
     medium: bool = False,
     large: bool = False,
+    add_icon: bool = False,
+    add_dash: bool = True,
 ) -> str:
     """Returns HTML formatted message."""
     color = COLORS[kind]
-    # icon = {"error": "🔴", "warning": "🟠", "success": "🟢", "normal": "🟡"}[kind]
-    # if insert_intro:
-    #     message = f"{kind.capitalize()[0]}: {message}"
-    message = f"- {message}" if add_dash else message
+    if add_icon:
+        icon = {"error": "🔴", "warning": "🟠", "success": "🟢", "normal": "🟡", "hint": "🔵"}[kind]
+        message = f"{icon} {message}"
+    if add_dash:
+        message = f"— {message}" if not message.startswith("—") else message
     if small:
         return f'<span class="{kind}" style="color: {color}; font-size: 10px">{message}</span>'
     if medium:
