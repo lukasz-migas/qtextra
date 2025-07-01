@@ -19,9 +19,22 @@ active_btn.setValue(10)
 active_btn.active = True
 layout.addWidget(active_btn)
 
-active_btn = QtActiveProgressBarButton(widget, "Click me")
+
+def activate():
+    active_btn.active = not active_btn.active
+    print(f"Active: {active_btn.active}")
+
+
+def cancel():
+    active_btn.active = False
+    print("Cancelled")
+
+
+active_btn = QtActiveProgressBarButton(widget, "Click me", which="dots")
 active_btn.setRange(0, 100)
 active_btn.setValue(10)
+active_btn.evt_clicked.connect(activate)
+active_btn.evt_cancel.connect(cancel)
 layout.addWidget(active_btn)
 widget.show()
 

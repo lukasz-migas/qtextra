@@ -219,6 +219,13 @@ class QtTutorial(QDialog):
         self._step_indicator.setMaximum(len(steps) * 100)
         self.set_step(0)
 
+    def add_step(self, step: TutorialStep) -> None:
+        """Add a step to the tutorial."""
+        self.steps.append(step)
+        self._step_indicator.setMinimum(0)
+        self._step_indicator.setMaximum(len(self.steps) * 100)
+        self.set_step(0)
+
     def set_step(self, index: int) -> None:
         """Show step."""
         self._current = index

@@ -15,7 +15,7 @@ class QtConfirmWithTextDialog(QDialog):
         self,
         parent: ty.Optional[QWidget] = None,
         title: str = "Please confirm...",
-        message: str = "Please type 'confirm' to continue.",
+        message: str = "Please type <b>confirm</b> to continue.",
         request: str = "confirm",
     ):
         super().__init__(parent)

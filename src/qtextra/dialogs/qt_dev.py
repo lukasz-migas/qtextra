@@ -1,9 +1,13 @@
 """Popup for developer tools."""
 
 from qtpy.QtWidgets import QLayout, QVBoxLayout, QWidget
-from qtreload.qt_reload import QtReloadWidget
 
 from qtextra.widgets.qt_dialog import QtFramelessTool
+
+try:
+    from qtreload.qt_reload import QtReloadWidget
+except ImportError:
+    QtReloadWidget = QWidget
 
 
 class QDevPopup(QtFramelessTool):

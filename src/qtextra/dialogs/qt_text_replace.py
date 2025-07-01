@@ -84,7 +84,7 @@ class QtTextReplace(QtDialog):
     def on_remove(self, hash_id: str) -> None:
         """Remove filter."""
         hash_ids = [
-            self.search_replace_layout.get_widget(index).tag for index in range(self.search_replace_layout.count() - 1)
+            self.search_replace_layout.get_widget(index).text for index in range(self.search_replace_layout.count() - 1)
         ]
         index = hash_ids.index(hash_id)
         search_for, replace_with = hash_id.split(SEPARATOR)

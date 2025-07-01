@@ -61,6 +61,12 @@ class QtScrollableLayoutWidget(QScrollArea):
         self._main_layout.insertLayout(index, layout, **kwargs)
         self._update_scroll()
 
+    def removeWidget(self, widget: QWidget) -> None:
+        """Remove widget."""
+        index = self._main_layout.indexOf(widget)
+        if index != -1:
+            self.removeWidgetOrLayout(index)
+
     def removeWidgetOrLayout(self, index: int) -> None:
         """Remove widget or layout based on index position."""
         widget = self.get_widget(index)

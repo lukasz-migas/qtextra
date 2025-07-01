@@ -7,7 +7,7 @@ from qtextra.dialogs.qt_confirm import QtConfirmWithTextDialog
 
 app = QApplication([])
 
-widget = QtConfirmWithTextDialog(None, message="Please type 'qtextra' to continue", request="qtextra")
+widget = QtConfirmWithTextDialog(None, message="Please type <b>qtextra</b> to continue", request="qtextra")
 THEMES.apply(widget)
 widget.show()
 app.exec_()

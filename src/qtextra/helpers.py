@@ -30,7 +30,7 @@ from qtpy.QtGui import (
 )
 from superqt import QElidingLabel, QLabeledSlider
 
-from qtextra.typing import Callback, Connectable, IconType, OptionalCallback, Orientation
+from qtextra.typing import Callback, Connectable, GifOption, IconType, OptionalCallback, Orientation
 from qtextra.utils.table_config import TableConfig
 
 if ty.TYPE_CHECKING:
@@ -1112,6 +1112,7 @@ def make_rich_btn(
 def make_active_btn(
     parent: Qw.QWidget | None,
     text: str,
+    which: str | GifOption = "infinity",
     tooltip: str | None = None,
     flat: bool = False,
     func: Callback | None = None,
@@ -1119,7 +1120,7 @@ def make_active_btn(
     """Make button with activity indicator."""
     from qtextra.widgets.qt_button import QtActivePushButton
 
-    widget = QtActivePushButton(parent=parent)
+    widget = QtActivePushButton(parent=parent, which=which)
     widget.setParent(parent)
     widget.setText(text)
     if tooltip:
@@ -2634,7 +2635,7 @@ def _get_confirm_dlg(
 def is_valid(widget: Qw.QWidget) -> bool:
     """Is valid."""
     try:
-        widget
+        repr(widget)
     except RuntimeError:
         return False
     return True
@@ -2883,7 +2884,10 @@ def make_spacer_widget(
 
 
 def add_flash_animation(
-    widget: Qw.QWidget, duration: int = 300, color: Array = (0.5, 0.5, 0.5, 0.5), n_loop: int = 1
+    widget: Qw.QWidget,
+    duration: int = 300,
+    color: np.ndarray | tuple[float, ...] = (0.5, 0.5, 0.5, 0.5),
+    n_loop: int = 1,
 ) -> None:
     """Add flash animation to widget to highlight certain action (e.g. taking a screenshot).
 
@@ -2982,7 +2986,7 @@ def remove_expand_animation(widget: Qw.QWidget) -> None:
 
 def make_loading_gif(
     parent: Qw.QWidget | None,
-    which: str | ty.Literal["dots", "infinity", "oval", "circle", "square"] = "infinity",
+    which: str | GifOption = "infinity",
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,
@@ -3020,7 +3024,7 @@ def make_gif_label(
 
 
 def make_gif(
-    which: str | ty.Literal["dots", "infinity", "oval", "confirm_close", "circle"] = "confirm_close",
+    which: str | GifOption = "confirm_close",
     size: tuple[int, int] = (20, 20),
     start: bool = True,
 ) -> QMovie:
@@ -3562,6 +3566,9 @@ def get_widget_for_schema(
     QtToggleGroup | Qw.QHBoxLayout | None,
 ]:
     """Get widget for specified field."""
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
+    from qtextra.widgets.qt_toggle_group import QtToggleGroup
+
     widget_cls = schema.get("widget_cls", None)
     if widget_cls is None:
         widget_cls = guess_widget_cls(schema)
@@ -3638,23 +3645,27 @@ def get_widget_for_schema(
 
 def get_value_from_widget(widget: Qw.QWidget) -> ty.Any:
     """Get value from widget."""
+    from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
+    from qtextra.widgets.qt_toggle_group import QtToggleGroup
+
     if isinstance(widget, Qw.QLineEdit):
         return widget.text()
     elif isinstance(widget, Qw.QCheckBox):
         return widget.isChecked()
     elif isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
         return widget.value()
-    elif isinstance(widget, Qw.QtCheckableComboBox):
-        return widget.checked_texts()
     elif isinstance(widget, Qw.QComboBox):
         return widget.currentText()
+    elif isinstance(widget, Qw.QLabel):
+        return widget.text()
+    elif isinstance(widget, QtCheckableComboBox):
+        return widget.checked_texts()
     elif isinstance(widget, QtMultiSelect):
         checked = widget.get_checked()
         if widget.n_max == 1:
             return checked[0] if checked else None
         return checked
-    elif isinstance(widget, Qw.QLabel):
-        return widget.text()
     elif isinstance(widget, QtToggleGroup):
         return widget.value
     raise ValueError(f"Unknown widget class {widget}")

@@ -8,12 +8,12 @@ from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 class QtActiveProgressBarButton(QWidget):
     """Button with progress bar in a layout."""
 
-    def __init__(self, parent: QWidget | None, text: str = ""):
+    def __init__(self, parent: QWidget | None, text: str = "", which: str = "infinity"):
         super().__init__(parent=parent)
 
         import qtextra.helpers as hp
 
-        self.active_btn = hp.make_active_btn(self, text)
+        self.active_btn = hp.make_active_btn(self, text, which=which)
         self.evt_clicked = self.active_btn.clicked
         self.setText = self.active_btn.setText
 
@@ -39,6 +39,7 @@ class QtActiveProgressBarButton(QWidget):
         layout.setSpacing(0)
         layout.addLayout(button_layout)
         layout.addWidget(self.progress_bar)
+        layout.addStretch(True)
         self.active = False
 
     @property

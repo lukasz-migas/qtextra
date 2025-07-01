@@ -1,4 +1,4 @@
-"""Color button."""
+y677"""Color button."""
 
 import typing as ty
 

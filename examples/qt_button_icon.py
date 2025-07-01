@@ -10,6 +10,7 @@ from qtextra.widgets.qt_button_icon import (
     QtExpandButton,
     QtFullscreenButton,
     QtHorizontalDirectionButton,
+    QtImageButton,
     QtLockButton,
     QtMinimizeButton,
     QtPauseButton,
@@ -17,6 +18,7 @@ from qtextra.widgets.qt_button_icon import (
     QtPriorityButton,
     QtSortButton,
     QtStateButton,
+    QtThemeButton,
     QtToggleButton,
     QtVerticalDirectionButton,
     QtVisibleButton,
@@ -49,6 +51,8 @@ for klass in [
     QtVisibleButton,
     QtLockButton,
     QtToggleButton,
+    QtThemeButton,
+    QtImageButton,
 ]:
     # crate an instance of the class, auto_connect will ensure that the icon changes upon clicking
     btn = klass(widget, auto_connect=True)

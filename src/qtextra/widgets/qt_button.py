@@ -101,11 +101,11 @@ class QtActivePushButton(QtPushButton):
 
     _pixmap = None
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, which: str = "infinity", **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         from qtextra.helpers import make_gif
 
-        self.loading_movie = make_gif("infinity")
+        self.loading_movie = make_gif(which)
         self.loading_movie.frameChanged.connect(self._update_icon)
         self.active = False
 
