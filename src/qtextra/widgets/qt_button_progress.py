@@ -39,7 +39,7 @@ class QtActiveProgressBarButton(QWidget):
         layout.setSpacing(0)
         layout.addLayout(button_layout)
         layout.addWidget(self.progress_bar)
-        layout.addStretch(True)
+        # layout.addStretch(True)
         self.active = False
 
     @property
