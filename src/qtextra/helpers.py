@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os.path
 import typing as ty
+import warnings
 from contextlib import contextmanager
 from enum import Enum
 from functools import partial
@@ -374,7 +375,9 @@ def make_label(
     hide: bool = False,
     disabled: bool = False,
     activated_func: Callback | None = None,
+    func_activated: Callback | None = None,
     click_func: Callback | None = None,
+    func_clicked: Callback | None = None,
     elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
     vertical: bool = False,
     min_width: int = 0,
@@ -389,9 +392,17 @@ def make_label(
 
     if vertical:
         widget = QtVerticalLabel(parent)
-        click_func = None
+        func_clicked = None
     else:
         widget = QtClickLabel(parent)
+
+    if activated_func:
+        warnings.warn("`activated_func` is deprecated, use `func_activated` instead.", DeprecationWarning, stacklevel=2)
+        func_activated = activated_func
+    if click_func:
+        warnings.warn("`click_func` is deprecated, use `func_clicked` instead.", DeprecationWarning, stacklevel=2)
+        func_clicked = click_func
+
     widget.setText(text)
     widget.setObjectName(object_name)
     if enable_url:
@@ -409,10 +420,10 @@ def make_label(
         set_font(widget, font_size=font_size, bold=bold)
     if selectable:
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse)
-    if activated_func:
-        [widget.linkActivated.connect(func) for func in _validate_func(activated_func)]
-    if click_func:
-        [widget.evt_clicked.connect(func) for func in _validate_func(click_func)]
+    if func_activated:
+        [widget.linkActivated.connect(func) for func in _validate_func(func_activated)]
+    if func_clicked:
+        [widget.evt_clicked.connect(func) for func in _validate_func(func_clicked)]
     if disabled:
         widget.setProperty("disabled", True)
     if hasattr(widget, "setElideMode"):
