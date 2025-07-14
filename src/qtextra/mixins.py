@@ -175,24 +175,25 @@ class CloseMixin:
 
     close: ty.Callable[..., ty.Any]
     _make_move_handle: ty.Callable[..., ty.Any]
+    _close_handle = None
 
     def _make_close_layout(self, title: str = "") -> QHBoxLayout:
         """Make close layout."""
         return self._make_close_handle(title=title)[1]
 
     def _make_close_handle(self, title: str = "") -> tuple[QPushButton, QHBoxLayout]:
-        close_btn = hp.make_qta_btn(
+        self._close_handle = hp.make_qta_btn(
             self,
             "cross",
             tooltip="Click here to close the popup window",
             normal=True,
+            func=self.close,
         )
-        close_btn.clicked.connect(self.close)
 
         close_layout = self._make_move_handle()
-        close_layout.addWidget(close_btn)
+        close_layout.addWidget(self._close_handle)
         self._title_label.setText(title)
-        return close_btn, close_layout
+        return self._close_handle, close_layout
 
     def _make_hide_layout(self, title: str = "") -> QHBoxLayout:
         """Make hide layout."""

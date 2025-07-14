@@ -426,6 +426,24 @@ def make_label(
     return widget
 
 
+def make_hint_label(
+    self,
+    text: str,
+    alignment: Qt.AlignmentFlag | None = None,
+    wrap: bool = False,
+    visible: bool = True,
+) -> Qw.QLabel:
+    """Make hint label."""
+    widget = Qw.QLabel(self)
+    widget.setText(text)
+    widget.setObjectName("hint_label")
+    widget.setWordWrap(wrap)
+    widget.setVisible(visible)
+    if alignment is not None:
+        widget.setAlignment(alignment)
+    return widget
+
+
 def make_tooltip_label(
     parent: Qw.QWidget | None,
     icon_name: IconType,
@@ -1221,10 +1239,10 @@ def make_qta_btn(
     if func_menu:
         widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         widget.customContextMenuRequested.connect(func_menu)
-        widget.has_right_click = True
+        widget.menu_enabled = True
         is_menu = True
     if is_menu:
-        widget.has_right_click = is_menu
+        widget.menu_enabled = is_menu
     if retain_size:
         set_retain_hidden_size_policy(widget)
     set_properties(widget, properties)
@@ -3606,13 +3624,6 @@ def get_widget_for_schema(
         widget = make_combobox(parent, func=func, **schema)
     elif widget_cls == "searchable_combo_box":
         widget = make_searchable_combobox(parent, func_index=func, **schema)
-    # elif widget_cls == "colormap_combo_box":
-    #     from qtextra.widgets.qt_searchable_combobox import add_search_to_combobox
-    #     from superqt import QColormapComboBox
-    #
-    #     widget = QColormapComboBox(parent)
-    #     widget.addColormaps(schema["enum"])
-    #     add_search_to_combobox(widget)
     elif widget_cls == "multi_combo_box":
         widget = make_checkable_combobox(parent, func=func, **schema)
     elif widget_cls == "multi_select":
@@ -3627,6 +3638,7 @@ def get_widget_for_schema(
         widget = QtToggleGroup.from_schema(parent, func=func, exclusive=False, **schema)
     else:
         raise ValueError(f"Unknown widget class {widget_cls}")
+
     # hide widget if needed
     if not schema.get("show", True):
         widget.hide()

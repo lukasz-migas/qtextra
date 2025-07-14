@@ -54,6 +54,13 @@ def qdev(
     return widget
 
 
+def enable_dev_border(app_or_widget) -> None:
+    """Enable dev border on widget."""
+    if hasattr(app_or_widget, "DEV_WIDGET"):
+        widget = app_or_widget.DEV_WIDGET
+        widget._enable_widget_borders.setChecked(True)
+
+
 def qdev_dock(
     parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
 ) -> ty.Tuple[QtReloadWidget, QDockWidget]:

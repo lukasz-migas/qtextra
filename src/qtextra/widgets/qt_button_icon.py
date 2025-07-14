@@ -35,9 +35,10 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     evt_click = Signal(QPushButton)
     evt_right_click = Signal(QPushButton)
-    has_right_click: bool = False
     count: int = 0
     count_enabled: bool = False
+    has_right_click: bool = False
+    menu_enabled: bool = False
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
@@ -122,15 +123,16 @@ class QtImagePushButton(QPushButton, QtaMixin):
         """Paint event."""
         super().paintEvent(*args)
         paint = QPainter(self)
-        if self.has_right_click:
+        if self.has_right_click or self.menu_enabled:
             width = self.rect().width() / 6
             radius = self.rect().width() / 8
             x = self.rect().width() - width
             y = self.rect().height() - width
-            color = THEMES.get_hex_color("success")
+            color = THEMES.get_hex_color("success" if self.has_right_click else "highlight")
             paint.setPen(QColor(color))
             paint.setBrush(QColor(color))
             paint.drawEllipse(QPointF(x, y), radius, radius)
+
         if self.count_enabled:
             # add text
             text = "9+" if self.count > 9 else str(self.count)

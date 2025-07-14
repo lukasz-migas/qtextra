@@ -62,31 +62,6 @@ QtLargeLabel {
     margin: 1px;
     background: none;
 }
-
-QLabel#error_label {
-    font-size: {{ increase(font_size, 4) }};
-}
-QLabel#title_label {
-    font-size: {{ increase(font_size, 3) }};
-}
-QLabel#header_label {
-    font-size: {{ increase(font_size, 6) }};
-    font-weight: bold;
-}
-QLabel#large_text {
-    font-size: {{ increase(font_size, 4) }};
-}
-QLabel#medium_text {
-    font-size: {{ increase(font_size, 2) }};
-}
-QLabel#tip_label {
-    color: {{ lighten(text, 30) }};
-}
-QLabel#watch_dir {
-    font-size: {{ increase(font_size, 2) }};
-    font-weight: bold;
-    min-height: 80px;
-}
 QLabel#h1 {
   font-size: 28px;
 }
@@ -98,6 +73,36 @@ QLabel#h3 {
   font-size: 18px;
   color: {{ secondary }};
 }
+
+QLabel#large_text {
+    font-size: {{ increase(font_size, 4) }};
+}
+QLabel#medium_text {
+    font-size: {{ increase(font_size, 2) }};
+}
+QLabel#error_label {
+    font-size: {{ increase(font_size, 4) }};
+}
+QLabel#title_label {
+    font-size: {{ increase(font_size, 3) }};
+}
+QLabel#header_label {
+    font-size: {{ increase(font_size, 6) }};
+    font-weight: bold;
+}
+QLabel#hint_label {
+    color: {{ lighten(text, 30) }};
+}
+QLabel#tip_label {
+    color: {{ lighten(text, 30) }};
+}
+
+QLabel#watch_dir {
+    font-size: {{ increase(font_size, 2) }};
+    font-weight: bold;
+    min-height: 80px;
+}
+
 
 /* ------------- QtClickableLabel --------- */
 QtClickableLabel{

@@ -251,24 +251,20 @@ class SystemSummaryPopup(QtFramelessPopup):
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import sys
 
-    def _main():  # type: ignore[no-untyped-def]
-        import sys
+    from qtextra.utils.dev import qframe
 
-        from qtextra.utils.dev import qframe
+    def _make_popup():
+        """Create a popup."""
+        popup = SystemSummaryPopup(frame)
+        popup.exec()
 
-        def _make_popup():
-            """Create a popup."""
-            popup = SystemSummaryPopup(frame)
-            popup.exec()
+    app, frame, ha = qframe(False)
+    frame.setMinimumSize(600, 600)
 
-        app, frame, ha = qframe(False)
-        frame.setMinimumSize(600, 600)
+    ha.addWidget(QtSystemSummaryWidget(parent=frame))
+    ha.addWidget(hp.make_btn(parent=frame, text="Open popup", func=_make_popup))
 
-        ha.addWidget(QtSystemSummaryWidget(parent=frame))
-        ha.addWidget(hp.make_btn(parent=frame, text="Open popup", func=_make_popup))
-
-        frame.show()
-        sys.exit(app.exec_())
-
-    _main()
+    frame.show()
+    sys.exit(app.exec_())
