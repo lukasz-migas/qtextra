@@ -6,7 +6,7 @@ import os.path
 import typing as ty
 import warnings
 from contextlib import contextmanager
-from enum import Enum
+from enum import Enum, EnumMeta
 from functools import partial
 from pathlib import Path
 
@@ -29,7 +29,7 @@ from qtpy.QtGui import (
     QPixmap,
     QValidator,
 )
-from superqt import QElidingLabel, QLabeledSlider
+from superqt import QElidingLabel, QEnumComboBox, QLabeledDoubleSlider, QLabeledSlider
 
 from qtextra.typing import Callback, Connectable, GifOption, IconType, OptionalCallback, Orientation
 from qtextra.utils.table_config import TableConfig
@@ -294,6 +294,11 @@ def increment_combobox(
     return combobox.currentIndex()
 
 
+def get_options_from_combobox(widget: Qw.QComboBox) -> list[str]:
+    """Return list of options from combobox."""
+    return [widget.itemText(index) for index in range(widget.count())]
+
+
 def set_combobox_data(
     widget: Qw.QComboBox, data: ty.Union[dict, ty.OrderedDict, Enum], current_item: str | None = None
 ):
@@ -312,9 +317,14 @@ def set_combobox_data(
 
 
 def set_combobox_text_data(
-    widget: Qw.QComboBox, data: ty.Union[list[str], dict[str, ty.Any]], current_item: str | None = None
+    widget: Qw.QComboBox,
+    data: ty.Union[list[str], dict[str, ty.Any]],
+    current_item: str | None = None,
+    clear: bool = False,
 ):
     """Set data/value on combobox."""
+    if clear:
+        widget.clear()
     if isinstance(data, ty.List):
         data = {m: m for m in data}
     for index, (text, item) in enumerate(data.items()):
@@ -825,6 +835,20 @@ def make_multi_select(
     )
 
 
+def make_enum_combobox(
+    *,
+    parent: Qw.QWidget | None,
+    enum_class: EnumMeta,
+    current_enum: Enum,
+    callback: ty.Callable[[], ty.Any] | ty.Callable[[Enum], ty.Any],
+) -> QEnumComboBox:
+    """Create an enum combobox widget."""
+    combo = QEnumComboBox(parent, enum_class=enum_class)
+    combo.setCurrentEnum(current_enum)
+    combo.currentEnumChanged.connect(callback)
+    return combo
+
+
 def make_combobox(
     parent: Qw.QWidget | None,
     items: ty.Sequence[str] | None = None,
@@ -1056,6 +1080,7 @@ def make_btn(
     hide: bool = False,
     disable: bool = False,
     wrap: bool = False,
+    retain_size: bool = False,
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
@@ -1086,6 +1111,8 @@ def make_btn(
         widget.hide()
     if disable:
         disable_widgets(widget, disabled=disable)
+    if retain_size:
+        set_retain_hidden_size_policy(widget)
     set_properties(widget, properties)
     return widget
 
@@ -1595,8 +1622,6 @@ def make_slider_with_text(
     func: Callback | None = None,
 ) -> Qw.QSlider:
     """Make QSlider."""
-    from superqt import QLabeledSlider
-
     orientation = get_orientation(orientation)
     widget = QLabeledSlider(orientation, parent)
     widget.setRange(min_value, max_value)
@@ -1616,6 +1641,7 @@ def make_double_slider_with_text(
     max_value: float = 100,
     step_size: float = 1,
     value: float = 1,
+    value_range: tuple[float, float] | None = None,
     n_decimals: int = 1,
     orientation: Orientation = "horizontal",
     tooltip: str | None = None,
@@ -1623,8 +1649,8 @@ def make_double_slider_with_text(
     func: Callback | None = None,
 ) -> Qw.QSlider:
     """Make QSlider."""
-    from superqt import QLabeledDoubleSlider
-
+    if value_range:
+        min_value, max_value = value_range
     orientation = get_orientation(orientation)
     widget = QLabeledDoubleSlider(orientation, parent)
     widget.setRange(min_value, max_value)
@@ -2069,6 +2095,18 @@ def _set_in_layout(
     if stretch_after:
         layout.addStretch(True)
     return layout
+
+
+def make_stacked_widget(
+    *widget: Qw.QWidget, parent: Qw.QWidget | None = None, index: int | None = None
+) -> Qw.QStackedWidget:
+    """Make stacked widget."""
+    stacked_widget = Qw.QStackedWidget(parent)
+    for widget_ in widget:
+        stacked_widget.addWidget(widget_)
+    if index is not None:
+        stacked_widget.setCurrentIndex(index)
+    return stacked_widget
 
 
 def make_progressbar(
@@ -2912,6 +2950,28 @@ def make_spacer_widget(
     return spacer
 
 
+def make_horizontal_spacer() -> Qw.QWidget:
+    """Make widget that fills space."""
+    return make_spacer_widget(horz=Qw.QSizePolicy.Policy.Expanding, vert=Qw.QSizePolicy.Policy.Minimum)
+
+
+def make_vertical_spacer() -> Qw.QWidget:
+    """Make widget that fills space."""
+    return make_spacer_widget(horz=Qw.QSizePolicy.Policy.Minimum, vert=Qw.QSizePolicy.Policy.Expanding)
+
+
+def make_v_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
+    """Make vertical QSpacerItem."""
+    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Preferred, Qw.QSizePolicy.Policy.Expanding)
+    return widget
+
+
+def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
+    """Make horizontal QSpacerItem."""
+    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Preferred)
+    return widget
+
+
 def add_flash_animation(
     widget: Qw.QWidget,
     duration: int = 300,
@@ -3566,7 +3626,7 @@ def connect(
             )
             if source:
                 text += f"; source={source}"
-            logger.debug(text)
+            logger.trace(text)
 
 
 def guess_widget_cls(schema: dict) -> str:

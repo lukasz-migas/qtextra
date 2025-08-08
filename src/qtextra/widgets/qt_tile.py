@@ -53,14 +53,13 @@ class QtTileWidget(QFrame):
         else:
             self._image = hp.make_label(self, "")  # type: ignore[assignment]
         self._description = hp.make_label(
-            self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter
+            self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, retain_size=True,
         )
-        hp.set_retain_hidden_size_policy(self._description)
 
         self._warning = hp.make_label(
-            self, self._tile.warning, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="small_text"
+            self, self._tile.warning, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="small_text",
+            retain_size=True
         )
-        hp.set_retain_hidden_size_policy(self._warning)
         if not self._tile.warning:
             self._warning.hide()
 

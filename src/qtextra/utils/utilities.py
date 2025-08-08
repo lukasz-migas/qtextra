@@ -169,7 +169,7 @@ def connect(
             )
             if source:
                 text += f"; source={source}"
-            logger.debug(text)
+            logger.trace(text)
 
 
 def s(path: Path) -> str:

@@ -234,13 +234,15 @@ class QtMiniToolbar(QFrame):
     def insert_spacer(self) -> None:
         """Insert spacer item."""
         spacer = (
-            hp.make_spacer_widget()
-        )  # make_v_spacer() if self.orientation == Qt.Orientation.Horizontal else make_h_spacer()
+            hp.make_horizontal_spacer() if self.orientation == Qt.Orientation.Horizontal else hp.make_vertical_spacer()
+        )
         self.layout_.insertWidget(0, spacer, stretch=True)
 
     def add_spacer(self) -> None:
         """Insert spacer item."""
-        spacer = hp.make_spacer_widget()
+        spacer = (
+            hp.make_horizontal_spacer() if self.orientation == Qt.Orientation.Horizontal else hp.make_vertical_spacer()
+        )
         self.layout_.insertWidget(self.layout_.count(), spacer, stretch=True)
 
     def show_border(self) -> None:

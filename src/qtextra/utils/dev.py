@@ -170,11 +170,16 @@ def _apply_style_on_widget(widget: QWidget) -> None:
     print("Applying style on widget")
 
 
-def apply_style(widget: QWidget) -> None:
+def apply_style(widget: QWidget, show_widget_borders: bool = False) -> None:
     """Apply stylesheet(s) on the widget."""
     from qtextra.config.theme import THEMES
 
     THEMES.set_theme_stylesheet(widget)
+    if show_widget_borders:
+        tmp_stylesheet = "QWidget { border: 1px solid #ff0000;}"
+        stylesheet = widget.styleSheet()
+        stylesheet += "\n" + tmp_stylesheet
+        widget.setStyleSheet(stylesheet)
     THEMES.evt_qss_changed.connect(lambda: _apply_style_on_widget(widget))
 
 

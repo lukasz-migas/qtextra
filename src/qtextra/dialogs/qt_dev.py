@@ -1,5 +1,7 @@
 """Popup for developer tools."""
 
+import typing as ty
+
 from qtpy.QtWidgets import QLayout, QVBoxLayout, QWidget
 
 from qtextra.widgets.qt_dialog import QtFramelessTool
@@ -13,15 +15,16 @@ except ImportError:
 class QDevPopup(QtFramelessTool):
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent: QWidget, modules: list[str]):
+    def __init__(self, parent: QWidget, modules: list[str], log_func: ty.Callable = lambda *args: None) -> None:
         self.modules = modules
+        self.log_func = log_func
         super().__init__(parent)
         self.setMinimumWidth(800)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QLayout:
         """Make panel."""
-        self.qdev = QtReloadWidget(self.modules, self)
+        self.qdev = QtReloadWidget(self.modules, self, log_func=self.log_func)
 
         _, hide_layout = self._make_hide_handle("Developer tools")
         layout = QVBoxLayout()

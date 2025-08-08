@@ -124,6 +124,10 @@ QComboBox {
   font-size: {{ increase(font_size, 1) }};
 }
 
+QComboBox:on {
+  border-radius: 0px;
+}
+
 QComboBox:disabled {
   background-color: {{ opacity(foreground, 75) }};
   border: 1px solid;
@@ -134,7 +138,6 @@ QComboBox:disabled {
 QWidget[emphasized="true"]  QComboBox {
   background-color: {{ primary }};
 }
-
 
 QComboBox::drop-down {
   width: 26px;
@@ -152,9 +155,7 @@ QComboBox::down-arrow:on {
   /* when the dropdown is open */
 }
 
-QComboBox:on {
-  border-radius: 0px;
-}
+/* ----------------- QListView ------------------ */
 
 QListView {
   /* controls the color of the open dropdown menu */
@@ -179,9 +180,7 @@ QListView::indicator:checked {
   image: url("theme_{{ id }}:/check.svg");
 }
 
-QWidget[emphasized="true"] QComboBox {
-  background-color: {{ primary }};
-}
+
 
 /* ----------------- QLineEdit ------------------ */
 

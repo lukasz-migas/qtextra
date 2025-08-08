@@ -771,11 +771,14 @@ class QtCheckableTableView(QTableView):
         config: TableConfig | None = self._config
         n_cols = self.column_count()
         header = self.header
-        # 25 px is optimal size for checkbox
+        # 25 px is the optimal size for checkbox
         header.setMinimumSectionSize(25)
         for column_id in range(n_cols):
             if config:
-                sizing_ = config.get(column_id)["sizing"]
+                column_metadata = config.get(column_id)
+                if not column_metadata:
+                    continue
+                sizing_ = column_metadata["sizing"]
                 mode = sizing.get(
                     sizing_, QHeaderView.ResizeMode.Stretch if column_id else QHeaderView.ResizeMode.Fixed
                 )
