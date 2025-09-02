@@ -28,22 +28,17 @@ class QtElidingLabel(QElidingLabel):
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import sys
 
-    def _main():  # type: ignore[no-untyped-def]
-        import sys
+    from qtextra.utils.dev import qframe
 
-        from qtextra.utils.dev import qframe
-
-        app, frame, ha = qframe(False)
-
-        widget = QtElidingLabel(
+    app, frame, ha = qframe(False)
+    ha.addWidget(
+        QtElidingLabel(
             parent=frame,
             text="This is a lot of text that should be cut because its way too long for such a short label\n" * 5,
             multiline=True,
         )
-
-        ha.addWidget(widget)
-        frame.show()
-        sys.exit(app.exec_())
-
-    _main()
+    )
+    frame.show()
+    sys.exit(app.exec_())
