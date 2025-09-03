@@ -9,6 +9,11 @@ QStatusBar::item{
 }
 
 /* ------------ QtStatusbarWidget ------------ */
+QtStatusbarIconWidget {
+    background-color: {{ darken(background, 5) }};
+    background-color: {{ foreground }};
+}
+
 QtStatusbarIconWidget > QtIconLabel {
     background-color: {{ darken(background, 5) }};
 }

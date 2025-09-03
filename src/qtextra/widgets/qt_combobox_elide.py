@@ -31,7 +31,7 @@ class QtElideComboBox(QComboBox):
         painter.drawControl(QStyle.ControlElement.CE_ComboBoxLabel, option)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     app = QApplication(sys.argv)
     combo = QtElideComboBox()
     combo.addItems(
