@@ -18,6 +18,7 @@ QueueList {
 }
 
 /* Status labels
+invalid = black #000000
 queued = orange #00C851
 incomplete = dark-orange #ffbb33
 run_next = pink #e04196
@@ -67,6 +68,12 @@ QLabel#task_info[text="step can fail"] {
 QLabel#task_info[text="all must succeed"] {
     border: 3px solid #8E24AA;
     background-color: #8E24AA;
+    color: #ffffff;
+}
+
+QLabel#task_state[text="Invalid"] {
+    border: 3px solid #000000;
+    background-color: #000000;
     color: #ffffff;
 }
 
