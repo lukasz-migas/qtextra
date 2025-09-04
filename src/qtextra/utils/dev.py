@@ -56,9 +56,12 @@ def qdev(
 
 def enable_dev_border(app_or_widget) -> None:
     """Enable dev border on widget."""
-    if hasattr(app_or_widget, "DEV_WIDGET"):
-        widget = app_or_widget.DEV_WIDGET
-        widget._enable_widget_borders.setChecked(True)
+    try:
+        if hasattr(app_or_widget, "DEV_WIDGET"):
+            widget = app_or_widget.DEV_WIDGET
+            widget._enable_widget_borders.setChecked(True)
+    except RuntimeError:
+        pass
 
 
 def qdev_dock(
