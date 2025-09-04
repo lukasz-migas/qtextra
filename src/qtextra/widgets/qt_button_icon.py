@@ -26,6 +26,7 @@ import qtextra.helpers as hp
 from qtextra.assets import get_icon
 from qtextra.config import THEMES
 from qtextra.widgets._qta_mixin import QtaMixin
+from qtextra.widgets.qt_tooltip import QtToolTip, TipPosition
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
 
@@ -462,6 +463,8 @@ class QtFullscreenButton(QtTogglePushButton):
 
 
 class QtMinimizeButton(QtTogglePushButton):
+    """Lock button with shown/hidden icon."""
+
     ICON_ON = "minimize"
     ICON_OFF = "maximize"
 
@@ -636,6 +639,7 @@ class QtToolbarPushButton(QtImagePushButton):
 
     indicator: str = ""
     _text: str = ""
+    _tooltip = None
 
     panel_widget: QWidget | None = None
     about_widget: QWidget | None = None
@@ -651,6 +655,8 @@ class QtToolbarPushButton(QtImagePushButton):
         self.opacity_anim.currentLoopChanged.connect(self._loop_update)
         self.opacity_anim.finished.connect(self.stop_pulse)
 
+        self.tooltip_timer = hp.make_periodic_timer(self, self._show_tooltip, 500, start=False)
+
         self.evt_click.connect(self.stop_pulse)
 
     def setToolTip(self, text: str) -> None:  # type: ignore[override]
@@ -663,13 +669,30 @@ class QtToolbarPushButton(QtImagePushButton):
         pos -= QPoint(0, 22)
         return pos
 
+    def _show_tooltip(self) -> None:
+        """Show a tooltip if it's available."""
+        if not self._text or self._tooltip is not None:
+            return
+        self._tooltip = QtToolTip.init(
+            self,
+            title="",
+            content=self._text,
+            icon=None,
+            parent=self,
+            tail_position=TipPosition.LEFT,
+            is_closable=False,
+            duration=-1,
+        )
+
     def event(self, evt: QEvent) -> bool:  # type: ignore[override]
-        """Override event handler to quickly display/hide tooltip."""
+        """Override event handler to quickly display/hide a tooltip."""
         if evt.type() == QEvent.Type.Enter:
-            QToolTip.showText(self._get_position(), self._text)
+            if not self._tooltip:
+                self.tooltip_timer.start()
             evt.ignore()
         elif evt.type() == QEvent.Type.Leave:
-            QToolTip.hideText()
+            self.tooltip_timer.stop()
+            self._tooltip = hp.close_widget(self._tooltip)
         return super().event(evt)
 
     @Slot(int)  # type: ignore[misc]

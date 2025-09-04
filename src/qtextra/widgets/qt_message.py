@@ -12,15 +12,18 @@ from qtextra.widgets.qt_label import QtWelcomeLabel
 class MessageWidget(QWidget):
     """Widget that displays a message at the center of the page."""
 
-    def __init__(self, message: str, parent=None, icon: str = ""):
+    def __init__(self, message: str, parent: QWidget | None = None, icon: str = ""):
         super().__init__(parent)
 
-        self.icon = hp.make_qta_label(self, icon)
-        self.icon.setVisible(icon != "")
-
-        self.label = QtWelcomeLabel(message)
-        self.label.setWordWrap(True)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.icon = hp.make_qta_label(self, icon, hide=icon == "")
+        self.label = hp.make_label(
+            self,
+            message,
+            wrap=True,
+            alignment=Qt.AlignmentFlag.AlignCenter,
+            enable_url=True,
+            object_name="overlay_label",
+        )
 
         layout = QVBoxLayout(self)
         layout.addStretch(True)
@@ -34,5 +37,6 @@ class MessageWidget(QWidget):
         return self.label.text()
 
     @message.setter
-    def message(self, value: str):
+    def message(self, value: str) -> None:
+        """Set message."""
         self.label.setText(value)

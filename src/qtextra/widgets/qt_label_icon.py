@@ -18,13 +18,13 @@ from qtextra.widgets._qta_mixin import QtaMixin
 
 def make_png_label(icon_path: str, size: tuple[int, int] = (40, 40)) -> QLabel:
     """Make svg icon."""
-    image = QKeepAspectLabel(None, icon_path)
+    image = QtKeepAspectLabel(None, icon_path)
     image.setMinimumSize(*size)
     return image
 
 
-class QKeepAspectLabel(QLabel):
-    """Keep aspect ratio label."""
+class QtKeepAspectLabel(QLabel):
+    """Keep the aspect ratio label."""
 
     def __init__(self, parent: QWidget | None, path: PathLike):
         super().__init__(parent)

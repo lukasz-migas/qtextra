@@ -111,7 +111,7 @@ class PopoutView(PopoutViewBase):
         self.is_closable = is_closable
 
         self.titleLabel = hp.make_label(self, title, bold=True, object_name="titleLabel")
-        self.contentLabel = hp.make_label(self, title, object_name="contentLabel")
+        self.contentLabel = hp.make_label(self, title, object_name="contentLabel", enable_url=True)
 
         # add icon widget
         self.iconWidget = hp.make_qta_label(self, icon or "")

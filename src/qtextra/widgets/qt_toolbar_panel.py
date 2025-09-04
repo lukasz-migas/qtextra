@@ -187,7 +187,6 @@ class QtPanelWidget(QWidget):
         if not button:
             logger.warning(f"Button with name '{name}' not found")
             return
-        button.disconnect()
         button.setCheckable(True)
         index = self.get_index(button)
 
@@ -301,7 +300,7 @@ class QtPanelToolbar(QToolBar):
 
     @property
     def stack_widget(self) -> QStackedWidget:
-        """Get instance of the stack widget."""
+        """Get an instance of the stack widget."""
         return self._widget._stack
 
     # noinspection PyMissingOrEmptyDocstring

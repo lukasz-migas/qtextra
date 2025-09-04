@@ -25,6 +25,11 @@ QLabel#window_title {
     font-weight: bold;
 }
 
+QLabel#overlay_label {
+    font-size: {{ increase(font_size, 14) }};
+    color: {{ lighten(text, 40) }};
+}
+
 QtDragWidget, QtDragWidget[drag=false] {
     background: {{ background }};
 }
@@ -34,15 +39,9 @@ QtDragWidget[drag=true] {
 }
 
 QtWelcomeLabel {
-    background: none;
-    color: {{ text }};
     font-size: 20px;
-}
-
-QtShortcutLabel {
-    background: none;
     color: {{ text }};
-    font-size: 16px;
+    background: none;
 }
 
 QtShortcut {
@@ -50,6 +49,13 @@ QtShortcut {
     font-size: 16px;
     font-weight: bold;
     text-align: top left;
+}
+
+
+QtShortcutLabel {
+    background: none;
+    color: {{ text }};
+    font-size: 16px;
 }
 
 QtLargeLabel {

@@ -5,7 +5,7 @@ from __future__ import annotations
 import os.path
 import typing as ty
 import warnings
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from enum import Enum, EnumMeta
 from functools import partial
 from pathlib import Path
@@ -448,21 +448,29 @@ def make_label(
 
 
 def make_hint_label(
-    self,
+    parent: Qw.QWidget,
     text: str,
     alignment: Qt.AlignmentFlag | None = None,
     wrap: bool = False,
     visible: bool = True,
 ) -> Qw.QLabel:
     """Make hint label."""
-    widget = Qw.QLabel(self)
-    widget.setText(text)
-    widget.setObjectName("hint_label")
-    widget.setWordWrap(wrap)
-    widget.setVisible(visible)
-    if alignment is not None:
-        widget.setAlignment(alignment)
-    return widget
+    return make_label(
+        parent, text, alignment=alignment, object_name="hint_label", enable_url=True, wrap=wrap, visible=visible
+    )
+
+
+def make_tip_label(
+    parent: Qw.QWidget,
+    text: str,
+    alignment: Qt.AlignmentFlag | None = Qt.AlignmentFlag.AlignHCenter,
+    wrap: bool = True,
+    visible: bool = True,
+):
+    """Make tip label."""
+    return make_label(
+        parent, text, alignment=alignment, object_name="tip_label", enable_url=True, wrap=wrap, visible=visible
+    )
 
 
 def make_tooltip_label(
@@ -641,6 +649,7 @@ def make_qta_label(
     xxlarge: bool = False,
     retain_size: bool = False,
     hover: bool = False,
+    hide: bool = False,
     **kwargs: ty.Any,
 ) -> QtQtaLabel:
     """Make QLabel element."""
@@ -668,6 +677,8 @@ def make_qta_label(
         widget.setToolTip(tooltip)
     if retain_size:
         set_retain_hidden_size_policy(widget)
+    if hide:
+        widget.setVisible(False)
     return widget
 
 
@@ -2702,10 +2713,32 @@ def _get_confirm_dlg(
 def is_valid(widget: Qw.QWidget) -> bool:
     """Is valid."""
     try:
-        repr(widget)
+        if hasattr(widget, "x"):
+            widget.x()
+        else:
+            repr(widget)
     except RuntimeError:
         return False
     return True
+
+
+def clear_if_invalid(widget: Qw.QWidget) -> Qw.QWidget | None:
+    """Clear widget if invalid."""
+    if not is_valid(widget):
+        return None
+    return widget
+
+
+def close_widget(widget: Qw.QWidget):
+    """Close widget."""
+    if widget is not None:
+        with suppress(Exception):
+            widget.close()
+        with suppress(Exception):
+            widget.setParent(None)
+        with suppress(Exception):
+            widget.deleteLater()
+    return None
 
 
 def confirm(
