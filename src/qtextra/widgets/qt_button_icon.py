@@ -852,6 +852,7 @@ if __name__ == "__main__":  # pragma: no cover
                 btn.set_count(i)
             btn.set_qta(qta_name, scale_factor=1)
             btn.setToolTip(f"{name} :: {qta_name}")
+            btn.setCheckable(True)
             lay.addWidget(btn)
             if i % 10 == 0:
                 ha.addLayout(lay)

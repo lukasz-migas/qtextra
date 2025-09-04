@@ -132,6 +132,8 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "unlocked": "mdi.lock-open",
     "notified": "mdi6.bell",
     "not_notified": "mdi6.bell-off",
+    "auto": "mdi6.brightness-auto",
+    "double_click": "mdi6.gesture-double-tap",
     # notification
     "notification": "mdi6.bell",
     "notification_on": "mdi6.bell",

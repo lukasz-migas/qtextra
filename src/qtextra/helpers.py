@@ -1482,6 +1482,8 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
 
 def show_menu(menu: Qw.QMenu | None = None, menu_func: ty.Callable | None = None) -> None:
     """Set menu on widget."""
+    if callable(menu):
+        menu_func = menu
     if menu is None:
         menu = menu_func()
     if menu:
