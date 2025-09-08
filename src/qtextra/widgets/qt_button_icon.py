@@ -882,6 +882,17 @@ if __name__ == "__main__":  # pragma: no cover
                 ha.addLayout(lay)
                 break
 
+        lay = QVBoxLayout()
+        for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
+            btn = QtImagePushButton()
+            btn.set_qta(qta_name)
+            btn.setText(name)
+            btn.setToolTip(f"{name} :: {qta_name}")
+            lay.addWidget(btn)
+            if i == 10:
+                ha.addLayout(lay)
+                break
+
         frame.show()
         sys.exit(app.exec_())
 

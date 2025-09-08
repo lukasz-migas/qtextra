@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import QPointF, QSize, Qt, Signal
+from qtpy.QtCore import QEvent, QPointF, QSize, Qt, Signal
 from qtpy.QtGui import QColor, QMovie, QPainter
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
 

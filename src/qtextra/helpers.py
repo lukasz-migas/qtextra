@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os.path
 import typing as ty
 import warnings
 from contextlib import contextmanager, suppress
@@ -869,6 +868,7 @@ def make_combobox(
     value: str | None = None,
     default: str | None = None,
     func: Callback | None = None,
+    func_index: Callback | None = None,
     expand: bool = True,
     object_name: str | None = None,
     data: dict | None = None,
@@ -897,6 +897,8 @@ def make_combobox(
         set_combobox_data(widget, data, value)
     if func:
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
+    if func_index:
+        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func_index)]
     return widget
 
 
@@ -2609,7 +2611,7 @@ def get_filename(
     from qtpy.QtWidgets import QFileDialog
 
     if base_filename:
-        base_dir = os.path.join(base_dir, base_filename)
+        base_dir = Path(base_dir) / base_filename
     if multiple:
         filename, _ = QFileDialog.getOpenFileNames(
             parent,
@@ -2638,7 +2640,7 @@ def get_save_filename(
     from qtpy.QtWidgets import QFileDialog
 
     if base_filename:
-        base_dir = os.path.join(base_dir, base_filename)
+        base_dir = Path(base_dir) / base_filename
     filename, _ = QFileDialog.getSaveFileName(parent, title, str(base_dir) or "", file_filter)
     return filename
 
@@ -2917,6 +2919,15 @@ def event_hook_removed() -> None:
     finally:
         if hasattr(QtCore, "pyqtRestoreInputHook"):
             QtCore.pyqtRestoreInputHook()
+
+
+def safe_float(text: float, default: float = 0.0) -> float:
+    """Convert text to float safely."""
+    try:
+        value = float(text)
+    except (ValueError, TypeError):
+        value = default
+    return value
 
 
 def enable_with_opacity(
@@ -3307,11 +3318,11 @@ def get_icon_from_img(path: PathLike) -> ty.Optional[QIcon]:
     icon : QIcon
         icon obtained
     """
-    if not os.path.exists(path):
+    if not Path(path).exists():
         return None
 
     icon = QIcon()
-    icon.addPixmap(QPixmap(str(path)), QIcon.Normal, QIcon.Off)
+    icon.addPixmap(QPixmap(str(path)), QIcon.Mode.Normal, QIcon.State.Off)
     return icon
 
 
@@ -3659,6 +3670,27 @@ def connect(
                 f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func};"
                 f" connectable={connectable}"
             )
+            if source:
+                text += f"; source={source}"
+            logger.trace(text)
+
+
+def add_or_remove(
+    appendable: list, func: ty.Callable, state: bool = True, source: str = "", silent: bool = False
+) -> None:
+    """Append or remove function from list."""
+    try:
+        if state:
+            appendable.append(func)
+        else:
+            try:
+                appendable.remove(func)
+            except Exception:
+                index = appendable.index(func)
+                appendable.pop(index)
+    except Exception as exc:
+        if not silent:
+            text = f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func}"
             if source:
                 text += f"; source={source}"
             logger.trace(text)

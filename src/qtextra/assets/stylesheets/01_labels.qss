@@ -80,6 +80,9 @@ QLabel#h3 {
   color: {{ secondary }};
 }
 
+QLabel#extra_large_text {
+    font-size: {{ increase(font_size, 8) }};
+}
 QLabel#large_text {
     font-size: {{ increase(font_size, 4) }};
 }

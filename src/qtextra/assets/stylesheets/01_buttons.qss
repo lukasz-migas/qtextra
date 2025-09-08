@@ -64,6 +64,10 @@ QtImagePushButton[with_text="true"]{
     max-height : 500px;
 }
 
+QtImagePushButton[text_in_center="true"]{
+    text-align : right;
+}
+
 QtImagePushButton[flat="true"]{
     background-color: none;
 }

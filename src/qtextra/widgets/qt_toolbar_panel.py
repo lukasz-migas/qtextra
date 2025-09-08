@@ -220,6 +220,14 @@ class QtPanelWidget(QWidget):
     def _add_after(self, button: QtToolbarPushButton) -> QAction:
         return self._buttons.addWidget(button)  # type: ignore[return-value]
 
+    def add_separator_before(self, button: QtToolbarPushButton) -> None:
+        """Add separator before button."""
+        self._buttons.insertSeparator(button)
+
+    def add_separator_after(self, button: QtToolbarPushButton) -> None:
+        """Add separator."""
+        self._buttons.addSeparator()
+
     def _show_another(self, button: QtToolbarPushButton) -> None:
         """Show another widget if current button is disabled or hidden."""
         for btn in self._button_dict:
@@ -316,6 +324,14 @@ class QtPanelToolbar(QToolBar):
         return self._widget.add_widget(name, tooltip, widget, location=location, func=func)
 
     add_widget.__doc__ = QtPanelWidget.__doc__
+
+    def add_separator_before(self, button: QtToolbarPushButton) -> None:
+        """Add widget to the toolbar."""
+        self._widget.add_separator_before(button)
+
+    def add_separator_after(self, button: QtToolbarPushButton) -> None:
+        """Add widget to the toolbar."""
+        self._widget.add_separator_after(button)
 
     def connect_widget(
         self,

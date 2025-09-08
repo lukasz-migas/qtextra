@@ -214,6 +214,10 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     # hand
     "left_hand": "fa6s.hand-point-left",
     "right_hand": "fa6s.hand-point-right",
+    # resolution
+    "low_resolution": "mdi.standard-definition",
+    "high_resolution": "mdi.standard-definition",
+    "ultra_resolution": "mdi.ultra-high-definition",
     # viewer
     "home": "fa5s.home",
     # "pan_zoom": "ri.drag-move-line",
