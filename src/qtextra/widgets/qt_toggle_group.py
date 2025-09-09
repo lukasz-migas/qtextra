@@ -70,8 +70,8 @@ class QtToggleGroup(QFrame):
         """Get value."""
         buttons = self.checked_buttons
         value = [button.text() for button in buttons]
-        if value and self.button_group.exclusive():
-            return value[0]
+        if self.button_group.exclusive():
+            return value[0] if value else None
         return value
 
     @value.setter

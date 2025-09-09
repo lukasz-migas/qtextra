@@ -132,6 +132,10 @@ class QtPanelWidget(QWidget):
                 return i
         return -1
 
+    def widget_iter(self) -> ty.Iterator[QtToolbarPushButton]:
+        """Iterate over widgets."""
+        yield from self._button_dict
+
     def add_widget(
         self,
         name: str,
@@ -298,6 +302,16 @@ class QtPanelToolbar(QToolBar):
         super().__init__(parent=parent)
 
         self._widget = QtPanelWidget(self, position=position)
+        # Get methods from the internal widget
+        self.widget_iter = self._widget.widget_iter
+        self.add_widget = self._widget.add_widget
+        self.add_separator_after = self._widget.add_separator_after
+        self.add_separator_before = self._widget.add_separator_before
+        self.connect_widget = self._widget.connect_widget
+        self.enable_widget = self._widget.enable_widget
+        self.disable_widget = self._widget.disable_widget
+        self.get_widget = self._widget.get_widget
+        self.get_index = self._widget.get_index
 
         self.setWindowTitle("Toolbar")
         self.setMovable(False)
@@ -311,51 +325,12 @@ class QtPanelToolbar(QToolBar):
         """Get an instance of the stack widget."""
         return self._widget._stack
 
-    # noinspection PyMissingOrEmptyDocstring
-    def add_widget(
-        self,
-        name: str,
-        tooltip: str | None = None,
-        widget: QWidget | None = None,
-        location: str = "top",
-        func: ty.Callable | None = None,
-    ) -> QtToolbarPushButton:
-        """Add widget to the toolbar."""
-        return self._widget.add_widget(name, tooltip, widget, location=location, func=func)
-
-    add_widget.__doc__ = QtPanelWidget.__doc__
-
-    def add_separator_before(self, button: QtToolbarPushButton) -> None:
-        """Add widget to the toolbar."""
-        self._widget.add_separator_before(button)
-
-    def add_separator_after(self, button: QtToolbarPushButton) -> None:
-        """Add widget to the toolbar."""
-        self._widget.add_separator_after(button)
-
-    def connect_widget(
-        self,
-        name: str,
-        widget: QWidget,
-        tooltip: str | None = None,
-    ) -> None:
-        """Add widget to the toolbar."""
-        self._widget.connect_widget(name, widget, tooltip)
-
     def set_disabled(self, button: QtToolbarPushButton, disable: bool) -> None:
         """Set widget as disabled."""
         if disable:
             self.disable_widget(button)
         else:
             self.enable_widget(button)
-
-    def enable_widget(self, button: QtToolbarPushButton) -> None:
-        """Enable widget."""
-        self._widget.enable_widget(button)
-
-    def disable_widget(self, button: QtToolbarPushButton) -> None:
-        """Disable widget."""
-        self._widget.disable_widget(button)
 
     @Slot()  # type: ignore[misc]
     def deactivate_all(self) -> None:
