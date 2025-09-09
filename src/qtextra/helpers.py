@@ -2675,7 +2675,8 @@ def get_color(
         color = QColor(*color.astype(int))
 
     # settings = get_settings()
-    dlg = Qw.QColorDialog(color)
+    dlg = Qw.QColorDialog(parent)
+    dlg.setCurrentColor(color)
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
     new_color: ty.Optional[ty.Union[str, np.ndarray]] = None
