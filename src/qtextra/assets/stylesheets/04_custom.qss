@@ -168,6 +168,11 @@ QLineEdit#discreet_line_edit {
 }
 
 /* ----------------- QWidget ----------------- */
+QWidget#success {
+    border: 2px solid {{ lighten(success, 30) }};
+    border-radius: 2px;
+}
+
 QWidget#error {
     border: 2px solid {{ lighten(error, 30) }};
     border-radius: 2px;
@@ -175,6 +180,11 @@ QWidget#error {
 
 QWidget#warning {
     border: 2px solid {{ lighten(warning, 30) }};
+    border-radius: 2px;
+}
+
+QWidget[drag=true] {
+    border: 4px solid {{ success }};
     border-radius: 2px;
 }
 
@@ -489,8 +499,13 @@ QGroupBox::title {
 }
 
 /* ------------ DialogSystemInfo ------------ */
-DialogSystemInfo > QTextEdit{
-  margin: 0px;
-  border: 0px;
-  padding: 2px;
+/*DialogSystemInfo > QTextEdit{*/
+/*  margin: 0px;*/
+/*  border: 0px;*/
+/*  padding: 2px;*/
+/*}*/
+
+
+QDialog#confirm_dialog > QLabel {
+    font-size: {{ increase(font_size, 3) }};
 }

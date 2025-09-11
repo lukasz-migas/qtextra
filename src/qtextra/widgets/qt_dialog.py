@@ -274,14 +274,14 @@ class ScreenshotMixin:
         copy_image_to_clipboard(img)
         hp.add_flash_animation(self)
 
-    def _get_save_screenshot_menu(self):
+    def on_show_save_screenshot_menu(self):
         """Get normalization menu."""
         menu = hp.make_menu(self)
         menu_save = hp.make_menu_item(self, "Save screenshot to file...", menu=menu)
         menu_save.triggered.connect(self.to_screenshot)
         menu_clip = hp.make_menu_item(self, "Copy screenshot to clipboard", menu=menu)
         menu_clip.triggered.connect(self.clipboard)
-        return menu
+        hp.show_menu(menu)
 
 
 class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, ScreenshotMixin):

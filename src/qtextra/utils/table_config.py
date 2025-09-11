@@ -21,7 +21,9 @@ class Column(ty.TypedDict):
     order: int
     hidden: bool
     tooltip: str
-    sizing: ColumnSizing
+    sizing: str | ColumnSizing
+    selectable: bool
+    resizable: bool
 
 
 class TableConfig(MutableMapping[int, Column]):
@@ -90,13 +92,16 @@ class TableConfig(MutableMapping[int, Column]):
         is_color: bool = False,
         no_sort: bool = False,
         tooltip: str = "",
-        sizing: ColumnSizing | str = "stretch",
+        sizing: str | ColumnSizing = "stretch",
         checkable: bool = False,
+        selectable: bool = True,
+        resizeable: bool = False,
     ) -> TableConfig:
         """Add an item to the configuration."""
+        self.last_index += 1
+
         if dtype == "bool":
             sizing = "contents"
-        self.last_index += 1
         if self.last_index == 0 and dtype == "bool":
             checkable = True
 
@@ -110,6 +115,8 @@ class TableConfig(MutableMapping[int, Column]):
             "hidden": hidden,
             "tooltip": tooltip,
             "sizing": sizing,
+            "selectable": selectable,
+            "resizeable": resizeable,
         }
         if is_color:
             self.color_columns.append(self.last_index)
@@ -151,3 +158,7 @@ class TableConfig(MutableMapping[int, Column]):
         """Return column iterator."""
         for col_id in self:
             yield col_id, self[col_id]
+
+    def get_selected_columns(self) -> list[int]:
+        """Return selected columns."""
+        return []

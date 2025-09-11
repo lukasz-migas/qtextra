@@ -348,10 +348,11 @@ class QtCheckableItemModel(QAbstractTableModel):
 
         row = index.row()
         column = index.column()
+        is_color = column in self.color_columns
 
         # check the background color
         if role == Qt.ItemDataRole.BackgroundRole:
-            if column in self.color_columns:
+            if is_color:
                 color = self._table[row][column]
                 if isinstance(color, str) and "#" in color:
                     return QBrush(QColor(color))
@@ -362,7 +363,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             return QBrush()
         # check text color
         elif role == Qt.ItemDataRole.ForegroundRole:
-            if column in self.color_columns:
+            if is_color:
                 bg_color = self._table[row][column]
                 if isinstance(bg_color, str) and "#" in bg_color:
                     return QBrush(get_text_color(QColor(bg_color)))
@@ -372,7 +373,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             return QBrush(QColor(TEXT_COLOR))
         # check value
         elif role == Qt.ItemDataRole.DisplayRole:
-            if column not in self.icon_columns and column not in self.checkable_columns:
+            if column not in self.icon_columns and column not in self.checkable_columns and not is_color:
                 value = self._table[row][column]
                 return value
         # check the alignment role
@@ -773,6 +774,8 @@ class QtCheckableTableView(QTableView):
         header = self.header
         # 25 px is the optimal size for checkbox
         header.setMinimumSectionSize(25)
+
+        resizable = []
         for column_id in range(n_cols):
             if config:
                 column_metadata = config.get(column_id)
@@ -786,12 +789,14 @@ class QtCheckableTableView(QTableView):
                 # The first column should always be a QCheckbox
                 mode = QHeaderView.ResizeMode.Fixed if column_id == 0 else QHeaderView.ResizeMode.Stretch
             header.setSectionResizeMode(column_id, mode)
-            if config and mode == QHeaderView.ResizeMode.Fixed:
-                header.resizeSection(column_id, config.get_width(column_id))
+            if config:
+                if mode == QHeaderView.ResizeMode.Fixed:
+                    header.resizeSection(column_id, config.get_width(column_id))
+                elif mode == QHeaderView.ResizeMode.Stretch and column_metadata["resizeable"]:
+                    resizable.append(column_id)
 
         # set column width for the first column (checkbox)
         self.setColumnWidth(0, 25)
-
         # disable editing
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         # enable sorting
@@ -809,6 +814,9 @@ class QtCheckableTableView(QTableView):
             self.setColumnHidden(n_col, True)
 
         self._is_init = True
+        for col in resizable:
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)
+            print("Set column to interactive:", col)
         model.data_changed()
 
     def set_column_resize_mode(self, index: int, mode: QHeaderView.ResizeMode = QHeaderView.ResizeMode.Stretch):

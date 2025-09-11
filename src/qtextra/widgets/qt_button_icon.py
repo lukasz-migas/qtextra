@@ -655,7 +655,7 @@ class QtToolbarPushButton(QtImagePushButton):
         self.opacity_anim.currentLoopChanged.connect(self._loop_update)
         self.opacity_anim.finished.connect(self.stop_pulse)
 
-        self.tooltip_timer = hp.make_periodic_timer(self, self._show_tooltip, 500, start=False)
+        self.tooltip_timer = hp.make_periodic_timer(self, self._show_tooltip, 1500, start=False)
 
         self.evt_click.connect(self.stop_pulse)
 
