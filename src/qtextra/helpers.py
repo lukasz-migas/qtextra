@@ -1570,6 +1570,7 @@ def make_checkbox(
     tristate: bool = False,
     model: ty.Callable | None = None,
     properties: dict[str, ty.Any] | None = None,
+    object_name: str = "",
     **kwargs: ty.Any,
 ) -> Qw.QCheckBox:
     """Make checkbox."""
@@ -1585,6 +1586,8 @@ def make_checkbox(
         widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if tristate:
         widget.setTristate(tristate)
+    if object_name:
+        widget.setObjectName(object_name)
     if func:
         [widget.stateChanged.connect(func_) for func_ in _validate_func(func)]
     if clicked:
