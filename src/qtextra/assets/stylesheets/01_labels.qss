@@ -1,12 +1,12 @@
-QLabel#error_label {
+QLabel#error_label, QLabel#error_status_label {
     color : {{ error }};
 }
 
-QLabel#warning_label {
+QLabel#warning_label, QLabel#warning_status_label {
     color : {{ warning }};
 }
 
-QLabel#success_label {
+QLabel#success_label, QLabel#success_status_label {
     color : {{ success }};
 }
 
@@ -89,9 +89,9 @@ QLabel#large_text {
 QLabel#medium_text {
     font-size: {{ increase(font_size, 2) }};
 }
-QLabel#error_label {
-    font-size: {{ increase(font_size, 4) }};
-}
+/*QLabel#error_label {*/
+/*    font-size: {{ increase(font_size, 4) }};*/
+/*}*/
 QLabel#title_label {
     font-size: {{ increase(font_size, 3) }};
 }
@@ -119,4 +119,11 @@ QtClickableLabel{
 }
 QtClickableLabel#warning{
     color: {{ warning }};
+}
+
+QLabel#ToolTip {
+    background-color: {{ background }};
+    color: {{ text }};
+    border: 1px solid {{ foreground }};
+    padding: 2px;
 }

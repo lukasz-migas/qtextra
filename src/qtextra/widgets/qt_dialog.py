@@ -230,7 +230,7 @@ class DialogMixin:
         elif position == "bottom":
             x = rect.center().x() - (size.width() * 0.5)
             y = rect.bottom() + y_pad
-        pos = widget.mapToGlobal(QPoint(x, y))
+        pos = widget.mapToGlobal(QPoint(int(x), int(y)))
         self.move(pos)
 
 

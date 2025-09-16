@@ -816,7 +816,6 @@ class QtCheckableTableView(QTableView):
         self._is_init = True
         for col in resizable:
             header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)
-            print("Set column to interactive:", col)
         model.data_changed()
 
     def set_column_resize_mode(self, index: int, mode: QHeaderView.ResizeMode = QHeaderView.ResizeMode.Stretch):

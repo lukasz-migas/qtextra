@@ -128,19 +128,22 @@ class TableConfig(MutableMapping[int, Column]):
             self.icon_columns.append(self.last_index)
         return self
 
-    def get_column(self, tag: str) -> Column | None:
-        """Get column by tag."""
-        for _col_id, col_info in self.items():
-            if col_info["tag"] == tag:
-                return col_info
-        return None
-
     def find_col_id(self, tag: str) -> int:
         """Find column id by the tag."""
         for col_id, col_info in self.items():
             if col_info["tag"] == tag:
                 return col_id
         return -1
+
+    def get_column(self, tag: int | str) -> Column | None:
+        """Get column by tag."""
+        for col_id, col_info in self.items():
+            if isinstance(tag, int):
+                if col_id == tag:
+                    return col_info
+            if col_info["tag"] == tag:
+                return col_info
+        return None
 
     def get_width(self, column_id: int) -> int:
         """Get the width of column."""
@@ -161,4 +164,8 @@ class TableConfig(MutableMapping[int, Column]):
 
     def get_selected_columns(self) -> list[int]:
         """Return selected columns."""
-        return []
+        selectable_columns = []
+        for col_id, col_info in self.column_iter():
+            if col_info["show"] and col_info["selectable"]:
+                selectable_columns.append(col_id)
+        return selectable_columns
