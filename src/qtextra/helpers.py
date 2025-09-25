@@ -338,6 +338,31 @@ def set_combobox_text_data(
     #     widget.setCurrentIndex(set_index)
 
 
+def update_combo_or_multi(
+    combos: list[Qw.QComboBox | QtMultiSelect],
+    options: list[str] | dict[str, str | ty.Any],
+    options_with_none: list[str] | dict[str, str | ty.Any] | None = None,
+    clear: bool = False,
+) -> None:
+    """Update combo or multi."""
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
+
+    for combo_or_multi in combos:
+        with qt_signals_blocked(combo_or_multi):
+            if isinstance(combo_or_multi, QtMultiSelect):
+                current = combo_or_multi.get_checked()
+                if clear:
+                    combo_or_multi.clear()
+                combo_or_multi.set_options(options, current)
+            else:
+                current = combo_or_multi.currentText()
+                if current not in options and "None" in current:
+                    current = "None"
+                if clear:
+                    combo_or_multi.clear()
+                set_combobox_text_data(combo_or_multi, options_with_none or options, current)
+
+
 def set_combobox_current_index(widget: Qw.QComboBox, current_data: ty.Any) -> None:
     """Set current index on combobox."""
     for index in range(widget.count()):
@@ -3823,6 +3848,40 @@ def get_value_from_widget(widget: Qw.QWidget) -> ty.Any:
     elif isinstance(widget, QtToggleGroup):
         return widget.value
     raise ValueError(f"Unknown widget class {widget}")
+
+
+def set_value_to_widget(widget: Qw.QWidget, value: ty.Any) -> None:
+    """Set value to widget."""
+    from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
+    from qtextra.widgets.qt_toggle_group import QtToggleGroup
+
+    if isinstance(widget, Qw.QLineEdit):
+        if isinstance(value, list):
+            value = ",".join([str(v) for v in value])
+        elif value is None:
+            value = ""
+        widget.setText(str(value))
+    elif isinstance(widget, Qw.QLabel):
+        widget.setText(str(value))
+    elif isinstance(widget, Qw.QCheckBox):
+        widget.setChecked(value)
+    elif isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
+        widget.setValue(value)
+    elif isinstance(widget, QtCheckableComboBox):
+        value = value or []
+        widget.set_checked_texts([str(v) for v in value])
+    elif isinstance(widget, Qw.QComboBox):
+        # if value was incorrect, let's check if there 'None' which can be safely set
+        if str(value) == "" and widget.itemText(0) == "None":
+            value = widget.itemText(0)
+        widget.setCurrentText(str(value))
+    elif isinstance(widget, QtMultiSelect):
+        widget.set_selected_options(value)
+    elif isinstance(widget, QtToggleGroup):
+        widget.value = value
+    else:
+        raise ValueError(f"Unknown widget class {widget}")
 
 
 def get_data_for_widgets(widgets: dict[str, Qw.QWidget], **kwargs: ty.Any) -> dict[str, ty.Any]:

@@ -80,8 +80,7 @@ class QtToggleGroup(QFrame):
         if not isinstance(value, list):
             value = [value]
         for button in self.button_group.buttons():
-            if button.text() in value:
-                button.setChecked(True)
+            button.setChecked(button.text() in value)
 
     @classmethod
     def from_schema(
