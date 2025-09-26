@@ -5,12 +5,14 @@ QtInfoToast {
 }
 
 QtInfoToast#titleLabel {
+    font-size: {{ increase(font_size, 4) }};
     font-weight: bold;
     color: {{ text }};
     background-color: transparent;
 }
 
 QtInfoToast#contentLabel {
+    font-size: {{ increase(font_size, 3) }};
     color: {{ text }};
     background-color: transparent;
 }

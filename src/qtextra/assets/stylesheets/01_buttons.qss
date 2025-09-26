@@ -191,6 +191,10 @@ QPushButton#success_btn {
     background-color: {{ darken(success, 15) }};
 }
 
+QPushButton#cancel_btn {
+    background-color: {{ lighten(warning, 30) }};
+}
+
 QPushButton#error_btn {
     background-color: {{ lighten(error, 50) }};
 }

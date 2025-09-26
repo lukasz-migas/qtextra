@@ -2722,6 +2722,8 @@ def _get_confirm_dlg(
     message: str,
     title: str = "Are you sure?",
     alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+    color: bool = True,
+    resizable: bool = False,
 ) -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
@@ -2735,11 +2737,13 @@ def _get_confirm_dlg(
     layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True, alignment=alignment), stretch=True)
     layout.addLayout(
         make_h_layout(
-            make_btn(dlg, "Yes", func=dlg.accept),
-            make_btn(dlg, "No", func=dlg.reject),
+            make_btn(dlg, "Yes", func=dlg.accept, object_name="success_btn" if color else ""),
+            make_btn(dlg, "No", func=dlg.reject, object_name="cancel_btn" if color else ""),
         )
     )
     dlg.setLayout(layout)
+    if not resizable:
+        dlg.layout().setSizeConstraint(Qw.QLayout.SizeConstraint.SetFixedSize)
     return dlg
 
 
@@ -2779,9 +2783,11 @@ def confirm(
     message: str,
     title: str = "Are you sure?",
     alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+    color: bool = True,
+    resizable: bool = False,
 ) -> bool:
     """Confirm action."""
-    dlg = _get_confirm_dlg(parent, message, title, alignment=alignment)
+    dlg = _get_confirm_dlg(parent, message, title, alignment=alignment, color=color, resizable=resizable)
     return bool(dlg.exec_())
 
 
@@ -2792,6 +2798,8 @@ def confirm_dont_ask_again(
     config: ty.Any = None,
     attr: str = "",
     alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+    color: bool = True,
+    resizable: bool = False,
 ) -> bool:
     """Confirm action."""
     if not config or not attr:
@@ -2804,7 +2812,7 @@ def confirm_dont_ask_again(
         func = partial(lambda value: config.update(**{attr: bool(value)}))
         value = getattr(config, attr, False)
 
-    dlg = _get_confirm_dlg(parent, message, title, alignment=alignment)
+    dlg = _get_confirm_dlg(parent, message, title, alignment=alignment, color=color, resizable=resizable)
     layout = dlg.layout()
     layout.addWidget(make_checkbox(dlg, "Don't ask again", func=func, value=value))
     return bool(dlg.exec_())
