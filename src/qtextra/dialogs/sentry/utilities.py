@@ -53,7 +53,7 @@ def strip_sensitive_data(event: dict, hint: dict):
             args[0] = args[0].split(os.sep)[-1]
     if DEBUG:  # pragma: no cover
         pprint(event)
-    logger.debug("Sending sentry event")
+    logger.trace(f"Sending sentry event - ({hint})")
     return event
 
 
