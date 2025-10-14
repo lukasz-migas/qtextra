@@ -6,6 +6,7 @@ from ast import literal_eval
 
 from pydantic_extra_types.color import Color
 
+from qtextra.config import is_dark as is_dark_theme
 from qtextra.utils.color import get_text_color, hex_to_qt_rgb, rgb_to_hex
 
 try:
@@ -23,6 +24,7 @@ gradient_pattern = re.compile(r"([vh])gradient\((.+)\)")
 darken_pattern = re.compile(r"{{\s?darken\((\w+),?\s?([-\d]+)?\)\s?}}")
 lighten_pattern = re.compile(r"{{\s?lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
 darken_or_lighten_pattern = re.compile(r"{{\s?darken_or_lighten\((\w+),?\s?([-\d]+)?\)\s?}}")
+darken_or_lighten_for_theme_pattern = re.compile(r"{{\s?darken_or_lighten_for_theme\((\w+),?\s?([-\d]+)?\)\s?}}")
 opacity_pattern = re.compile(r"{{\s?opacity\((\w+),?\s?([-\d]+)?\)\s?}}")
 replace_pattern = re.compile(r"{{\s?replace\((\w+)\)\s?}}")
 
@@ -54,7 +56,7 @@ def color_for_background(color: ty.Union[str, Color]) -> str:
     return get_text_color(rgb_to_hex(color, 1)).name()
 
 
-def darken_or_lighten(color: ty.Union[str, Color], percentage=10) -> str:
+def darken_or_lighten(color: ty.Union[str, Color], percentage: float = 10) -> str:
     """Darken or lighten the color.
 
     If color is light, darken it, otherwise lighten it.
@@ -65,7 +67,14 @@ def darken_or_lighten(color: ty.Union[str, Color], percentage=10) -> str:
     return lighten(color, percentage)
 
 
-def darken(color: ty.Union[str, Color], percentage=10) -> str:
+def darken_or_lighten_for_theme(color: ty.Union[str, Color], is_dark: bool = False, percentage: float = 10) -> str:
+    """Darken the color if it is light, otherwise lighten it."""
+    if is_dark:
+        return lighten(color, percentage)
+    return darken(color, percentage)
+
+
+def darken(color: ty.Union[str, Color], percentage: float = 10) -> str:
     """Darken the color."""
     red, green, blue = _get_color(color)
     ratio = 1 - float(percentage) / 100
@@ -75,7 +84,7 @@ def darken(color: ty.Union[str, Color], percentage=10) -> str:
     return f"rgb({red}, {green}, {blue})"
 
 
-def lighten(color: ty.Union[str, Color], percentage=10) -> str:
+def lighten(color: ty.Union[str, Color], percentage: float = 10) -> str:
     """Lighten the color."""
     red, green, blue = _get_color(color)
     ratio = float(percentage) / 100
@@ -85,13 +94,13 @@ def lighten(color: ty.Union[str, Color], percentage=10) -> str:
     return f"rgb({red}, {green}, {blue})"
 
 
-def opacity(color: ty.Union[str, Color], value=255) -> str:
+def opacity(color: ty.Union[str, Color], value: int = 255) -> str:
     """Adjust opacity."""
     red, green, blue = _get_color(color)
     return f"rgba({red}, {green}, {blue}, {max(min(int(value), 255), 0)})"
 
 
-def gradient(stops, horizontal=True) -> str:
+def gradient(stops: list[str], horizontal: bool = True) -> str:
     """Make gradient."""
     if not use_gradients:
         return stops[-1]
@@ -129,6 +138,10 @@ def template(css, **theme):
         color, percentage = matchobj.groups()
         return darken_or_lighten(theme[color], percentage)
 
+    def _darken_or_lighten_for_theme_match(matchobj):
+        color, percentage = matchobj.groups()
+        return darken_or_lighten_for_theme(theme[color], is_dark_theme, percentage)
+
     def _opacity_match(matchobj):
         color, percentage = matchobj.groups()
         return opacity(theme[color], percentage)
@@ -151,6 +164,7 @@ def template(css, **theme):
         css = darken_pattern.sub(_darken_match, css)
         css = lighten_pattern.sub(_lighten_match, css)
         css = darken_or_lighten_pattern.sub(_darken_or_lighten_match, css)
+        css = darken_or_lighten_for_theme_pattern.sub(_darken_or_lighten_for_theme_match, css)
         css = opacity_pattern.sub(_opacity_match, css)
         css = replace_pattern.sub(_replace_match, css)
         if isinstance(v, Color):

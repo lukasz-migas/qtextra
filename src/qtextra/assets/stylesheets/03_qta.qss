@@ -57,3 +57,7 @@ QtImagePushButton#normal_icon[with_count=true]{
     min-width : 30px;
     max-width : 30px;
 }
+
+QtImagePushButton[checkable=true]::checked{
+    background: {{ darken_or_lighten(background, 30) }};
+}

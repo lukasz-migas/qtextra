@@ -1306,6 +1306,7 @@ def make_qta_btn(
     if checkable:
         widget.setCheckable(checkable)
         widget.setChecked(checked)
+        set_properties(widget, {"checkable": True})
     if checked_icon_name:
         widget.set_toggle_qta(icon_name, checked_icon_name, **kwargs)
     if object_name:
