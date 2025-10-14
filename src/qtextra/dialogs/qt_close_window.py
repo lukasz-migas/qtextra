@@ -54,7 +54,7 @@ class QtConfirmCloseDialog(QDialog):
         close_btn.setShortcut(QKeySequence("Ctrl+Q"))
 
         if callable(save_func):
-            save_btn.clicked.connect(self.save_func)
+            save_btn.clicked.connect(self.save_and_accept)
         else:
             save_btn.hide()
         cancel_btn.clicked.connect(self.reject)
@@ -79,6 +79,12 @@ class QtConfirmCloseDialog(QDialog):
         # https://github.com/pytest-dev/pytest-qt/issues/254
         self.close_btn = close_btn
         self.cancel_btn = cancel_btn
+
+    def save_and_accept(self):
+        """Save and accept."""
+        if callable(self.save_func):
+            self.save_func()
+        return self.accept()
 
     def accept(self):
         """Accept."""
