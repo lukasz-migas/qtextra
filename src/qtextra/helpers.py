@@ -2732,7 +2732,7 @@ def _get_confirm_dlg(
     dlg = QDialog(parent)
     dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)  # type: ignore[attr-defined]
     dlg.setObjectName("confirm_dialog")
-    dlg.setMinimumSize(350, 200)
+    dlg.setMinimumSize(450, 300)
     dlg.setWindowTitle(title)
     layout = make_v_layout()
     layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True, alignment=alignment), stretch=True)
@@ -2783,7 +2783,7 @@ def confirm(
     parent: ty.Optional[QObject],
     message: str,
     title: str = "Are you sure?",
-    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignHCenter,
     color: bool = True,
     resizable: bool = False,
 ) -> bool:
@@ -2798,7 +2798,7 @@ def confirm_dont_ask_again(
     title: str = "Are you sure?",
     config: ty.Any = None,
     attr: str = "",
-    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignHCenter,
     color: bool = True,
     resizable: bool = False,
 ) -> bool:
