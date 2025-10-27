@@ -38,7 +38,8 @@ dependencies = [
     "koyo",
     "numpy",
     "appdirs",
-    "psygnal",
+    "psygnal>=0.14.2; python_version <= '3.9'",
+    "psygnal>=0.15.0; python_version >= '3.10'",
     "pydantic>2",
     "pydantic-extra-types"
 ]
