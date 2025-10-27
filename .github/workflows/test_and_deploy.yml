@@ -89,7 +89,7 @@ jobs:
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11", "3.12"]
-        backend: [pyqt5, pyside2, pyqt6]
+        backend: [pyside2, pyqt5, pyqt6, pyside6]
         exclude:
           # Abort (core dumped) on linux pyqt6, unknown reason
           - platform: ubuntu-latest
