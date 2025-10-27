@@ -19,7 +19,7 @@ def setup_widget():
 
 
 class TestCLIQueueHandler:
-    @pytest.mark.xfail(IS_WIN or IS_MAC, reason="Some signals don't fire on Windows in time")
+    @pytest.mark.xfail(IS_WIN or IS_MAC, reason="Some signals don't fire on Windows/MacOS in time")
     def test_init(self, qtbot, setup_widget):
         queued, started, next_, finished, errored, cancelled, paused = [], [], [], [], [], [], []  # type: ignore
         queue = setup_widget()
