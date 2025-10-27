@@ -72,7 +72,7 @@ jobs:
           include-hidden-files: true
 
   test:
-    name: Test (${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.backend }})
+    name: Test
     uses: pyapp-kit/workflows/.github/workflows/test-pyrepo.yml@v2
     secrets:
       codecov_token: ${{ secrets.CODECOV_TOKEN }}
@@ -83,6 +83,7 @@ jobs:
       pip-install-pre-release: ${{ github.event_name == 'schedule' }}
       extras: 'test'
       coverage-upload: artifact
+
     strategy:
       fail-fast: false
       matrix:
