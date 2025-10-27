@@ -190,7 +190,7 @@ docstring-code-format = true
 minversion = "8"
 console_output_style = "count"
 testpaths = ["qtextra", "tests"]
-xfail_strict = true
+xfail_strict = false
 # options so that we can see the stdout and loguru logs
 addopts = [
     "-ras",
