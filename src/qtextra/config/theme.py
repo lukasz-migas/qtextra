@@ -475,9 +475,13 @@ class Themes(ConfigBase):
         stylesheet = template(stylesheet, **palette)
         return stylesheet
 
+    get_stylesheet = get_theme_stylesheet
+
     def set_theme_stylesheet(self, widget: QWidget, theme_name: ty.Optional[str] = None) -> None:
         """Set stylesheet on widget."""
         widget.setStyleSheet(self.get_theme_stylesheet(theme_name))
+
+    set_stylesheet = set_theme_stylesheet
 
     def apply(self, widget: QWidget) -> None:
         """Apply theme on widget."""
@@ -485,7 +489,7 @@ class Themes(ConfigBase):
 
     @staticmethod
     def get_theme_path(theme_name: str) -> Path:
-        """Get path of directory for a given theme name."""
+        """Get the path of directory for a given theme name."""
         from qtextra.utils.appdirs import USER_THEME_DIR
 
         return USER_THEME_DIR / theme_name
