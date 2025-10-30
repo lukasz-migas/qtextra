@@ -788,6 +788,7 @@ def make_line_edit(
     font_size: int | None = None,
     object_name: str = "",
     func: Callback | None = None,
+    func_enter: Callback | None = None,
     func_changed: Callback | None = None,
     func_clear: Callback | None = None,
     default: str = "",
@@ -817,6 +818,8 @@ def make_line_edit(
         widget.setValidator(validator)
     if func:
         [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
+    if func_enter:
+        [widget.returnPressed.connect(func_) for func_ in _validate_func(func_enter)]
     if func_clear:
         action = widget.findChild(Qw.QAction)
         if action:
@@ -828,13 +831,22 @@ def make_line_edit(
 
 
 def make_text_edit(
-    parent: Qw.QWidget | None, text: str = "", tooltip: str | None = None, placeholder: str = ""
+    parent: Qw.QWidget | None, text: str = "", tooltip: str | None = None, placeholder: str = "",
+        func_changed: Callback | None = None,
+        func_clear: Callback | None = None,
 ) -> Qw.QTextEdit:
     """Make QTextEdit - a multiline version of QLineEdit."""
     widget = Qw.QTextEdit(parent)
     widget.setText(text)
     if tooltip:
         widget.setToolTip(tooltip)
+    if func_clear:
+        action = widget.findChild(Qw.QAction)
+        if action:
+            widget.hide_action = action
+            [action.triggered.connect(func_) for func_ in _validate_func(func_clear)]
+    if func_changed:
+        [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     widget.setPlaceholderText(placeholder)
     return widget
 

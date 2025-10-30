@@ -157,6 +157,12 @@ class QtSelectionList(QWidget):
         # self.list_widget.setAlternatingRowColors(True)
         self._layout.addRow(self.list_widget)
 
+    def on_click(self, index: int) -> None:
+        """Select an item by index."""
+        item = self.list_widget.item(index)
+        if item:
+            self.list_widget.setCurrentItem(item)
+
     def on_selection_changed(self) -> None:
         """Update selection changed information."""
         self.evt_selection_changed.emit()
