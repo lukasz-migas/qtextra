@@ -223,8 +223,9 @@ class QtTagManager(QWidget):
         active: bool = False,
         allow_check: bool = True,
         hide_check: bool = False,
+        set_property: bool = False,
     ) -> str:
-        """Add tag to ."""
+        """Add tag to the Tag manager.."""
         if not hash_id:
             hash_id = get_short_hash()
         allow_action = self.allow_action if allow_action is None else allow_action
@@ -240,6 +241,8 @@ class QtTagManager(QWidget):
         widget.evt_action.connect(self.remove_tag)
         widget.evt_checked.connect(self._tag_changed)
         widget.evt_clicked.connect(self.evt_clicked.emit)
+        if set_property:
+            hp.set_properties(widget, {"text": text})
 
         self._layout.addWidget(widget)
         self.widgets[hash_id] = widget
@@ -252,10 +255,11 @@ class QtTagManager(QWidget):
         allow_action: bool | None = None,
         allow_check: bool = True,
         hide_check: bool = False,
+        set_property: bool = False,
     ) -> None:
         """Add tags."""
         for tag in options:
-            self.add_tag(tag, allow_action=allow_action, allow_check=allow_check, hide_check=hide_check)
+            self.add_tag(tag, allow_action=allow_action, allow_check=allow_check, hide_check=hide_check, set_property=set_property)
 
     @Slot(str)  # type: ignore[misc]
     def remove_tag(self, hash_id: str) -> None:
