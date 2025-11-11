@@ -2059,7 +2059,7 @@ def make_v_layout(
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
-    widget_alignment: Qt.AlignmentFlag | None = None,
+    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
     parent: Qw.QWidget | None = None,
 ) -> Qw.QVBoxLayout:
     """Make vertical layout."""
@@ -2089,7 +2089,7 @@ def make_h_layout(
     spacing: int | None = None,
     margin: int | tuple[int, int, int, int] | None = None,
     alignment: Qt.AlignmentFlag | None = None,
-    widget_alignment: Qt.AlignmentFlag | None = None,
+    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
     parent: Qw.QWidget | None = None,
@@ -2205,18 +2205,24 @@ def _set_in_layout(
     alignment: Qt.AlignmentFlag | None = None,
     stretch_before: bool = False,
     stretch_after: bool = False,
-    widget_alignment: Qt.AlignmentFlag | None = None,
+    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
 ) -> Qw.QVBoxLayout | Qw.QHBoxLayout:
     if stretch_before:
         layout.addStretch(True)
-    for widget in widgets:
+    for i, widget in enumerate(widgets):
         if isinstance(widget, Qw.QLayout):
             layout.addLayout(widget)
         elif isinstance(widget, Qw.QSpacerItem):
             layout.addSpacerItem(widget)
         else:
             if widget_alignment:
-                layout.addWidget(widget, alignment=widget_alignment)
+                widget_alignment_ = (
+                    widget_alignment.get(i, None) if isinstance(widget_alignment, dict) else widget_alignment
+                )
+                if widget_alignment_:
+                    layout.addWidget(widget, alignment=widget_alignment_)
+                else:
+                    layout.addWidget(widget)
             else:
                 layout.addWidget(widget)
     if stretch_id is not None:

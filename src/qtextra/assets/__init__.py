@@ -8,6 +8,8 @@ from pathlib import Path
 from koyo.utilities import get_module_path
 from loguru import logger
 
+from qtextra.typing import IconType
+
 HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent.resolve()
 
 ICON_PATH = HERE / "icons"
@@ -36,7 +38,7 @@ LOADING_GIFS = {
 
 MISSING = "MISSING"
 
-QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
+QTA_MAPPING: ty.Dict[str, IconType] = {
     MISSING: "ri.error-warning-line",
     "clear": "mdi6.delete-empty",
     "json": "mdi6.code-json",
@@ -264,7 +266,7 @@ def check_icon_mapping() -> None:
             print(f"Icon '{icon}' is mapped to multiple keys: {keys}")
 
 
-def update_icon_mapping(mapping: ty.Dict[str, str], silent: bool = False, key: str = "") -> None:
+def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key: str = "") -> None:
     """Update icon mapping."""
     global QTA_MAPPING
     for k, v_new in mapping.items():
@@ -299,6 +301,8 @@ def update_icons(mapping: ty.Dict[str, str], append: bool = True) -> None:
 
 def get_icon(name: str | tuple[str, dict]) -> tuple[str, dict]:
     """Return icon."""
+    from qtextra.config import THEMES
+
     kwargs = None
     if isinstance(name, tuple):
         name, kwargs = name
@@ -316,6 +320,19 @@ def get_icon(name: str | tuple[str, dict]) -> tuple[str, dict]:
     if isinstance(name, tuple):
         name, kwargs_ = name
         kwargs.update(kwargs_)
+    if "." not in name:
+        name = QTA_MAPPING.get(name, QTA_MAPPING[MISSING])
+
+    # convert templated color to hex
+    if (
+        "color" in kwargs
+        and isinstance(kwargs["color"], str)
+        and kwargs["color"].startswith("{{ ")
+        and kwargs["color"].endswith(" }}")
+    ):
+        # extract templated color to avoid issues in qtawesome (should be between {{ and }}
+        color = kwargs["color"][3:-3].strip()
+        kwargs["color"] = THEMES.get_hex_color(color)
     return name, kwargs
 
 
