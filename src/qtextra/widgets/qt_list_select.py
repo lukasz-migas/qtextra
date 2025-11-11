@@ -19,6 +19,7 @@ from qtpy.QtWidgets import (
 )
 
 import qtextra.helpers as hp
+from qtextra.widgets.qt_dialog import QtFramelessPopup
 from qtextra.widgets.qt_toolbar_mini import QtMiniToolbar
 
 
@@ -83,8 +84,10 @@ class QtSelectionList(QWidget):
         allow_visible_toggle: bool = True,
         enable_single_click: bool = False,
         double_click_to_select: bool = True,
+        text: str = "",
     ):
         super().__init__(parent)
+        self.text: str = text
         self.allow_toolbar = allow_toolbar
         self.allow_sort = allow_sort
         self.allow_filter = allow_filter
@@ -99,7 +102,6 @@ class QtSelectionList(QWidget):
     def init_ui(self) -> None:
         """Initialize the user interface."""
         self._layout = hp.make_form_layout(parent=self)
-
         self.filter_by = hp.make_line_edit(
             self, placeholder="Type in text to filter...", func_changed=self.on_filter, func_clear=self.on_filter
         )
@@ -171,14 +173,14 @@ class QtSelectionList(QWidget):
             count = self.list_widget.count()
             self.info_label.setText(f"{len(selected)}/{count}")
 
-    def add_item(self, item_text: str) -> None:
+    def add_item(self, item_text: str, check: bool = False) -> None:
         """Add an item to the list in alphabetical order."""
         items = [self.list_widget.item(i).text() for i in range(self.list_widget.count())]
         items.append(item_text)
         checked = [
             self.list_widget.item(i).checkState() == Qt.CheckState.Checked for i in range(self.list_widget.count())
         ]
-        checked.append(False)
+        checked.append(check)
         if self.allow_sort:
             index = index_natsorted(items)
             items, checked = order_by_index(items, index), order_by_index(checked, index)  # type: ignore[assignment]
@@ -191,8 +193,22 @@ class QtSelectionList(QWidget):
             self.list_widget.addItem(item)
         self.on_selection_changed()
 
+    def add_items(self, items: list[str], *, check: bool = False, clear: bool = False) -> None:
+        """Add multiple items to the list."""
+        if clear:
+            self.list_widget.clear()
+        for item in items:
+            self.add_item(item, check=check)
+
+    def remove_item(self, item_text: str) -> None:
+        """Remove an item from the list."""
+        for i in range(self.list_widget.count()):
+            if self.list_widget.item(i).text() == item_text:
+                self.list_widget.takeItem(i)
+                break
+
     def on_filter(self) -> None:
-        """Filter list of items in the table."""
+        """Filter the list of items in the table."""
         text = self.filter_by.text().lower()
         for index in range(self.list_widget.count()):
             item = self.list_widget.item(index)
@@ -210,20 +226,6 @@ class QtSelectionList(QWidget):
         self.filter_by.setText("")
         for i in range(self.list_widget.count()):
             self.list_widget.item(i).setHidden(False)
-
-    def add_items(self, items: list[str], clear: bool = False) -> None:
-        """Add multiple items to the list."""
-        if clear:
-            self.list_widget.clear()
-        for item in items:
-            self.add_item(item)
-
-    def remove_item(self, item_text: str) -> None:
-        """Remove an item from the list."""
-        for i in range(self.list_widget.count()):
-            if self.list_widget.item(i).text() == item_text:
-                self.list_widget.takeItem(i)
-                break
 
     def on_select_all(self) -> None:
         """Select all items in the list."""
@@ -259,12 +261,64 @@ class QtSelectionList(QWidget):
             if self.list_widget.item(i).checkState() == Qt.CheckState.Checked
         ]
 
+    def get_unchecked(self) -> list[str]:
+        """Get unchecked items."""
+        return [
+            self.list_widget.item(i).text()
+            for i in range(self.list_widget.count())
+            if self.list_widget.item(i).checkState() == Qt.CheckState.Unchecked
+        ]
+
     def set_checked(self, checked: list[str]) -> None:
         """Set checked items."""
         for i in range(self.list_widget.count()):
             item = self.list_widget.item(i)
             current_state = item.checkState()
             item.setCheckState(Qt.CheckState.Checked if item.text() in checked else current_state)
+
+
+class QtListSelectPopup(QtFramelessPopup):
+    """Popup window."""
+
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        allow_toolbar: bool = False,
+        allow_sort: bool = False,
+        allow_filter: bool = False,
+        allow_visible_toggle: bool = False,
+        enable_single_click: bool = False,
+        double_click_to_select: bool = True,
+        text: str = "",
+    ) -> None:
+        self.text: str = text
+        self.allow_toolbar = allow_toolbar
+        self.allow_sort = allow_sort
+        self.allow_filter = allow_filter
+        self.allow_visible_toggle = allow_visible_toggle
+        self.enable_single_click = enable_single_click
+        self.double_click_to_select = double_click_to_select
+
+        super().__init__(parent)
+
+    # noinspection PyAttributeOutsideInit
+    def make_panel(self) -> QFormLayout:
+        """Make panel."""
+        self.selection_list = QtSelectionList(
+            parent=self,
+            allow_toolbar=self.allow_toolbar,
+            allow_sort=self.allow_sort,
+            allow_filter=self.allow_filter,
+            allow_visible_toggle=self.allow_visible_toggle,
+            enable_single_click=self.enable_single_click,
+            double_click_to_select=self.double_click_to_select,
+            text=self.text,
+        )
+        layout = hp.make_form_layout(parent=self)
+        layout.addRow(hp.make_label(self, self.text, hide=self.text == ""))
+        layout.addRow(hp.make_h_line(self))
+        layout.addRow(self.selection_list)
+        return layout
 
 
 if __name__ == "__main__":  # pragma: no cover

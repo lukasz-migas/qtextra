@@ -255,6 +255,21 @@ if __name__ == "__main__":  # pragma: no cover
         if i % 20 == 0:
             ha.addLayout(lay)
             lay = QHBoxLayout()
+    # add labels
+    lay = QHBoxLayout()
+    ha.addLayout(lay)
+    for state in QtSeverityLabel.STATES:
+        btn = QtSeverityLabel()
+        btn.set_large()
+        btn.severity = state
+        lay.addWidget(btn)
+    lay = QHBoxLayout()
+    ha.addLayout(lay)
+    for state in QtStateLabel.STATES:
+        btn = QtStateLabel()
+        btn.set_large()
+        btn.state = state
+        lay.addWidget(btn)
 
     frame.show()
     frame.setMaximumHeight(400)

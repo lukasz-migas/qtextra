@@ -11,7 +11,7 @@ QStatusBar::item{
 /* ------------ QtStatusbarWidget ------------ */
 QtStatusbarIconWidget {
     background-color: {{ darken(background, 5) }};
-    background-color: {{ foreground }};
+    /*background-color: {{ foreground }};*/
 }
 
 QtStatusbarIconWidget > QtIconLabel {
@@ -28,7 +28,7 @@ QtStatusbarIconWidget > QtIconLabel::pressed {
     background-color: {{ darken(foreground, 5) }};
 }
 
-QtStatusbarWidget > QLabel, QtStatusbarLabel {
+QtStatusbarWidget > QLabel, QtStatusbarWidget > QtStatusbarLabel {
     background-color: {{ darken(background, 5) }};
 }
 

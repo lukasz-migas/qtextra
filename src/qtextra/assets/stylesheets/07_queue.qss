@@ -145,3 +145,103 @@ QLabel#task_state[text="Locked"] {
     background-color: #e0115f;
     color: #ffffff;
 }
+
+/* ------------- QtTagButton - necessary to override Queue CSS --------- */
+QtTagButton[text="Invalid"] {
+    border-radius: 5px;
+    background-color: #000000;
+    border: 3px solid #000000;
+}
+QtTagButton[text="Queued"] {
+    border-radius: 5px;
+    background-color: #00C851;
+    border: 3px solid #00C851;
+}
+QtTagButton[text="Running"] {
+    border-radius: 5px;
+    background-color: #8E24AA;
+    border: 3px solid #8E24AA;
+}
+QtTagButton[text="Run-next"] {
+    border-radius: 5px;
+    background-color: #e04196;
+    border: 3px solid #e04196;
+}
+QtTagButton[text="Paused"] {
+    border-radius: 5px;
+    background-color: #e91e63;
+    border: 3px solid #e91e63;
+}
+QtTagButton[text="Pausing"] {
+    border-radius: 5px;
+    background-color: #1DE9B6;
+    border: 3px solid #1DE9B6;
+}
+QtTagButton[text="Finished"] {
+    border-radius: 5px;
+    background-color: #4285F4;
+    border: 3px solid #4285F4;
+}
+QtTagButton[text="Incomplete"] {
+    border-radius: 5px;
+    background-color: #ffbb33;
+    border: 3px solid #ffbb33;
+}
+QtTagButton[text="Part-failed"] {
+    border-radius: 5px;
+    background-color: #ff3d00;
+    border: 3px solid #ff3d00;
+}
+QtTagButton[text="Failed"] {
+    border-radius: 5px;
+    background-color: #ff4444;
+    border: 3px solid #ff4444;
+}
+QtTagButton[text="Cancelling"] {
+    border-radius: 5px;
+    background-color: #546e7a;
+    border: 3px solid #546e7a;
+}
+QtTagButton[text="Cancelled"] {
+    border-radius: 5px;
+    background-color: #263238;
+    border: 3px solid #263238;
+}
+QtTagButton[text="Locked"] {
+    border-radius: 5px;
+    background-color: #e0115f;
+    border: 3px solid #e0115f;
+}
+
+QtTagButton QLabel[text="Invalid"],
+QtTagButton QLabel[text="Queued"],
+QtTagButton QLabel[text="Running"],
+QtTagButton QLabel[text="Run-next"],
+QtTagButton QLabel[text="Paused"],
+QtTagButton QLabel[text="Finished"],
+QtTagButton QLabel[text="Part-failed"],
+QtTagButton QLabel[text="Failed"],
+QtTagButton QLabel[text="Cancelling"],
+QtTagButton QLabel[text="Cancelled"],
+QtTagButton QLabel[text="Locked"] {
+    color: #ffffff;
+}
+QtTagButton QLabel[text="Pausing"],
+QtTagButton QLabel[text="Incomplete"] {
+    color: #000000;
+}
+
+QtTagButton[active=True]{
+    border: 5px solid {{ text }};
+}
+QtTagButton[text="Cancelled"][active=True],
+QtTagButton[text="Invalid"][active=True] {
+    border: 5px solid {{ highlight }};
+}
+QtTagManager[small_text=True] QLabel {
+    font-size: {{ decrease(font_size, 1) }};
+}
+QtTagManager[small_text=True] QtTagButton {
+    margin: 0px;
+    padding: 0px;
+}

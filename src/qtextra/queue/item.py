@@ -55,7 +55,7 @@ class TaskWidget(QFrame):
             "",
             alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
             enable_url=True,
-            click_func=self.on_toggle_visibility,
+            func_clicked=self.on_toggle_visibility,
             elide_mode=Qt.TextElideMode.ElideRight,
         )
         self.task_state = hp.make_label(

@@ -14,7 +14,7 @@ class TaskState(str, Enum):
     """State of the task."""
 
     QUEUED = "queued"
-    RUN_NEXT = "run_next"
+    RUN_NEXT = "run-next"
     RUNNING = "running"
     PAUSING = "pausing"
     PAUSED = "paused"
@@ -25,6 +25,16 @@ class TaskState(str, Enum):
     CANCELLING = "cancelling"
     CANCELLED = "cancelled"
     LOCKED = "locked"
+    INVALID = "invalid"
+
+
+class TaskProgress(str, Enum):
+    """Progress of a task."""
+
+    PENDING = "wait"
+    COMPLETE = "check"
+    INCOMPLETE = "cross"
+    ACTIVE = "active"
 
 
 class WorkerState(str, Enum):
@@ -32,6 +42,29 @@ class WorkerState(str, Enum):
 
     FINISHED = "finished"
     NOT_ENOUGH_SPACE = "not_enough_space"
+
+
+class ProcessState(str, Enum):
+    """Process state."""
+
+    PASS = "pass"
+    FAIL = "fail"
+    CANCEL = "cancel"
+
+
+class TaskType(str, Enum):
+    """Task types."""
+
+    PROCESS = "process"
+    THREAD = "thread"
+    CLI = "console"
+
+
+class State(str, Enum):
+    """State."""
+
+    COMPLETE = "check"
+    INCOMPLETE = "cross"
 
 
 class Connectable(ty.Protocol):

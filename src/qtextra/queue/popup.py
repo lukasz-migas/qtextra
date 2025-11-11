@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from qtpy.QtWidgets import QFormLayout, QWidget
+from qtpy.QtWidgets import QFormLayout, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
 from qtextra.queue.queue_widget import QUEUE, QueueList
+from qtextra.typing import TaskState
+from qtextra.widgets.qt_button_tag import QtTagManager
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
 
@@ -40,6 +42,20 @@ class QueuePopup(QtFramelessTool):
         layout.addRow(hp.make_h_line(self))
         layout.addRow(self.queue_list)
         return layout
+
+
+def create_queue_filter(parent: QWidget, subset: tuple[str, ...] = ()) -> QtTagManager:
+    """Create queue filter widget."""
+    state_filter = QtTagManager(parent, flow=True)
+    state_filter.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
+    states = [state.name.capitalize().replace("_", "-") for state in TaskState]
+    if subset:
+        subset = [s.lower() for s in subset]
+        states = [state for state in states if state.lower() in subset]
+    state_filter.add_tags(states, hide_check=True, set_property=True)
+    state_filter.add_filter(placeholder="Filter...", case_sensitive=False)
+    state_filter.add_clear()
+    return state_filter
 
 
 if __name__ == "__main__":  # pragma: no cover

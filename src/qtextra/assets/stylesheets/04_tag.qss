@@ -28,7 +28,6 @@ QtTagButton::hover {
 }
 QtTagButton[active=True]{
     border: 3px solid {{ darken(success, 5) }};
-    background-color: {{ darken(success, 5) }};
 }
 QtTagButton[active=False]{
     background-color: {{ darken(foreground, 5) }};

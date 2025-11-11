@@ -509,3 +509,21 @@ QGroupBox::title {
 QDialog#confirm_dialog > QLabel {
     font-size: {{ increase(font_size, 3) }};
 }
+
+/* ------------ QtDirectoryWidget ------------ */
+QtDirectoryWidget {
+  background-color: {{ background }};
+  border-radius: 2px;
+  border: 1px solid {{ foreground }};
+}
+
+QtDirectoryWidget:hover {
+    border: 2px solid {{ highlight }};
+}
+
+QtDirectoryWidget > QLabel#success_path {
+    color: {{ success }};
+}
+QtDirectoryWidget > QLabel#warning_path {
+    color: {{ warning }};
+}

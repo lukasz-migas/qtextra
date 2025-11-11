@@ -7,6 +7,8 @@ import typing as ty
 from qtpy.QtCore import Signal
 from qtpy.QtWidgets import QFrame, QWidget
 
+from qtextra.typing import OptionalCallback
+
 
 class QtToggleGroup(QFrame):
     """Widget for toggle group."""
@@ -93,7 +95,7 @@ class QtToggleGroup(QFrame):
         default: str | list[str] = "",
         description: str = "",
         items: dict[str, ty.Any] | None = None,
-        func: ty.Callable | None = None,
+        func: OptionalCallback = None,
         exclusive: bool = True,
         multiline: bool = False,
         **kwargs: dict,

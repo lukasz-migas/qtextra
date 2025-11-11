@@ -15,7 +15,18 @@ import qtpy.QtWidgets as Qw
 from koyo.system import IS_MAC, IS_WIN
 from koyo.typing import PathLike
 from loguru import logger
-from qtpy.QtCore import QEasingCurve, QObject, QPoint, QPropertyAnimation, QRect, QSize, Qt, QTimer, QUrl
+from qtpy.QtCore import (
+    QEasingCurve,
+    QObject,
+    QPoint,
+    QPropertyAnimation,
+    QRect,
+    QRegularExpression,
+    QSize,
+    Qt,
+    QTimer,
+    QUrl,
+)
 from qtpy.QtGui import (
     QColor,
     QCursor,
@@ -26,14 +37,15 @@ from qtpy.QtGui import (
     QImage,
     QMovie,
     QPixmap,
+    QRegularExpressionValidator,
     QValidator,
 )
 from superqt import QElidingLabel, QEnumComboBox, QLabeledDoubleSlider, QLabeledSlider
 
 from qtextra.typing import Callback, Connectable, GifOption, IconType, OptionalCallback, Orientation
-from qtextra.utils.table_config import TableConfig
 
 if ty.TYPE_CHECKING:
+    from qtextra.utils.table_config import TableConfig
     from qtextra.widgets.qt_action import QtQtaAction
     from qtextra.widgets.qt_button import QtActivePushButton, QtPushButton, QtRichTextButton
     from qtextra.widgets.qt_button_color import QtColorSwatch
@@ -52,7 +64,6 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_select_multi import QtMultiSelect
     from qtextra.widgets.qt_separator import QtHorzLine, QtHorzLineWithText, QtVertLine
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
-
 
 # def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
 #     """Trim dialog size and retrieve new size."""
@@ -207,11 +218,21 @@ def run_process(
     program: str,
     arguments: list[str],
     detached: bool = True,
-    stdout_func: ty.Callable | None = None,
-    error_func: ty.Callable | None = None,
+    func_stdout: ty.Callable | None = None,
+    func_error: ty.Callable | None = None,
+    **kwargs: ty.Any,
 ) -> None:
-    """Execute process."""
+    """Execute the process."""
     from qtpy.QtCore import QProcess
+
+    stdout_func = kwargs.pop("stdout_func", None)
+    if stdout_func:
+        warnings.warn("`stdout_func` is deprecated, use `func_stdout` instead.", DeprecationWarning, stacklevel=2)
+        func_stdout = stdout_func
+    error_func = kwargs.pop("error_func", None)
+    if error_func:
+        warnings.warn("`error_func` is deprecated, use `func_error` instead.", DeprecationWarning, stacklevel=2)
+        func_error = error_func
 
     process = QProcess()
     process.setProgram(program)
@@ -220,13 +241,13 @@ def run_process(
     else:
         process.setArguments(arguments)
     if detached:
-        if stdout_func:
+        if func_stdout:
             process.readyReadStandardOutput.connect(
-                lambda: stdout_func(process.readAllStandardOutput().data().decode())
+                lambda: func_stdout(process.readAllStandardOutput().data().decode())
             )
-            process.readyReadStandardError.connect(lambda: stdout_func(process.readAllStandardError().data().decode()))
-        if error_func:
-            process.errorOccurred.connect(error_func)
+            process.readyReadStandardError.connect(lambda: func_stdout(process.readAllStandardError().data().decode()))
+        if func_error:
+            [process.errorOccurred.connect(func_error_) for func_error_ in _validate_func(func_error)]
         process.startDetached()
     else:
         process.start()
@@ -408,9 +429,7 @@ def make_label(
     visible: bool = True,
     hide: bool = False,
     disabled: bool = False,
-    activated_func: Callback | None = None,
     func_activated: Callback | None = None,
-    click_func: Callback | None = None,
     func_clicked: Callback | None = None,
     elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
     vertical: bool = False,
@@ -430,9 +449,11 @@ def make_label(
     else:
         widget = QtClickLabel(parent)
 
+    activated_func = kwargs.pop("activated_func", None)
     if activated_func:
         warnings.warn("`activated_func` is deprecated, use `func_activated` instead.", DeprecationWarning, stacklevel=2)
         func_activated = activated_func
+    click_func = kwargs.pop("click_func", None)
     if click_func:
         warnings.warn("`click_func` is deprecated, use `func_clicked` instead.", DeprecationWarning, stacklevel=2)
         func_clicked = click_func
@@ -442,7 +463,7 @@ def make_label(
     if enable_url:
         widget.setTextFormat(Qt.TextFormat.RichText)
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)
-        if not activated_func:
+        if not func_activated:
             widget.setOpenExternalLinks(True)
     if alignment is not None:
         widget.setAlignment(alignment)
@@ -603,16 +624,22 @@ def make_scrollable_label(
     tooltip: str | None = None,
     selectable: bool = False,
     visible: bool = True,
-    activated_func: Callback | None = None,
+    func_activated: Callback | None = None,
+    **kwargs: ty.Any,
 ) -> QtScrollableLabel:
     """Make QLabel element."""
     from qtextra.widgets.qt_label_scroll import QtScrollableLabel
+
+    activated_func = kwargs.pop("activated_func", None)
+    if activated_func:
+        warnings.warn("`activated_func` is deprecated, use `func_activated` instead.", DeprecationWarning, stacklevel=2)
+        func_activated = activated_func
 
     widget = QtScrollableLabel(parent, text=text, wrap=wrap)
     widget.setObjectName(object_name)
     widget.label.setObjectName(object_name)
     if enable_url:
-        widget.label.setTextFormat(Qt.RichText)
+        widget.label.setTextFormat(Qt.TextFormat.RichText)
         widget.label.setTextInteractionFlags(
             widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction
         )
@@ -629,8 +656,8 @@ def make_scrollable_label(
         widget.label.setTextInteractionFlags(
             widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse
         )
-    if activated_func:
-        [widget.label.linkActivated.connect(func) for func in _validate_func(activated_func)]
+    if func_activated:
+        [widget.label.linkActivated.connect(func) for func in _validate_func(func_activated)]
     widget.setVisible(visible)
     return widget
 
@@ -795,7 +822,7 @@ def make_line_edit(
     disabled: bool = False,
     validator: QValidator | None = None,
     hide: bool = False,
-    **_kwargs,
+    **_kwargs: ty.Any,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
     if default:
@@ -831,9 +858,12 @@ def make_line_edit(
 
 
 def make_text_edit(
-    parent: Qw.QWidget | None, text: str = "", tooltip: str | None = None, placeholder: str = "",
-        func_changed: Callback | None = None,
-        func_clear: Callback | None = None,
+    parent: Qw.QWidget | None,
+    text: str = "",
+    tooltip: str | None = None,
+    placeholder: str = "",
+    func_changed: Callback | None = None,
+    func_clear: Callback | None = None,
 ) -> Qw.QTextEdit:
     """Make QTextEdit - a multiline version of QLineEdit."""
     widget = Qw.QTextEdit(parent)
@@ -1243,10 +1273,16 @@ def make_active_progress_btn(
     text: str,
     tooltip: str | None = None,
     func: Callback | None = None,
-    cancel_func: Callback | None = None,
+    func_cancel: Callback | None = None,
+    **kwargs: ty.Any,
 ) -> QtActiveProgressBarButton:
     """Make button with activity indicator."""
     from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
+
+    cancel_func = kwargs.pop("cancel_func", None)
+    if cancel_func:
+        warnings.warn("`cancel_func` is deprecated, use `func_cancel` instead.", DeprecationWarning, stacklevel=2)
+        func_cancel = cancel_func
 
     widget = QtActiveProgressBarButton(parent=parent)
     widget.setParent(parent)
@@ -1255,8 +1291,8 @@ def make_active_progress_btn(
         widget.setToolTip(tooltip)
     if func:
         [widget.evt_clicked.connect(func_) for func_ in _validate_func(func)]
-    if cancel_func:
-        [widget.evt_cancel.connect(func_) for func_ in _validate_func(cancel_func)]
+    if func_cancel:
+        [widget.evt_cancel.connect(func_) for func_ in _validate_func(func_cancel)]
     return widget
 
 
@@ -1520,12 +1556,17 @@ def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
         widget.setStyleSheet("QPushButton::menu-indicator { image: none; width : 0px; left:}")
 
 
-def show_menu(menu: Qw.QMenu | None = None, menu_func: ty.Callable | None = None) -> None:
+def show_menu(menu: Qw.QMenu | None = None, func_menu: ty.Callable | None = None, **kwargs: ty.Any) -> None:
     """Set menu on widget."""
+    menu_func = kwargs.pop("menu_func", None)
+    if menu_func:
+        warnings.warn("`menu_func` is deprecated, use `func_menu` instead.", DeprecationWarning, stacklevel=2)
+        func_menu = menu_func
+
     if callable(menu):
-        menu_func = menu
-    if menu is None:
-        menu = menu_func()
+        func_menu = menu
+    if menu is None and callable(func_menu):
+        menu = func_menu()
     if menu:
         show_below_mouse(menu, show=True)
 
@@ -1594,6 +1635,45 @@ def get_table_stretch(sizing: str) -> Qw.QHeaderView.ResizeMode:
     elif sizing == "contents":
         return Qw.QHeaderView.ResizeMode.ResizeToContents
     return Qw.QHeaderView.ResizeMode.Interactive
+
+
+def find_in_table(table: Qw.QTableWidget, column: int, text: str) -> int | None:
+    """Find text in table."""
+    for row in range(table.rowCount()):
+        item = table.item(row, column)
+        if item is not None and item.text() == text:
+            return row
+    return None
+
+
+def select_columns(parent: Qw.QWidget | None, table: Qw.QTableWidget, table_config: TableConfig) -> None:
+    """Select which columns in the table should be shown/hidden."""
+    from qtextra.widgets.qt_list_select import QtListSelectPopup
+
+    def _update_visible_columns() -> None:
+        for name in popup.selection_list.get_unchecked():
+            update_table_column(table, table_config, name, True)
+        for name in popup.selection_list.get_checked():
+            update_table_column(table, table_config, name, False)
+
+    columns = table_config.get_selected_columns()
+    hidden = [table.isColumnHidden(col_id) for col_id in columns]
+
+    popup = QtListSelectPopup(parent, text="Select columns that should be visible in the table.")
+    for i, index in enumerate(columns):
+        column = table_config.get_column(index)
+        popup.selection_list.add_item(column["name"], check=not hidden[i])
+    popup.selection_list.evt_selection_changed.connect(_update_visible_columns)
+    popup.show()
+
+
+def update_table_column(table: Qw.QTableWidget, table_config: TableConfig, name: str, check: bool) -> None:
+    """Update table column visibility."""
+    column = table_config.get_column(name)
+    if column:
+        index = table_config.find_col_id(column["tag"])
+        column["hidden"] = check
+        table.setColumnHidden(index, check)
 
 
 def make_checkbox(
@@ -1848,7 +1928,7 @@ def make_radio_btn(
     expand: bool = True,
     checked: bool = False,
     func: Callback | None = None,
-    **_kwargs,
+    **_kwargs: ty.Any,
 ) -> Qw.QRadioButton:
     """Make radio button."""
     widget = Qw.QRadioButton(parent)
@@ -1925,15 +2005,15 @@ def make_toggle(
 def make_h_line_with_text(
     label: str, parent: Qw.QWidget | None = None, bold: bool = False, position: str = "center", **kwargs: ty.Any
 ) -> QtHorzLineWithText:
-    """Make horizontal line with text."""
+    """Make a horizontal line with text."""
     from qtextra.widgets.qt_separator import QtHorzLineWithText
 
     widget = QtHorzLineWithText(parent=parent, label=label, bold=bold, position=position, **kwargs)
     return widget
 
 
-def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzLine:
-    """Make horizontal line."""
+def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool = False) -> QtHorzLine:
+    """Make a horizontal line."""
     from qtextra.widgets.qt_separator import QtHorzLine
 
     widget = QtHorzLine(parent)
@@ -1941,11 +2021,13 @@ def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False) -> QtHorzL
         widget.setFrameShape(Qw.QFrame.HLine)
         widget.setFrameShadow(Qw.QFrame.Plain)
         widget.setObjectName("thin")
+    if hide:
+        widget.hide()
     return widget
 
 
 def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool = False) -> QtVertLine:
-    """Make horizontal line."""
+    """Make a horizontal line."""
     from qtextra.widgets.qt_separator import QtVertLine
 
     widget = QtVertLine(parent)
@@ -1957,13 +2039,13 @@ def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool
 
 
 def make_v_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
-    """Make vertical QSpacerItem."""
+    """Make a vertical QSpacerItem."""
     widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Preferred, Qw.QSizePolicy.Policy.Expanding)
     return widget
 
 
 def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
-    """Make horizontal QSpacerItem."""
+    """Make a horizontal QSpacerItem."""
     widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Preferred)
     return widget
 
@@ -2230,20 +2312,26 @@ def make_advanced_collapsible(
     allow_checkbox: bool = True,
     icon: IconType = "info",
     allow_icon: bool = False,
-    icon_func: Callback | None = None,
+    func_icon: Callback | None = None,
     allow_warning: bool = False,
     warning_icon: IconType = "warning",
     collapsed: bool = True,
+    **kwargs: ty.Any,
 ) -> QtCheckCollapsible:
-    """Make collapsible widget."""
+    """Make a collapsible widget."""
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
+
+    icon_func = kwargs.pop("icon_func", None)
+    if icon_func:
+        warnings.warn("`icon_func` is deprecated, use `func_icon` instead.", DeprecationWarning, stacklevel=2)
+        func_icon = icon_func
 
     advanced_widget = QtCheckCollapsible(title, parent, icon=icon, warning_icon=warning_icon)
     advanced_widget.set_checkbox_visible(allow_checkbox)
     advanced_widget.set_icon_visible(allow_icon)
     advanced_widget.set_warning_visible(allow_warning)
-    if icon_func:
-        [advanced_widget.action_btn.clicked.connect(func_) for func_ in _validate_func(icon_func)]
+    if func_icon:
+        [advanced_widget.action_btn.clicked.connect(func_) for func_ in _validate_func(func_icon)]
     advanced_widget.collapse() if collapsed else advanced_widget.expand()
     return advanced_widget
 
@@ -3056,18 +3144,6 @@ def make_vertical_spacer() -> Qw.QWidget:
     return make_spacer_widget(horz=Qw.QSizePolicy.Policy.Minimum, vert=Qw.QSizePolicy.Policy.Expanding)
 
 
-def make_v_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
-    """Make vertical QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Preferred, Qw.QSizePolicy.Policy.Expanding)
-    return widget
-
-
-def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
-    """Make horizontal QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Preferred)
-    return widget
-
-
 def add_flash_animation(
     widget: Qw.QWidget,
     duration: int = 300,
@@ -3226,15 +3302,6 @@ def make_gif(
     if start:
         movie.start()
     return movie
-
-
-def find_in_table(table: Qw.QTableWidget, column: int, text: str) -> int | None:
-    """Find text in table."""
-    for row in range(table.rowCount()):
-        item = table.item(row, column)
-        if item is not None and item.text() == text:
-            return row
-    return None
 
 
 def make_progress_widget(
@@ -3493,7 +3560,7 @@ def show_on_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
 
 
 def check_if_outside_for_mouse(pos: QPoint, sz_hint: QSize) -> QPoint:
-    """Show popup dialog centered near the mouse cursor, ensuring it stays on-screen."""
+    """Show a popup dialog centered near the mouse cursor, ensuring it stays on-screen."""
     # Determine the screen at the current mouse position
     screen = Qw.QApplication.screenAt(QCursor().pos())
     if not screen:
@@ -3693,7 +3760,7 @@ def open_file(path: PathLike) -> None:
 
 
 def open_link(link: str) -> None:
-    """Open URL link in the default browser."""
+    """Open an URL link in the default browser."""
     QDesktopServices.openUrl(QUrl(link))  # type: ignore[attr-defined]
 
 
@@ -3746,171 +3813,8 @@ def add_or_remove(
             logger.trace(text)
 
 
-def guess_widget_cls(schema: dict) -> str:
-    """Guess widget class."""
-    if "type" in schema:
-        item_type = schema["type"]
-    else:
-        item_type = schema["anyOf"][0]["type"]
-    if item_type in ["string", "array"]:
-        if schema.get("enum"):
-            return "combo_box"
-        return "line_edit"
-    elif item_type == "boolean":
-        return "checkbox"
-    elif item_type == "integer":
-        return "int_spin_box"
-    elif item_type == "number":
-        return "double_spin_box"
-    raise ValueError(f"Could not parse '{item_type}'")
-
-
-def get_widget_for_schema(
-    parent: Qw.QWidget, schema: dict, func: OptionalCallback = None
-) -> tuple[
-    Qw.QLabel | Qw.QLineEdit | Qw.QCheckBox | Qw.QSpinBox | Qw.QDoubleSpinBox | Qw.QComboBox | QtMultiSelect,
-    QtToggleGroup | Qw.QHBoxLayout | None,
-]:
-    """Get widget for specified field."""
-    from qtextra.widgets.qt_select_multi import QtMultiSelect
-    from qtextra.widgets.qt_toggle_group import QtToggleGroup
-
-    widget_cls = schema.get("widget_cls", None)
-    if widget_cls is None:
-        widget_cls = guess_widget_cls(schema)
-    if isinstance(widget_cls, tuple):
-        widget_cls, related_field = widget_cls
-
-    layout: Qw.QLayout | None = None
-    widget: (
-        Qw.QLabel
-        | Qw.QLineEdit
-        | Qw.QCheckBox
-        | Qw.QSpinBox
-        | Qw.QDoubleSpinBox
-        | Qw.QComboBox
-        | QtMultiSelect
-        | QtToggleGroup
-    )
-    if widget_cls == "line_edit":
-        widget = make_line_edit(parent, func=func, func_clear=func, **schema)
-    elif widget_cls == "line_edit_changed":
-        widget = make_line_edit(parent, func_changed=func, func_clear=func, **schema)
-    elif widget_cls == "disabled_line_edit":
-        widget = make_line_edit(parent, func=func, disabled=True, **schema)
-    elif widget_cls == "disabled_line_edit_changed":
-        widget = make_line_edit(parent, func_changed=func, disabled=True, **schema)
-    elif widget_cls == "disabled_label":
-        widget = make_label(parent, disabled=True, **schema)
-    elif widget_cls == "checkbox":
-        widget = make_checkbox(parent, "", func=func, **schema)
-    elif widget_cls == "int_spin_box":
-        widget = make_int_spin_box(parent, func=func, **schema)
-    elif widget_cls == "double_spin_box":
-        widget = make_double_spin_box(parent, func=func, **schema)
-    elif widget_cls == "combo_box":
-        widget = make_combobox(parent, func=func, **schema)
-    elif widget_cls == "searchable_combo_box":
-        widget = make_searchable_combobox(parent, func_index=func, **schema)
-    elif widget_cls == "multi_combo_box":
-        widget = make_checkable_combobox(parent, func=func, **schema)
-    elif widget_cls == "multi_select":
-        widget = QtMultiSelect.from_schema(parent, func_changed=func, sort=True, **schema)
-    elif widget_cls == "single_select":
-        widget = QtMultiSelect.from_schema(parent, func_changed=func, n_max=1, sort=True, **schema)
-    elif widget_cls == "single_toggle":
-        widget = QtToggleGroup.from_schema(parent, func=func, **schema)
-    elif widget_cls == "single_toggle_multiline":
-        widget = QtToggleGroup.from_schema(parent, func=func, multiline=True, **schema)
-    elif widget_cls == "multi_toggle":
-        widget = QtToggleGroup.from_schema(parent, func=func, exclusive=False, **schema)
-    else:
-        raise ValueError(f"Unknown widget class {widget_cls}")
-
-    # hide widget if needed
-    if not schema.get("show", True):
-        widget.hide()
-    # check whether 'warning' is included with the widget, if so, add it into a layout
-    if schema.get("warning"):
-        warning_label = make_warning_label(parent, schema["warning"], normal=True)
-        layout = make_h_layout(warning_label, widget, spacing=1, stretch_id=(1,))
-    if schema.get("help"):
-        help_label = make_help_label(parent, schema["help"], normal=True)
-        if layout is None:
-            layout = make_h_layout(help_label, widget, spacing=1, stretch_id=(1,))
-        else:
-            layout.insertWidget(0, help_label)
-    return widget, layout
-
-
-def get_value_from_widget(widget: Qw.QWidget) -> ty.Any:
-    """Get value from widget."""
-    from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
-    from qtextra.widgets.qt_select_multi import QtMultiSelect
-    from qtextra.widgets.qt_toggle_group import QtToggleGroup
-
-    if isinstance(widget, Qw.QLineEdit):
-        return widget.text()
-    elif isinstance(widget, Qw.QCheckBox):
-        return widget.isChecked()
-    elif isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
-        return widget.value()
-    elif isinstance(widget, Qw.QComboBox):
-        return widget.currentText()
-    elif isinstance(widget, Qw.QLabel):
-        return widget.text()
-    elif isinstance(widget, QtCheckableComboBox):
-        return widget.checked_texts()
-    elif isinstance(widget, QtMultiSelect):
-        checked = widget.get_checked()
-        if widget.n_max == 1:
-            return checked[0] if checked else None
-        return checked
-    elif isinstance(widget, QtToggleGroup):
-        return widget.value
-    raise ValueError(f"Unknown widget class {widget}")
-
-
-def set_value_to_widget(widget: Qw.QWidget, value: ty.Any) -> None:
-    """Set value to widget."""
-    from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
-    from qtextra.widgets.qt_select_multi import QtMultiSelect
-    from qtextra.widgets.qt_toggle_group import QtToggleGroup
-
-    if isinstance(widget, Qw.QLineEdit):
-        if isinstance(value, list):
-            value = ",".join([str(v) for v in value])
-        elif value is None:
-            value = ""
-        widget.setText(str(value))
-    elif isinstance(widget, Qw.QLabel):
-        widget.setText(str(value))
-    elif isinstance(widget, Qw.QCheckBox):
-        widget.setChecked(value)
-    elif isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
-        widget.setValue(value)
-    elif isinstance(widget, QtCheckableComboBox):
-        value = value or []
-        widget.set_checked_texts([str(v) for v in value])
-    elif isinstance(widget, Qw.QComboBox):
-        # if value was incorrect, let's check if there 'None' which can be safely set
-        if str(value) == "" and widget.itemText(0) == "None":
-            value = widget.itemText(0)
-        widget.setCurrentText(str(value))
-    elif isinstance(widget, QtMultiSelect):
-        widget.set_selected_options(value)
-    elif isinstance(widget, QtToggleGroup):
-        widget.value = value
-    else:
-        raise ValueError(f"Unknown widget class {widget}")
-
-
-def get_data_for_widgets(widgets: dict[str, Qw.QWidget], **kwargs: ty.Any) -> dict[str, ty.Any]:
-    """Get config for widgets."""
-    data = {}
-    for key, widget in widgets.items():
-        if key.startswith("_"):
-            continue
-        data[key] = get_value_from_widget(widget)
-    data.update(kwargs)
-    return data
+def set_regex_validator(widget: Qw.QWidget, pattern: str) -> None:
+    """Set regex validator on widget."""
+    if not hasattr(widget, "setValidator"):
+        return
+    widget.setValidator(QRegularExpressionValidator(QRegularExpression(pattern)))

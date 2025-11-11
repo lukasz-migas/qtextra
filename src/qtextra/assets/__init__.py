@@ -55,6 +55,11 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "ruler": "ph.ruler",
     "ipython": "mdi.console",
     "cli": "mdi6.console-line",
+    "console": "mdi6.console-line",
+    "thread": "mdi6.volleyball",
+    "active": "mdi6.lightbulb-on-outline",
+    "process": "ri.computer-line",
+    "wait": "mdi6.timer-sand",
     "template": "ei.file-new",
     "image": "fa6.image",
     "images": "fa5s.images",
@@ -216,7 +221,7 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "right_hand": "fa6s.hand-point-right",
     # resolution
     "low_resolution": "mdi.standard-definition",
-    "high_resolution": "mdi.standard-definition",
+    "high_resolution": "mdi.high-definition",
     "ultra_resolution": "mdi.ultra-high-definition",
     # viewer
     "home": "fa5s.home",
@@ -243,6 +248,20 @@ QTA_MAPPING: ty.Dict[str, str | tuple[str, dict]] = {
     "reject": "fa5s.thumbs-down",
     "target": "mdi.target",
 }
+
+
+def check_icon_mapping() -> None:
+    """Check icon mapping for icons."""
+    icons: dict[str, list[str]] = {}
+    for key, value in QTA_MAPPING.items():
+        if isinstance(value, tuple):
+            value = value[0]
+        if value not in icons:
+            icons[value] = []
+        icons[value].append(key)
+    for icon, keys in icons.items():
+        if len(keys) > 1:
+            print(f"Icon '{icon}' is mapped to multiple keys: {keys}")
 
 
 def update_icon_mapping(mapping: ty.Dict[str, str], silent: bool = False, key: str = "") -> None:

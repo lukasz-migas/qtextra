@@ -90,7 +90,7 @@ class QtCheckCollapsible(QCollapsible):
         """Add layout to the central content widget's layout."""
         self._content.layout().addLayout(layout)
 
-    def addRow(self, label: QWidget | QLayout, widget: QWidget | None = None):
+    def addRow(self, label: str | QWidget | QLayout, widget: QWidget | None = None):
         """Add layout to the central content widget's layout."""
         if not hasattr(self._content.layout(), "addRow"):
             raise ValueError("Layout does not have `addRow` method.")

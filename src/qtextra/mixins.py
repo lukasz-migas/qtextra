@@ -31,6 +31,7 @@ class DocumentationMixin:
 
     ENABLE_TUTORIAL: bool = False
     _docs_tutorial_btn: QPushButton | None = None
+
     ENABLE_HTML: bool = True
     _docs_info_btn: QPushButton | None = None
 

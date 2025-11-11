@@ -133,6 +133,8 @@ class TableConfig(MutableMapping[int, Column]):
         for col_id, col_info in self.items():
             if col_info["tag"] == tag:
                 return col_id
+            elif col_info["name"] == tag:
+                return col_id
         return -1
 
     def get_column(self, tag: int | str) -> Column | None:
@@ -142,6 +144,8 @@ class TableConfig(MutableMapping[int, Column]):
                 if col_id == tag:
                     return col_info
             if col_info["tag"] == tag:
+                return col_info
+            elif col_info["name"] == tag:
                 return col_info
         return None
 
@@ -167,5 +171,13 @@ class TableConfig(MutableMapping[int, Column]):
         selectable_columns = []
         for col_id, col_info in self.column_iter():
             if col_info["show"] and col_info["selectable"]:
+                selectable_columns.append(col_id)
+        return selectable_columns
+
+    def get_selectable_columns(self) -> list[int]:
+        """Return selectable columns."""
+        selectable_columns = []
+        for col_id, col_info in self.column_iter():
+            if col_info["selectable"]:
                 selectable_columns.append(col_id)
         return selectable_columns
