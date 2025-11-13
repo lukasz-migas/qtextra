@@ -33,10 +33,15 @@ class QueueList(QScrollArea):
 
     def __init__(self, parent: ty.Optional[QWidget] = None) -> None:
         super().__init__(parent=parent)
-        self.widgets: ty.Dict[str, TaskWidget] = {}
-        self.finished_widgets: ty.List[TaskWidget] = []
-        self.cancelled_widgets: ty.List[TaskWidget] = []
-        self.failed_widgets: ty.List[TaskWidget] = []
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        self.widgets: dict[str, TaskWidget] = {}
+        self.finished_widgets: list[TaskWidget] = []
+        self.cancelled_widgets: list[TaskWidget] = []
+        self.failed_widgets: list[TaskWidget] = []
 
         # states
         self.selected: ty.Sequence[str] = ["running", "queued", "paused", "finished", "failed", "cancelled"]
@@ -61,11 +66,6 @@ class QueueList(QScrollArea):
         main_layout.setSpacing(2)
         main_layout.setContentsMargins(1, 1, 1, 1)
         main_layout.addStretch(1)
-
-        self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)  # type: ignore[attr-defined]
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # type: ignore[attr-defined]
         self._layout = main_layout
 
     def __repr__(self) -> str:
@@ -238,7 +238,7 @@ class QueueList(QScrollArea):
         self.purge_finished()
 
     def on_clear_queue(self, force: bool = False) -> None:
-        """Clear table, but first ask for confirmation."""
+        """Clear the table, but first ask for confirmation."""
         if force or hp.confirm(
             self, "Are you sure you wish to remove <b>all</b> tasks from the list?", "Clear queue..."
         ):
@@ -256,7 +256,6 @@ class QueueList(QScrollArea):
         for task in tasks:
             self.on_requeue_task(task)
 
-    # @Slot(Task)
     def on_task_started(self, task: Task) -> None:
         """Task finished."""
         widget = self._find_widget(task)
@@ -275,7 +274,6 @@ class QueueList(QScrollArea):
         else:
             logger.warning(f"Could not find widget for task '{task.task_id}' (paused)")
 
-    # @Slot(Task)
     def on_task_next(self, task: Task) -> None:
         """Task finished."""
         widget = self._find_widget(task)
@@ -285,7 +283,6 @@ class QueueList(QScrollArea):
         else:
             logger.warning(f"Could not find widget for task '{task.task_id}' (next)")
 
-    # @Slot(Task)
     def on_task_finished(self, task: Task) -> None:
         """Task finished."""
         widget = self.widgets.pop(task.task_id, None)
@@ -299,7 +296,6 @@ class QueueList(QScrollArea):
             logger.warning(f"Could not find widget for task '{task.task_id}' (finished)")
         self.purge_finished()
 
-    # @Slot(Task, tuple)
     def on_task_failed(self, task: Task, _exc_info: ty.Tuple) -> None:
         """Task failed."""
         widget = self.widgets.pop(task.task_id, None)
