@@ -215,7 +215,28 @@ class QtSeverityLabel(QtQtaLabel):
 class QtStateLabel(QtQtaLabel):
     """Severity label."""
 
-    STATES = ("wait", "check", "cross", "active", "upgrade", "thread", "process", "cli")
+    STATES = ("wait", "check", "cross", "active", "upgrade")
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self._state: str = "wait"
+        self.state = "wait"
+
+    @property
+    def state(self) -> str:
+        """Get state."""
+        return self._state
+
+    @state.setter
+    def state(self, state: str) -> None:
+        self._state = state
+        self.set_qta(state)
+
+
+class QtWorkerLabel(QtQtaLabel):
+    """Severity label."""
+
+    STATES = ("thread", "process", "cli")
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
@@ -267,6 +288,12 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtStateLabel.STATES:
         btn = QtStateLabel()
+        btn.set_large()
+        btn.state = state
+        lay.addWidget(btn)
+
+    for state in QtWorkerLabel.STATES:
+        btn = QtWorkerLabel()
         btn.set_large()
         btn.state = state
         lay.addWidget(btn)

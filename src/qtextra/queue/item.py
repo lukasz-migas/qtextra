@@ -304,7 +304,7 @@ class TaskWidget(QFrame):
         self._update_state()
 
     def paused(self, paused: bool) -> None:
-        """Task was paused."""
+        """The task was paused."""
         if self.task:
             self.pause_btn.paused = paused
             if self.pause_btn.paused:
@@ -316,7 +316,7 @@ class TaskWidget(QFrame):
             self._update_state()
 
     def _on_cancel_task(self, force: bool = False) -> None:
-        """Triggered when user clicked to pause task."""
+        """Triggered when user clicked to pause the task."""
         if self.task:
             if force or hp.confirm(self, "Are you sure you wish to cancel this task?", "Cancel task?"):
                 self.evt_cancel_task.emit(self.task)  # type: ignore[unused-ignore]
@@ -327,7 +327,7 @@ class TaskWidget(QFrame):
         self._on_cancel_task()
 
     def cancelled(self) -> None:
-        """Task was cancelled."""
+        """The task was canceled."""
         if self.task:
             try:
                 self.poll_timer.stop()
