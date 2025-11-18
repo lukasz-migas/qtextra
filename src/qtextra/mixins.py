@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import time
 import typing as ty
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
 
-from koyo.timer import report_time
+from koyo.timer import MeasureTimer
 from loguru import logger
 from qtpy.QtCore import QTimer, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QCloseEvent
@@ -132,9 +131,9 @@ class TimerMixin:
         self, message: str = "Task took", func: ty.Callable = logger.trace
     ) -> ty.Generator[None, None, None]:
         """Measure time."""
-        t_start = time.time()
-        yield
-        func(f"{message} {report_time(t_start)}")
+        with MeasureTimer() as timer:
+            yield
+        func(f"{message} {timer()}")
 
 
 class MinimizeMixin:
