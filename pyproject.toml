@@ -55,9 +55,15 @@ console = [
     "ipykernel>=5.2.0",
 ]
 pyside2 = ["pyside2"]
-pyside6 = ["pyside6"]
+pyside6 = [
+    "pyside6>6.9.0; platform_system == 'Windows'",
+    "pyside6; platform_system != 'Windows'"
+]
 pyqt5 = ["pyqt5"]
-pyqt6 = ["pyqt6"]
+pyqt6 = [
+    "pyqt6>6.9.0; platform_system == 'Windows'",
+    "pyqt6; platform_system != 'Windows'"
+]
 reload = ["qtreload"]
 test = [
     "pytest>=8.1",
