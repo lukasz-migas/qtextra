@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import typing as ty
 
-from pydantic import BaseModel, ConfigDict, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QFrame, QVBoxLayout, QWidget
@@ -22,7 +22,7 @@ class Tile(BaseModel):
     icon_kws: ty.Optional[ty.Dict[str, ty.Any]] = None
     warning: str = ""
 
-    @validator("func", pre=True)
+    @field_validator("func", mode="before")
     def _validate_widget(cls, value) -> ty.Callable:
         """Check correct model is provided."""
         if not value:
@@ -53,12 +53,20 @@ class QtTileWidget(QFrame):
         else:
             self._image = hp.make_label(self, "")  # type: ignore[assignment]
         self._description = hp.make_label(
-            self, self._tile.description, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, retain_size=True,
+            self,
+            self._tile.description,
+            wrap=True,
+            alignment=Qt.AlignmentFlag.AlignHCenter,
+            retain_size=True,
         )
 
         self._warning = hp.make_label(
-            self, self._tile.warning, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="small_text",
-            retain_size=True
+            self,
+            self._tile.warning,
+            wrap=True,
+            alignment=Qt.AlignmentFlag.AlignHCenter,
+            object_name="small_text",
+            retain_size=True,
         )
         if not self._tile.warning:
             self._warning.hide()
