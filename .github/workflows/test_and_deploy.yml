@@ -44,6 +44,8 @@ jobs:
 
       - run: uv sync --no-dev --group test --extra ${{ matrix.backend }}
       - uses: pyvista/setup-headless-display-action@v4
+        with:
+          qt: true
 
       - name: Test
         run: uv run coverage run -p -m pytest -v --color=yes
