@@ -314,7 +314,7 @@ class QtListSelectPopup(QtFramelessPopup):
             double_click_to_select=self.double_click_to_select,
             text=self.text,
         )
-        layout = hp.make_form_layout(parent=self)
+        layout = hp.make_form_layout(parent=self, margin=1)
         layout.addRow(hp.make_label(self, self.text, hide=self.text == ""))
         layout.addRow(hp.make_h_line(self))
         layout.addRow(self.selection_list)
