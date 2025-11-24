@@ -487,7 +487,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
             object_name="window_title",
         )
 
-        layout = hp.make_hbox_layout(spacing=0)
+        layout = hp.make_h_layout(spacing=0)
         layout.addWidget(self._title_label, stretch=True)
         layout.addStretch(1)
         self._title_layout = layout
@@ -508,7 +508,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
         )
         self._move_handle.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        layout = hp.make_hbox_layout(spacing=0)
+        layout = hp.make_h_layout(spacing=0)
         layout.addWidget(self._title_label, stretch=True)
         layout.addWidget(self._move_handle)
         self._title_layout = layout

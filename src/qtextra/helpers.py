@@ -26,6 +26,7 @@ from qtpy.QtCore import (
     Qt,
     QTimer,
     QUrl,
+    Signal,
 )
 from qtpy.QtGui import (
     QColor,
@@ -65,21 +66,8 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_separator import QtHorzLine, QtHorzLineWithText, QtVertLine
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
-# def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:
-#     """Trim dialog size and retrieve new size."""
-#     win = None
-#     # win = cls.current()
-#     sh = dlg.sizeHint()
-#     cw, ch = sh.width(), sh.height()
-#     if win is None:
-#         return cw, ch
-#     win_size = win.size()
-#     mw, mh = win_size.width(), win_size.height()
-#     if cw > mw:
-#         cw = mw - 50
-#     if ch > mh:
-#         ch = mh - 50
-#     return cw, ch
+
+## Layout functions
 
 
 def make_form_layout(
@@ -164,22 +152,207 @@ def insert_widget_in_form_layout(
 def make_hbox_layout(
     widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: tuple[int, int, int, int] | None = None
 ) -> Qw.QHBoxLayout:
-    """Make horizontal box layout."""
-    layout = Qw.QHBoxLayout(widget)
-    layout.setSpacing(spacing)
-    if content_margins:
-        layout.setContentsMargins(*content_margins)
-    return layout
+    """Make a horizontal box layout."""
+    warnings.warn("`make_hbox_layout` is deprecated, use `make_h_layout` instead.", DeprecationWarning, stacklevel=2)
+    return make_h_layout(widget, spacing=spacing, margin=content_margins)
+
+
+def make_h_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    stretch_id: int | tuple[int, ...] | None = None,
+    stretch_ratio: int | tuple[int, ...] = 1,
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    alignment: Qt.AlignmentFlag | None = None,
+    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    parent: Qw.QWidget | None = None,
+) -> Qw.QHBoxLayout:
+    """Make horizontal layout."""
+    layout = Qw.QHBoxLayout(parent)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        stretch_ratio=stretch_ratio,
+        alignment=alignment,
+        widget_alignment=widget_alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
 
 
 def make_vbox_layout(
     widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: tuple[int, int, int, int] | None = None
 ) -> Qw.QVBoxLayout:
-    """Make vertical box layout."""
-    layout = Qw.QVBoxLayout(widget)
-    layout.setSpacing(spacing)
-    if content_margins:
-        layout.setContentsMargins(*content_margins)
+    """Make a vertical box layout."""
+    warnings.warn("`make_vbox_layout` is deprecated, use `make_v_layout` instead.", DeprecationWarning, stacklevel=2)
+    return make_v_layout(widget, spacing=spacing, margin=content_margins)
+
+
+def make_v_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    stretch_id: int | tuple[int, ...] | None = None,
+    stretch_ratio: int | tuple[int, ...] = 1,
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    alignment: Qt.AlignmentFlag | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
+    parent: Qw.QWidget | None = None,
+) -> Qw.QVBoxLayout:
+    """Make vertical layout."""
+    layout = Qw.QVBoxLayout(parent)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        stretch_ratio=stretch_ratio,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+        widget_alignment=widget_alignment,
+    )
+
+
+def make_grid_layout(
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    parent: Qw.QWidget | None = None,
+    column_to_stretch: int | dict[int, int] | None = None,
+) -> Qw.QGridLayout:
+    """Make grid layout."""
+    layout = Qw.QGridLayout(parent)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    if column_to_stretch:
+        if isinstance(column_to_stretch, int):
+            column_to_stretch = {column_to_stretch: 1}
+        for column, stretch in column_to_stretch.items():
+            layout.setColumnStretch(column, stretch)
+    return layout
+
+
+def make_flow_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    stretch_id: int | tuple[int, ...] | None = None,
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    alignment: Qt.AlignmentFlag | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    parent: Qw.QWidget | None = None,
+    vertical_spacing: int | None = None,
+    horizontal_spacing: int | None = None,
+) -> Qw.QHBoxLayout:
+    """Make horizontal layout."""
+    from qtextra.widgets.qt_layout_flow import QtFlowLayout
+
+    layout = QtFlowLayout(parent, spacing=0, margin=margin)
+    if vertical_spacing is not None:
+        layout.setVerticalSpacing(vertical_spacing)
+    if horizontal_spacing is not None:
+        layout.setHorizontalSpacing(horizontal_spacing)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
+
+
+def make_animated_flow_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    stretch_id: int | tuple[int, ...] | None = None,
+    spacing: int | None = None,
+    margin: int | tuple[int, int, int, int] | None = None,
+    alignment: Qt.AlignmentFlag | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    parent: Qw.QWidget | None = None,
+    use_animation: bool = False,
+) -> Qw.QHBoxLayout:
+    """Make horizontal layout."""
+    from qtextra.widgets.qt_layout_flow import QtAnimatedFlowLayout
+
+    layout = QtAnimatedFlowLayout(parent, use_animation=use_animation, tight=True)
+    if spacing is not None:
+        layout.setSpacing(spacing)
+    if margin is not None:
+        if isinstance(margin, int):
+            margin = (margin, margin, margin, margin)
+        layout.setContentsMargins(*margin)
+    return _set_in_layout(
+        *widgets,
+        layout=layout,
+        stretch_id=stretch_id,
+        alignment=alignment,
+        stretch_before=stretch_before,
+        stretch_after=stretch_after,
+    )
+
+
+def _set_in_layout(
+    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
+    layout: Qw.QVBoxLayout | Qw.QHBoxLayout,
+    stretch_id: int | tuple[int, ...],
+    stretch_ratio: int | tuple[int, ...] = 1,
+    alignment: Qt.AlignmentFlag | None = None,
+    stretch_before: bool = False,
+    stretch_after: bool = False,
+    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
+) -> Qw.QVBoxLayout | Qw.QHBoxLayout:
+    if stretch_before:
+        layout.addStretch(True)
+    for i, widget in enumerate(widgets):
+        if isinstance(widget, Qw.QLayout):
+            layout.addLayout(widget)
+        elif isinstance(widget, Qw.QSpacerItem):
+            layout.addSpacerItem(widget)
+        else:
+            if widget_alignment:
+                widget_alignment_ = (
+                    widget_alignment.get(i, None) if isinstance(widget_alignment, dict) else widget_alignment
+                )
+                if widget_alignment_:
+                    layout.addWidget(widget, alignment=widget_alignment_)
+                else:
+                    layout.addWidget(widget)
+            else:
+                layout.addWidget(widget)
+    if stretch_id is not None:
+        if isinstance(stretch_id, int):
+            stretch_id = (stretch_id,)
+        if isinstance(stretch_ratio, int):
+            stretch_ratio = (stretch_ratio,) * len(stretch_id)
+        assert len(stretch_id) == len(stretch_ratio), "Stretch id and ratio must have same length"
+        stretch_ratio = list(stretch_ratio)
+        for index, st_id in enumerate(stretch_id):
+            layout.setStretch(st_id, stretch_ratio[index])
+    if alignment:
+        layout.setAlignment(alignment)
+    if stretch_after:
+        layout.addStretch(True)
     return layout
 
 
@@ -189,11 +362,209 @@ def set_layout_margin(layout: Qw.QLayout, margin: int) -> None:
         layout.setMargin(margin)
 
 
+# Misc functions
+def make_shortcut_str(sequence: str) -> str:
+    """Make a shortcut string."""
+    from qtpy.QtGui import QKeySequence
+
+    return QKeySequence(sequence).toString(QKeySequence.SequenceFormat.NativeText)
+
+
+def get_key(key: str) -> str:
+    """Get keyboard key."""
+    from koyo.system import IS_WIN
+
+    key = key.lower()
+    if key in ["ctrl", "control"]:
+        return "Ctrl" if IS_WIN else "⌘"
+    elif key == "shift":
+        return "Shift" if IS_WIN else "⇧"
+    elif key == "alt":
+        return "Alt" if IS_WIN else "⌥"
+    elif key == "cmd":
+        return "Cmd" if IS_WIN else "⌘"
+    return key.capitalize()
+
+
 def set_from_schema(widget: Qw.QWidget, schema: dict[str, ty.Any], **_kwargs: ty.Any) -> None:
     """Set certain values on the model."""
     with qt_signals_blocked(widget):
         if "description" in schema:
             widget.setToolTip(schema["description"])
+
+
+def set_tooltip(widget: Qw.QWidget, tooltip: str):
+    """Set tooltip on specified widget."""
+    widget.setToolTip(tooltip)
+
+
+def set_properties(widget: Qw.QWidget, properties: dict[str, ty.Any] | None) -> None:
+    """Set properties on widget."""
+    if properties:
+        for key, value in properties.items():
+            widget.setProperty(key, value)
+        polish_widget(widget)
+
+
+def set_font(widget: Qw.QWidget, font_size: int = 7, font_weight: int = 50, bold: bool = False):
+    """Set font on a widget."""
+    font = QFont()
+    font.setPointSize(font_size if IS_WIN else font_size + 2)
+    font.setWeight(QFont.Weight(font_weight))
+    font.setBold(bold)
+    widget.setFont(font)
+
+
+def set_bold(widget: Qw.QWidget, bold: bool = True) -> Qw.QWidget:
+    """Set text on widget as bold."""
+    font = widget.font()
+    font.setBold(bold)
+    widget.setFont(font)
+    return widget
+
+
+def update_widget_style(widget: Qw.QWidget, object_name: str):
+    """Update widget style by forcing its re-polish."""
+    widget.setObjectName(object_name)
+    widget.style().polish(widget)
+
+
+def update_widgets_style(*widget: Qw.QWidget, object_name: str):
+    """Update widget style by forcing its re-polish."""
+    for widget_ in widget:
+        widget_.setObjectName(object_name)
+        widget_.style().polish(widget_)
+
+
+def update_property(widget: Qw.QWidget, prop: str, value: ty.Any) -> None:
+    """Update properties of widget to update style."""
+    widget.setProperty(prop, value)
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
+
+
+def polish_widget(*widget: Qw.QWidget):
+    """Update widget style."""
+    for widget_ in widget:
+        widget_.style().unpolish(widget_)
+        widget_.style().polish(widget_)
+
+
+def get_font(font_size: int, font_weight: int = QFont.Weight.Normal) -> QFont:
+    """Get font."""
+    font = QFont(QFont().defaultFamily())
+    font.setWeight(font_weight)
+    font.setPointSize(font_size if IS_WIN else font_size + 2)
+    return font
+
+
+def set_sizer_policy(
+    widget: Qw.QWidget,
+    min_size: ty.Union[QSize, tuple[int]] = None,
+    max_size: ty.Union[QSize, tuple[int]] = None,
+    h_stretch: bool = False,
+    v_stretch: bool = False,
+):
+    """Set sizer policy."""
+    size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Policy.Minimum, Qw.QSizePolicy.Policy.Preferred)
+    size_policy.setHorizontalStretch(h_stretch)
+    size_policy.setVerticalStretch(v_stretch)
+    size_policy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
+    widget.setSizePolicy(size_policy)
+    if min_size:
+        widget.setMinimumSize(QSize(min_size))
+    if max_size:
+        widget.setMaximumSize(QSize(max_size))
+
+
+def set_expanding_sizer_policy(
+    widget: Qw.QWidget,
+    horz: bool = False,
+    vert: bool = False,
+    expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.MinimumExpanding,
+    not_expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Preferred,
+    h_stretch: bool = False,
+    v_stretch: bool = False,
+):
+    """Set expanding policy."""
+    size_policy = Qw.QSizePolicy(not_expanding if not horz else expanding, not_expanding if not vert else expanding)
+    widget.setSizePolicy(size_policy)
+    size_policy.setHorizontalStretch(h_stretch)
+    size_policy.setVerticalStretch(v_stretch)
+
+
+def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
+    """Set hidden policy."""
+    policy = widget.sizePolicy()
+    policy.setRetainSizeWhenHidden(True)
+    widget.setSizePolicy(policy)
+
+
+def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
+    """Set menu on bitmap button."""
+    widget.setMenu(menu)
+    if IS_MAC:
+        widget.setMinimumSize(QSize(55, 32))
+    else:
+        widget.setStyleSheet("QPushButton::menu-indicator { image: none; width : 0px; left:}")
+
+
+def _validate_func(func: ty.Union[ty.Callable, ty.Sequence[ty.Callable]]) -> ty.Sequence[ty.Callable]:
+    if callable(func):
+        func = [func]
+    return [func for func in func if callable(func)]
+
+
+def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto") -> str:
+    """Parse into a hyperlink."""
+    if value is None:
+        value = link
+    if isinstance(link, Path):
+        return f"<a href='{link.resolve().as_uri()}'>{value}</a>"
+    if prefix:
+        return f"<a href='{prefix}:{link}'>{value}</a>"
+    return f"<a href='{link}'>{value}</a>"
+
+
+def set_regex_validator(widget: Qw.QWidget, pattern: str) -> None:
+    """Set regex validator on widget."""
+    if not hasattr(widget, "setValidator"):
+        return
+    widget.setValidator(QRegularExpressionValidator(QRegularExpression(pattern)))
+
+
+def is_valid(widget: Qw.QWidget) -> bool:
+    """Is valid."""
+    try:
+        if hasattr(widget, "x"):
+            widget.x()
+        else:
+            repr(widget)
+    except RuntimeError:
+        return False
+    return True
+
+
+def clear_if_invalid(widget: Qw.QWidget) -> Qw.QWidget | None:
+    """Clear widget if invalid."""
+    if not is_valid(widget):
+        return None
+    return widget
+
+
+def close_widget(widget: Qw.QWidget):
+    """Close widget."""
+    if widget is not None:
+        with suppress(Exception):
+            widget.close()
+        with suppress(Exception):
+            widget.setParent(None)
+        with suppress(Exception):
+            widget.deleteLater()
+    return None
+
+
+## Timer functions
 
 
 def call_later(parent: Qw.QWidget, func: ty.Callable, delay: int) -> None:
@@ -212,6 +583,9 @@ def make_periodic_timer(parent: Qw.QWidget, func: ty.Callable, delay: int, start
     if start:
         timer.start()
     return timer
+
+
+## QProcess functions
 
 
 def run_process(
@@ -253,6 +627,16 @@ def run_process(
         process.start()
 
 
+def get_orientation(orientation: Orientation | Qt.Orientation) -> Qt.Orientation:
+    """Get Qt orientation."""
+    if isinstance(orientation, str):
+        orientation = Qt.Orientation.Horizontal if orientation.lower() == "horizontal" else Qt.Orientation.Vertical
+    return orientation
+
+
+## Combobox functions
+
+
 def combobox_setter(
     widget: Qw.QComboBox,
     clear: bool = True,
@@ -291,7 +675,7 @@ def check_if_combobox_needs_update(combobox: Qw.QComboBox, new_data: dict[ty.Any
 def increment_combobox(
     combobox: Qw.QComboBox,
     direction: int,
-    reset_func: ty.Callable | None = None,
+    reset_signal: Signal | None = None,
     skip: list[int] | None = None,
     skipped: bool = False,
 ) -> int:
@@ -299,8 +683,8 @@ def increment_combobox(
     idx = combobox.currentIndex()
     count = combobox.count()
     idx += direction
-    if direction == 0 and callable(reset_func):
-        reset_func.emit()  # type: ignore[attr-defined]
+    if direction == 0 and hasattr(reset_signal, "emit"):
+        reset_signal.emit()
     if idx >= count:
         idx = 0
     if idx < 0:
@@ -308,7 +692,7 @@ def increment_combobox(
     if skip is not None and idx in skip and not skipped:
         with qt_signals_blocked(combobox):
             combobox.setCurrentIndex(idx)
-        increment_combobox(combobox, direction, reset_func, skip, skipped=len(skip) > count)
+        increment_combobox(combobox, direction, reset_signal, skip, skipped=len(skip) > count)
     else:
         combobox.setCurrentIndex(idx)
     return combobox.currentIndex()
@@ -392,27 +776,86 @@ def set_combobox_current_index(widget: Qw.QComboBox, current_data: ty.Any) -> No
             break
 
 
-def make_shortcut_str(sequence: str) -> str:
-    """Make shortcut string."""
-    from qtpy.QtGui import QKeySequence
+# Table functions
+def make_table(
+    parent: Qw.QWidget, table_config: TableConfig, elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone
+) -> Qw.QTableWidget:
+    """Make table."""
+    # get columns
+    column_names = table_config.to_columns()
+    # crete table
+    table = Qw.QTableWidget(parent)
+    table.setColumnCount(len(column_names))
+    table.setHorizontalHeaderLabels(column_names)
+    table.setCornerButtonEnabled(False)
+    table.setTextElideMode(elide)
 
-    return QKeySequence(sequence).toString(QKeySequence.SequenceFormat.NativeText)
+    # set column width
+    header = table.horizontalHeader()
+    for column_index, column in table_config.column_iter():
+        header.setSectionResizeMode(column_index, get_table_stretch(column["sizing"]))
+        if column["hidden"]:
+            header.setSectionHidden(column_index, column["hidden"])
+    return table
 
 
-def get_key(key: str) -> str:
-    """Get keyboard key."""
-    from koyo.system import IS_WIN
+def clear_table(table: Qw.QTableWidget) -> None:
+    """Clear table."""
+    while table.rowCount() > 0:
+        table.removeRow(0)
 
-    key = key.lower()
-    if key in ["ctrl", "control"]:
-        return "Ctrl" if IS_WIN else "⌘"
-    elif key == "shift":
-        return "Shift" if IS_WIN else "⇧"
-    elif key == "alt":
-        return "Alt" if IS_WIN else "⌥"
-    elif key == "cmd":
-        return "Cmd" if IS_WIN else "⌘"
-    return key.capitalize()
+
+def get_table_stretch(sizing: str) -> Qw.QHeaderView.ResizeMode:
+    """Get table stretch."""
+    if sizing == "stretch":
+        return Qw.QHeaderView.ResizeMode.Stretch
+    elif sizing == "fixed":
+        return Qw.QHeaderView.ResizeMode.Fixed
+    elif sizing == "contents":
+        return Qw.QHeaderView.ResizeMode.ResizeToContents
+    return Qw.QHeaderView.ResizeMode.Interactive
+
+
+def find_in_table(table: Qw.QTableWidget, column: int, text: str) -> int | None:
+    """Find text in table."""
+    for row in range(table.rowCount()):
+        item = table.item(row, column)
+        if item is not None and item.text() == text:
+            return row
+    return None
+
+
+def select_columns(parent: Qw.QWidget | None, table: Qw.QTableWidget, table_config: TableConfig) -> None:
+    """Select which columns in the table should be shown/hidden."""
+    from qtextra.widgets.qt_list_select import QtListSelectPopup
+
+    def _update_visible_columns() -> None:
+        for name in popup.selection_list.get_unchecked():
+            update_table_column(table, table_config, name, True)
+        for name in popup.selection_list.get_checked():
+            update_table_column(table, table_config, name, False)
+
+    columns = table_config.get_selected_columns()
+    hidden = [table.isColumnHidden(col_id) for col_id in columns]
+
+    popup = QtListSelectPopup(parent, text="Select columns that should be visible in the table.")
+    for i, index in enumerate(columns):
+        column = table_config.get_column(index)
+        popup.selection_list.add_item(column["name"], check=not hidden[i])
+    popup.selection_list.evt_selection_changed.connect(_update_visible_columns)
+    popup.show()
+
+
+def update_table_column(table: Qw.QTableWidget, table_config: TableConfig, name: str, check: bool) -> None:
+    """Update table column visibility."""
+    column = table_config.get_column(name)
+    if column:
+        index = table_config.find_col_id(column["tag"])
+        column["hidden"] = check
+        table.setColumnHidden(index, check)
+
+
+## Widgets functions
 
 
 def make_label(
@@ -533,6 +976,7 @@ def make_tooltip_label(
     xxlarge: bool = False,
     retain_size: bool = False,
     hide: bool = False,
+    disabled: bool = False,
     **kwargs: ty.Any,
 ):
     """Create Qta icon with immediate tooltip."""
@@ -554,6 +998,8 @@ def make_tooltip_label(
     widget.setToolTip(tooltip)
     if retain_size:
         set_retain_hidden_size_policy(widget)
+    if disabled:
+        disable_widgets(widget, disabled=disabled)
     if hide:
         widget.hide()
     return widget
@@ -578,38 +1024,6 @@ def make_info_label(
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
     return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
-
-
-def make_url_btn(
-    parent: Qw.QWidget,
-    xxsmall: bool = False,
-    xsmall: bool = False,
-    small: bool = True,
-    normal: bool = False,
-    average: bool = False,
-    medium: bool = False,
-    large: bool = False,
-    xlarge: bool = False,
-    xxlarge: bool = False,
-    func: Callback | None = None,
-    tooltip: str = "Click here to find out more...",
-) -> QtImagePushButton:
-    """Make Qta button that looks like an URL."""
-    return make_qta_btn(
-        parent,
-        "help",
-        xxsmall=xxsmall,
-        xsmall=xsmall,
-        small=small,
-        normal=normal,
-        average=average,
-        medium=medium,
-        large=large,
-        xlarge=xlarge,
-        xxlarge=xxlarge,
-        func=func,
-        tooltip=tooltip,
-    )
 
 
 def make_scrollable_label(
@@ -701,6 +1115,7 @@ def make_qta_label(
     retain_size: bool = False,
     hover: bool = False,
     hide: bool = False,
+    disabled: bool = False,
     **kwargs: ty.Any,
 ) -> QtQtaLabel:
     """Make QLabel element."""
@@ -730,12 +1145,9 @@ def make_qta_label(
         set_retain_hidden_size_policy(widget)
     if hide:
         widget.setVisible(False)
+    if disabled:
+        disable_widgets(widget, disabled=disabled)
     return widget
-
-
-def set_tooltip(widget: Qw.QWidget, tooltip: str):
-    """Set tooltip on specified widget."""
-    widget.setToolTip(tooltip)
 
 
 def make_eliding_label(
@@ -804,6 +1216,38 @@ def make_eliding_label2(
         widget.setToolTip(tooltip)
     widget.setWordWrap(wrap)
     return widget
+
+
+def make_url_btn(
+    parent: Qw.QWidget,
+    xxsmall: bool = False,
+    xsmall: bool = False,
+    small: bool = True,
+    normal: bool = False,
+    average: bool = False,
+    medium: bool = False,
+    large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    func: Callback | None = None,
+    tooltip: str = "Click here to find out more...",
+) -> QtImagePushButton:
+    """Make Qta button that looks like an URL."""
+    return make_qta_btn(
+        parent,
+        "help",
+        xxsmall=xxsmall,
+        xsmall=xsmall,
+        small=small,
+        normal=normal,
+        average=average,
+        medium=medium,
+        large=large,
+        xlarge=xlarge,
+        xxlarge=xxlarge,
+        func=func,
+        tooltip=tooltip,
+    )
 
 
 def make_line_edit(
@@ -879,51 +1323,6 @@ def make_text_edit(
         [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     widget.setPlaceholderText(placeholder)
     return widget
-
-
-def make_multi_select(
-    parent: Qw.QWidget,
-    description: str = "",
-    options: list[str] | None = None,
-    value: str = "",
-    default: str = "",
-    placeholder: str = "Select...",
-    func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
-    func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
-    items: dict[str, ty.Any] | None = None,
-    show_btn: bool = True,
-    **kwargs: ty.Any,
-) -> QtMultiSelect:
-    """Make multi select."""
-    from qtextra.widgets.qt_select_multi import QtMultiSelect
-
-    return QtMultiSelect.from_schema(
-        parent,
-        description=description,
-        options=options,
-        value=value,
-        default=default,
-        placeholder=placeholder,
-        func=func,
-        func_changed=func_changed,
-        items=items,
-        show_btn=show_btn,
-        **kwargs,
-    )
-
-
-def make_enum_combobox(
-    *,
-    parent: Qw.QWidget | None,
-    enum_class: EnumMeta,
-    current_enum: Enum,
-    callback: ty.Callable[[], ty.Any] | ty.Callable[[Enum], ty.Any],
-) -> QEnumComboBox:
-    """Create an enum combobox widget."""
-    combo = QEnumComboBox(parent, enum_class=enum_class)
-    combo.setCurrentEnum(current_enum)
-    combo.currentEnumChanged.connect(callback)
-    return combo
 
 
 def make_combobox(
@@ -1011,6 +1410,20 @@ def make_eliding_combobox(
     return widget
 
 
+def make_enum_combobox(
+    *,
+    parent: Qw.QWidget | None,
+    enum_class: EnumMeta,
+    current_enum: Enum,
+    callback: ty.Callable[[], ty.Any] | ty.Callable[[Enum], ty.Any],
+) -> QEnumComboBox:
+    """Create an enum combobox widget."""
+    combo = QEnumComboBox(parent, enum_class=enum_class)
+    combo.setCurrentEnum(current_enum)
+    combo.currentEnumChanged.connect(callback)
+    return combo
+
+
 def make_checkable_combobox(
     parent: Qw.QWidget | None,
     items: ty.Sequence[str] | None = None,
@@ -1096,6 +1509,37 @@ def make_searchable_combobox(
     return widget
 
 
+def make_multi_select(
+    parent: Qw.QWidget,
+    description: str = "",
+    options: list[str] | None = None,
+    value: str = "",
+    default: str = "",
+    placeholder: str = "Select...",
+    func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
+    func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
+    items: dict[str, ty.Any] | None = None,
+    show_btn: bool = True,
+    **kwargs: ty.Any,
+) -> QtMultiSelect:
+    """Make multi select."""
+    from qtextra.widgets.qt_select_multi import QtMultiSelect
+
+    return QtMultiSelect.from_schema(
+        parent,
+        description=description,
+        options=options,
+        value=value,
+        default=default,
+        placeholder=placeholder,
+        func=func,
+        func_changed=func_changed,
+        items=items,
+        show_btn=show_btn,
+        **kwargs,
+    )
+
+
 def make_icon(path: str) -> QIcon:
     """Make an icon."""
     icon = QIcon()
@@ -1135,14 +1579,6 @@ def make_svg_label(parent: Qw.QWidget | None, object_name: str, tooltip: str | N
     return widget
 
 
-def set_properties(widget: Qw.QWidget, properties: dict[str, ty.Any] | None) -> None:
-    """Set properties on widget."""
-    if properties:
-        for key, value in properties.items():
-            widget.setProperty(key, value)
-        polish_widget(widget)
-
-
 def make_btn(
     parent: Qw.QWidget | None,
     text: str,
@@ -1161,6 +1597,7 @@ def make_btn(
     disable: bool = False,
     wrap: bool = False,
     retain_size: bool = False,
+    disabled: bool = False,
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
@@ -1187,6 +1624,8 @@ def make_btn(
         [widget.connect_to_right_click(func_) for func_ in _validate_func(func_menu)]
     if object_name:
         widget.setObjectName(object_name)
+    if disabled:
+        disable_widgets(widget, disabled=disabled)
     if hide:
         widget.hide()
     if disable:
@@ -1296,23 +1735,6 @@ def make_active_progress_btn(
     return widget
 
 
-def make_scroll_area(
-    parent: Qw.QWidget | None,
-    vertical: Qt.ScrollBarPolicy = Qt.ScrollBarPolicy.ScrollBarAsNeeded,
-    horizontal: Qt.ScrollBarPolicy = Qt.ScrollBarPolicy.ScrollBarAsNeeded,
-) -> tuple[Qw.QWidget, Qw.QScrollArea]:
-    """Make scroll area."""
-    scroll = Qw.QScrollArea()
-    scroll.setWidgetResizable(True)
-    scroll.setVerticalScrollBarPolicy(vertical)
-    scroll.setHorizontalScrollBarPolicy(horizontal)
-    scroll.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
-
-    inner = Qw.QWidget(scroll)
-    scroll.setWidget(inner)
-    return inner, scroll
-
-
 def make_qta_btn(
     parent: Qw.QWidget | None,
     icon_name: IconType,
@@ -1336,6 +1758,7 @@ def make_qta_btn(
     standout: bool = False,
     is_menu: bool = False,
     hide: bool = False,
+    disabled: bool = False,
     **kwargs: ty.Any,
 ) -> QtImagePushButton:
     """Make button with qtawesome icon."""
@@ -1370,14 +1793,16 @@ def make_qta_btn(
         widget.menu_enabled = is_menu
     if retain_size:
         set_retain_hidden_size_policy(widget)
+    if disabled:
+        disable_widgets(widget, disabled=disabled)
+    if hide:
+        widget.hide()
     set_properties(widget, properties)
     if label:
         widget.setText(label)
         widget.setProperty("with_text", True)
     if standout:
         widget.setProperty("standout", True)
-    if hide:
-        widget.hide()
     return widget
 
 
@@ -1547,15 +1972,6 @@ def make_swatch_grid(
     return layout, swatches
 
 
-def set_menu_on_bitmap_btn(widget: Qw.QPushButton, menu: Qw.QMenu) -> None:
-    """Set menu on bitmap button."""
-    widget.setMenu(menu)
-    if IS_MAC:
-        widget.setMinimumSize(QSize(55, 32))
-    else:
-        widget.setStyleSheet("QPushButton::menu-indicator { image: none; width : 0px; left:}")
-
-
 def show_menu(menu: Qw.QMenu | None = None, func_menu: ty.Callable | None = None, **kwargs: ty.Any) -> None:
     """Set menu on widget."""
     menu_func = kwargs.pop("menu_func", None)
@@ -1590,90 +2006,6 @@ def make_bitmap_tool_btn(
     if tooltip:
         widget.setToolTip(tooltip)
     return widget
-
-
-def _validate_func(func: ty.Union[ty.Callable, ty.Sequence[ty.Callable]]) -> ty.Sequence[ty.Callable]:
-    if callable(func):
-        func = [func]
-    return [func for func in func if callable(func)]
-
-
-def make_table(
-    parent: Qw.QWidget, table_config: TableConfig, elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone
-) -> Qw.QTableWidget:
-    """Make table."""
-    # get columns
-    column_names = table_config.to_columns()
-    # crete table
-    table = Qw.QTableWidget(parent)
-    table.setColumnCount(len(column_names))
-    table.setHorizontalHeaderLabels(column_names)
-    table.setCornerButtonEnabled(False)
-    table.setTextElideMode(elide)
-
-    # set column width
-    header = table.horizontalHeader()
-    for column_index, column in table_config.column_iter():
-        header.setSectionResizeMode(column_index, get_table_stretch(column["sizing"]))
-        if column["hidden"]:
-            header.setSectionHidden(column_index, column["hidden"])
-    return table
-
-
-def clear_table(table: Qw.QTableWidget) -> None:
-    """Clear table."""
-    while table.rowCount() > 0:
-        table.removeRow(0)
-
-
-def get_table_stretch(sizing: str) -> Qw.QHeaderView.ResizeMode:
-    """Get table stretch."""
-    if sizing == "stretch":
-        return Qw.QHeaderView.ResizeMode.Stretch
-    elif sizing == "fixed":
-        return Qw.QHeaderView.ResizeMode.Fixed
-    elif sizing == "contents":
-        return Qw.QHeaderView.ResizeMode.ResizeToContents
-    return Qw.QHeaderView.ResizeMode.Interactive
-
-
-def find_in_table(table: Qw.QTableWidget, column: int, text: str) -> int | None:
-    """Find text in table."""
-    for row in range(table.rowCount()):
-        item = table.item(row, column)
-        if item is not None and item.text() == text:
-            return row
-    return None
-
-
-def select_columns(parent: Qw.QWidget | None, table: Qw.QTableWidget, table_config: TableConfig) -> None:
-    """Select which columns in the table should be shown/hidden."""
-    from qtextra.widgets.qt_list_select import QtListSelectPopup
-
-    def _update_visible_columns() -> None:
-        for name in popup.selection_list.get_unchecked():
-            update_table_column(table, table_config, name, True)
-        for name in popup.selection_list.get_checked():
-            update_table_column(table, table_config, name, False)
-
-    columns = table_config.get_selected_columns()
-    hidden = [table.isColumnHidden(col_id) for col_id in columns]
-
-    popup = QtListSelectPopup(parent, text="Select columns that should be visible in the table.")
-    for i, index in enumerate(columns):
-        column = table_config.get_column(index)
-        popup.selection_list.add_item(column["name"], check=not hidden[i])
-    popup.selection_list.evt_selection_changed.connect(_update_visible_columns)
-    popup.show()
-
-
-def update_table_column(table: Qw.QTableWidget, table_config: TableConfig, name: str, check: bool) -> None:
-    """Update table column visibility."""
-    column = table_config.get_column(name)
-    if column:
-        index = table_config.find_col_id(column["tag"])
-        column["hidden"] = check
-        table.setColumnHidden(index, check)
 
 
 def make_checkbox(
@@ -1799,13 +2131,6 @@ def make_double_slider_with_text(
     if func:
         [widget.valueChanged.connect(func_) for func_ in _validate_func(func)]
     return widget
-
-
-def get_orientation(orientation: Orientation | Qt.Orientation) -> Qt.Orientation:
-    """Get Qt orientation."""
-    if isinstance(orientation, str):
-        orientation = Qt.Orientation.Horizontal if orientation.lower() == "horizontal" else Qt.Orientation.Vertical
-    return orientation
 
 
 def make_labelled_slider(
@@ -1945,7 +2270,7 @@ def make_radio_btn(
 
 
 def make_radio_btn_group(parent: Qw.QWidget | None, radio_buttons) -> Qw.QButtonGroup:
-    """Make radio button group."""
+    """Make a radio button group."""
     widget = Qw.QButtonGroup(parent)
     for btn_id, radio_btn in enumerate(radio_buttons):
         widget.addButton(radio_btn, btn_id)
@@ -2050,197 +2375,6 @@ def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     return widget
 
 
-def make_v_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    stretch_id: int | tuple[int, ...] | None = None,
-    stretch_ratio: int | tuple[int, ...] = 1,
-    spacing: int | None = None,
-    margin: int | tuple[int, int, int, int] | None = None,
-    alignment: Qt.AlignmentFlag | None = None,
-    stretch_before: bool = False,
-    stretch_after: bool = False,
-    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
-    parent: Qw.QWidget | None = None,
-) -> Qw.QVBoxLayout:
-    """Make vertical layout."""
-    layout = Qw.QVBoxLayout(parent)
-    if spacing is not None:
-        layout.setSpacing(spacing)
-    if margin is not None:
-        if isinstance(margin, int):
-            margin = (margin, margin, margin, margin)
-        layout.setContentsMargins(*margin)
-    return _set_in_layout(
-        *widgets,
-        layout=layout,
-        stretch_id=stretch_id,
-        stretch_ratio=stretch_ratio,
-        alignment=alignment,
-        stretch_before=stretch_before,
-        stretch_after=stretch_after,
-        widget_alignment=widget_alignment,
-    )
-
-
-def make_h_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    stretch_id: int | tuple[int, ...] | None = None,
-    stretch_ratio: int | tuple[int, ...] = 1,
-    spacing: int | None = None,
-    margin: int | tuple[int, int, int, int] | None = None,
-    alignment: Qt.AlignmentFlag | None = None,
-    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
-    stretch_before: bool = False,
-    stretch_after: bool = False,
-    parent: Qw.QWidget | None = None,
-) -> Qw.QHBoxLayout:
-    """Make horizontal layout."""
-    layout = Qw.QHBoxLayout(parent)
-    if spacing is not None:
-        layout.setSpacing(spacing)
-    if margin is not None:
-        if isinstance(margin, int):
-            margin = (margin, margin, margin, margin)
-        layout.setContentsMargins(*margin)
-    return _set_in_layout(
-        *widgets,
-        layout=layout,
-        stretch_id=stretch_id,
-        stretch_ratio=stretch_ratio,
-        alignment=alignment,
-        widget_alignment=widget_alignment,
-        stretch_before=stretch_before,
-        stretch_after=stretch_after,
-    )
-
-
-def make_grid_layout(
-    spacing: int | None = None,
-    margin: int | tuple[int, int, int, int] | None = None,
-    parent: Qw.QWidget | None = None,
-    column_to_stretch: int | dict[int, int] | None = None,
-) -> Qw.QGridLayout:
-    """Make grid layout."""
-    layout = Qw.QGridLayout(parent)
-    if spacing is not None:
-        layout.setSpacing(spacing)
-    if margin is not None:
-        if isinstance(margin, int):
-            margin = (margin, margin, margin, margin)
-        layout.setContentsMargins(*margin)
-    if column_to_stretch:
-        if isinstance(column_to_stretch, int):
-            column_to_stretch = {column_to_stretch: 1}
-        for column, stretch in column_to_stretch.items():
-            layout.setColumnStretch(column, stretch)
-    return layout
-
-
-def make_flow_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    stretch_id: int | tuple[int, ...] | None = None,
-    spacing: int | None = None,
-    margin: int | tuple[int, int, int, int] | None = None,
-    alignment: Qt.AlignmentFlag | None = None,
-    stretch_before: bool = False,
-    stretch_after: bool = False,
-    parent: Qw.QWidget | None = None,
-    vertical_spacing: int | None = None,
-    horizontal_spacing: int | None = None,
-) -> Qw.QHBoxLayout:
-    """Make horizontal layout."""
-    from qtextra.widgets.qt_layout_flow import QtFlowLayout
-
-    layout = QtFlowLayout(parent, spacing=0, margin=margin)
-    if vertical_spacing is not None:
-        layout.setVerticalSpacing(vertical_spacing)
-    if horizontal_spacing is not None:
-        layout.setHorizontalSpacing(horizontal_spacing)
-    return _set_in_layout(
-        *widgets,
-        layout=layout,
-        stretch_id=stretch_id,
-        alignment=alignment,
-        stretch_before=stretch_before,
-        stretch_after=stretch_after,
-    )
-
-
-def make_animated_flow_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    stretch_id: int | tuple[int, ...] | None = None,
-    spacing: int | None = None,
-    margin: int | tuple[int, int, int, int] | None = None,
-    alignment: Qt.AlignmentFlag | None = None,
-    stretch_before: bool = False,
-    stretch_after: bool = False,
-    parent: Qw.QWidget | None = None,
-    use_animation: bool = False,
-) -> Qw.QHBoxLayout:
-    """Make horizontal layout."""
-    from qtextra.widgets.qt_layout_flow import QtAnimatedFlowLayout
-
-    layout = QtAnimatedFlowLayout(parent, use_animation=use_animation, tight=True)
-    if spacing is not None:
-        layout.setSpacing(spacing)
-    if margin is not None:
-        if isinstance(margin, int):
-            margin = (margin, margin, margin, margin)
-        layout.setContentsMargins(*margin)
-    return _set_in_layout(
-        *widgets,
-        layout=layout,
-        stretch_id=stretch_id,
-        alignment=alignment,
-        stretch_before=stretch_before,
-        stretch_after=stretch_after,
-    )
-
-
-def _set_in_layout(
-    *widgets: ty.Union[Qw.QWidget, Qw.QSpacerItem, Qw.QLayout],
-    layout: Qw.QVBoxLayout | Qw.QHBoxLayout,
-    stretch_id: int | tuple[int, ...],
-    stretch_ratio: int | tuple[int, ...] = 1,
-    alignment: Qt.AlignmentFlag | None = None,
-    stretch_before: bool = False,
-    stretch_after: bool = False,
-    widget_alignment: Qt.AlignmentFlag | dict[int, Qt.AlignmentFlag] | None = None,
-) -> Qw.QVBoxLayout | Qw.QHBoxLayout:
-    if stretch_before:
-        layout.addStretch(True)
-    for i, widget in enumerate(widgets):
-        if isinstance(widget, Qw.QLayout):
-            layout.addLayout(widget)
-        elif isinstance(widget, Qw.QSpacerItem):
-            layout.addSpacerItem(widget)
-        else:
-            if widget_alignment:
-                widget_alignment_ = (
-                    widget_alignment.get(i, None) if isinstance(widget_alignment, dict) else widget_alignment
-                )
-                if widget_alignment_:
-                    layout.addWidget(widget, alignment=widget_alignment_)
-                else:
-                    layout.addWidget(widget)
-            else:
-                layout.addWidget(widget)
-    if stretch_id is not None:
-        if isinstance(stretch_id, int):
-            stretch_id = (stretch_id,)
-        if isinstance(stretch_ratio, int):
-            stretch_ratio = (stretch_ratio,) * len(stretch_id)
-        assert len(stretch_id) == len(stretch_ratio), "Stretch id and ratio must have same length"
-        stretch_ratio = list(stretch_ratio)
-        for index, st_id in enumerate(stretch_id):
-            layout.setStretch(st_id, stretch_ratio[index])
-    if alignment:
-        layout.setAlignment(alignment)
-    if stretch_after:
-        layout.addStretch(True)
-    return layout
-
-
 def make_stacked_widget(
     *widget: Qw.QWidget, parent: Qw.QWidget | None = None, index: int | None = None
 ) -> Qw.QStackedWidget:
@@ -2266,50 +2400,6 @@ def make_progressbar(
     widget.setMinimum(minimum)
     widget.setMaximum(maximum)
     return widget
-
-
-def set_font(widget: Qw.QWidget, font_size: int = 7, font_weight: int = 50, bold: bool = False):
-    """Set font on a widget."""
-    font = QFont()
-    font.setPointSize(font_size if IS_WIN else font_size + 2)
-    font.setWeight(QFont.Weight(font_weight))
-    font.setBold(bold)
-    widget.setFont(font)
-
-
-def set_bold(widget: Qw.QWidget, bold: bool = True) -> Qw.QWidget:
-    """Set text on widget as bold."""
-    font = widget.font()
-    font.setBold(bold)
-    widget.setFont(font)
-    return widget
-
-
-def update_widget_style(widget: Qw.QWidget, object_name: str):
-    """Update widget style by forcing its re-polish."""
-    widget.setObjectName(object_name)
-    widget.style().polish(widget)
-
-
-def update_widgets_style(*widget: Qw.QWidget, object_name: str):
-    """Update widget style by forcing its re-polish."""
-    for widget_ in widget:
-        widget_.setObjectName(object_name)
-        widget_.style().polish(widget_)
-
-
-def update_property(widget: Qw.QWidget, prop: str, value: ty.Any) -> None:
-    """Update properties of widget to update style."""
-    widget.setProperty(prop, value)
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
-
-
-def polish_widget(*widget: Qw.QWidget):
-    """Update widget style."""
-    for widget_ in widget:
-        widget_.style().unpolish(widget_)
-        widget_.style().polish(widget_)
 
 
 def make_advanced_collapsible(
@@ -2340,56 +2430,6 @@ def make_advanced_collapsible(
         [advanced_widget.action_btn.clicked.connect(func_) for func_ in _validate_func(func_icon)]
     advanced_widget.collapse() if collapsed else advanced_widget.expand()
     return advanced_widget
-
-
-def get_font(font_size: int, font_weight: int = QFont.Weight.Normal) -> QFont:
-    """Get font."""
-    font = QFont(QFont().defaultFamily())
-    font.setWeight(font_weight)
-    font.setPointSize(font_size if IS_WIN else font_size + 2)
-    return font
-
-
-def set_sizer_policy(
-    widget: Qw.QWidget,
-    min_size: ty.Union[QSize, tuple[int]] = None,
-    max_size: ty.Union[QSize, tuple[int]] = None,
-    h_stretch: bool = False,
-    v_stretch: bool = False,
-):
-    """Set sizer policy."""
-    size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Policy.Minimum, Qw.QSizePolicy.Policy.Preferred)
-    size_policy.setHorizontalStretch(h_stretch)
-    size_policy.setVerticalStretch(v_stretch)
-    size_policy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
-    widget.setSizePolicy(size_policy)
-    if min_size:
-        widget.setMinimumSize(QSize(min_size))
-    if max_size:
-        widget.setMaximumSize(QSize(max_size))
-
-
-def set_expanding_sizer_policy(
-    widget: Qw.QWidget,
-    horz: bool = False,
-    vert: bool = False,
-    expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.MinimumExpanding,
-    not_expanding: Qw.QSizePolicy.Policy = Qw.QSizePolicy.Policy.Preferred,
-    h_stretch: bool = False,
-    v_stretch: bool = False,
-):
-    """Set expanding policy."""
-    size_policy = Qw.QSizePolicy(not_expanding if not horz else expanding, not_expanding if not vert else expanding)
-    widget.setSizePolicy(size_policy)
-    size_policy.setHorizontalStretch(h_stretch)
-    size_policy.setVerticalStretch(v_stretch)
-
-
-def set_retain_hidden_size_policy(widget: Qw.QWidget) -> None:
-    """Set hidden policy."""
-    policy = widget.sizePolicy()
-    policy.setRetainSizeWhenHidden(True)
-    widget.setSizePolicy(policy)
 
 
 def make_group_box(parent: Qw.QWidget | None, title: str, is_flat: bool = True, bold: bool = False) -> Qw.QGroupBox:
@@ -2520,7 +2560,7 @@ def make_overlay_message(
     ok_func=None,
     ok_text="OK",
 ) -> QtOverlayDismissMessage:
-    """Add overlay message to widget."""
+    """Add an overlay message to widget."""
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
 
     _widget = QtOverlayDismissMessage(
@@ -2538,8 +2578,8 @@ def make_overlay_message(
     return _widget
 
 
-def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning"):
-    """Create a pop up dialog with a warning message."""
+def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning") -> None:
+    """Create a popup dialog with a warning message."""
     from qtpy.QtWidgets import QMessageBox
 
     dlg = QMessageBox(parent=parent)
@@ -2673,17 +2713,6 @@ def long_toast(
     QtToast(parent).show_message(title, message, duration=duration, position=position, icon=icon)
 
 
-def hyper(link: Path | str, value: str | Path | None = None, prefix: str = "goto") -> str:
-    """Parse into a hyperlink."""
-    if value is None:
-        value = link
-    if isinstance(link, Path):
-        return f"<a href='{link.resolve().as_uri()}'>{value}</a>"
-    if prefix:
-        return f"<a href='{prefix}:{link}'>{value}</a>"
-    return f"<a href='{link}'>{value}</a>"
-
-
 def open_filename(
     parent: Qw.QWidget | None, title: str = "Select file...", base_dir: str = "", file_filter: str = "*"
 ) -> str:
@@ -2794,6 +2823,7 @@ def get_filename_with_path(
     filename = get_text(value=filename, parent=parent, label=message, title=title)
     if filename:
         return str((Path(path) / filename).with_suffix(extension))
+    return None
 
 
 def get_color(
@@ -2852,37 +2882,6 @@ def _get_confirm_dlg(
     if not resizable:
         dlg.layout().setSizeConstraint(Qw.QLayout.SizeConstraint.SetFixedSize)
     return dlg
-
-
-def is_valid(widget: Qw.QWidget) -> bool:
-    """Is valid."""
-    try:
-        if hasattr(widget, "x"):
-            widget.x()
-        else:
-            repr(widget)
-    except RuntimeError:
-        return False
-    return True
-
-
-def clear_if_invalid(widget: Qw.QWidget) -> Qw.QWidget | None:
-    """Clear widget if invalid."""
-    if not is_valid(widget):
-        return None
-    return widget
-
-
-def close_widget(widget: Qw.QWidget):
-    """Close widget."""
-    if widget is not None:
-        with suppress(Exception):
-            widget.close()
-        with suppress(Exception):
-            widget.setParent(None)
-        with suppress(Exception):
-            widget.deleteLater()
-    return None
 
 
 def confirm(
@@ -3103,7 +3102,7 @@ def disable_with_opacity(
 
 
 def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.75 if IS_MAC else 0.5) -> None:
-    """Set enabled state on a list of widgets. If disabled, decrease opacity."""
+    """Set an enabled state on a list of widgets. If disabled, decrease opacity."""
     for wdg in objs:
         wdg.setEnabled(not disabled)
         op = None
@@ -3245,7 +3244,7 @@ def expand_animation(
 
 
 def remove_expand_animation(widget: Qw.QWidget) -> None:
-    """Remove expand animation from widget."""
+    """Remove an expand animation from widget."""
     widget.setGraphicsEffect(None)
     if hasattr(widget, "_animation"):
         del widget._animation
@@ -3288,6 +3287,23 @@ def make_gif_label(
     if start:
         movie.start()
     return label, movie
+
+
+def make_scroll_area(
+    parent: Qw.QWidget | None,
+    vertical: Qt.ScrollBarPolicy = Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+    horizontal: Qt.ScrollBarPolicy = Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+) -> tuple[Qw.QWidget, Qw.QScrollArea]:
+    """Make scroll area."""
+    scroll = Qw.QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setVerticalScrollBarPolicy(vertical)
+    scroll.setHorizontalScrollBarPolicy(horizontal)
+    scroll.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
+
+    inner = Qw.QWidget(scroll)
+    scroll.setWidget(inner)
+    return inner, scroll
 
 
 def make_gif(
@@ -3503,7 +3519,7 @@ def style_form_layout(layout: Qw.QFormLayout) -> None:
 
 
 def show_above_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-    """Show popup dialog above the mouse cursor position."""
+    """Show the popup dialog above the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight())
@@ -3516,7 +3532,7 @@ def show_above_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: in
 
 
 def show_below_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-    """Show popup dialog below the mouse cursor position."""
+    """Show the popup dialog below the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
     widget_width = max(sz_hint.width(), widget_to_show.minimumWidth()) / 2
@@ -3528,7 +3544,7 @@ def show_below_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: in
 
 
 def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-    """Show popup dialog left of the mouse cursor position."""
+    """Show the popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight())
@@ -3541,7 +3557,7 @@ def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: 
 
 
 def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-    """Show popup dialog left of the mouse cursor position."""
+    """Show the popup dialog left of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 2
@@ -3553,7 +3569,7 @@ def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset:
 
 
 def show_on_mouse(widget_to_show: Qw.QWidget, show: bool = True) -> None:
-    """Show popup dialog in the center of mouse cursor position."""
+    """Show the popup dialog in the center of mouse cursor position."""
     pos = QCursor().pos()
     sz_hint = widget_to_show.sizeHint()
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 4
@@ -3594,7 +3610,7 @@ def check_if_outside_for_mouse(pos: QPoint, sz_hint: QSize) -> QPoint:
 
 
 def show_in_center_of_screen(widget_to_show: Qw.QWidget, show: bool = True) -> None:
-    """Show popup dialog in the center of the screen."""
+    """Show a popup dialog in the center of the screen."""
     screen = Qw.QApplication.screenAt(QCursor().pos())
     if not screen:
         screen = Qw.QApplication.primaryScreen()
@@ -3611,7 +3627,7 @@ def show_in_center_of_screen(widget_to_show: Qw.QWidget, show: bool = True) -> N
 def show_in_center_of_widget(
     widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
-    """Show popup dialog above the widget."""
+    """Show a popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
@@ -3627,7 +3643,7 @@ def show_in_center_of_widget(
 def show_right_of_widget(
     widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
-    """Show popup dialog above the widget."""
+    """Show a popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.right()), int(rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
@@ -3642,7 +3658,7 @@ def show_right_of_widget(
 def show_left_of_widget(
     widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
 ) -> None:
-    """Show popup dialog above the widget."""
+    """Show a popup dialog above the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left()), int(rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
@@ -3766,7 +3782,7 @@ def open_file(path: PathLike) -> None:
 
 
 def open_link(link: str) -> None:
-    """Open an URL link in the default browser."""
+    """Open URL link in the default browser."""
     QDesktopServices.openUrl(QUrl(link))  # type: ignore[attr-defined]
 
 
@@ -3817,10 +3833,3 @@ def add_or_remove(
             if source:
                 text += f"; source={source}"
             logger.trace(text)
-
-
-def set_regex_validator(widget: Qw.QWidget, pattern: str) -> None:
-    """Set regex validator on widget."""
-    if not hasattr(widget, "setValidator"):
-        return
-    widget.setValidator(QRegularExpressionValidator(QRegularExpression(pattern)))
