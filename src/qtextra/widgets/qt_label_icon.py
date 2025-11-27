@@ -254,6 +254,34 @@ class QtWorkerLabel(QtQtaLabel):
         self.set_qta(state)
 
 
+class QtValidLabel(QtQtaLabel):
+    """Severity label."""
+
+    STATES = ("success", "warning")
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+        self._state = True
+        self.state = True
+
+    @property
+    def state(self) -> bool:
+        """Get state."""
+        return self._state
+
+    @state.setter
+    def state(self, state: bool) -> None:
+        self._state = state
+        self.set_qta("success" if state else "warning")
+
+    def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
+        """Override to show tooltips instantly."""
+        if self.toolTip():
+            pos = self.mapToGlobal(self.contentsRect().center())
+            QToolTip.showText(pos, self.toolTip(), self)
+        super().enterEvent(event)
+
+
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
@@ -291,9 +319,17 @@ if __name__ == "__main__":  # pragma: no cover
         btn.set_large()
         btn.state = state
         lay.addWidget(btn)
-
+    lay = QHBoxLayout()
+    ha.addLayout(lay)
     for state in QtWorkerLabel.STATES:
         btn = QtWorkerLabel()
+        btn.set_large()
+        btn.state = state
+        lay.addWidget(btn)
+    lay = QHBoxLayout()
+    ha.addLayout(lay)
+    for state in [True, False]:
+        btn = QtValidLabel()
         btn.set_large()
         btn.state = state
         lay.addWidget(btn)

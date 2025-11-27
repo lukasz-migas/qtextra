@@ -121,13 +121,13 @@ class QtDirectoryWidget(QFrame):
 
     def show_as_path(self, show_full: bool) -> None:
         """Show basename without the full path."""
-        path = self._path if show_full else Path(self._path).parent
+        path = self._path if show_full else Path(self._path).name
         self.path_label.setText(str(path))
 
     def _on_check(self) -> None:
         """Checked/unchecked event."""
         self.evt_checked.emit(self.path, self.checkbox.isChecked())
-        hp.disable_with_opacity(self, [self.path_label], not self.checkbox.isChecked())
+        hp.disable_widgets(self.path_label, disabled=not self.checkbox.isChecked())
 
     def _on_edit(self) -> None:
         """Edit value."""
@@ -202,16 +202,18 @@ class QtDirectoryManager(QScrollArea):
         for path in paths:
             self.remove_path(path)
 
-    def add_path(self, path: PathLike) -> None:
+    def add_path(self, path: PathLike, checked: bool = True) -> None:
         """Add the path widget.
 
         Parameters
         ----------
         path : str
             path to be added to the widget
+        checked : bool
+            State of the checkbox.
         """
         widget = QtDirectoryWidget(path, exist_obj_name=self._exist_obj_name, parent=self)
-        widget.checkbox.setChecked(True)
+        widget.checkbox.setChecked(checked)
         self.widgets[widget.path] = widget
         self._layout.insertWidget(0, widget)
         self.evt_added.emit(widget.path)

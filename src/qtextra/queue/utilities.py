@@ -18,6 +18,7 @@ COLORS = {
     "normal": "#777777",
     "hint": "#00a6ff",
 }
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def listify_multiple(
@@ -143,3 +144,11 @@ def format_command(commands: list[str], is_dev: bool = True) -> str:
     else:
         command = command.replace("--no_color --debug", "--debug")
     return command
+
+
+def decode(text: bytes) -> str:
+    """Decode text."""
+    try:
+        return text.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return text.decode("latin1")

@@ -10,7 +10,7 @@ from pathlib import Path
 from koyo.timer import MeasureTimer
 from loguru import logger
 from qtpy.QtCore import QTimer, Signal  # type: ignore[attr-defined]
-from qtpy.QtGui import QCloseEvent
+from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDragLeaveEvent, QDropEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 import qtextra.helpers as hp
@@ -261,3 +261,41 @@ class IndicatorMixin:
             self.evt_indicate_about.emit("warning", source)
         else:
             self.evt_indicate.emit("warning")
+
+
+class DragAndDropMixin:
+    """Handle drag-and-drop event."""
+
+    centralWidget: ty.Callable[..., QWidget]
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        """Override Qt method.
+
+        Provide style updates on event.
+        """
+        hp.toast(
+            self,
+            "Drag & drop",
+            "Drop the files in the app and we will try to open them..",
+            icon="info",
+            position="top_left",
+        )
+        hp.update_property(self.centralWidget(), "drag", True)
+        hp.call_later(self, lambda: hp.update_property(self.centralWidget(), "drag", False), 2000)
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
+        """Override Qt method."""
+        hp.update_property(self.centralWidget(), "drag", False)
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        """Override Qt method."""
+        hp.update_property(self.centralWidget(), "drag", False)
+        self._handle_drop(event)
+
+    def _handle_drop(self, event: QDropEvent) -> None:
+        """Handle drop event."""
+        raise NotImplementedError("Must implement method")

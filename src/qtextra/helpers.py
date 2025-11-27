@@ -3080,6 +3080,9 @@ def enable_with_opacity(
     min_opacity: float = 0.75 if IS_MAC else 0.5,
 ):
     """Enable widgets."""
+    warnings.warn(
+        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.", DeprecationWarning, stacklevel=2
+    )
     disable_with_opacity(obj, widget_list, not enabled, min_opacity)
 
 
@@ -3090,6 +3093,9 @@ def disable_with_opacity(
     min_opacity: float = 0.75 if IS_MAC else 0.5,
 ) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
+    warnings.warn(
+        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.", DeprecationWarning, stacklevel=2
+    )
     for wdg in widget_list:
         if isinstance(wdg, str):
             widget = getattr(obj, wdg)
@@ -3767,6 +3773,8 @@ def copy_image_to_clipboard(image: QImage) -> None:
 def set_object_name(*widget: Qw.QWidget, object_name: str) -> None:
     """Set object name and polish."""
     for widget_ in widget:
+        if widget_.objectName() == object_name:
+            continue
         widget_.setObjectName(object_name)
         if hasattr(widget_, "polish"):
             widget_.polish()
