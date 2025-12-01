@@ -28,3 +28,18 @@ class InfoDialog(QtFramelessPopup):
         layout.addRow(header_layout)
         layout.addRow(self.label)
         return layout
+
+
+if __name__ == "__main__":
+    import sys
+
+    from qtextra.utils.dev import apply_style, qapplication
+
+    _ = qapplication()  # analysis:ignore
+
+    dlg = InfoDialog(
+        None, "This is some <b>useful</b> information.<br>Visit <a href='https://example.com'>Example</a>."
+    )
+    apply_style(dlg)
+    dlg.show()
+    sys.exit(dlg.exec_())

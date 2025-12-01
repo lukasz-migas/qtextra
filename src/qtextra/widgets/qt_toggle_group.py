@@ -11,7 +11,7 @@ from qtextra.typing import OptionalCallback
 
 
 class QtToggleGroup(QFrame):
-    """Widget for toggle group."""
+    """Widget for a toggle group."""
 
     _old_value: ty.Any = None
 
@@ -84,6 +84,10 @@ class QtToggleGroup(QFrame):
         for button in self.button_group.buttons():
             button.setChecked(button.text() in value)
 
+    def setValue(self, value: str | list[str]) -> None:
+        """Set value (Qt style)."""
+        self.value = value
+
     @classmethod
     def from_schema(
         cls: type[QtToggleGroup],
@@ -142,7 +146,12 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(wdg)
 
     wdg = QtToggleGroup.from_schema(
-        None, [str(i) for i in range(15)], ["1", "5"], exclusive=False, func=print, orientation="flow"
+        None,
+        [str(i) for i in range(15)],
+        ["1", "5"],
+        exclusive=False,
+        func=print,
+        orientation="flow",
     )
     ha.addWidget(wdg)
 

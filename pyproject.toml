@@ -134,17 +134,39 @@ src = ["src", "tests"]
 # https://beta.ruff.rs/docs/rules/
 [tool.ruff.lint]
 extend-select = [
-    "E",    # style errors
-    "W",    # style warnings
-    "F",    # flakes
-    "D",    # pydocstyle
-    "I",    # isort
-    "U",    # pyupgrade
-    # "S",    # bandit
-    "C",    # flake8-comprehensions
-    "B",    # flake8-bugbear
-    "A001", # flake8-builtins
-    "RUF",  # ruff-specific rules
+    "F",    # Pyflakes
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "UP", # pyupgrade
+    "I", # isort
+    "S", # flake8-bandit
+    "D", # pydocstyle
+    "YTT", #flake8-2020
+#    "TC", # flake8-type-checing
+    "BLE", # flake8-blind-exception
+    "B", # flake8-bugbear
+    "A", # flake8-builtins
+    "C4", # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "G", # flake8-logging-format
+    "PIE", # flake8-pie
+    "COM", # flake8-commas
+    "SIM",  # Common simplification rules
+    "INP", # flake8-no-pep420
+    "PYI", # flake8-pyi
+    "Q", # flake8-quotes
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "TID",  # flake8-tidy-imports # replace absolutify import
+    "TRY", # tryceratops
+    "ICN", # flake8-import-conventions
+    "RUF", # ruff specyfic rules
+    "ASYNC", # flake8-async
+    "EXE", # flake8-executable
+    "FA", # flake8-future-annotations
+    "LOG", # flake8-logging
+    "SLOT", # flake8-slots
+    "FURB", # refurb
 ]
 # I do this to get numpy-style docstrings AND retain
 # D417 (Missing argument descriptions in the docstring)

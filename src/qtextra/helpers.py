@@ -143,14 +143,19 @@ def remove_widget_in_form_layout(layout: Qw.QFormLayout, label: str):
 
 
 def insert_widget_in_form_layout(
-    layout: Qw.QFormLayout, row: int, label: Qw.QWidget, widget_or_layout: ty.Union[Qw.QWidget, Qw.QLayout]
+    layout: Qw.QFormLayout,
+    row: int,
+    label: Qw.QWidget,
+    widget_or_layout: ty.Union[Qw.QWidget, Qw.QLayout],
 ) -> None:
     """Insert widget in form layout."""
     layout.insertRow(row, label, widget_or_layout)
 
 
 def make_hbox_layout(
-    widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: tuple[int, int, int, int] | None = None
+    widget: Qw.QWidget | None = None,
+    spacing: int = 0,
+    content_margins: tuple[int, int, int, int] | None = None,
 ) -> Qw.QHBoxLayout:
     """Make a horizontal box layout."""
     warnings.warn("`make_hbox_layout` is deprecated, use `make_h_layout` instead.", DeprecationWarning, stacklevel=2)
@@ -190,7 +195,9 @@ def make_h_layout(
 
 
 def make_vbox_layout(
-    widget: Qw.QWidget | None = None, spacing: int = 0, content_margins: tuple[int, int, int, int] | None = None
+    widget: Qw.QWidget | None = None,
+    spacing: int = 0,
+    content_margins: tuple[int, int, int, int] | None = None,
 ) -> Qw.QVBoxLayout:
     """Make a vertical box layout."""
     warnings.warn("`make_vbox_layout` is deprecated, use `make_v_layout` instead.", DeprecationWarning, stacklevel=2)
@@ -377,11 +384,11 @@ def get_key(key: str) -> str:
     key = key.lower()
     if key in ["ctrl", "control"]:
         return "Ctrl" if IS_WIN else "⌘"
-    elif key == "shift":
+    if key == "shift":
         return "Shift" if IS_WIN else "⇧"
-    elif key == "alt":
+    if key == "alt":
         return "Alt" if IS_WIN else "⌥"
-    elif key == "cmd":
+    if key == "cmd":
         return "Cmd" if IS_WIN else "⌘"
     return key.capitalize()
 
@@ -561,7 +568,7 @@ def close_widget(widget: Qw.QWidget):
             widget.setParent(None)
         with suppress(Exception):
             widget.deleteLater()
-    return None
+    return
 
 
 ## Timer functions
@@ -617,7 +624,7 @@ def run_process(
     if detached:
         if func_stdout:
             process.readyReadStandardOutput.connect(
-                lambda: func_stdout(process.readAllStandardOutput().data().decode())
+                lambda: func_stdout(process.readAllStandardOutput().data().decode()),
             )
             process.readyReadStandardError.connect(lambda: func_stdout(process.readAllStandardError().data().decode()))
         if func_error:
@@ -704,7 +711,9 @@ def get_options_from_combobox(widget: Qw.QComboBox) -> list[str]:
 
 
 def set_combobox_data(
-    widget: Qw.QComboBox, data: ty.Union[dict, ty.OrderedDict, Enum], current_item: str | None = None
+    widget: Qw.QComboBox,
+    data: ty.Union[dict, ty.OrderedDict, Enum],
+    current_item: str | None = None,
 ):
     """Set data/value on combobox."""
     if not isinstance(data, (dict, ty.OrderedDict)):
@@ -715,9 +724,8 @@ def set_combobox_data(
             text = item.value
         widget.addItem(text, item)
 
-        if current_item is not None:
-            if current_item == item or current_item == text:
-                widget.setCurrentIndex(index)
+        if current_item is not None and (current_item in (item, text)):
+            widget.setCurrentIndex(index)
 
 
 def set_combobox_text_data(
@@ -733,9 +741,8 @@ def set_combobox_text_data(
         data = {m: m for m in data}
     for index, (text, item) in enumerate(data.items()):
         widget.addItem(str(text), item)
-        if current_item is not None:
-            if current_item == item or current_item == text:
-                widget.setCurrentIndex(index)
+        if current_item is not None and (current_item in (item, text)):
+            widget.setCurrentIndex(index)
     # set_index = widget.findText(current_item)
     # if set_index is None:
     #     set_index = widget.findData(current_item)
@@ -778,7 +785,9 @@ def set_combobox_current_index(widget: Qw.QComboBox, current_data: ty.Any) -> No
 
 # Table functions
 def make_table(
-    parent: Qw.QWidget, table_config: TableConfig, elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone
+    parent: Qw.QWidget,
+    table_config: TableConfig,
+    elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
 ) -> Qw.QTableWidget:
     """Make table."""
     # get columns
@@ -809,9 +818,9 @@ def get_table_stretch(sizing: str) -> Qw.QHeaderView.ResizeMode:
     """Get table stretch."""
     if sizing == "stretch":
         return Qw.QHeaderView.ResizeMode.Stretch
-    elif sizing == "fixed":
+    if sizing == "fixed":
         return Qw.QHeaderView.ResizeMode.Fixed
-    elif sizing == "contents":
+    if sizing == "contents":
         return Qw.QHeaderView.ResizeMode.ResizeToContents
     return Qw.QHeaderView.ResizeMode.Interactive
 
@@ -944,7 +953,13 @@ def make_hint_label(
 ) -> Qw.QLabel:
     """Make hint label."""
     return make_label(
-        parent, text, alignment=alignment, object_name="hint_label", enable_url=True, wrap=wrap, visible=visible
+        parent,
+        text,
+        alignment=alignment,
+        object_name="hint_label",
+        enable_url=True,
+        wrap=wrap,
+        visible=visible,
     )
 
 
@@ -957,7 +972,13 @@ def make_tip_label(
 ):
     """Make tip label."""
     return make_label(
-        parent, text, alignment=alignment, object_name="tip_label", enable_url=True, wrap=wrap, visible=visible
+        parent,
+        text,
+        alignment=alignment,
+        object_name="tip_label",
+        enable_url=True,
+        wrap=wrap,
+        visible=visible,
     )
 
 
@@ -1006,21 +1027,30 @@ def make_tooltip_label(
 
 
 def make_warning_label(
-    parent: Qw.QWidget | None, tooltip: str, icon_name: IconType = "warning", **kwargs: ty.Any
+    parent: Qw.QWidget | None,
+    tooltip: str,
+    icon_name: IconType = "warning",
+    **kwargs: ty.Any,
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
     return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
 
 
 def make_help_label(
-    parent: Qw.QWidget | None, tooltip: str, icon_name: IconType = "help", **kwargs: ty.Any
+    parent: Qw.QWidget | None,
+    tooltip: str,
+    icon_name: IconType = "help",
+    **kwargs: ty.Any,
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
     return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
 
 
 def make_info_label(
-    parent: Qw.QWidget | None, tooltip: str, icon_name: IconType = "info", **kwargs: ty.Any
+    parent: Qw.QWidget | None,
+    tooltip: str,
+    icon_name: IconType = "info",
+    **kwargs: ty.Any,
 ) -> QtQtaTooltipLabel:
     """Create Qta icon with immediate tooltip."""
     return make_tooltip_label(parent, icon_name, tooltip, **kwargs)
@@ -1055,7 +1085,7 @@ def make_scrollable_label(
     if enable_url:
         widget.label.setTextFormat(Qt.TextFormat.RichText)
         widget.label.setTextInteractionFlags(
-            widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction
+            widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction,
         )
         widget.label.setOpenExternalLinks(True)
     if alignment is not None:
@@ -1068,7 +1098,7 @@ def make_scrollable_label(
         set_font(widget.label, font_size=font_size, bold=bold)
     if selectable:
         widget.label.setTextInteractionFlags(
-            widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse
+            widget.label.textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse,
         )
     if func_activated:
         [widget.label.linkActivated.connect(func) for func in _validate_func(func_activated)]
@@ -1121,10 +1151,7 @@ def make_qta_label(
     """Make QLabel element."""
     from qtextra.widgets.qt_label_icon import QtQtaLabel, QtQtaTooltipLabel
 
-    if hover:
-        widget = QtQtaTooltipLabel(parent=parent)
-    else:
-        widget = QtQtaLabel(parent=parent)
+    widget = QtQtaTooltipLabel(parent=parent) if hover else QtQtaLabel(parent=parent)
     widget.set_qta(icon_name, **kwargs)
     widget.set_default_size(
         xxsmall=xxsmall,
@@ -1266,6 +1293,7 @@ def make_line_edit(
     disabled: bool = False,
     validator: QValidator | None = None,
     hide: bool = False,
+    regex: str | None = None,
     **_kwargs: ty.Any,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
@@ -1277,6 +1305,8 @@ def make_line_edit(
     disable_widgets(widget, disabled=disabled, min_opacity=0.95)
     widget.setPlaceholderText(placeholder)
     widget.setHidden(hide)
+    if regex:
+        set_regex_validator(widget, regex)
     if font_size:
         set_font(widget, font_size=font_size, bold=bold)
     if bold:
@@ -2302,7 +2332,12 @@ def make_toggle_group(
     layout.setSpacing(2)
     for btn_id, btn_label in enumerate(label):
         radio_btn = make_rich_btn(
-            parent, btn_label, func=func, checkable=True, tooltip=tooltip, check=btn_label in checked_label
+            parent,
+            btn_label,
+            func=func,
+            checkable=True,
+            tooltip=tooltip,
+            check=btn_label in checked_label,
         )
         widget.addButton(radio_btn, btn_id)
         layout.addWidget(radio_btn)
@@ -2328,13 +2363,16 @@ def make_toggle(
 
 
 def make_h_line_with_text(
-    label: str, parent: Qw.QWidget | None = None, bold: bool = False, position: str = "center", **kwargs: ty.Any
+    label: str,
+    parent: Qw.QWidget | None = None,
+    bold: bool = False,
+    position: str = "center",
+    **kwargs: ty.Any,
 ) -> QtHorzLineWithText:
     """Make a horizontal line with text."""
     from qtextra.widgets.qt_separator import QtHorzLineWithText
 
-    widget = QtHorzLineWithText(parent=parent, label=label, bold=bold, position=position, **kwargs)
-    return widget
+    return QtHorzLineWithText(parent=parent, label=label, bold=bold, position=position, **kwargs)
 
 
 def make_h_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool = False) -> QtHorzLine:
@@ -2365,18 +2403,18 @@ def make_v_line(parent: Qw.QWidget | None = None, thin: bool = False, hide: bool
 
 def make_v_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     """Make a vertical QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Preferred, Qw.QSizePolicy.Policy.Expanding)
-    return widget
+    return Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Preferred, Qw.QSizePolicy.Policy.Expanding)
 
 
 def make_h_spacer(x: int = 40, y: int = 20) -> Qw.QSpacerItem:
     """Make a horizontal QSpacerItem."""
-    widget = Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Preferred)
-    return widget
+    return Qw.QSpacerItem(x, y, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Preferred)
 
 
 def make_stacked_widget(
-    *widget: Qw.QWidget, parent: Qw.QWidget | None = None, index: int | None = None
+    *widget: Qw.QWidget,
+    parent: Qw.QWidget | None = None,
+    index: int | None = None,
 ) -> Qw.QStackedWidget:
     """Make stacked widget."""
     stacked_widget = Qw.QStackedWidget(parent)
@@ -2388,7 +2426,10 @@ def make_stacked_widget(
 
 
 def make_progressbar(
-    parent: Qw.QWidget | None, minimum: int = 0, maximum: int = 100, with_progress: bool = False
+    parent: Qw.QWidget | None,
+    minimum: int = 0,
+    maximum: int = 100,
+    with_progress: bool = False,
 ) -> ty.Union[Qw.QProgressBar, QtLabeledProgressBar]:
     """Make progressbar."""
     if with_progress:
@@ -2659,13 +2700,14 @@ def toast_alt(
             "warning": ToastIcon.WARNING,
             "error": ToastIcon.ERROR,
             "critical": ToastIcon.ERROR,
-        }.get(icon, ToastIcon.INFORMATION)
+        }.get(icon, ToastIcon.INFORMATION),
     )
     obj.setShowIcon(icon != "none")
     obj.setPosition(
         {"top_right": ToastPosition.TOP_RIGHT, "top_left": ToastPosition.TOP_LEFT}.get(
-            position, ToastPosition.BOTTOM_RIGHT
-        )
+            position,
+            ToastPosition.BOTTOM_RIGHT,
+        ),
     )
     obj.setAlwaysOnMainScreen(False)
 
@@ -2714,7 +2756,10 @@ def long_toast(
 
 
 def open_filename(
-    parent: Qw.QWidget | None, title: str = "Select file...", base_dir: str = "", file_filter: str = "*"
+    parent: Qw.QWidget | None,
+    title: str = "Select file...",
+    base_dir: str = "",
+    file_filter: str = "*",
 ) -> str:
     """Get filename."""
     from qtpy.QtWidgets import QFileDialog
@@ -2827,7 +2872,10 @@ def get_filename_with_path(
 
 
 def get_color(
-    parent: Qw.QWidget | None, color: str | np.ndarray | None = None, as_hex: bool = True, as_array: bool = False
+    parent: Qw.QWidget | None,
+    color: str | np.ndarray | None = None,
+    as_hex: bool = True,
+    as_array: bool = False,
 ) -> np.ndarray:
     """Get color."""
     from qtpy.QtGui import QColor
@@ -2876,7 +2924,7 @@ def _get_confirm_dlg(
         make_h_layout(
             make_btn(dlg, "Yes", func=dlg.accept, object_name="success_btn" if color else ""),
             make_btn(dlg, "No", func=dlg.reject, object_name="cancel_btn" if color else ""),
-        )
+        ),
     )
     dlg.setLayout(layout)
     if not resizable:
@@ -3032,7 +3080,14 @@ def get_double(
 ) -> float | None:
     """Get text."""
     value, ok = Qw.QInputDialog.getDouble(
-        parent, title, label, value=value, minValue=minimum, maxValue=maximum, decimals=n_decimals, step=step
+        parent,
+        title,
+        label,
+        value=value,
+        minValue=minimum,
+        maxValue=maximum,
+        decimals=n_decimals,
+        step=step,
     )
     if ok:
         return value
@@ -3081,7 +3136,9 @@ def enable_with_opacity(
 ):
     """Enable widgets."""
     warnings.warn(
-        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.", DeprecationWarning, stacklevel=2
+        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
     disable_with_opacity(obj, widget_list, not enabled, min_opacity)
 
@@ -3094,13 +3151,12 @@ def disable_with_opacity(
 ) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     warnings.warn(
-        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.", DeprecationWarning, stacklevel=2
+        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
     for wdg in widget_list:
-        if isinstance(wdg, str):
-            widget = getattr(obj, wdg)
-        else:
-            widget = wdg
+        widget = getattr(obj, wdg) if isinstance(wdg, str) else wdg
         widget.setEnabled(not disabled)
         op = Qw.QGraphicsOpacityEffect(obj)
         op.setOpacity(min_opacity if disabled else 1.0)
@@ -3234,7 +3290,10 @@ def remove_flash_animation(widget: Qw.QWidget):
 
 
 def expand_animation(
-    stack: Qw.QWidget | Qw.QStackedWidget, start_width: int, end_width: int, duration: int = 500
+    stack: Qw.QWidget | Qw.QStackedWidget,
+    start_width: int,
+    end_width: int,
+    duration: int = 500,
 ) -> None:
     """Create expand animation."""
     animation = QPropertyAnimation(stack, b"maximumWidth")
@@ -3279,7 +3338,10 @@ def make_loading_gif(
 
 
 def make_gif_label(
-    parent: Qw.QWidget | None, path: str, size: tuple[int, int] = (20, 20), start: bool = True
+    parent: Qw.QWidget | None,
+    path: str,
+    size: tuple[int, int] = (20, 20),
+    start: bool = True,
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation and place it in the label."""
     label = Qw.QLabel("Loading...", parent=parent)
@@ -3377,7 +3439,10 @@ def make_auto_update_layout(parent: Qw.QWidget, func: ty.Callable):
 def make_line_label(parent: Qw.QWidget | None, text: str, bold: bool = False) -> Qw.QHBoxLayout:
     """Make layout with `--- TEXT ---` which looks pretty nice."""
     return make_h_layout(
-        make_h_line(parent), make_label(parent, text, bold=bold), make_h_line(parent), stretch_id=(0, 2)
+        make_h_line(parent),
+        make_label(parent, text, bold=bold),
+        make_h_line(parent),
+        stretch_id=(0, 2),
     )
 
 
@@ -3473,10 +3538,8 @@ def get_icon_from_img(path: PathLike) -> ty.Optional[QIcon]:
 
 def disconnect_event(widget: Qw.QWidget, evt_name, func):
     """Safely disconnect event without raising RuntimeError."""
-    try:
+    with suppress(RuntimeError):
         getattr(widget, evt_name).disconnect(func)
-    except RuntimeError:
-        pass
 
 
 def get_main_window(parent: Qw.QWidget | None = None) -> Qw.QMainWindow | None:
@@ -3631,7 +3694,11 @@ def show_in_center_of_screen(widget_to_show: Qw.QWidget, show: bool = True) -> N
 
 
 def show_in_center_of_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
+    widget_to_show: Qw.QWidget,
+    parent: Qw.QWidget,
+    show: bool = True,
+    x_offset: int = 0,
+    y_offset: int = 0,
 ) -> None:
     """Show a popup dialog above the widget."""
     rect = parent.rect()
@@ -3647,7 +3714,11 @@ def show_in_center_of_widget(
 
 
 def show_right_of_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
+    widget_to_show: Qw.QWidget,
+    parent: Qw.QWidget,
+    show: bool = True,
+    x_offset: int = 0,
+    y_offset: int = 0,
 ) -> None:
     """Show a popup dialog above the widget."""
     rect = parent.rect()
@@ -3662,7 +3733,11 @@ def show_right_of_widget(
 
 
 def show_left_of_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
+    widget_to_show: Qw.QWidget,
+    parent: Qw.QWidget,
+    show: bool = True,
+    x_offset: int = 0,
+    y_offset: int = 0,
 ) -> None:
     """Show a popup dialog above the widget."""
     rect = parent.rect()
@@ -3678,7 +3753,11 @@ def show_left_of_widget(
 
 
 def show_above_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
+    widget_to_show: Qw.QWidget,
+    parent: Qw.QWidget,
+    show: bool = True,
+    x_offset: int = 0,
+    y_offset: int = 0,
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
@@ -3694,7 +3773,11 @@ def show_above_widget(
 
 
 def show_below_widget(
-    widget_to_show: Qw.QWidget, parent: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0
+    widget_to_show: Qw.QWidget,
+    parent: Qw.QWidget,
+    show: bool = True,
+    x_offset: int = 0,
+    y_offset: int = 0,
 ) -> None:
     """Show popup dialog above the widget."""
     rect = parent.rect()
@@ -3805,7 +3888,11 @@ def show_image(widget: Qw.QLabel, path: PathLike) -> None:
 
 
 def connect(
-    connectable: Connectable, func: ty.Callable, state: bool = True, source: str = "", silent: bool = False
+    connectable: Connectable,
+    func: ty.Callable,
+    state: bool = True,
+    source: str = "",
+    silent: bool = False,
 ) -> None:
     """Function that connects/disconnects."""
     try:
@@ -3823,7 +3910,11 @@ def connect(
 
 
 def add_or_remove(
-    appendable: list, func: ty.Callable, state: bool = True, source: str = "", silent: bool = False
+    appendable: list,
+    func: ty.Callable,
+    state: bool = True,
+    source: str = "",
+    silent: bool = False,
 ) -> None:
     """Append or remove function from list."""
     try:

@@ -257,7 +257,10 @@ class QtWorkerLabel(QtQtaLabel):
 class QtValidLabel(QtQtaLabel):
     """Severity label."""
 
-    STATES = ("success", "warning")
+    STATES = (
+        "success_color",
+        "warning_color",
+    )
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
@@ -272,7 +275,7 @@ class QtValidLabel(QtQtaLabel):
     @state.setter
     def state(self, state: bool) -> None:
         self._state = state
-        self.set_qta("success" if state else "warning")
+        self.set_qta(self.STATES[0] if state else self.STATES[1])
 
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
