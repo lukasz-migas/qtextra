@@ -430,8 +430,11 @@ class QtPinButton(QtTogglePushButton):
     ICON_ON = "pin_on"
     ICON_OFF = "pin_off"
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, color: bool = False, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
+        if color:
+            self.ICON_ON = "pin_on_color"
+            self.ICON_OFF = "pin_off_color"
 
     @property
     def pin(self) -> bool:
