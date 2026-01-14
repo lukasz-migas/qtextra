@@ -47,11 +47,13 @@ class Task:
         state: TaskState = TaskState.QUEUED,
         task_name_repr: str | None = None,
         task_name_tooltip: str | None = None,
+        metadata: dict | None = None,
     ):
         self.task_id = task_id
         self.task_name = task_name
         self.task_name_repr = task_name_repr
         self.task_name_tooltip = task_name_tooltip
+        self.metadata = metadata
         self.commands = commands
         self.state = state
         self.stdout = ""
