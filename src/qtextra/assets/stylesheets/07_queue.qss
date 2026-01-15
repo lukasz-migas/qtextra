@@ -164,18 +164,18 @@ QtTagButton[text="Running"] {
 }
 QtTagButton[text="Run-next"] {
     border-radius: 5px;
-    background-color: #e04196;
-    border: 3px solid #e04196;
+    background-color: #dfc5fe;
+    border: 3px solid #dfc5fe;
+}
+QtTagButton[text="Pausing"] {
+    border-radius: 5px;
+    background-color: #ffb7ce;
+    border: 3px solid #ffb7ce;
 }
 QtTagButton[text="Paused"] {
     border-radius: 5px;
     background-color: #e91e63;
     border: 3px solid #e91e63;
-}
-QtTagButton[text="Pausing"] {
-    border-radius: 5px;
-    background-color: #1DE9B6;
-    border: 3px solid #1DE9B6;
 }
 QtTagButton[text="Finished"] {
     border-radius: 5px;
@@ -184,8 +184,8 @@ QtTagButton[text="Finished"] {
 }
 QtTagButton[text="Incomplete"] {
     border-radius: 5px;
-    background-color: #ffbb33;
-    border: 3px solid #ffbb33;
+    background-color: #1DE9B6;
+    border: 3px solid #1DE9B6;
 }
 QtTagButton[text="Part-failed"] {
     border-radius: 5px;
@@ -194,13 +194,14 @@ QtTagButton[text="Part-failed"] {
 }
 QtTagButton[text="Failed"] {
     border-radius: 5px;
-    background-color: #ff4444;
-    border: 3px solid #ff4444;
+    background-color: #92000A;
+    border: 3px solid #92000A;
+    color: #FFFFFF;
 }
 QtTagButton[text="Cancelling"] {
     border-radius: 5px;
-    background-color: #546e7a;
-    border: 3px solid #546e7a;
+    background-color: #9e9e9e;
+    border: 3px solid #9e9e9e;
 }
 QtTagButton[text="Cancelled"] {
     border-radius: 5px;
@@ -209,25 +210,25 @@ QtTagButton[text="Cancelled"] {
 }
 QtTagButton[text="Locked"] {
     border-radius: 5px;
-    background-color: #e0115f;
-    border: 3px solid #e0115f;
+    background-color: #795548;
+    border: 3px solid #795548;
 }
 
 QtTagButton QLabel[text="Invalid"],
 QtTagButton QLabel[text="Queued"],
 QtTagButton QLabel[text="Running"],
-QtTagButton QLabel[text="Run-next"],
 QtTagButton QLabel[text="Paused"],
 QtTagButton QLabel[text="Finished"],
 QtTagButton QLabel[text="Part-failed"],
 QtTagButton QLabel[text="Failed"],
-QtTagButton QLabel[text="Cancelling"],
 QtTagButton QLabel[text="Cancelled"],
 QtTagButton QLabel[text="Locked"] {
     color: #ffffff;
 }
+QtTagButton QLabel[text="Run-next"],
 QtTagButton QLabel[text="Pausing"],
-QtTagButton QLabel[text="Incomplete"] {
+QtTagButton QLabel[text="Incomplete"],
+QtTagButton QLabel[text="Cancelling"]{
     color: #000000;
 }
 

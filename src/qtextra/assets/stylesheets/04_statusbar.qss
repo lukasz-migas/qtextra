@@ -29,18 +29,20 @@ QtStatusbarIconWidget > QtIconLabel::pressed {
 }
 
 QtStatusbarWidget > QLabel, QtStatusbarWidget > QtStatusbarLabel {
-    background-color: {{ darken(background, 5) }};
+    /*background-color: {{ darken(background, 5) }};*/
+    background-color: none;
 }
 
 
 QtStatusbarWidget > QtIconLabel::hover {
+    /*background-color: {{ darken(foreground, 5) }};*/
+    background-color: none;
     border-radius: 5px;
-    background-color: {{ darken(foreground, 5) }};
 }
 
 QtStatusbarWidget > QtIconLabel::pressed {
-    border-radius: 5px;
     background-color: {{ darken(foreground, 5) }};
+    border-radius: 5px;
 }
 
 QQtStatusbarSpinner {
