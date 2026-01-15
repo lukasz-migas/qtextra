@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import typing as ty
+from functools import partial
 
 from koyo.timer import MeasureTimer
 from loguru import logger
@@ -42,6 +43,8 @@ class TaskWidget(QFrame):
     dlg_info: TaskInfoDialog | None = None
 
     def __init__(self, parent: QWidget | None = None, toggled: bool = True):
+        from qtextra.queue.queue_widget import QUEUE
+
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)
@@ -81,7 +84,8 @@ class TaskWidget(QFrame):
             normal=True,
             func=self.on_open_menu,
         )
-        self.options_btn.hide()  # disable for now
+        if not QUEUE.has_actions():
+            self.options_btn.hide()
 
         self.clipboard_btn = hp.make_qta_btn(
             self,
@@ -266,6 +270,25 @@ class TaskWidget(QFrame):
 
     def on_open_menu(self) -> None:
         """Open folder menu."""
+        from qtextra.queue.queue_widget import QUEUE
+
+        if not QUEUE.has_actions():
+            return
+
+        menu = hp.make_menu(self)
+        for action in QUEUE.actions:
+            hp.make_menu_item(
+                self,
+                title=action["title"],
+                menu=menu,
+                icon=action["icon"],
+                func=partial(self._execute_action, action["func"]),
+            )
+
+    def _execute_action(self, func: ty.Callable[[Task], None]) -> None:
+        """Execute action."""
+        if self.task:
+            func(self.task)
 
     def _on_retry_task(self) -> None:
         """Try task again."""

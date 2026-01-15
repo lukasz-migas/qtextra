@@ -241,7 +241,9 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     # selection
     "invert_selection": "fa5s.exchange-alt",
     "pin_on": ("ph.push-pin-fill", {"rotated": -45}),
+    "pin_on_color": ("ph.push-pin-fill", {"rotated": -45, "color": "{{ success }}"}),
     "pin_off": "ph.push-pin-fill",
+    "pin_off_color": ("ph.push-pin-fill", {"rotated": 0, "color": "{{ icon }}"}),
     "minimize": "fa5s.window-minimize",
     "maximize": "fa5s.window-maximize",
     "fullscreen": "fa5s.expand",

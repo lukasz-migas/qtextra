@@ -69,10 +69,20 @@ class CLIQueueHandler(QObject):
         self.finished_queue: ty.List[str] = []
         self._evt_cancel.connect(self._kill)  # type: ignore[unused-ignore]
 
+        self.actions: list[dict] = list()
+
         atexit.register(self.close)
 
+    def add_action(self, title: str, func: ty.Callable[[Task], None], icon: str | None = None) -> None:
+        """ADd action that will be shown in the task widget."""
+        self.actions.append({"title": title, "icon": icon, "func": func})
+
+    def has_actions(self) -> bool:
+        """Check whether there are any actions defined."""
+        return len(self.actions) > 0
+
     def set_max_parallel(self, n_parallel: int) -> None:
-        """Set maximum number of parallel tasks."""
+        """Set the maximum number of parallel tasks."""
         self.n_parallel = n_parallel
         self.run_queued()
 
