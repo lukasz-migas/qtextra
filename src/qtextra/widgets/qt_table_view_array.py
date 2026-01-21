@@ -186,6 +186,9 @@ class QtArrayTableModel(QAbstractTableModel):
         with MeasureTimer() as timer:
             reminder = self.n_total - self.n_loaded
             items_to_fetch = min(reminder, BATCH_SIZE)
+            if items_to_fetch == 0:
+                return
+
             self.beginInsertRows(QModelIndex(), self.n_loaded, self.n_loaded + items_to_fetch - 1)
             self.n_loaded += items_to_fetch
             self.df = self.base_df.iloc[: self.n_loaded, :]
