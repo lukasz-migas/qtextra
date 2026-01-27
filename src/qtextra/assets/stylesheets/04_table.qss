@@ -1,0 +1,14 @@
+QtDataFrameWidget > HeaderView {
+    font-weight: bold;
+    background-color: {{ background }};
+    selection-color: {{ text }};
+    selection-background-color: {{ highlight }};
+    border: 0px solid {{ highlight }};
+}
+
+QtDataFrameWidget > TableView {
+    background-color: {{ background }};
+    gridline-color: {{ highlight }};
+    selection-color: {{ highlight }};
+    selection-background-color: {{ background }};
+}

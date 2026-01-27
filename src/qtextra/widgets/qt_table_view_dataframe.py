@@ -60,8 +60,8 @@ class QtDataFrameWidget(Qw.QWidget):
         self.columnHeader.horizontalScrollBar().valueChanged.connect(self.dataView.horizontalScrollBar().setValue)
         self.indexHeader.verticalScrollBar().valueChanged.connect(self.dataView.verticalScrollBar().setValue)
 
-        self.dataView.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.dataView.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
         self.indexHeader.horizontalScrollBar().valueChanged.connect(lambda: None)
@@ -99,16 +99,12 @@ class QtDataFrameWidget(Qw.QWidget):
             1,
             1,
         )
-
-        # Styling
-        for header in [self.indexHeader, self.columnHeader]:
-            header.setStyleSheet("background-color: white;selection-color: black;selection-background-color: #EAEAEA;")
-
-        self.dataView.setStyleSheet(
-            "background-color: white;"
-            "alternate-background-color: #F4F6F6;"
-            "selection-color: black;"
-            "selection-background-color: #BBDEFB;",
+        # React to scroll range changes so we can hide bars when unnecessary
+        self.dataView.horizontalScrollBar().rangeChanged.connect(
+            lambda _min, _max: self.dataView.horizontalScrollBar().setVisible(_max > 0),
+        )
+        self.dataView.verticalScrollBar().rangeChanged.connect(
+            lambda _min, _max: self.dataView.verticalScrollBar().setVisible(_max > 0),
         )
 
         for item in [self.dataView, self.columnHeader, self.indexHeader]:
@@ -116,14 +112,15 @@ class QtDataFrameWidget(Qw.QWidget):
             item.setStyleSheet(item.styleSheet() + "border: 0px solid black;")
             item.setItemDelegate(NoFocusDelegate())
         # Ensure widgets expand within the layout
-        self.dataView.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)
-        self.columnHeader.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Fixed)
-        self.indexHeader.setSizePolicy(Qw.QSizePolicy.Fixed, Qw.QSizePolicy.Expanding)
+        self.dataView.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
+        self.columnHeader.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Fixed)
+        self.indexHeader.setSizePolicy(Qw.QSizePolicy.Policy.Fixed, Qw.QSizePolicy.Policy.Expanding)
 
     def showEvent(self, event: Qg.QShowEvent):
         """Initialize column and row sizes on the first time the widget is shown."""
         if not self._loaded:
             self._init_sizes()
+        self._update_scrollbar_visibility()
         self._loaded = True
         event.accept()
 
@@ -139,8 +136,16 @@ class QtDataFrameWidget(Qw.QWidget):
         self.indexHeader.setSpans()
         self._update_header_level_names_visibility(df)
         self._init_sizes()
+        self._update_scrollbar_visibility()
         self.updateGeometry()
         self.gridLayout.activate()
+
+    def _update_scrollbar_visibility(self):
+        """Hide scrollbars when not needed."""
+        hbar = self.dataView.horizontalScrollBar()
+        vbar = self.dataView.verticalScrollBar()
+        hbar.setVisible(hbar.maximum() > 0)
+        vbar.setVisible(vbar.maximum() > 0)
 
     def _update_header_level_names_visibility(self, df):
         """Show or hide the level-name header rows/columns based on availability."""
@@ -219,7 +224,7 @@ class QtDataFrameWidget(Qw.QWidget):
             # This constrained width, with the flag of Qt.TextWordWrap
             # gets the height the cell would have to be to fit the text.
             constrained_rect = Qc.QRect(0, 0, cell_width, 0)
-            h = self.dataView.fontMetrics().boundingRect(constrained_rect, Qt.TextWordWrap, text).height()
+            h = self.dataView.fontMetrics().boundingRect(constrained_rect, Qt.TextFlag.TextWordWrap, text).height()
 
             height = max(height, h)
 
@@ -235,16 +240,13 @@ class QtDataFrameWidget(Qw.QWidget):
         """Handle key presses."""
         Qw.QWidget.keyPressEvent(self, event)
 
-        if event.matches(Qg.QKeySequence.Copy):
-            print("Ctrl + C")
+        if event.matches(Qg.QKeySequence.StandardKey.Copy):
             self.dataView.copy()
-        if event.matches(Qg.QKeySequence.Paste):
+        if event.matches(Qg.QKeySequence.StandardKey.Paste):
             self.dataView.paste()
-            print("Ctrl + V")
-        if event.key() == Qt.Key_P and (event.modifiers() & Qt.ControlModifier):
+        if event.key() == Qt.Key.Key_P and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
             self.dataView.print()
-            print("Ctrl + P")
-        if event.key() == Qt.Key_D and (event.modifiers() & Qt.ControlModifier):
+        if event.key() == Qt.Key.Key_D and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
             self.debug()
             print("Ctrl + D")
 
@@ -257,11 +259,13 @@ class QtDataFrameWidget(Qw.QWidget):
 
 # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
 class NoFocusDelegate(Qw.QStyledItemDelegate):
-    def paint(self, QPainter, QStyleOptionViewItem, QModelIndex):
+    """Delegate to remove focus border."""
+
+    def paint(self, painter: Qw.QPainter, style: Qw.QStyleOptionViewItem, index: Qw.QModelIndex):
         """Paint event."""
-        if QStyleOptionViewItem.state & Qw.QStyle.State_HasFocus:
-            QStyleOptionViewItem.state = QStyleOptionViewItem.state ^ Qw.QStyle.State_HasFocus
-        super().paint(QPainter, QStyleOptionViewItem, QModelIndex)
+        if style.state & Qw.QStyle.StateFlag.State_HasFocus:
+            style.state = style.state ^ Qw.QStyle.StateFlag.State_HasFocus
+        super().paint(painter, style, index)
 
 
 class DataTableModel(Qc.QAbstractTableModel):
@@ -277,7 +281,7 @@ class DataTableModel(Qc.QAbstractTableModel):
 
     def columnCount(self, parent=None):
         """Return the number of columns in the DataFrame."""
-        if type(self.df) == pd.Series:
+        if isinstance(self.df, pd.Series):
             return 1
         return self.df.columns.shape[0]
 
@@ -286,9 +290,13 @@ class DataTableModel(Qc.QAbstractTableModel):
         return len(self.df)
 
     # Returns the data from the DataFrame
-    def data(self, index, role=Qc.Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """Return the data to display in the table."""
-        if role == Qc.Qt.DisplayRole or role == Qc.Qt.EditRole or role == Qc.Qt.ToolTipRole:
+        if (
+            role == Qt.ItemDataRole.DisplayRole
+            or role == Qt.ItemDataRole.EditRole
+            or role == Qt.ItemDataRole.ToolTipRole
+        ):
             row = index.row()
             col = index.column()
             cell = self.df.iloc[row, col]
@@ -298,12 +306,12 @@ class DataTableModel(Qc.QAbstractTableModel):
                 return ""
 
             # Float formatting
-            if isinstance(cell, (float, np.floating)) and role != Qc.Qt.ToolTipRole:
+            if isinstance(cell, (float, np.floating)) and role != Qt.ItemDataRole.ToolTipRole:
                 return f"{cell:.4f}"
 
             return str(cell)
 
-        if role == Qc.Qt.ToolTipRole:
+        if role == Qt.ItemDataRole.ToolTipRole:
             row = index.row()
             col = index.column()
             cell = self.df.iloc[row, col]
@@ -318,12 +326,12 @@ class DataTableModel(Qc.QAbstractTableModel):
     def flags(self, index):
         """Set the item flags at the given index."""
         # Set the table to be editable
-        return Qc.Qt.ItemIsEditable | Qc.Qt.ItemIsEnabled | Qc.Qt.ItemIsSelectable
+        return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 
     # Set data in the DataFrame. Required if table is editable
     def setData(self, index, value, role=None):
         """Set the data at the given index."""
-        if role == Qc.Qt.EditRole:
+        if role == Qt.ItemDataRole.EditRole:
             row = index.row()
             col = index.column()
             try:
@@ -358,8 +366,8 @@ class DataTableView(Qw.QTableView):
         # self.setWordWrap(True)
         # self.resizeRowsToContents()
         self.setAlternatingRowColors(True)
-        self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollPerPixel)
-        self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollPerPixel)
+        self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
 
     def set_data(self, df):
         """Set data model."""
@@ -386,14 +394,14 @@ class DataTableView(Qw.QTableView):
             selection = self.selectionModel().selection()
             columnHeader.selectionModel().select(
                 selection,
-                Qc.QItemSelectionModel.Columns | Qc.QItemSelectionModel.ClearAndSelect,
+                Qc.QItemSelectionModel.SelectionFlag.Columns | Qc.QItemSelectionModel.SelectionFlag.ClearAndSelect,
             )
 
         if not indexHeader.hasFocus():
             selection = self.selectionModel().selection()
             indexHeader.selectionModel().select(
                 selection,
-                Qc.QItemSelectionModel.Rows | Qc.QItemSelectionModel.ClearAndSelect,
+                Qc.QItemSelectionModel.SelectionFlag.Rows | Qc.QItemSelectionModel.SelectionFlag.ClearAndSelect,
             )
 
     def print(self):
@@ -478,7 +486,7 @@ class HeaderModel(Qc.QAbstractTableModel):
         row = index.row()
         col = index.column()
 
-        if role == Qc.Qt.DisplayRole or role == Qc.Qt.ToolTipRole:
+        if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.ToolTipRole:
             if self.orientation == Qt.Orientation.Horizontal:
                 if type(self.df.columns) == pd.MultiIndex:
                     return str(self.df.columns.values[col][row])
@@ -489,12 +497,20 @@ class HeaderModel(Qc.QAbstractTableModel):
                     return str(self.df.index.values[row][col])
                 return str(self.df.index.values[row])
             return None
+        if role == Qt.ItemDataRole.FontRole:
+            bold_font = Qg.QFont()
+            bold_font.setBold(True)
+            return bold_font
         return None
 
     # The headers of this table will show the level names of the MultiIndex
     def headerData(self, section, orientation, role=None):
         """Header data."""
-        if role in [Qc.Qt.DisplayRole, Qc.Qt.ToolTipRole]:
+        if role == Qt.ItemDataRole.FontRole:
+            bold_font = Qg.QFont()
+            bold_font.setBold(True)
+            return bold_font
+        if role in [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole]:
             if self.orientation == Qt.Orientation.Horizontal and orientation == Qt.Orientation.Vertical:
                 if type(self.df.columns) == pd.MultiIndex:
                     return str(self.df.columns.names[section])
@@ -532,12 +548,12 @@ class HeaderView(Qw.QTableView):
         self.viewport().installEventFilter(self)
 
         # Settings
-        self.setSizePolicy(Qw.QSizePolicy(Qw.QSizePolicy.Maximum, Qw.QSizePolicy.Maximum))
+        self.setSizePolicy(Qw.QSizePolicy(Qw.QSizePolicy.Policy.Maximum, Qw.QSizePolicy.Policy.Maximum))
         self.setWordWrap(False)
-        self.setFont(Qg.QFont("Times", weight=Qg.QFont.Bold))
+        self.setFont(Qg.QFont("Times", weight=Qg.QFont.Weight.Bold))
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollPerPixel)
-        self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollPerPixel)
+        self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
 
         # Link selection to DataTable
         self.selectionModel().selectionChanged.connect(self.on_selection_changed)
@@ -554,7 +570,7 @@ class HeaderView(Qw.QTableView):
             self.verticalHeader().setHighlightSections(False)  # Selection lags a lot without this
 
         else:
-            self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.verticalHeader().hide()
             self.horizontalHeader().setDisabled(True)
 
