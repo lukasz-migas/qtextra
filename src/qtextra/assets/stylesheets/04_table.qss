@@ -9,6 +9,6 @@ QtDataFrameWidget > HeaderView {
 QtDataFrameWidget > TableView {
     background-color: {{ background }};
     gridline-color: {{ highlight }};
-    selection-color: {{ highlight }};
+    selection-color: {{ lighten(highlight, 50) }};
     selection-background-color: {{ background }};
 }

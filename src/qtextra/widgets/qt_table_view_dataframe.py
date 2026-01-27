@@ -13,6 +13,7 @@ import pandas as pd
 import qtpy.QtCore as Qc
 import qtpy.QtGui as Qg
 import qtpy.QtWidgets as Qw
+from loguru import logger
 from qtpy.QtCore import Qt
 
 
@@ -109,7 +110,6 @@ class QtDataFrameWidget(Qw.QWidget):
 
         for item in [self.dataView, self.columnHeader, self.indexHeader]:
             item.setContentsMargins(0, 0, 0, 0)
-            item.setStyleSheet(item.styleSheet() + "border: 0px solid black;")
             item.setItemDelegate(NoFocusDelegate())
         # Ensure widgets expand within the layout
         self.dataView.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
@@ -249,13 +249,16 @@ class QtDataFrameWidget(Qw.QWidget):
 
         if event.matches(Qg.QKeySequence.StandardKey.Copy):
             self.dataView.copy()
+            logger.trace("Copied selection to clipboard")
         if event.matches(Qg.QKeySequence.StandardKey.Paste):
             self.dataView.paste()
+            logger.trace("Pasted clipboard contents")
         if event.key() == Qt.Key.Key_P and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
             self.dataView.print()
+            logger.trace("Printed clipboard contents")
         if event.key() == Qt.Key.Key_D and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
             self.debug()
-            print("Ctrl + D")
+            logger.trace("Debug contents")
 
     def debug(self):
         """Debug."""
