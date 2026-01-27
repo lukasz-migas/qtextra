@@ -6,6 +6,8 @@ QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView 
 
 from __future__ import annotations
 
+import contextlib
+
 import numpy as np
 import pandas as pd
 import qtpy.QtCore as Qc
@@ -84,8 +86,8 @@ class QtDataFrameWidget(Qw.QWidget):
         self.gridLayout.addWidget(self.dataView.verticalScrollBar(), 2, 3, 1, 1)
 
         # These expand when the window is enlarged instead of having the grid squares spread out
-        self.gridLayout.setColumnStretch(4, 1)
-        self.gridLayout.setRowStretch(4, 1)
+        self.gridLayout.setColumnStretch(2, 1)
+        self.gridLayout.setRowStretch(2, 1)
 
         # These placeholders will ensure the size of the blank spaces beside our headers
         self.gridLayout.addWidget(TrackingSpacer(ref_x=self.columnHeader.verticalHeader()), 3, 1, 1, 1)
@@ -113,37 +115,62 @@ class QtDataFrameWidget(Qw.QWidget):
             item.setContentsMargins(0, 0, 0, 0)
             item.setStyleSheet(item.styleSheet() + "border: 0px solid black;")
             item.setItemDelegate(NoFocusDelegate())
+        # Ensure widgets expand within the layout
+        self.dataView.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Expanding)
+        self.columnHeader.setSizePolicy(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Fixed)
+        self.indexHeader.setSizePolicy(Qw.QSizePolicy.Fixed, Qw.QSizePolicy.Expanding)
 
     def showEvent(self, event: Qg.QShowEvent):
         """Initialize column and row sizes on the first time the widget is shown."""
         if not self._loaded:
-            # Set column widths
-            for column_index in range(self.columnHeader.model().columnCount()):
-                self.auto_size_column(column_index)
-
-            # Set row heights
-            # Just sets a single uniform row height based on the first N rows for performance.
-            N = 100
-            default_row_height = 30
-            for row_index in range(self.indexHeader.model().rowCount())[:N]:
-                self.auto_size_row(row_index)
-                height = self.indexHeader.rowHeight(row_index)
-                default_row_height = max(default_row_height, height)
-
-            # Set limit for default row height
-            default_row_height = min(default_row_height, 100)
-
-            self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
-            self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
-
+            self._init_sizes()
         self._loaded = True
         event.accept()
 
     def set_data(self, df):
         """Set data header."""
+        if df is None:
+            df = pd.DataFrame()
+        self._loaded = False
         self.dataView.set_data(df)
         self.columnHeader.set_data(df)
         self.indexHeader.set_data(df)
+        self.columnHeader.setSpans()
+        self.indexHeader.setSpans()
+        self._update_header_level_names_visibility(df)
+        self._init_sizes()
+        self.updateGeometry()
+        self.gridLayout.activate()
+
+    def _update_header_level_names_visibility(self, df):
+        """Show or hide the level-name header rows/columns based on availability."""
+        col_v_header = self.columnHeader.verticalHeader()
+        idx_h_header = self.indexHeader.horizontalHeader()
+        col_v_header.setFixedWidth(
+            0 if not (any(df.columns.names) or df.columns.name) else col_v_header.sizeHint().width(),
+        )
+        idx_h_header.setFixedHeight(
+            0 if not (any(df.index.names) or df.index.name) else idx_h_header.sizeHint().height(),
+        )
+
+    def _init_sizes(self):
+        """Shared sizing logic for initial load and data resets."""
+        # Set column widths
+        for column_index in range(self.columnHeader.model().columnCount()):
+            self.auto_size_column(column_index)
+        # Set row heights (uniform, based on first N rows)
+        N = 100
+        default_row_height = 30
+        for row_index in range(self.indexHeader.model().rowCount())[:N]:
+            self.auto_size_row(row_index)
+            height = self.indexHeader.rowHeight(row_index)
+            default_row_height = max(default_row_height, height)
+        default_row_height = min(default_row_height, 100)
+        self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
+        self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
+        self.dataView.resize(self.dataView.sizeHint())
+        self.columnHeader.resize(self.columnHeader.sizeHint())
+        self.indexHeader.resize(self.indexHeader.sizeHint())
 
     def auto_size_column(self, column_index):
         """Set the size of column at column_index to fit its contents."""
@@ -336,8 +363,11 @@ class DataTableView(Qw.QTableView):
 
     def set_data(self, df):
         """Set data model."""
+        with contextlib.suppress(Exception):
+            self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
         model = DataTableModel(df)
         self.setModel(model)
+        self.selectionModel().selectionChanged.connect(self.on_selection_changed)
 
     def on_selection_changed(self):
         """
@@ -536,7 +566,13 @@ class HeaderView(Qw.QTableView):
     def set_data(self, df):
         """Update dataframe."""
         self.df = df
+        with contextlib.suppress(Exception):
+            self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
         self.setModel(HeaderModel(df, self.orientation))
+        self.selectionModel().selectionChanged.connect(self.on_selection_changed)
+        self.setSpans()
+        self.initSize()
+        self.updateGeometry()
 
     # Header
     def on_selection_changed(self):
@@ -849,6 +885,13 @@ class TrackingSpacer(Qw.QFrame):
 
 # Examples
 if __name__ == "__main__":  # pragma: no cover
+
+    def _get_new_data():
+        shape = np.random.randint(10, 100, 2)
+        df = pd.DataFrame(np.random.randint(-255, 255, shape) / 255)
+        df.columns = ["Column " + str(i) for i in range(df.shape[1])]
+        return df
+
     import sys
 
     from qtextra.utils.dev import qframe
@@ -856,19 +899,12 @@ if __name__ == "__main__":  # pragma: no cover
     app, frame, va = qframe(False)
     frame.setMinimumSize(400, 400)
 
-    array = pd.DataFrame(
-        {
-            ("a", "b"): {("A", "B"): 1, ("A", "C"): 2},
-            ("a", "a"): {("A", "C"): 3, ("A", "B"): 4},
-            ("a", "c"): {("A", "B"): 5, ("A", "C"): 6},
-            ("b", "a"): {("A", "C"): 7, ("A", "B"): 8},
-            ("b", "b"): {("A", "D"): 9, ("A", "B"): 10},
-        },
-    )
-    widget = QtDataFrameWidget(None, array)
+    df = _get_new_data()
+
+    widget = QtDataFrameWidget(None, df)
     va.addWidget(widget, stretch=True)
     btn = Qw.QPushButton("Press me to change data")
-    btn.clicked.connect(lambda: widget.set_data(pd.DataFrame(np.random.randint(-255, 255, (10, 10)) / 255)))
+    btn.clicked.connect(lambda: widget.set_data(_get_new_data()))
     va.addWidget(btn)
 
     frame.show()
