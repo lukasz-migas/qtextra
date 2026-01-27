@@ -4,6 +4,8 @@ QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView 
  headers.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 import qtpy.QtCore as Qc
@@ -22,7 +24,12 @@ class QtDataFrameWidget(Qw.QWidget):
     """
 
     def __init__(
-        self, parent: Qw.QWidget, df: pd.DataFrame, inplace: bool = True, editable: bool = False, stretch: bool = False
+        self,
+        parent: Qw.QWidget | None,
+        df: pd.DataFrame | None,
+        inplace: bool = True,
+        editable: bool = False,
+        stretch: bool = False,
     ):
         super().__init__(parent)
         if df is None:
@@ -44,7 +51,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.indexHeader = HeaderView(self, df, Qt.Orientation.Vertical)
 
         # Link scrollbars
-        # Scrolling in data table also scrolls the headers
+        # Scrolling in the data table also scrolls the headers
         self.dataView.horizontalScrollBar().valueChanged.connect(self.columnHeader.horizontalScrollBar().setValue)
         self.dataView.verticalScrollBar().valueChanged.connect(self.indexHeader.verticalScrollBar().setValue)
         # Scrolling in headers also scrolls the data table
@@ -68,7 +75,8 @@ class QtDataFrameWidget(Qw.QWidget):
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setSpacing(0)
 
-        # Add items to layout
+        # Add items to the layout
+        # widget, row, column, rowspan, colspan
         self.gridLayout.addWidget(self.columnHeader, 0, 1, 1, 2)
         self.gridLayout.addWidget(self.indexHeader, 1, 0, 2, 2)
         self.gridLayout.addWidget(self.dataView, 2, 2, 1, 1)
@@ -83,7 +91,11 @@ class QtDataFrameWidget(Qw.QWidget):
         self.gridLayout.addWidget(TrackingSpacer(ref_x=self.columnHeader.verticalHeader()), 3, 1, 1, 1)
         self.gridLayout.addWidget(TrackingSpacer(ref_y=self.indexHeader.horizontalHeader()), 1, 2, 1, 1)
         self.gridLayout.addItem(
-            Qw.QSpacerItem(0, 0, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding), 0, 0, 1, 1
+            Qw.QSpacerItem(0, 0, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding),
+            0,
+            0,
+            1,
+            1,
         )
 
         # Styling
@@ -94,7 +106,7 @@ class QtDataFrameWidget(Qw.QWidget):
             "background-color: white;"
             "alternate-background-color: #F4F6F6;"
             "selection-color: black;"
-            "selection-background-color: #BBDEFB;"
+            "selection-background-color: #BBDEFB;",
         )
 
         for item in [self.dataView, self.columnHeader, self.indexHeader]:
@@ -240,8 +252,7 @@ class DataTableModel(Qc.QAbstractTableModel):
         """Return the number of columns in the DataFrame."""
         if type(self.df) == pd.Series:
             return 1
-        else:
-            return self.df.columns.shape[0]
+        return self.df.columns.shape[0]
 
     def rowCount(self, parent=None):
         """Return the number of rows in the DataFrame."""
@@ -260,13 +271,12 @@ class DataTableModel(Qc.QAbstractTableModel):
                 return ""
 
             # Float formatting
-            if isinstance(cell, (float, np.floating)):
-                if not role == Qc.Qt.ToolTipRole:
-                    return f"{cell:.4f}"
+            if isinstance(cell, (float, np.floating)) and role != Qc.Qt.ToolTipRole:
+                return f"{cell:.4f}"
 
             return str(cell)
 
-        elif role == Qc.Qt.ToolTipRole:
+        if role == Qc.Qt.ToolTipRole:
             row = index.row()
             col = index.column()
             cell = self.df.iloc[row, col]
@@ -276,6 +286,7 @@ class DataTableModel(Qc.QAbstractTableModel):
                 return "NaN"
 
             return str(cell)
+        return None
 
     def flags(self, index):
         """Set the item flags at the given index."""
@@ -296,6 +307,7 @@ class DataTableModel(Qc.QAbstractTableModel):
             self.dataChanged.emit(index, index)
 
             return True
+        return None
 
 
 class DataTableView(Qw.QTableView):
@@ -343,13 +355,15 @@ class DataTableView(Qw.QTableView):
         if not columnHeader.hasFocus():
             selection = self.selectionModel().selection()
             columnHeader.selectionModel().select(
-                selection, Qc.QItemSelectionModel.Columns | Qc.QItemSelectionModel.ClearAndSelect
+                selection,
+                Qc.QItemSelectionModel.Columns | Qc.QItemSelectionModel.ClearAndSelect,
             )
 
         if not indexHeader.hasFocus():
             selection = self.selectionModel().selection()
             indexHeader.selectionModel().select(
-                selection, Qc.QItemSelectionModel.Rows | Qc.QItemSelectionModel.ClearAndSelect
+                selection,
+                Qc.QItemSelectionModel.Rows | Qc.QItemSelectionModel.ClearAndSelect,
             )
 
     def print(self):
@@ -418,15 +432,16 @@ class HeaderModel(Qc.QAbstractTableModel):
         """Number of columns."""
         if self.orientation == Qt.Orientation.Horizontal:
             return self.df.columns.shape[0]
-        else:  # Vertical
-            return self.df.index.nlevels
+        # Vertical
+        return self.df.index.nlevels
 
     def rowCount(self, parent=None):
         """Number of rows."""
         if self.orientation == Qt.Orientation.Horizontal:
             return self.df.columns.nlevels
-        elif self.orientation == Qt.Orientation.Vertical:
+        if self.orientation == Qt.Orientation.Vertical:
             return self.df.index.shape[0]
+        return None
 
     def data(self, index, role=None):
         """Data."""
@@ -437,14 +452,14 @@ class HeaderModel(Qc.QAbstractTableModel):
             if self.orientation == Qt.Orientation.Horizontal:
                 if type(self.df.columns) == pd.MultiIndex:
                     return str(self.df.columns.values[col][row])
-                else:
-                    return str(self.df.columns.values[col])
+                return str(self.df.columns.values[col])
 
-            elif self.orientation == Qt.Orientation.Vertical:
+            if self.orientation == Qt.Orientation.Vertical:
                 if type(self.df.index) == pd.MultiIndex:
                     return str(self.df.index.values[row][col])
-                else:
-                    return str(self.df.index.values[row])
+                return str(self.df.index.values[row])
+            return None
+        return None
 
     # The headers of this table will show the level names of the MultiIndex
     def headerData(self, section, orientation, role=None):
@@ -453,15 +468,13 @@ class HeaderModel(Qc.QAbstractTableModel):
             if self.orientation == Qt.Orientation.Horizontal and orientation == Qt.Orientation.Vertical:
                 if type(self.df.columns) == pd.MultiIndex:
                     return str(self.df.columns.names[section])
-                else:
-                    return str(self.df.columns.name)
-            elif self.orientation == Qt.Orientation.Vertical and orientation == Qt.Orientation.Horizontal:
+                return str(self.df.columns.name)
+            if self.orientation == Qt.Orientation.Vertical and orientation == Qt.Orientation.Horizontal:
                 if type(self.df.index) == pd.MultiIndex:
                     return str(self.df.index.names[section])
-                else:
-                    return str(self.df.index.name)
-            else:
-                return None  # These cells should be hidden anyways
+                return str(self.df.index.name)
+            return None  # These cells should be hidden anyways
+        return None
 
 
 class HeaderView(Qw.QTableView):
@@ -504,7 +517,7 @@ class HeaderView(Qw.QTableView):
         # Orientation specific settings
         if orientation == Qt.Orientation.Horizontal:
             self.setHorizontalScrollBarPolicy(
-                Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
             )  # Scrollbar is replaced in DataFrameViewer
             self.horizontalHeader().hide()
             self.verticalHeader().setDisabled(True)
@@ -544,7 +557,8 @@ class HeaderView(Qw.QTableView):
                 last_row_ix = self.df.columns.nlevels - 1
                 last_col_ix = self.model().columnCount() - 1
                 higher_levels = Qc.QItemSelection(
-                    self.model().index(0, 0), self.model().index(last_row_ix - 1, last_col_ix)
+                    self.model().index(0, 0),
+                    self.model().index(last_row_ix - 1, last_col_ix),
                 )
                 selection.merge(higher_levels, Qc.QItemSelectionModel.SelectionFlag.Deselect)
 
@@ -559,7 +573,8 @@ class HeaderView(Qw.QTableView):
                 last_row_ix = self.model().rowCount() - 1
                 last_col_ix = self.df.index.nlevels - 1
                 higher_levels = Qc.QItemSelection(
-                    self.model().index(0, 0), self.model().index(last_row_ix, last_col_ix - 1)
+                    self.model().index(0, 0),
+                    self.model().index(last_row_ix, last_col_ix - 1),
                 )
                 selection.merge(higher_levels, Qc.QItemSelectionModel.SelectionFlag.Deselect)
 
@@ -605,10 +620,7 @@ class HeaderView(Qw.QTableView):
 
             for col in range(self.model().columnCount()):
                 width = self.columnWidth(col)
-                if width + padding < min_size:
-                    new_width = min_size
-                else:
-                    new_width = width + padding
+                new_width = max(width + padding, min_size)
 
                 self.setColumnWidth(col, new_width)
                 self.table.setColumnWidth(col, new_width)
@@ -626,10 +638,7 @@ class HeaderView(Qw.QTableView):
         # Find spans for horizontal HeaderView
         if self.orientation == Qt.Orientation.Horizontal:
             # Find how many levels the MultiIndex has
-            if type(df.columns) == pd.MultiIndex:
-                N = len(df.columns[0])
-            else:
-                N = 1
+            N = len(df.columns[0]) if type(df.columns) == pd.MultiIndex else 1
 
             for level in range(N):  # Iterates over the levels
                 # Find how many segments the MultiIndex has
@@ -662,10 +671,7 @@ class HeaderView(Qw.QTableView):
         # Find spans for vertical HeaderView
         else:
             # Find how many levels the MultiIndex has
-            if type(df.index) == pd.MultiIndex:
-                N = len(df.index[0])
-            else:
-                N = 1
+            N = len(df.index[0]) if type(df.index) == pd.MultiIndex else 1
 
             for level in range(N):  # Iterates over the levels
                 # Find how many segments the MultiIndex has
@@ -704,22 +710,19 @@ class HeaderView(Qw.QTableView):
                 if self.columnAt(x + margin) == 0:
                     # We're at the left edge of the first column
                     return None
-                else:
-                    return self.columnAt(x - margin)
-            else:
-                return None
+                return self.columnAt(x - margin)
+            return None
 
         # Return the index of the row this y position is on the top edge of
-        elif self.orientation == Qt.Orientation.Vertical:
+        if self.orientation == Qt.Orientation.Vertical:
             y = mouse_position
             if self.rowAt(y - margin) != self.rowAt(y + margin):
                 if self.rowAt(y + margin) == 0:
                     # We're at the top edge of the first row
                     return None
-                else:
-                    return self.rowAt(y - margin)
-            else:
-                return None
+                return self.rowAt(y - margin)
+            return None
+        return None
 
     def eventFilter(self, object: Qc.QObject, event: Qc.QEvent):
         """Event filter."""
@@ -738,8 +741,7 @@ class HeaderView(Qw.QTableView):
                 elif self.orientation == Qt.Orientation.Vertical:
                     self.initial_header_size = self.rowHeight(self.header_being_resized)
                 return True
-            else:
-                self.header_being_resized = None
+            self.header_being_resized = None
 
         # End the drag process
         if event.type() == Qc.QEvent.Type.MouseButtonRelease:
@@ -821,8 +823,7 @@ class HeaderView(Qw.QTableView):
         """Minimum size hint."""
         if self.orientation == Qt.Orientation.Horizontal:
             return Qc.QSize(0, self.sizeHint().height())
-        else:
-            return Qc.QSize(self.sizeHint().width(), 0)
+        return Qc.QSize(self.sizeHint().width(), 0)
 
 
 # This is a fixed size widget with a size that tracks some other widget
@@ -862,7 +863,7 @@ if __name__ == "__main__":  # pragma: no cover
             ("a", "c"): {("A", "B"): 5, ("A", "C"): 6},
             ("b", "a"): {("A", "C"): 7, ("A", "B"): 8},
             ("b", "b"): {("A", "D"): 9, ("A", "B"): 10},
-        }
+        },
     )
     widget = QtDataFrameWidget(None, array)
     va.addWidget(widget, stretch=True)
