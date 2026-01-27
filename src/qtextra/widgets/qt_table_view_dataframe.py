@@ -136,6 +136,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.indexHeader.setSpans()
         self._update_header_level_names_visibility(df)
         self._init_sizes()
+        self._resize_all_rows()
         self._update_scrollbar_visibility()
         self.updateGeometry()
         self.gridLayout.activate()
@@ -146,6 +147,12 @@ class QtDataFrameWidget(Qw.QWidget):
         vbar = self.dataView.verticalScrollBar()
         hbar.setVisible(hbar.maximum() > 0)
         vbar.setVisible(vbar.maximum() > 0)
+
+    def _resize_all_rows(self):
+        """Auto-resize every row to its content height."""
+        row_count = self.indexHeader.model().rowCount()
+        for row_index in range(row_count):
+            self.auto_size_row(row_index)
 
     def _update_header_level_names_visibility(self, df):
         """Show or hide the level-name header rows/columns based on availability."""
@@ -208,7 +215,7 @@ class QtDataFrameWidget(Qw.QWidget):
 
     def auto_size_row(self, row_index):
         """Set the size of row at row_index to fix its contents."""
-        padding = 20
+        padding = 5
 
         self.indexHeader.resizeRowToContents(row_index)
         height = self.indexHeader.rowHeight(row_index)
@@ -550,7 +557,7 @@ class HeaderView(Qw.QTableView):
         # Settings
         self.setSizePolicy(Qw.QSizePolicy(Qw.QSizePolicy.Policy.Maximum, Qw.QSizePolicy.Policy.Maximum))
         self.setWordWrap(False)
-        self.setFont(Qg.QFont("Times", weight=Qg.QFont.Weight.Bold))
+        # self.setFont(Qg.QFont("Times", weight=Qg.QFont.Weight.Bold))
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
