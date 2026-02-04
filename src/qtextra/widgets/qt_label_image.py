@@ -96,7 +96,7 @@ class ImageViewer(QGraphicsView):
 
     def set_image(self, image_path: str):
         """Set or change the image displayed in the viewer."""
-        pixmap = QPixmap(image_path)
+        pixmap = QPixmap(str(image_path))
         if pixmap.isNull():
             print(f"Error: Could not load image from {image_path}")
             return
