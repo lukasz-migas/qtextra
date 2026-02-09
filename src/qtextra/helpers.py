@@ -3400,7 +3400,7 @@ def make_progress_widget(
     with_progress: bool = False,
     with_cancel: bool = True,
     with_layout: bool = True,
-):
+) -> tuple[Qw.QHBoxLayout | None, Qw.QWidget, Qw.QProgressBar | QtLabeledProgressBar, Qw.QPushButton | None]:
     """Create progress widget and all other elements."""
     if with_cancel and not with_layout:
         raise ValueError("Cannot have cancel button without layout.")

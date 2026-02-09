@@ -16,35 +16,6 @@ from qtextra.queue.utilities import _safe_call, escape_ansi, iterable_callbacks
 from qtextra.typing import Callback, TaskState
 
 
-def run_command(command: list[str]) -> None:
-    """Execute command using the QProcess wrapper."""
-    from qtextra.helpers import get_main_window
-
-    program, args = command[0], command[1:]
-    logger_.trace(f"Running command: {program} {' '.join(args)}")
-
-    process = QProcess(get_main_window())
-    process.finished.connect(process.deleteLater)
-    process.finished.connect(lambda exit_code, exit_status: logger_.trace(f"Command finished with {exit_code}"))
-    process.setProgram(program)
-    # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments
-    # incorrect. It's safer to simply join the arguments  together and set them as one long string. The
-    # assumption is that the arguments were properly setup in the first place!
-    if IS_WIN and hasattr(process, "setNativeArguments"):
-        process.setNativeArguments(" ".join(args))
-    else:
-        process.setArguments(args)
-    process.start()
-
-
-def decode(text: bytes) -> str:
-    """Decode text."""
-    try:
-        return text.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        return text.decode("latin1")
-
-
 class Queue(SimpleQueue):
     """Queue class with few missing methods."""
 
@@ -215,7 +186,7 @@ class QProcessWrapper(QObject):
                 if self.command_queue.qsize() == 0:
                     self.task.state = TaskState.FINISHED
                     self.logger.trace(
-                        f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (populate)"
+                        f"Changed state of '{self.task.task_name}' to '{self.task.state.value}' (populate)",
                     )
                     return self.populate_command_queue()
                 self.current_task_id = self.task.task_id
@@ -256,10 +227,10 @@ class QProcessWrapper(QObject):
             command = " ".join(command_args)
             if not self.task:
                 raise ValueError("Task not found.")
-            # set start time
+            # set a start time
             if command_index == 0:
                 self.task.start_time = time_()
-            # activate master task
+            # activate a master task
             # activate the current task
             if not self.task.is_active():
                 self.task.activate()
@@ -314,17 +285,16 @@ class QProcessWrapper(QObject):
             self.on_setup_task()
 
         # all tasks have finished
-        if self.master_finished:
-            if task:
-                # update stats
-                if task.state == TaskState.RUNNING:
-                    task.state = TaskState.FINISHED
-                    self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (all-finished)")
-                task.end_time = time_()
-                task.lock()  # lock task
-                self.finished_tasks.add(task.task_id)
-                self.logger.trace(f"Added '{task.task_name}' to finished tasks (all-finished).")
-                self.logger.debug("Task finished successfully.")
+        if self.master_finished and task:
+            # update stats
+            if task.state == TaskState.RUNNING:
+                task.state = TaskState.FINISHED
+                self.logger.trace(f"Changed state of '{task.task_name}' to '{task.state.value}' (all-finished)")
+            task.end_time = time_()
+            task.lock()  # lock task
+            self.finished_tasks.add(task.task_id)
+            self.logger.trace(f"Added '{task.task_name}' to finished tasks (all-finished).")
+            self.logger.debug("Task finished successfully.")
 
     def on_error(self, _error: ty.Any) -> None:
         """Process has errored."""
@@ -376,7 +346,7 @@ class QProcessWrapper(QObject):
             else:
                 self.logger.trace(
                     f"Starting task. state={process_state!s}; process_id={process_id!s}; paused={self._paused!s};"
-                    f" cancelled={self._cancelled!s}"
+                    f" cancelled={self._cancelled!s}",
                 )
                 self.process.start()
 

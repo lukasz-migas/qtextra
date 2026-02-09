@@ -86,6 +86,8 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     # "check": "fa5s.check",
     "edit": "ri.edit-box-fill",
     "add": "ri.add-circle-line",
+    "add_one": "mdi6.plus-circle-outline",
+    "add_many": "mdi6.plus-circle-multiple-outline",
     "remove": "ri.indeterminate-circle-line",
     "check": "ri.checkbox-circle-line",
     # "delete": "fa5s.trash-alt",
@@ -274,7 +276,7 @@ def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key:
     """Update icon mapping."""
     global QTA_MAPPING
     for k, v_new in mapping.items():
-        v_exist = QTA_MAPPING.get(k, None)
+        v_exist = QTA_MAPPING.get(k)
         v_new = mapping[k]
         if v_exist and v_exist == v_new and not silent:
             print(f"Warning: Icon mapping already exists for '{k}'")

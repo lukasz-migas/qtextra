@@ -3,11 +3,14 @@ import typing as ty
 from contextlib import suppress
 
 from koyo.system import IS_WIN
+from loguru import logger
+from qtpy.QtCore import QProcess
 
 from qtextra.typing import Callback
 
 if ty.TYPE_CHECKING:
     from qtextra.queue.task import Task
+
 
 COLORS = {
     "error": "#ff121e",
@@ -19,6 +22,42 @@ COLORS = {
     "hint": "#00a6ff",
 }
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def set_process(process: QProcess, command: str, args: list[str]) -> None:
+    """Set process."""
+    process.setProgram(command)
+    # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments incorrect.
+    # It's safer to simply join the arguments together and set them as one long string. The assumption being that
+    # the arguments were properly set up in the first place!
+    if IS_WIN:
+        if hasattr(process, "setNativeArguments"):
+            process.setNativeArguments(" ".join(args))  # type: ignore[arg-type]
+        else:
+            process.setArguments(args)  # type: ignore[arg-type]
+    else:
+        process.setArguments(args)  # type: ignore[arg-type]
+
+
+def run_command(command: list[str]) -> None:
+    """Execute command using the QProcess wrapper."""
+    from qtextra.helpers import get_main_window
+
+    program, args = command[0], command[1:]
+    logger.trace(f"Running command: {program} {' '.join(args)}")
+
+    process = QProcess(get_main_window())
+    process.finished.connect(process.deleteLater)
+    process.finished.connect(lambda exit_code, exit_status: logger.trace(f"Command finished with {exit_code}"))
+    process.setProgram(program)
+    # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments
+    # incorrect. It's safer to simply join the arguments  together and set them as one long string. The
+    # assumption is that the arguments were properly setup in the first place!
+    if IS_WIN and hasattr(process, "setNativeArguments"):
+        process.setNativeArguments(" ".join(args))
+    else:
+        process.setArguments(args)
+    process.start()
 
 
 def listify_multiple(
@@ -93,7 +132,7 @@ def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty
     """Callbacks should always be a sequence."""
     if func is None:
         return []
-    elif isinstance(func, ty.Sequence):
+    if isinstance(func, ty.Sequence):
         return func
     return [func]
 
@@ -121,7 +160,7 @@ ansi_escape = re.compile(
         [ -/]*  # Intermediate bytes
         [@-~]   # Final byte
     )
-"""
+""",
 )
 
 
