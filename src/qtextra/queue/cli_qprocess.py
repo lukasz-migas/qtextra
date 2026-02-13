@@ -14,6 +14,7 @@ from qtpy.QtCore import QObject, QProcess, QTimer, Signal  # type: ignore[attr-d
 from qtextra.queue.task import Task
 from qtextra.queue.utilities import _safe_call, escape_ansi, iterable_callbacks
 from qtextra.typing import Callback, TaskState
+from qtextra.queue.utilities import decode
 
 
 class Queue(SimpleQueue):
