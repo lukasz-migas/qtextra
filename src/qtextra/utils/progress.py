@@ -11,7 +11,7 @@ except ImportError:
 
 
 class Progress(tqdm):
-    """This class inherits from tqdm and provides an interface for
+    """"Class inherits from tqdm and provides an interface for
     progress bars in the napari viewer. Progress bars can be created
     directly by wrapping an iterable or by providing a total number
     of expected updates.

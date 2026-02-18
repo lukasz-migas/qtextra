@@ -63,8 +63,6 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     "process": "ri.computer-line",
     "wait": "mdi6.timer-sand",
     "template": "ei.file-new",
-    "image": "fa6.image",
-    "images": "fa5s.images",
     "tutorial": "mdi.tooltip-check",
     # "log": "mdi6.file-document",
     "log": "mdi6.clipboard-text",
@@ -145,6 +143,13 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     "not_notified": "mdi6.bell-off",
     "auto": "mdi6.brightness-auto",
     "double_click": "mdi6.gesture-double-tap",
+    # file format
+    "gif": "mdi6.file-gif-box",
+    "pdf": "mdi6.file-pdf-box",
+    "jpg": "mdi6.file-jpg-box",
+    "png": "mdi6.file-png-box",
+    "excel": "mdi6.file-excel-box",
+    "word": "mdi6.file-word-box",
     # notification
     "notification": "mdi6.bell",
     "notification_on": "mdi6.bell",
@@ -199,6 +204,15 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     # lock
     "lock_closed": "fa5s.lock",
     "lock_open": "fa5s.lock-open",
+    # emotion
+    "happy": "fa5s.smile",
+    "happy_color": ("fa5s.smile", {"color": "#FEBB49"}),
+    "neutral": "fa5s.meh",
+    "neutral_color": ("fa5s.meh", {"color": "#FEBB49"}),
+    "sad": "fa5s.frown",
+    "sad_color": ("fa5s.sad", {"color": "#FEBB49"}),
+    "angry": "fa5s.angry",
+    "angry_color": ("fa5s.angry", {"color": "#FEBB49"}),
     # theme
     "light_theme": "ri.sun-fill",
     "dark_theme": "ri.moon-clear-fill",
@@ -229,6 +243,25 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     "low_resolution": "mdi.standard-definition",
     "high_resolution": "mdi.high-definition",
     "ultra_resolution": "mdi.ultra-high-definition",
+    # image type
+    "2d": "ph.rectangle-bold",
+    "3d": "ph.cube-bold",
+    "image": "fa6.image",
+    "images": "fa5s.images",
+    # mask
+    "mask": "mdi6.domino-mask",
+    "masks": "mdi.drama-masks",
+    # number
+    "0": "mdi6.numeric-0-circle",
+    "1": "mdi6.numeric-1-circle",
+    "2": "mdi6.numeric-2-circle",
+    "3": "mdi6.numeric-3-circle",
+    "4": "mdi6.numeric-4-circle",
+    "5": "mdi6.numeric-5-circle",
+    "6": "mdi6.numeric-6-circle",
+    "7": "mdi6.numeric-7-circle",
+    "8": "mdi6.numeric-8-circle",
+    "9": "mdi6.numeric-9-circle",
     # viewer
     "home": "fa5s.home",
     # "pan_zoom": "ri.drag-move-line",
@@ -280,6 +313,8 @@ def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key:
         v_new = mapping[k]
         if v_exist and v_exist == v_new and not silent:
             print(f"Warning: Icon mapping already exists for '{k}'")
+        if v_exist and v_exist != v_new and not silent:
+            print(f"Warning: Icon mapping for '{k}' is being overwritten from '{v_exist}' to '{v_new}'")
         QTA_MAPPING[k] = v_new
 
 

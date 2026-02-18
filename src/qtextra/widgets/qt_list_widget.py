@@ -142,7 +142,7 @@ class QtListWidget(QListWidget):
         raise NotImplementedError("Must implement method")
 
     def _check_existing(self, item_model: _M) -> bool:
-        """This method should be modified actually implement checking functionality."""
+        """"Method should be modified actually implement checking functionality."""
         return False
 
     @property

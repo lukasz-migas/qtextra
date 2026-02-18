@@ -504,6 +504,26 @@ class QtImageButton(QtTogglePushButton):
         super().__init__(*args, **kwargs)
 
 
+class QtMaskButton(QtTogglePushButton):
+    """Boolean button."""
+
+    ICON_ON = "masks"
+    ICON_OFF = "mask"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+
+class QtNDisplayButton(QtTogglePushButton):
+    """Boolean button."""
+
+    ICON_ON = "2d"
+    ICON_OFF = "3d"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+
 class QtMultiStatePushButton(QtImagePushButton):
     """Base class for a multi-state button where options are shown as a QMenu."""
 
@@ -601,6 +621,22 @@ class QtStateButton(QtMultiStatePushButton):
         "info": "Info",
         "warning": "Warning",
         "error": "Error",
+    }
+
+
+class QtEmotionButton(QtMultiStatePushButton):
+    """State button."""
+
+    DEFAULT_STATE = "happy"
+    STATE_TO_ICON: ty.ClassVar[dict] = {
+        "happy": "happy",
+        "neutral": "neutral",
+        "sad": "sad",
+    }
+    STATE_TO_OPTION: ty.ClassVar[dict] = {
+        "happy": "Happy!",
+        "neutral": "Neutral",
+        "sad": "Sad",
     }
 
 
@@ -825,6 +861,8 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtAnimationPlayButton(parent=frame, auto_connect=True))
         lay.addWidget(QtPauseButton(parent=frame, auto_connect=True))
         lay.addWidget(QtImageButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtMaskButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtNDisplayButton(parent=frame, auto_connect=True))
         lay.addWidget(QtLockButton(parent=frame, auto_connect=True))
         lay.addWidget(QtHorizontalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtVisibleButton(parent=frame, auto_connect=True))
@@ -842,6 +880,7 @@ if __name__ == "__main__":  # pragma: no cover
         # multi-state
         lay.addWidget(QtPriorityButton(parent=frame, auto_connect=True))
         lay.addWidget(QtStateButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtEmotionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtMultiThemeButton(parent=frame, auto_connect=True))
 
         ha.addWidget(hp.make_v_line())

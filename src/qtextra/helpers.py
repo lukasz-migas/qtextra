@@ -393,9 +393,14 @@ def get_key(key: str) -> str:
     return key.capitalize()
 
 
-def set_from_schema(widget: Qw.QWidget, schema: dict[str, ty.Any], **_kwargs: ty.Any) -> None:
+def set_from_schema(
+    widget: Qw.QWidget,
+    schema: dict[str, ty.Any],
+    block_signals: bool = True,
+    **_kwargs: ty.Any,
+) -> None:
     """Set certain values on the model."""
-    with qt_signals_blocked(widget):
+    with qt_signals_blocked(widget, block_signals=block_signals):
         if "description" in schema:
             widget.setToolTip(schema["description"])
 
@@ -714,18 +719,20 @@ def set_combobox_data(
     widget: Qw.QComboBox,
     data: ty.Union[dict, ty.OrderedDict, Enum],
     current_item: str | None = None,
+    block_signals: bool = True,
 ):
     """Set data/value on combobox."""
     if not isinstance(data, (dict, ty.OrderedDict)):
         data = {m: m.value for m in data}
 
-    for index, (item, text) in enumerate(data.items()):
-        if not isinstance(text, str):
-            text = item.value
-        widget.addItem(text, item)
+    with qt_signals_blocked(widget, block_signals=block_signals):
+        for index, (item, text) in enumerate(data.items()):
+            if not isinstance(text, str):
+                text = item.value
+            widget.addItem(text, item)
 
-        if current_item is not None and (current_item in (item, text)):
-            widget.setCurrentIndex(index)
+            if current_item is not None and (current_item in (item, text)):
+                widget.setCurrentIndex(index)
 
 
 def set_combobox_text_data(
