@@ -891,6 +891,7 @@ def make_label(
     func_activated: Callback | None = None,
     func_clicked: Callback | None = None,
     elide_mode: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
+    text_format: Qt.TextFormat = Qt.TextFormat.AutoText,
     vertical: bool = False,
     min_width: int = 0,
     **kwargs: ty.Any,
@@ -919,6 +920,7 @@ def make_label(
 
     widget.setText(text)
     widget.setObjectName(object_name)
+    widget.setTextFormat(text_format)
     if enable_url:
         widget.setTextFormat(Qt.TextFormat.RichText)
         widget.setTextInteractionFlags(widget.textInteractionFlags() | Qt.TextInteractionFlag.TextBrowserInteraction)

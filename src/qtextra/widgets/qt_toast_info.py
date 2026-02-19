@@ -101,7 +101,13 @@ class QtInfoToast(QFrame):
         self.position = position
 
         self.titleLabel = hp.make_label(self, object_name="titleLabel", bold=True)
-        self.contentLabel = hp.make_label(self, object_name="contentLabel", wrap=True, enable_url=True)
+        self.contentLabel = hp.make_label(
+            self,
+            object_name="contentLabel",
+            wrap=True,
+            enable_url=True,
+            alignment=Qt.AlignmentFlag.AlignJustify,
+        )
 
         self.closeButton = hp.make_qta_btn(self, "cross", func=self.close)
         self.closeButton.set_normal()
@@ -207,9 +213,8 @@ class QtInfoToast(QFrame):
         self.update()
 
     def eventFilter(self, obj, e: QEvent):
-        if obj is self.parent():
-            if e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange]:
-                self._adjustText()
+        if obj is self.parent() and e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange]:
+            self._adjustText()
 
         return super().eventFilter(obj, e)
 
@@ -222,7 +227,7 @@ class QtInfoToast(QFrame):
         self._adjustText()
         super().showEvent(e)
 
-        if self.duration >= 0:
+        if self.duration > 0:
             QTimer.singleShot(self.duration, self.__fadeOut)
 
         if self.position != ToastPosition.NONE:

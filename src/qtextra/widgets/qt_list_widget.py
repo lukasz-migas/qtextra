@@ -142,7 +142,7 @@ class QtListWidget(QListWidget):
         raise NotImplementedError("Must implement method")
 
     def _check_existing(self, item_model: _M) -> bool:
-        """"Method should be modified actually implement checking functionality."""
+        """Method should be modified actually implement checking functionality."""
         return False
 
     @property
@@ -226,7 +226,7 @@ class QtListWidget(QListWidget):
         return item, self.itemWidget(item)
 
     def get_index_for_hash_id(self, hash_id: str) -> int:
-        """Get index of the item."""
+        """Get the index of the item."""
         for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
             if widget.hash_id == hash_id:
                 return index

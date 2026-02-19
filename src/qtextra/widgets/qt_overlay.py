@@ -6,7 +6,7 @@ from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QPainter
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QStyle, QStyleOption, QVBoxLayout, QWidget
 
-from qtextra.helpers import make_btn
+import qtextra.helpers as hp
 from qtextra.widgets.qt_label_icon import QtIconLabel
 
 
@@ -70,8 +70,7 @@ class QtOverlay(QWidget):
         if event.type() == QEvent.Type.LayoutRequest:
             self.__layout()
             return True
-        else:
-            return super().event(event)
+        return super().event(event)
 
     def paintEvent(self, event):
         """Paint event."""
@@ -90,12 +89,9 @@ class QtOverlay(QWidget):
         # position itself over `widget`
         # noinspection PyShadowingNames
         def _get_size(hint, minimum, maximum, policy):
-            if policy == QSizePolicy.Policy.Ignored:
+            if policy == QSizePolicy.Policy.Ignored or policy == QSizePolicy.PolicyFlag.ExpandFlag:
                 return maximum
-            elif policy == QSizePolicy.PolicyFlag.ExpandFlag:
-                return maximum
-            else:
-                return max(hint, minimum)
+            return max(hint, minimum)
 
         widget = self.__widget
         if widget is None:
@@ -112,15 +108,9 @@ class QtOverlay(QWidget):
             tl = self.parent().mapFrom(widget.window(), bounds.topLeft())
             bounds = QRect(tl, widget.size())
         else:
-            if widget.isWindow():
-                bounds = widget.geometry()
-            else:
-                bounds = QRect(widget.mapToGlobal(QPoint(0, 0)), widget.size())
+            bounds = widget.geometry() if widget.isWindow() else QRect(widget.mapToGlobal(QPoint(0, 0)), widget.size())
 
-            if self.isWindow():
-                bounds = bounds
-            else:
-                bounds = QRect(self.parent().mapFromGlobal(bounds.topLeft()), bounds.size())
+            bounds = bounds if self.isWindow() else QRect(self.parent().mapFromGlobal(bounds.topLeft()), bounds.size())
 
         sh = self.sizeHint()
         min_sh = self.minimumSizeHint()
@@ -246,20 +236,23 @@ class QtMessageWidget(QFrame):
         self.setLineWidth(1)
 
         self.icon_label = QtIconLabel(icon_name, parent=self)
-        self.text_label = QLabel(text=text, wordWrap=wrap_word, textFormat=text_format)
-        self.text_label.setAlignment(Qt.AlignmentFlag.AlignJustify)
-        if sys.platform == "darwin":
-            self.text_label.setAttribute(Qt.WidgetAttribute.WA_MacSmallSize)
+        self.text_label = hp.make_label(
+            self,
+            text=text,
+            wrap=wrap_word,
+            text_format=text_format,
+            alignment=Qt.AlignmentFlag.AlignJustify,
+        )
 
-        self.ok_btn = make_btn(self, "OK", tooltip="Accept")
-        self.ok_btn.clicked.connect(self.on_accept)
-        self.ok_btn.setVisible(False)
-        self.cancel_btn = make_btn(self, "Close", tooltip="Close message")
-        self.cancel_btn.clicked.connect(self.close)
-        self.cancel_btn.setVisible(False)
-        self.dismiss_btn = make_btn(self, "Dismiss", tooltip="Dismiss message and don't show it again in this session")
-        self.dismiss_btn.clicked.connect(self.on_dismiss)
-        self.dismiss_btn.setVisible(False)
+        self.ok_btn = hp.make_btn(self, "OK", tooltip="Accept", func=self.on_accept, hide=True)
+        self.cancel_btn = hp.make_btn(self, "Close", tooltip="Close message", func=self.close, hide=True)
+        self.dismiss_btn = hp.make_btn(
+            self,
+            "Dismiss",
+            tooltip="Dismiss message and don't show it again in this session",
+            func=self.on_dismiss,
+            hide=True,
+        )
 
         self.btn_row = QHBoxLayout()
         self.btn_row.addWidget(self.ok_btn, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -280,7 +273,12 @@ class QtMessageWidget(QFrame):
         self.setLayout(self.layout)
 
     def set_buttons(
-        self, ok_btn: bool = False, cancel_btn: bool = False, dismiss_btn: bool = False, ok_func=None, ok_text="OK"
+        self,
+        ok_btn: bool = False,
+        cancel_btn: bool = False,
+        dismiss_btn: bool = False,
+        ok_func=None,
+        ok_text="OK",
     ):
         """Set buttons on the ui."""
         self.ok_btn.setVisible(ok_btn)
@@ -356,12 +354,12 @@ class QtOverlayMessage(QtOverlay):
 
     @property
     def is_dismissed(self) -> bool:
-        """Flag to indicate whether overlay message is dismissed."""
+        """Flag to indicate whether to overlay message is dismissed."""
         return self._msg_widget._dismissed
 
     @property
     def is_displayed(self) -> bool:
-        """Flag to indicate whether overlay message is displayed."""
+        """Flag to indicate whether to overlay message is displayed."""
         return not self._msg_widget._dismissed
 
     def dismiss(self):
@@ -392,17 +390,38 @@ class QtOverlayDismissMessage(QtOverlayMessage):
         **kwargs,
     ):
         super().__init__(
-            parent=parent, text=text, icon_name=icon_name, alignment=alignment, word_wrap=word_wrap, **kwargs
+            parent=parent,
+            text=text,
+            icon_name=icon_name,
+            alignment=alignment,
+            word_wrap=word_wrap,
+            **kwargs,
         )
         self._msg_widget.set_buttons(dismiss_btn=dismiss_btn, ok_btn=ok_btn, ok_func=ok_func, ok_text=ok_text)
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import qtextra.helpers as hp
     from qtextra.utils.dev import qframe
+
+    def _popup_dismiss():
+        print("Creating popup")
+        overlay_wdg = QtOverlayDismissMessage(
+            frame,
+            "Some random text that is written here to test the overlay message widget" * 3,
+            word_wrap=True,
+            dismiss_btn=True,
+            can_dismiss=True,
+        )
+        overlay_wdg.set_widget(frame)
 
     app, frame, ha = qframe(False)
     frame.setLayout(ha)
     frame.setMinimumSize(400, 400)
+
+    btn = hp.make_btn(frame, "Create popup")
+    btn.clicked.connect(_popup_dismiss)
+    ha.addWidget(btn)
 
     overlay = QtOverlayLabel(parent=frame, text="Spatial overlay text")
 
