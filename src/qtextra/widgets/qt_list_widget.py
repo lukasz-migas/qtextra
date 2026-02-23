@@ -238,7 +238,7 @@ class QtListWidget(QListWidget):
         return item.item_model
 
     def get_item_for_item_model(self, item_model: _M) -> ty.Optional[QListWidgetItem]:
-        """Get item by its model."""
+        """Get the item by its model."""
         for item, _item_model, _ in self.item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return item
@@ -252,7 +252,7 @@ class QtListWidget(QListWidget):
         return self.get_item_widget_for_index(index)[1]
 
     def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
-        """Get widget by its model."""
+        """Get the widget by its model."""
         for _, _item_model, widget in self.item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return widget
@@ -315,7 +315,7 @@ class QtListWidget(QListWidget):
         self.evt_cleared.emit()
 
     def append_item(self, item_model: _M) -> tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
-        """Append item."""
+        """Append an item."""
         if self._check_existing(item_model):
             return None, None
         try:
@@ -333,13 +333,14 @@ class QtListWidget(QListWidget):
         return item, widget
 
     def insert_item(self, item_model: _M, index: int = 0) -> tuple[ty.Optional[QListWidgetItem], ty.Optional[QWidget]]:
-        """Insert item in the list."""
+        """Insert an item in the list."""
         if self._check_existing(item_model):
             return None, None
         item = QListWidgetItem(parent=self)
         item.item_model = item_model
         self.insertItem(index, item)
         widget = self._make_widget(item)
+        widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         item.setSizeHint(widget.sizeHint())
         self.setItemWidget(item, widget)
         self.evt_updated.emit(self.count())
