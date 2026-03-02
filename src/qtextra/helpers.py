@@ -3160,16 +3160,15 @@ def disable_with_opacity(
 ) -> None:
     """Set enabled state on a list of widgets. If disabled, decrease opacity."""
     warnings.warn(
-        "`enable_with_opacity` is deprecated, use `disable_widgets` instead.",
+        "`disable_with_opacity` is deprecated, use `disable_widgets` instead.",
         DeprecationWarning,
         stacklevel=2,
     )
-    for wdg in widget_list:
-        widget = getattr(obj, wdg) if isinstance(wdg, str) else wdg
-        widget.setEnabled(not disabled)
-        op = Qw.QGraphicsOpacityEffect(obj)
-        op.setOpacity(min_opacity if disabled else 1.0)
-        widget.setGraphicsEffect(op)
+    disable_widgets(
+        *[getattr(obj, wdg) if isinstance(wdg, str) else wdg for wdg in widget_list],
+        disabled=disabled,
+        min_opacity=min_opacity,
+    )
 
 
 def disable_widgets(*objs: Qw.QWidget, disabled: bool, min_opacity: float = 0.75 if IS_MAC else 0.5) -> None:
