@@ -42,7 +42,9 @@ def disable_warnings() -> None:
 
 
 def qdev(
-    parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
+    parent=None,
+    modules: ty.Iterable[str] = DEFAULT_MODULES,
+    log_func: ty.Callable[[str], None] | None = None,
 ) -> QtReloadWidget:
     """Create reload widget."""
     from qtreload.qt_reload import QtReloadWidget
@@ -65,7 +67,9 @@ def enable_dev_border(app_or_widget) -> None:
 
 
 def qdev_dock(
-    parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
+    parent=None,
+    modules: ty.Iterable[str] = DEFAULT_MODULES,
+    log_func: ty.Callable[[str], None] | None = None,
 ) -> ty.Tuple[QtReloadWidget, QDockWidget]:
     """Create reload widget in dock."""
     widget = qdev(parent, modules, log_func=log_func)
@@ -74,11 +78,14 @@ def qdev_dock(
 
 
 def qdev_popup(
-    parent=None, modules: ty.Iterable[str] = DEFAULT_MODULES, log_func: ty.Callable[[str], None] | None = None
+    parent=None,
+    modules: ty.Iterable[str] = DEFAULT_MODULES,
+    log_func: ty.Callable[[str], None] | None = None,
 ) -> ty.Tuple[QtReloadWidget, QWidget]:
     """Create reload widget in popup."""
     widget = qdev(parent, modules, log_func=log_func)
     popup = QDialog()
+    popup.qdev = widget
     popup.setLayout(widget.layout())
     return widget, popup
 
@@ -192,10 +199,7 @@ def qmain(horz: bool = True, set_style: bool = True):
 
     app = qapplication()
     main = QtWidgets.QMainWindow()
-    if horz:
-        ha = QtWidgets.QHBoxLayout()
-    else:
-        ha = QtWidgets.QVBoxLayout()
+    ha = QtWidgets.QHBoxLayout() if horz else QtWidgets.QVBoxLayout()
     main.setCentralWidget(QtWidgets.QWidget())
     main.centralWidget().setLayout(ha)
     if set_style:

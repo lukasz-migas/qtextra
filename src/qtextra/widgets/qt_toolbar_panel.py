@@ -39,7 +39,9 @@ class QtAboutWidget(QWidget):
         self._layout = QVBoxLayout(self)
         self._layout.addWidget(self.title_label)
         self._layout.addWidget(
-            self.description_label, stretch=True, alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+            self.description_label,
+            stretch=True,
+            alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft,
         )
         self._layout.addWidget(self.docs_label)
 
@@ -144,7 +146,7 @@ class QtPanelWidget(QWidget):
         location: str = "top",
         func: ty.Callable | None = None,
     ) -> QtToolbarPushButton:
-        """Add widget to the stack.
+        """Add a widget to the stack.
 
         Parameters
         ----------
@@ -170,7 +172,6 @@ class QtPanelWidget(QWidget):
             name,
             checkable=widget is not None,
             large=True,
-            # icon_kwargs=dict(color_active=THEMES.get_hex_color("success")),
         )
         button.setObjectName(name)
         if tooltip:
@@ -326,7 +327,7 @@ class QtPanelToolbar(QToolBar):
         return self._widget._stack
 
     def set_disabled(self, button: QtToolbarPushButton, disable: bool) -> None:
-        """Set widget as disabled."""
+        """Set the widget as disabled."""
         if disable:
             self.disable_widget(button)
         else:
@@ -364,7 +365,7 @@ if __name__ == "__main__":  # pragma: no cover fmt: off
             class Test(QtTab):
                 _description: ty.ClassVar[dict] = {
                     "title": choice(
-                        ["dimensionality reduction", "machine learning", "spatial", "spectral", "highlights"]
+                        ["dimensionality reduction", "machine learning", "spatial", "spectral", "highlights"],
                     ),
                     "description": "ABOUT THE PANEL",
                 }

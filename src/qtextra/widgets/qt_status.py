@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import QSize, Qt, QTimer, Signal
+from qtpy.QtCore import Qt, QTimer, Signal
 from qtpy.QtGui import QFont, QIcon, QMouseEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QSizePolicy, QStatusBar, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_button_tool import QtToolButton
-from qtextra.widgets.qt_label_icon import QtQtaLabel
+from qtextra.widgets.qt_label_icon import QtQtaLabel, QtQtaNotificationLabel
 
 
 class QtStatusbarLabel(QLabel):
@@ -95,17 +95,21 @@ class QtStatusbarIconWidget(QWidget):
     # Signals
     evt_clicked = Signal()
 
-    def __init__(self, parent: QWidget | None, statusbar: QStatusBar, name: str = "", index: ty.Optional[int] = None):
+    def __init__(
+        self,
+        parent: QWidget | None,
+        statusbar: QStatusBar,
+        name: str = "",
+        index: ty.Optional[int] = None,
+        active: bool = False,
+    ):
         """Status bar widget base."""
         super().__init__(parent)
         self.setMouseTracking(True)
 
         # Widget
         self._status_bar = statusbar
-        self._icon = None
-        self._pixmap = None
-        self._icon_size = QSize(16, 16)  # ; should this be adjutable?
-        self.label_icon = QtQtaLabel()
+        self.label_icon = QtQtaLabel() if not active else QtQtaNotificationLabel()
         if name:
             self.label_icon.set_qta(name)
             self.label_icon.set_small()
@@ -268,7 +272,7 @@ class QtStatusbarMemory(QtStatusbarTimerBase):
         from qtextra.utils.utilities import memory_usage
 
         text = "%d%%" % memory_usage()
-        return "Mem " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
+        return "Mem " + text.rjust(3)
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
@@ -292,7 +296,7 @@ class QtStatusbarProcessMemory(QtStatusbarTimerBase):
             text = "%d%%" % process_memory_usage()
         except Exception:
             text = "N/A"
-        return "Mem " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
+        return "Mem " + text.rjust(3)
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
@@ -303,14 +307,14 @@ class QtStatusbarCPU(QtStatusbarTimerBase):
     """Status bar widget for system cpu usage."""
 
     def import_test(self) -> None:
-        """Raise ImportError if feature is not supported."""
+        """Raise ImportError if a feature is not supported."""
 
     def get_value(self) -> str:
         """Return CPU usage."""
         import psutil
 
         text = "%d%%" % psutil.cpu_percent(interval=0)
-        return "CPU " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
+        return "CPU " + text.rjust(3)
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
@@ -331,7 +335,7 @@ class QtStatusbarProcessCPU(QtStatusbarTimerBase):
             text = "%d%%" % psutil.Process().cpu_percent(interval=0)
         except Exception:
             text = "N/A"
-        return "CPU " + text.rjust(3) if not self._pixmap else " " + text.rjust(3)
+        return "CPU " + text.rjust(3)
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""

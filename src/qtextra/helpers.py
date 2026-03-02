@@ -3047,7 +3047,7 @@ def confirm_with_text(
 
     if request not in message:
         if "<b>confirm</b>" not in message:
-            raise ValueError(f"Request string ({request}) must be part of the message.")
+            raise ValueError(f"Request string ({request}) must be part of the message.")  # noqa: TRY003
         message = message.replace("<b>confirm</b>", f"<b>{request}</b>")
     dlg = QtConfirmWithTextDialog(parent, title, message, request)
     return bool(dlg.exec_())
@@ -3410,9 +3410,9 @@ def make_progress_widget(
     with_cancel: bool = True,
     with_layout: bool = True,
 ) -> tuple[Qw.QHBoxLayout | None, Qw.QWidget, Qw.QProgressBar | QtLabeledProgressBar, Qw.QPushButton | None]:
-    """Create progress widget and all other elements."""
+    """Create a progress widget and all other elements."""
     if with_cancel and not with_layout:
-        raise ValueError("Cannot have cancel button without layout.")
+        raise ValueError("Cannot have cancel button without layout.")  # noqa: TRY003
 
     progress_widget = Qw.QWidget(widget)
     progress_widget.hide()
@@ -3907,7 +3907,7 @@ def connect(
     try:
         connectable_func = connectable.connect if state else connectable.disconnect
         connectable_func(func)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         if not silent:
             text = (
                 f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func};"
@@ -3932,10 +3932,10 @@ def add_or_remove(
         else:
             try:
                 appendable.remove(func)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 index = appendable.index(func)
                 appendable.pop(index)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         if not silent:
             text = f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func}"
             if source:

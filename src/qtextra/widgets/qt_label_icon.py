@@ -6,8 +6,8 @@ import typing as ty
 from contextlib import suppress
 
 from koyo.typing import PathLike
-from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
-from qtpy.QtGui import QEnterEvent, QPixmap, QResizeEvent
+from qtpy.QtCore import QPointF, QSize, Qt, Signal  # type: ignore[attr-defined]  # type: ignore[attr-defined]
+from qtpy.QtGui import QColor, QEnterEvent, QPainter, QPixmap, QResizeEvent
 from qtpy.QtWidgets import QLabel, QToolTip, QWidget
 from superqt.utils import qdebounced
 
@@ -148,6 +148,40 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
         if self._icon:
             self.setPixmap(self._icon.pixmap(self._size))
         return super().update(*args, **kwargs)
+
+
+class QtQtaNotificationLabel(QtQtaLabel):
+    """Label with a small dot to indicate notifications."""
+
+    STATES = ("", "success", "info", "warning", "error", "critical")
+    COLORS = {"info": "#017AFF", "critical": "#54100D", "error": "#FF0000", "warning": "#FF7F00", "success": "#00FF00"}
+    _state = ""
+
+    @property
+    def state(self) -> str:
+        """Get state."""
+        return self._state
+
+    @state.setter
+    def state(self, value: ty.Literal["", "success", "info", "warning", "error", "critical"]) -> None:
+        if value not in self.STATES:
+            raise ValueError(f"Invalid state: {value}. Must be one of {self.STATES}")
+        self._state = value
+
+    def paintEvent(self, *args: ty.Any) -> None:
+        """Add a notification dot to the label."""
+        super().paintEvent(*args)
+        if self.state:
+            paint = QPainter(self)
+            width = self.rect().width() / 6
+            radius = self.rect().width() / 8
+            x = self.rect().width() - width
+            y = self.rect().height() - width
+            color = self.COLORS.get(self.state, "#FF0000")
+            paint.setPen(QColor(color))
+            paint.setBrush(QColor(color))
+            paint.drawEllipse(QPointF(x, y), radius, radius)
+            paint.end()
 
 
 class QtQtaTooltipLabel(QtQtaLabel):
@@ -336,6 +370,14 @@ if __name__ == "__main__":  # pragma: no cover
         btn.set_large()
         btn.state = state
         lay.addWidget(btn)
+
+    lay = QHBoxLayout()
+    ha.addLayout(lay)
+    for state in QtQtaNotificationLabel.STATES:
+        btn = QtQtaNotificationLabel("error")
+        btn.set_large()
+        lay.addWidget(btn)
+        btn.state = state
 
     frame.show()
     frame.setMaximumHeight(400)

@@ -72,8 +72,7 @@ def time_to_qt_time(value: str) -> QTime:
         _, _ = value.split(":")
     except Exception:
         return time
-    time = time.fromString(value, "HH:mm")
-    return time
+    return time.fromString(value, "HH:mm")
 
 
 def parse_time(value: str) -> ty.Tuple[int, ...]:
@@ -389,7 +388,9 @@ class Themes(ConfigBase):
         return rgb_to_hex(get_text_color(color).getRgb())
 
     def get_theme(
-        self, theme_name: ty.Optional[str] = None, as_dict: bool = False
+        self,
+        theme_name: ty.Optional[str] = None,
+        as_dict: bool = False,
     ) -> ty.Union[Theme, ty.Dict[str, str]]:
         """Get a theme based on its name.
 
@@ -415,8 +416,7 @@ class Themes(ConfigBase):
             if as_dict:
                 return _theme.model_dump()
             return _theme
-        else:
-            raise ValueError(f"Unrecognized theme {theme_name}. Available themes are {self.available_themes()}")
+        raise ValueError(f"Unrecognized theme {theme_name}. Available themes are {self.available_themes()}")
 
     @property
     def is_dark(self) -> bool:
@@ -472,8 +472,7 @@ class Themes(ConfigBase):
             theme_name = self.theme
         palette = self.themes[theme_name].model_dump()
         stylesheet = get_stylesheet()
-        stylesheet = template(stylesheet, **palette)
-        return stylesheet
+        return template(stylesheet, **palette)
 
     get_stylesheet = get_theme_stylesheet
 
@@ -526,7 +525,7 @@ class Themes(ConfigBase):
                             except ValidationError as err:
                                 logger.warning(
                                     f"Failed setting of {key} because it did not pass validation."
-                                    f"\nFailed with error=`{err}`"
+                                    f"\nFailed with error=`{err}`",
                                 )
                     else:
                         theme = Theme(**theme)
@@ -534,7 +533,7 @@ class Themes(ConfigBase):
                         self.themes[theme_name] = theme
                 except ValidationError as err:
                     logger.warning(
-                        f"Skipping {theme_name} theme because it did not pass validation.\nFailed with error=`{err}`"
+                        f"Skipping {theme_name} theme because it did not pass validation.\nFailed with error=`{err}`",
                     )
                 except Exception:
                     logger.warning("Could not load theme data.")
