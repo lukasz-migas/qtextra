@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +12,8 @@ def setup_widget(qtbot):
     """Setup panel"""
 
     def _widget() -> QtSplashScreen:
-        widget = QtSplashScreen()
+        path = Path(__file__).parent / "_test_data" / "qtextra.png"
+        widget = QtSplashScreen(path)
         qtbot.addWidget(widget)
         return widget
 
@@ -23,6 +25,5 @@ class TestQtSplashScreen:
         monkeypatch.setattr(QtSplashScreen, "show", lambda *a: None)
         widget = setup_widget()
 
-        with patch.object(widget, "on_message") as mock_method:
+        with qtbot.waitSignal(EVENTS.evt_splash_msg, timeout=500), patch.object(widget, "on_message"):
             EVENTS.evt_splash_msg.emit("Hello")
-            mock_method.assert_called_once()

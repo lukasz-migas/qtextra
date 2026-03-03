@@ -18,8 +18,11 @@ class QtSplashScreen(QSplashScreen):
         from qtextra.event_loop import get_app
 
         get_app()
-        pm = QPixmap(path).scaled(
-            width, width, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+        pm = QPixmap(str(path)).scaled(
+            width,
+            width,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
         )
         super().__init__(pm)
         self.show()
