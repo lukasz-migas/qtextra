@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import typing as ty
 from contextlib import suppress
 from functools import partial
@@ -18,10 +19,9 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 from superqt import ensure_main_thread
-from superqt.utils import qthrottled
 
 import qtextra.helpers as hp
-from qtextra.config import EVENTS, THEMES, get_settings
+from qtextra.config import EVENTS, THEMES
 from qtextra.utils.notifications import NOTIFICATION_LEVELS, ErrorNotification, Notification, NotificationSeverity
 from qtextra.widgets.qt_button_icon import QtExpandButton
 from qtextra.widgets.qt_dialog import QtFramelessPopup, SubWindowBase
@@ -30,20 +30,20 @@ from qtextra.widgets.qt_label_icon import QtSeverityLabel
 ActionSequence = ty.Sequence[ty.Tuple[str, ty.Callable[[], None]]]
 
 
-# TODO: This is currently broken since the settings.nottifications settings module is not present
-
-
 class QtNotification(SubWindowBase):
     """Small popup notification that can contain actions."""
+
+    DISMISS_AFTER = 5000
 
     MAX_OPACITY = 0.9
     FADE_IN_RATE = 220
     FADE_OUT_RATE = 120
-    DISMISS_AFTER = 5000
     MIN_WIDTH = 400
     MIN_HEIGHT = 40
     BOTTOM_Y_OFFSET = 0
     MIN_EXPANSION = 18
+
+    _instances: ty.ClassVar[list[QtNotification]] = []
 
     def __init__(
         self,
@@ -54,6 +54,7 @@ class QtNotification(SubWindowBase):
         is_bottom: bool = True,
         expanded: bool = True,
         auto_close: bool = True,
+        parent: QWidget | None = None,
     ):
         super().__init__()
         # disable window decorations
@@ -65,28 +66,30 @@ class QtNotification(SubWindowBase):
         # if the notification is not meant to automatically close, set the DISMISS_AFTER value to 0
         if not auto_close:
             self.DISMISS_AFTER = 0
+        else:
+            self.DISMISS_AFTER = int(os.getenv("QTEXTRA_NOTIFICATION_DISMISS_TIME", self.DISMISS_AFTER))
 
-        parent = None
+        parent = parent or hp.get_parent()
         if parent is not None:
             self.setParent(parent)
         if hasattr(parent, "evt_window_resize"):
-            self.parent().evt_window_resize.connect(
-                self.move_to_bottom_right if self.is_bottom else self.move_to_top_right
+            parent.evt_window_resize.connect(
+                self.move_to_bottom_right if self.is_bottom else self.move_to_top_right,
             )
+        if hasattr(parent, "statusbar"):
             self.BOTTOM_Y_OFFSET = parent.statusbar.height()
 
-        self.timer = QTimer()
-        self.timer_bar = QTimer()
+        self.dismiss_timer = QTimer()
+        self.progress_timer = QTimer()
 
         self.make_ui()
         self.set_notification(message, severity, actions, source)
         if expanded:
             self.setProperty("expanded", str(expanded))
-            self.expand_btn.expanded = True if self.is_bottom else False
+            self.expand_btn.expanded = bool(self.is_bottom)
 
         EVENTS.evt_notification_dismiss.connect(self.close)
 
-        # setup
         self.adjustSize()
         self.move_to_bottom_right() if self.is_bottom else self.move_to_top_right()
 
@@ -106,25 +109,25 @@ class QtNotification(SubWindowBase):
         # self.message = QElidingLabel(self.row1_widget)
         self.message.setWordWrap(True)
         self.message.setMinimumWidth(self.MIN_WIDTH - 200)
-        self.message.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.message.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.message.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.expand_btn = QtExpandButton(parent=self.row1_widget)
         self.expand_btn.expanded = True
         self.expand_btn.setToolTip("Click here to expand/contract text")
-        self.expand_btn.setCursor(Qt.PointingHandCursor)
+        self.expand_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.expand_btn.setMaximumWidth(20)
         self.expand_btn.setMinimumHeight(20)
         self.expand_btn.clicked.connect(self.toggle_expansion)
 
         self.settings_btn = hp.make_qta_btn(self.row1_widget, "gear", tooltip="Show notification settings.", small=True)
-        self.settings_btn.setCursor(Qt.PointingHandCursor)
+        self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.settings_btn.setMaximumWidth(20)
         self.settings_btn.setMinimumHeight(20)
         self.settings_btn.clicked.connect(self.settings)
 
         self.dismiss_btn = hp.make_qta_btn(self.row1_widget, "cross", tooltip="Dismiss this notification.", small=True)
-        self.dismiss_btn.setCursor(Qt.PointingHandCursor)
+        self.dismiss_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.dismiss_btn.setMaximumWidth(20)
         self.dismiss_btn.setMinimumHeight(20)
         self.dismiss_btn.clicked.connect(self.close)
@@ -159,6 +162,25 @@ class QtNotification(SubWindowBase):
         self.vertical_layout.addWidget(self._timer_indicator)
         self.resize(self.MIN_WIDTH, self.MIN_HEIGHT)
 
+    def enterEvent(self, event):
+        """On hover, stop the self-destruct timer."""
+        self.timer_stop()
+
+    def leaveEvent(self, event):
+        """On hover exit, restart the self-destruct timer."""
+        self.timer_start()
+
+    def mouseDoubleClickEvent(self, event):
+        """Expand the notification on double click."""
+        self.toggle_expansion()
+
+    def mouseMoveEvent(self, event):
+        """On hover, stop the self-destruct timer."""
+        self.dismiss_timer.stop()
+        self.progress_timer.stop()
+        self._timer_indicator.setVisible(False)
+        return super().mouseMoveEvent(event)
+
     def set_notification(
         self,
         message: str,
@@ -176,8 +198,22 @@ class QtNotification(SubWindowBase):
     def slide_in(self):
         """Run animation that fades in the dialog with a slight slide up."""
         super().slide_in()
-        if get_settings().notification.auto_expand:
+        if os.getenv("QTEXTRA_NOTIFICATION_AUTO_EXPAND") in ("1", "True"):
             self.opacity_anim.finished.connect(self.auto_expand)
+
+    def timer_start(self):
+        """Start the self-destruct timer."""
+        if self.DISMISS_AFTER > 0:
+            self.dismiss_timer.start()
+
+    def timer_stop(self):
+        """Stop the self-destruct timer."""
+        self.dismiss_timer.stop()
+
+    @property
+    def is_expanded(self) -> bool:
+        """Checks whether text is expanded."""
+        return self.property("expanded") if self.is_bottom else not self.property("expanded")
 
     def auto_expand(self):
         """Toggle expansion."""
@@ -186,7 +222,7 @@ class QtNotification(SubWindowBase):
     def toggle_expansion(self):
         """Toggle the expanded state of the notification frame."""
         self.contract() if self.is_expanded else self.expand()
-        self.timer.stop()
+        self.dismiss_timer.stop()
 
     def expand(self):
         """Expanded the notification so that the full message is visible."""
@@ -204,12 +240,12 @@ class QtNotification(SubWindowBase):
                 curr.y() - delta if self.is_bottom else curr.y(),
                 curr.width(),
                 new_height,
-            )
+            ),
         )
-        self.geom_anim.setEasingCurve(QEasingCurve.OutQuad)
+        self.geom_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
         self.geom_anim.start()
-        self.setProperty("expanded", True if self.is_bottom else False)
-        self.expand_btn.expanded = False if self.is_bottom else True
+        self.setProperty("expanded", bool(self.is_bottom))
+        self.expand_btn.expanded = not self.is_bottom
 
     def contract(self):
         """Contract notification to a single elided line of the message."""
@@ -223,50 +259,81 @@ class QtNotification(SubWindowBase):
                 geom.y() + dlt if self.is_bottom else geom.y(),
                 geom.width(),
                 geom.height() - dlt,
-            )
+            ),
         )
-        self.geom_anim.setEasingCurve(QEasingCurve.OutQuad)
+        self.geom_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
         self.geom_anim.start()
-        self.setProperty("expanded", False if self.is_bottom else True)
-        self.expand_btn.expanded = True if self.is_bottom else False
+        self.setProperty("expanded", not self.is_bottom)
+        self.expand_btn.expanded = bool(self.is_bottom)
 
-    def show(self):
+    def show(self) -> None:
         """Show the message with a fade and slight slide in from the bottom."""
 
         def _update_timer_indicator():
             with suppress(RuntimeError):
-                self._timer_indicator.setValue(self.timer.remainingTime() / self.DISMISS_AFTER * 100)
+                self._timer_indicator.setValue(int(self.dismiss_timer.remainingTime() / self.DISMISS_AFTER * 100))
 
         super().show()
+        self._instances.append(self)
         self.slide_in()
+        if self.parent() is not None and not self.parent().isActiveWindow():
+            return
+        if self.parent() is not None:
+            notifications = self._instances
+            for notification in notifications:
+                notification.timer_stop()
+
         if self.DISMISS_AFTER > 0:
-            self.timer.setInterval(get_settings().notification.dismiss_time)
-            self.timer.setSingleShot(True)
-            self.timer.timeout.connect(self.close)
-            self.timer.start()
+            self.dismiss_timer.setInterval(self.DISMISS_AFTER)
+            self.dismiss_timer.setSingleShot(True)
+            self.dismiss_timer.timeout.connect(self.close)
+            self.dismiss_timer.start()
 
-            self.timer_bar.setInterval(50)
-            self.timer_bar.setSingleShot(False)
-            self.timer_bar.timeout.connect(_update_timer_indicator)
-            self.timer_bar.start()
+            self.progress_timer.setInterval(50)
+            self.progress_timer.setSingleShot(False)
+            self.progress_timer.timeout.connect(_update_timer_indicator)
+            self.progress_timer.start()
 
-    def close(self):
+    def close(self) -> None:
         """Fade out then close."""
-        try:
-            self.opacity_anim.setDuration(self.FADE_OUT_RATE)
-            self.opacity_anim.setStartValue(self.MAX_OPACITY)
-            self.opacity_anim.setEndValue(0)
-            self.opacity_anim.start()
-            self.opacity_anim.finished.connect(super().close)
-        except RuntimeError:
-            pass
+        self.timer_stop()
+        self.opacity_anim.stop()
+        self.geom_anim.stop()
+        with suppress(RuntimeError, ValueError):
+            self._instances.remove(self)
+        if self.parent() is not None:
+            notifications = self._instances
+            if len(notifications) > 1 and notifications[-1] == self:
+                notifications[-2].timer_start()
+            self.parent().setFocus()
+        super().close()
+        # try:
+        #     self.opacity_anim.setDuration(self.FADE_OUT_RATE)
+        #     self.opacity_anim.setStartValue(self.MAX_OPACITY)
+        #     self.opacity_anim.setEndValue(0)
+        #     self.opacity_anim.start()
+        #     self.opacity_anim.finished.connect(super().close)
+        # except RuntimeError:
+        #     pass
 
-    def mouseMoveEvent(self, event):
-        """On hover, stop the self-destruct timer."""
-        self.timer.stop()
-        self.timer_bar.stop()
-        self._timer_indicator.setVisible(False)
-        return super().mouseMoveEvent(event)
+    def close_with_fade(self):
+        """Fade out then close."""
+        self.dismiss_timer.stop()
+        self.opacity_anim.stop()
+        self.geom_anim.stop()
+
+        self.opacity_anim.setDuration(self.FADE_OUT_RATE)
+        self.opacity_anim.setStartValue(self.MAX_OPACITY)
+        self.opacity_anim.setEndValue(0)
+        self.opacity_anim.start()
+        self.opacity_anim.finished.connect(self.close)
+
+    def deleteLater(self) -> None:
+        """Stop all animations and timers before deleting."""
+        self.opacity_anim.stop()
+        self.geom_anim.stop()
+        self.dismiss_timer.stop()
+        super().deleteLater()
 
     def setup_buttons(self, actions: ActionSequence = ()):
         """Add buttons to the dialog.
@@ -311,14 +378,9 @@ class QtNotification(SubWindowBase):
             self.row2_widget.height() + self.message.sizeHint().height() + 30,
         )
 
-    @property
-    def is_expanded(self) -> bool:
-        """Checks whether text is expanded."""
-        return self.property("expanded") if self.is_bottom else not self.property("expanded")
-
     def settings(self):
         """Show settings popup."""
-        self.timer.stop()
+        self.dismiss_timer.stop()
         SettingsPopup(self.parent() or self).show()
 
     @classmethod
@@ -326,7 +388,8 @@ class QtNotification(SubWindowBase):
         """From notification."""
         actions = notification.actions
         if isinstance(notification, ErrorNotification):
-            actions = tuple(notification.actions) + (
+            actions = (
+                *notification.actions,
                 # ("Copy to clipboard", partial(copy_to_clipboard, notification)),
                 ("Report on GitHub", partial(show_report, notification)),
                 ("View Traceback", partial(show_tb, notification)),
@@ -343,17 +406,15 @@ class QtNotification(SubWindowBase):
         )
 
     @classmethod
-    @qthrottled(timeout=250)
     @ensure_main_thread
-    def show_notification(cls, notification: Notification):
+    def show_notification(cls: QtNotification, notification: Notification):
         """Show notification."""
-        if notification.severity >= get_settings().notification.level:
+        if notification.severity >= NotificationSeverity(os.getenv("QTEXTRA_NOTIFICATION_LEVEL", "WARNING")):
             application_instance = QApplication.instance()
-            if application_instance:
-                # Check if this is running from a thread
-                if application_instance.thread() != QThread.currentThread():
-                    EVENTS.evt_notification.emit(notification)
-                    return
+            # Check if this is running from a thread
+            if application_instance and application_instance.thread() != QThread.currentThread():
+                EVENTS.evt_notification.emit(notification)
+                return
             cls.from_notification(notification).show()
 
 
@@ -374,20 +435,20 @@ class SettingsPopup(QtFramelessPopup):
             step_size=500,
             tooltip="Specify the amount of time before the popup is automatically dismissed. Time in milliseconds.",
         )
-        self.dismiss_time.setValue(get_settings().notification.dismiss_time)
+        self.dismiss_time.setValue(int(os.getenv("QTEXTRA_NOTIFICATION_DISMISS_TIME", 5000)))
         self.dismiss_time.valueChanged.connect(self.on_apply)
 
         self.auto_expand = hp.make_checkbox(self, tooltip="Auto-expand notification if the message is too long.")
-        self.auto_expand.setChecked(get_settings().notification.auto_expand)
+        self.auto_expand.setChecked(os.getenv("QTEXTRA_NOTIFICATION_AUTO_EXPAND", "True") in ("1", "True"))
         self.auto_expand.stateChanged.connect(self.on_apply)
 
         self.level = hp.make_combobox(self, tooltip="Specify what kind of notifications you wish to see.")
-        hp.set_combobox_data(self.level, NOTIFICATION_LEVELS, get_settings().notification.level)
+        hp.set_combobox_data(self.level, NOTIFICATION_LEVELS, os.getenv("QTEXTRA_NOTIFICATION_LEVEL", "WARNING"))
         self.level.currentTextChanged.connect(self.on_apply)
 
         main_layout = hp.make_form_layout()
         main_layout.addRow(
-            hp.make_label(self, "Notification Settings", alignment=Qt.AlignmentFlag.AlignHCenter, bold=True)
+            hp.make_label(self, "Notification Settings", alignment=Qt.AlignmentFlag.AlignHCenter, bold=True),
         )
         main_layout.addRow(hp.make_label(self, "Auto-dismiss time (ms)"), self.dismiss_time)
         main_layout.addRow(hp.make_label(self, "Auto-expand"), self.auto_expand)
@@ -396,10 +457,9 @@ class SettingsPopup(QtFramelessPopup):
 
     def on_apply(self):
         """Update configuration."""
-        settings = get_settings()
-        settings.notification.dismiss_time = self.dismiss_time.value()
-        settings.notification.auto_expand = self.auto_expand.isChecked()
-        settings.notification.level = self.level.currentData()
+        os.environ["QTEXTRA_NOTIFICATION_AUTO_EXPAND"] = str(self.auto_expand.isChecked())
+        os.environ["QTEXTRA_NOTIFICATION_LEVEL"] = str(self.level.currentText())
+        os.environ["QTEXTRA_NOTIFICATION_DISMISS_TIME"] = str(self.dismiss_time.value())
 
 
 def show_tb(notification: ErrorNotification, parent):
@@ -422,7 +482,7 @@ def show_tb(notification: ErrorNotification, parent):
 
     debug_btn.clicked.connect(_enter_debug_mode)
     tb_dialog.layout().addWidget(text)
-    tb_dialog.layout().addWidget(debug_btn, 0, Qt.AlignmentFlag.AlignRight)
+    tb_dialog.layout().addWidget(debug_btn, alignment=Qt.AlignmentFlag.AlignRight)
     tb_dialog.show()
 
 
@@ -518,9 +578,11 @@ if __name__ == "__main__":  # pragma: no cover
                 notif = ErrorNotification(ValueError("This is going to be quite a long exception\n" * 4))
             else:
                 notif = Notification(
-                    message=f"This is a test message: {severity!s}\n" * choice(range(5)), severity=severity
+                    message=f"This is a test message: {severity!s}\n" * choice(range(5)),
+                    severity=severity,
                 )
             pop = QtNotification.from_notification(notif)
+            pop.setParent(frame)
             THEMES.set_theme_stylesheet(pop)
             pop.show()
 
@@ -534,6 +596,7 @@ if __name__ == "__main__":  # pragma: no cover
                 actions=(("Open Requirements Dialog", print),),
             )
             pop = QtNotification.from_notification(notif)
+            pop.setParent(frame)
             THEMES.set_theme_stylesheet(pop)
             pop.show()
 

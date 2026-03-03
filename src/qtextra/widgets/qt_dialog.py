@@ -133,7 +133,11 @@ class DialogMixin:
         hp.show_right_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
 
     def show_left_of_widget(
-        self, parent: QObject | None, show: bool = True, x_offset: int = 0, y_offset: int = 0
+        self,
+        parent: QObject | None,
+        show: bool = True,
+        x_offset: int = 0,
+        y_offset: int = 0,
     ) -> None:
         """Show popup dialog left of the widget."""
         hp.show_left_of_widget(self, parent, show, x_offset=x_offset, y_offset=y_offset)
@@ -440,8 +444,7 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):  # type: ignore[misc]
                 self.evt_hide.emit()
             self.clearFocus()
             return False
-        else:
-            return super().close()
+        return super().close()
 
 
 class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
@@ -473,7 +476,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
     def toggle_popup(self) -> None:
         """Toggle popup to be temporary."""
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Popup
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Popup,
         )
 
     def _make_title_handle(self, title: str = "") -> QHBoxLayout:
@@ -504,7 +507,10 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
             object_name="window_title",
         )
         self._move_handle = hp.make_qta_label(
-            self, "move_handle", tooltip="Click here and drag the mouse around to move the window.", normal=True
+            self,
+            "move_handle",
+            tooltip="Click here and drag the mouse around to move the window.",
+            normal=True,
         )
         self._move_handle.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -564,8 +570,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
                 self.evt_hide.emit()
             self.clearFocus()
             return False
-        else:
-            return super().close()
+        return super().close()
 
 
 class QtFramelessTool(QtFramelessPopup):
@@ -627,7 +632,7 @@ class QtCollapsibleFramelessTool(QtFramelessTool):
                 sz.height() + 20,
                 size.width(),
                 size.height(),
-            )
+            ),
         )
         self.geom_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
         self.geom_anim.start()
@@ -647,7 +652,7 @@ class QtCollapsibleFramelessTool(QtFramelessTool):
                 sz.height() + 20,
                 size.width(),
                 size.height(),
-            )
+            ),
         )
         self.geom_anim.setEasingCurve(QEasingCurve.OutQuad)
         self.geom_anim.start()
@@ -726,6 +731,7 @@ class QtTransparentPopup(QDialog, DialogMixin):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             return self.close()
         super().keyPressEvent(event)
+        return None
 
 
 class SubWindowBase(QDialog):

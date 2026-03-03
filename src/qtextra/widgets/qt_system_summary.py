@@ -12,7 +12,7 @@ from numba.cuda import CudaSupportError
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_dialog import QtFramelessPopup
+from qtextra.widgets.qt_dialog import QtFramelessTool
 
 MEM_USAGE_ERROR = 4e9  # 4 Gb
 MEM_USAGE_WARNING = 16e9  # 16 Gb
@@ -85,7 +85,8 @@ class QtSystemSummaryWidget(QWidget):
         style_if(self.process_memory_label, mem, MEM_USAGE_ERROR, MEM_USAGE_WARNING, less=False)
 
         self.free_memory_label = QLabel(
-            f"{human_readable_byte_size(available)}, ({round(100 * available / total, 2)}%)", self
+            f"{human_readable_byte_size(available)}, ({round(100 * available / total, 2)}%)",
+            self,
         )
         self.group_box_layout.addRow("Free Memory:", self.free_memory_label)
         style_if(self.free_memory_label, available, MEM_ERROR, MEM_WARNING)
@@ -106,7 +107,8 @@ class QtSystemSummaryWidget(QWidget):
         self.group_box_layout.addRow("CUDA GPU:", self.cuda_gpu_label)
 
         hp.set_object_name(
-            self.cuda_gpu_label, object_name="success_status_label" if cuda_gpu_name != "N/A" else "error_status_label"
+            self.cuda_gpu_label,
+            object_name="success_status_label" if cuda_gpu_name != "N/A" else "error_status_label",
         )
 
         self.cudatoolkit_label = QLabel("", self)
@@ -192,7 +194,9 @@ class QtSystemSummaryWidget(QWidget):
         self.gpu_memory_total_label.setText(f"{human_readable_byte_size(cuda_memory_total)}")
         if cuda_memory_total == 0:
             hp.set_object_name(
-                self.gpu_memory_total_label, self.gpu_memory_free_label, object_name="error_status_label"
+                self.gpu_memory_total_label,
+                self.gpu_memory_free_label,
+                object_name="error_status_label",
             )
         else:
             if numba.cuda.current_context().get_memory_info().total < 8000000000:
@@ -208,7 +212,7 @@ class QtSystemSummaryWidget(QWidget):
                 hp.set_object_name(self.gpu_memory_free_label, object_name="success_status_label")
 
 
-class SystemSummaryPopup(QtFramelessPopup):
+class SystemSummaryPopup(QtFramelessTool):
     """Show summary of the system."""
 
     def __init__(self, parent: QWidget | None = None):
@@ -217,6 +221,7 @@ class SystemSummaryPopup(QtFramelessPopup):
     def make_panel(self) -> QVBoxLayout:
         """Create widget."""
         layout = hp.make_v_layout(spacing=0, margin=0)
+        layout.addLayout(self._make_hide_layout("System summary"))
         layout.addWidget(QtSystemSummaryWidget(self), stretch=True)
         return layout
 

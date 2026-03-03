@@ -15,11 +15,20 @@ class Events(QObject):
     evt_help_request = Signal(str)
 
     # logger/information events
-    evt_msg_info = Signal(str)
-    evt_msg_success = Signal(str)
-    evt_msg_warning = Signal(str)
-    evt_msg_error = Signal(str)
-    evt_msg_critical = Signal(str)
+    evt_msg_info = Signal(str)  # message
+    evt_msg_success = Signal(str)  # message
+    evt_msg_warning = Signal(str)  # message
+    evt_msg_error = Signal(str)  # message
+    evt_msg_critical = Signal(str)  # message
+
+    # notification
+    evt_notification_popup = Signal(str, str, str)  # title, message, type
+    evt_notification_long_popup = Signal(str, str, str)  # title, message, type
+    evt_notification_info = Signal(str, str)  # title, message
+    evt_notification_success = Signal(str, str)  # title, message
+    evt_notification_warning = Signal(str, str)  # title, message
+    evt_notification_error = Signal(str, str)  # title, message
+    evt_notification_critical = Signal(str, str)  # title, message
 
     # exception
     evt_exception = Signal(tuple)

@@ -90,35 +90,33 @@ def qdev_popup(
     return widget, popup
 
 
-def qapplication(test_time: int = 3):
+def qapplication(test_time: int = 3, init_func: ty.Callable[[], QApplication] | None = None):
     """Return QApplication instance.
 
     Creates it if it doesn't already exist.
-
-    Parameters
-    ----------
-    test_time: int
-        Time to maintain open the application when testing. It's given in seconds
     """
     import faulthandler
 
     disable_warnings()
     logger.enable("qtextra")
 
-    os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-    if hasattr(Qt, "AA_EnableHighDpiScaling"):
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    if hasattr(Qt, "AA_UseHighDpiPixmaps"):
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    if hasattr(Qt, "AA_UseStyleSheetPropagationInWidgetStyles"):
-        QApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
-    if hasattr(Qt, "AA_ShareOpenGLContexts"):
-        QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
+    if init_func is not None:
+        app = init_func()
+    else:
+        os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+        if hasattr(Qt, "AA_EnableHighDpiScaling"):
+            QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+        if hasattr(Qt, "AA_UseHighDpiPixmaps"):
+            QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+        if hasattr(Qt, "AA_UseStyleSheetPropagationInWidgetStyles"):
+            QApplication.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
+        if hasattr(Qt, "AA_ShareOpenGLContexts"):
+            QApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
 
-    faulthandler.enable()
+        faulthandler.enable()
 
-    Application = MacApplication if sys.platform == "darwin" else QApplication
-    app = Application.instance()
+        Application = MacApplication if sys.platform == "darwin" else QApplication
+        app = Application.instance()
     if app is None:
         # Set Application name for Gnome 3
         # https://groups.google.com/forum/#!topic/pyside/24qxvwfrRDs

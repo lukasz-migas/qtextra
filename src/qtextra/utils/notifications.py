@@ -1,15 +1,30 @@
-"""Notifications."""
+"""Notifications.
+
+Environment variable
+QTEXTRA_NOTIFICATION_EXIT_ON_ERROR: 0 (default) or 1, whether to exit on error instead of showing a notification.
+QTEXTRA_NOTIFICATION_CATCH_ERROR: 0 (default) or 1, whether to catch error and show notification instead of calling
+    the original except hook.
+QTEXTRA_NOTIFICATION_HOOKS_ENABLED: 0 (default) or 1, whether to send error information to telemetry instead of showing
+    a notification.
+QTEXTRA_NOTIFICATION_AUTO_EXPAND: 0 (default) or 1, whether to auto expand the notification when a new notification
+    is received.
+QTEXTRA_NOTIFICATION_DISMISS_TIME: 5000 (default) or int, time in milliseconds after which the notification is
+    automatically dismissed. 0 to disable.
+QTEXTRA_NOTIFICATION_LEVEL: "WARNING" (default) or str, minimum severity level to show in the notification manager.
+    One of "NONE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL".
+"""
 
 from __future__ import annotations
 
+import os
 import sys
 import threading
+import typing as ty
 import warnings
 from collections.abc import Sequence
 from datetime import datetime
 from enum import auto
 from types import TracebackType
-from typing import Callable, List, Optional, Tuple, Type, Union
 
 from loguru import logger
 from napari.utils.misc import StringEnum
@@ -17,7 +32,7 @@ from napari.utils.misc import StringEnum
 try:
     from napari.utils.events import Event, EventEmitter
 except ImportError:
-    raise ImportError("please install napari using 'pip install napari'") from None
+    raise ImportError("please install napari using 'pip install napari'") from None  # noqa: TRY003
 
 name2num = {
     "critical": 50,
@@ -64,7 +79,7 @@ NOTIFICATION_LEVELS = {
     NotificationSeverity.CRITICAL: "Critical",
 }
 
-ActionSequence = Sequence[Tuple[str, Callable[[], None]]]
+ActionSequence = Sequence[ty.Tuple[str, ty.Callable[[], None]]]
 
 
 logger_call = {
@@ -98,13 +113,13 @@ class Notification(Event):
     def __init__(
         self,
         message: str,
-        severity: Union[str, NotificationSeverity] = NotificationSeverity.WARNING,
+        severity: ty.Union[str, NotificationSeverity] = NotificationSeverity.WARNING,
         actions: ActionSequence = (),
         auto_close: bool = True,
         **kwargs,
     ):
         self.severity = NotificationSeverity(severity)
-        super().__init__(type=str(self.severity).lower(), **kwargs)
+        super().__init__(type_name=str(self.severity).lower(), **kwargs)
         self.message = message
         self.actions = actions
         self.auto_close = auto_close
@@ -123,7 +138,7 @@ class Notification(Event):
         return WarningNotification(warning, **kwargs)
 
     def __str__(self):
-        return f"{self.date}: {self.message}"
+        return f"{self.date} ({str(self.severity).upper()}): {self.message}"
 
     def as_plain_str(self) -> str:
         """Render as string."""
@@ -150,6 +165,17 @@ class ErrorNotification(Notification):
         if hasattr(exception, "__traceback__"):
             self._traceback = exception.__traceback__
 
+    def __str__(self) -> str:
+        from napari.utils._tracebacks import get_tb_formatter
+
+        fmt = get_tb_formatter()
+        exc_info = (
+            self.exception.__class__,
+            self.exception,
+            self.exception.__traceback__,
+        )
+        return fmt(exc_info, as_html=False)
+
     @property
     def traceback(self):
         """Retrieve traceback."""
@@ -170,24 +196,23 @@ class ErrorNotification(Notification):
         )
         return fmt(exc_info, as_html=True)
 
+    def as_text(self) -> str:
+        """Render as text."""
+        from napari.utils._tracebacks import get_tb_formatter
+
+        fmt = get_tb_formatter()
+        exc_info = (
+            self.exception.__class__,
+            self.exception,
+            self.exception.__traceback__,
+        )
+        return fmt(exc_info, as_html=False, color="NoColor")
+
     def as_plain_str(self) -> str:
         """Render as string."""
         import traceback
 
         return "".join(traceback.format_stack())
-
-    def __str__(self):
-        """Render as string."""
-        from napari.utils._tracebacks import get_tb_formatter
-
-        fmt = get_tb_formatter()
-        exception = self.exception
-        exc_info = (
-            exception.__class__,
-            exception,
-            exception.__traceback__,
-        )
-        return fmt(exc_info, as_html=False)
 
 
 class WarningNotification(Notification):
@@ -229,17 +254,19 @@ class NotificationManager:
     re-entrency of the hooks themselves.
     """
 
-    records: List[Notification]
-    _instance: Optional[NotificationManager] = None
+    records: ty.List[Notification]
+    _instance: ty.Optional[NotificationManager] = None
 
     def __init__(self) -> None:
-        self.records: List[Notification] = []
-        self.exit_on_error = False
+        self.records: ty.List[Notification] = []
+        self.exit_on_error = os.getenv("QTEXTRA_NOTIFICATION_EXIT_ON_ERROR") in ("1", "True")
+        self.catch_error = os.getenv("QTEXTRA_NOTIFICATION_CATCH_ERROR") in ("1", "True")
         self.notification_ready = self.changed = EventEmitter(source=self, event_class=Notification)
         self.records_cleared = EventEmitter(source=self, event_class=Event)
         self._originals_except_hooks = []
         self._original_showwarnings_hooks = []
         self._originals_thread_except_hooks = []
+        self._seen_warnings: set[tuple[str, type, str, int]] = set()
 
     def __enter__(self):
         self.install_hooks()
@@ -259,90 +286,120 @@ class NotificationManager:
         threading.excepthook to display any message in the UI,
         storing the previous hooks to be restored if necessary.
         """
-        from ionglow.config import get_settings
+        enabled = os.getenv("QTEXTRA_NOTIFICATION_HOOKS_ENABLED") in ("1", "True")
 
-        # if getattr(threading, "excepthook", None):
-        #     # TODO: we might want to display the additional thread information
-        #     self._originals_thread_except_hooks.append(threading.excepthook)
-        #     threading.excepthook = self.receive_thread_error
-        # else:
-        #     # Patch for Python < 3.8
-        #     _setup_thread_excepthook()
+        if enabled:
+            self._originals_thread_except_hooks.append(threading.excepthook)
+            threading.excepthook = self.receive_thread_error
 
-        if not get_settings().telemetry.enabled:
             self._originals_except_hooks.append(sys.excepthook)
-            self._original_showwarnings_hooks.append(warnings.showwarning)
             sys.excepthook = self.receive_error
 
-    # warnings.showwarning = self.receive_warning
+            self._original_showwarnings_hooks.append(warnings.showwarning)
+            warnings.showwarning = self.receive_warning
 
-    def restore_hooks(self):
+    def restore_hooks(self) -> None:
         """Remove hooks installed by `install_hooks` and restore previous hooks."""
-        if getattr(threading, "excepthook", None):
-            # `threading.excepthook` available only for Python >= 3.8
-            if self._originals_thread_except_hooks:
-                threading.excepthook = self._originals_thread_except_hooks.pop()
+        if getattr(threading, "excepthook", None) and self._originals_thread_except_hooks:
+            threading.excepthook = self._originals_thread_except_hooks.pop()
 
         if self._originals_except_hooks:
             sys.excepthook = self._originals_except_hooks.pop()
         if self._original_showwarnings_hooks:
             warnings.showwarning = self._original_showwarnings_hooks.pop()
 
-    def dispatch(self, notification: Notification):
+    def dispatch(self, notification: Notification) -> None:
         """Dispatch notification."""
         self.records.append(notification)
         self.notification_ready(notification)
 
-    #         if isinstance(notification, ErrorNotification):
-    #             logger_call[notification.severity](notification.as_plain_str())
-
-    def receive_thread_error(self, args: threading.ExceptHookArgs):
-        """Receive error from thread."""
+    def receive_thread_error(
+        self,
+        args: tuple[
+            type[BaseException],
+            BaseException,
+            TracebackType | None,
+            threading.Thread | None,
+        ],
+    ) -> None:
+        """Receive thread error."""
         self.receive_error(*args)
 
     def receive_error(
         self,
-        exctype: Optional[Type[BaseException]] = None,
-        value: Optional[BaseException] = None,
-        traceback: Optional[TracebackType] = None,
-        thread: Optional[threading.Thread] = None,
-    ):
+        exctype: type[BaseException],
+        value: BaseException,
+        traceback: TracebackType | None = None,
+        thread: threading.Thread | None = None,
+    ) -> None:
         """Receive error."""
         if isinstance(value, KeyboardInterrupt):
             sys.exit("Closed by KeyboardInterrupt")
+
         if self.exit_on_error:
             sys.__excepthook__(exctype, value, traceback)
             sys.exit("Exit on error")
-
-        try:
-            notif = Notification.from_exception(value)
-            self.dispatch(notif)
-        except Exception:
-            logger.error("Encountered a problem while parsing an error.")
+        if not self.catch_error:
+            sys.__excepthook__(exctype, value, traceback)
+            return
+        self.dispatch(Notification.from_exception(value))
 
     def receive_warning(
         self,
         message: Warning,
-        category: Type[Warning],
+        category: type[Warning],
         filename: str,
         lineno: int,
         file=None,
         line=None,
     ):
         """Receive warning."""
-        self.dispatch(Notification.from_warning(message, filename=filename, lineno=lineno))
+        msg = message if isinstance(message, str) else message.args[0]
+        if (msg, category, filename, lineno) in self._seen_warnings:
+            return
+        self._seen_warnings.add((msg, category, filename, lineno))
+        self.dispatch(
+            Notification.from_warning(
+                message,
+                filename=filename,
+                lineno=lineno,
+            ),
+        )
 
-    def receive_info(self, message: str):
-        """Receive information message."""
-        self.dispatch(Notification(message, NotificationSeverity.INFO))
+    def receive_info(self, message: str) -> None:
+        """Receive info."""
+        self.dispatch(Notification(message, severity="INFO"))
 
 
 NOTIFICATION_MANAGER: NotificationManager = NotificationManager()
 
 
-def show_info(message: str):
-    """Show message."""
-    NOTIFICATION_MANAGER.receive_info(message)
+def show_debug(message: str) -> None:
+    """Show a debug message in the notification manager."""
+    NOTIFICATION_MANAGER.dispatch(
+        Notification(message, severity=NotificationSeverity.DEBUG),
+    )
+
+
+def show_info(message: str) -> None:
+    """Show an info message in the notification manager."""
+    NOTIFICATION_MANAGER.dispatch(
+        Notification(message, severity=NotificationSeverity.INFO),
+    )
+
+
+def show_warning(message: str) -> None:
+    """Show a warning in the notification manager."""
+    NOTIFICATION_MANAGER.dispatch(
+        Notification(message, severity=NotificationSeverity.WARNING),
+    )
+
+
+def show_error(message: str) -> None:
+    """Show an error in the notification manager."""
+    NOTIFICATION_MANAGER.dispatch(
+        Notification(message, severity=NotificationSeverity.ERROR),
+    )
 
 
 def _setup_thread_excepthook():
@@ -356,7 +413,7 @@ def _setup_thread_excepthook():
         def run_with_except_hook(*args2, **kwargs2):
             try:
                 _run(*args2, **kwargs2)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 sys.excepthook(*sys.exc_info())
 
         self.run = run_with_except_hook

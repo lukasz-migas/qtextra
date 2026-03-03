@@ -810,26 +810,44 @@ class QtLabelledToolbarPushButton(QWidget):
     """Push button with label."""
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        self._label_hidden = False
         super().__init__(*args, **kwargs)
 
         self.image_btn = QtToolbarPushButton()
         self.label = QLabel()
+
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
         layout.addWidget(self.image_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Add methods from the QtToolbarPushButton
+        self.evt_click = self.image_btn.evt_click
+        self.set_default_size = self.image_btn.set_default_size
+        self.set_qta = self.image_btn.set_qta
+        self.setText = self.image_btn.setText
+        self.setChecked = self.image_btn.setChecked
+        self.set_indicator = self.image_btn.set_indicator
+        self.set_indicator = self.image_btn.set_indicator
+        self.stop_pulse = self.image_btn.stop_pulse
+        self.start_pulse = self.image_btn.start_pulse
+
+    @property
+    def label_hidden(self) -> bool:
+        """Get label hidden state."""
+        return self._label_hidden
+
+    @label_hidden.setter
+    def label_hidden(self, value: bool) -> None:
+        self._label_hidden = value
+        self.label.setHidden(value)
 
     def set_label(self, text: str) -> None:
         """Set label."""
         self.label.setText(text)
 
-    def set_qta(self, name: str, **kwargs: ty.Any) -> None:
-        """Set icon."""
-        self.image_btn.set_qta(name, **kwargs)
-
     # Alias methods to offer Qt-like interface
-    setQta = set_qta
     setLabel = set_label
 
 
@@ -842,11 +860,23 @@ if __name__ == "__main__":  # pragma: no cover
         from qtextra.assets import QTA_MAPPING
         from qtextra.utils.dev import qdev, qmain
 
+        def _disable_toolbar_labels():
+            nonlocal toolbar_buttons
+
+            for btn in toolbar_buttons:
+                btn.label_hidden = not btn.label_hidden
+
+        toolbar_buttons = []
+
         app, frame, va = qmain(False)
-        frame.setMinimumSize(600, 600)
+        frame.setMinimumSize(800, 800)
 
         dev = qdev(frame)
         va.addWidget(dev)
+
+        ha = QHBoxLayout()
+        ha.addWidget(hp.make_btn(frame, "Toggle toolbar label visibility", func=_disable_toolbar_labels))
+        va.addLayout(ha)
 
         ha = QHBoxLayout()
         va.addLayout(ha)
@@ -901,21 +931,22 @@ if __name__ == "__main__":  # pragma: no cover
                 lay = QVBoxLayout()
         ha.addWidget(hp.make_v_line())
 
-        lay = QVBoxLayout()
-        for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
-            btn = QtToolbarPushButton()
-            btn.set_qta(qta_name)
-            btn.set_large()
-            btn.setToolTip(f"{name} :: {qta_name}")
-            lay.addWidget(btn)
-            if i % 10 == 0:
-                ha.addLayout(lay)
-                lay = QVBoxLayout()
-        ha.addWidget(hp.make_v_line())
+        # lay = QVBoxLayout()
+        # for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
+        #     btn = QtToolbarPushButton()
+        #     btn.set_qta(qta_name)
+        #     btn.set_large()
+        #     btn.setToolTip(f"{name} :: {qta_name}")
+        #     lay.addWidget(btn)
+        #     if i % 10 == 0:
+        #         ha.addLayout(lay)
+        #         lay = QVBoxLayout()
+        # ha.addWidget(hp.make_v_line())
 
         lay = QVBoxLayout()
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
             btn = QtLabelledToolbarPushButton()
+            toolbar_buttons.append(btn)
             btn.set_qta(qta_name)
             btn.set_label(name)
             btn.setToolTip(f"{name} :: {qta_name}")
@@ -923,6 +954,8 @@ if __name__ == "__main__":  # pragma: no cover
             if i == 10:
                 ha.addLayout(lay)
                 break
+
+        ha.addWidget(hp.make_v_line())
 
         lay = QVBoxLayout()
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):

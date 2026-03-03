@@ -16,6 +16,7 @@ class QtToggleGroup(QFrame):
     _old_value: ty.Any = None
 
     evt_changed = Signal(object)
+    evt_index_changed = Signal(object)
 
     def __init__(
         self,
@@ -52,11 +53,17 @@ class QtToggleGroup(QFrame):
         if self._old_value != self.value:
             self._old_value = self.value
             self.evt_changed.emit(self.value)
+            self.evt_index_changed.emit(self.index)
 
     @property
     def buttons(self) -> list[QWidget]:
         """Buttons."""
         return self.button_group.buttons()
+
+    @property
+    def options(self) -> list[str]:
+        """Options."""
+        return [button.text() for button in self.buttons]
 
     @property
     def checked_buttons(self) -> ty.Any:
@@ -83,6 +90,17 @@ class QtToggleGroup(QFrame):
             value = [value]
         for button in self.button_group.buttons():
             button.setChecked(button.text() in value)
+
+    @property
+    def index(self) -> int | list[int] | None:
+        """Get index."""
+        options = self.options
+        index = None
+        if isinstance(self.value, list):
+            index = [options.index(v) for v in self.value]
+        elif self.value is not None:
+            index = options.index(self.value)
+        return index
 
     def setValue(self, value: str | list[str]) -> None:
         """Set value (Qt style)."""

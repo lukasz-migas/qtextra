@@ -35,7 +35,10 @@ class DocumentationMixin:
     _docs_info_btn: QPushButton | None = None
 
     def _make_info_layout(
-        self, align_right: bool = True, html_link: str = "", parent: QWidget | None = None
+        self,
+        align_right: bool = True,
+        html_link: str = "",
+        parent: QWidget | None = None,
     ) -> ty.Tuple[QPushButton, QHBoxLayout]:
         """Make info button."""
         if not html_link:
@@ -128,7 +131,9 @@ class TimerMixin:
 
     @contextmanager  # type: ignore[arg-type]
     def measure_time(
-        self, message: str = "Task took", func: ty.Callable = logger.trace
+        self,
+        message: str = "Task took",
+        func: ty.Callable = logger.trace,
     ) -> ty.Generator[None, None, None]:
         """Measure time."""
         with MeasureTimer() as timer:
@@ -218,24 +223,6 @@ class IndicatorMixin:
         QtToast(self).show_message(title, message)  # type: ignore[arg-type]
 
     @staticmethod
-    def on_notify_critical(msg: str, func: ty.Callable = logger.critical) -> None:
-        """Notify the user of an error."""
-        EVENTS.evt_msg_critical.emit(msg)
-        func(msg)
-
-    @staticmethod
-    def on_notify_error(msg: str, func: ty.Callable = logger.error) -> None:
-        """Notify the user of an error."""
-        EVENTS.evt_msg_error.emit(msg)
-        func(msg)
-
-    @staticmethod
-    def on_notify_warning(msg: str, func: ty.Callable = logger.warning) -> None:
-        """Notify the user of a warning."""
-        EVENTS.evt_msg_warning.emit(msg)
-        func(msg)
-
-    @staticmethod
     def on_notify_info(msg: str, func: ty.Callable = logger.info) -> None:
         """Notify the user of an info."""
         EVENTS.evt_msg_info.emit(msg)
@@ -246,6 +233,54 @@ class IndicatorMixin:
         """Notify the user of an success."""
         EVENTS.evt_msg_success.emit(msg)
         func(msg)
+
+    @staticmethod
+    def on_notify_warning(msg: str, func: ty.Callable = logger.warning) -> None:
+        """Notify the user of a warning."""
+        EVENTS.evt_msg_warning.emit(msg)
+        func(msg)
+
+    @staticmethod
+    def on_notify_error(msg: str, func: ty.Callable = logger.error) -> None:
+        """Notify the user of an error."""
+        EVENTS.evt_msg_error.emit(msg)
+        func(msg)
+
+    @staticmethod
+    def on_notify_critical(msg: str, func: ty.Callable = logger.critical) -> None:
+        """Notify the user of an error."""
+        EVENTS.evt_msg_critical.emit(msg)
+        func(msg)
+
+    @staticmethod
+    def on_notification_info(title: str, content: str, func: ty.Callable = logger.info) -> None:
+        """Notify the user of an info."""
+        EVENTS.evt_notification_info.emit(title, content)
+        func(content)
+
+    @staticmethod
+    def on_notification_success(title: str, content: str, func: ty.Callable = logger.success) -> None:
+        """Notify the user of an success."""
+        EVENTS.evt_notification_success.emit(title, content)
+        func(content)
+
+    @staticmethod
+    def on_notification_warning(title: str, content: str, func: ty.Callable = logger.warning) -> None:
+        """Notify the user of a warning."""
+        EVENTS.evt_notification_warning.emit(title, content)
+        func(content)
+
+    @staticmethod
+    def on_notification_error(title: str, content: str, func: ty.Callable = logger.error) -> None:
+        """Notify the user of an error."""
+        EVENTS.evt_notification_error.emit(title, content)
+        func(content)
+
+    @staticmethod
+    def on_notification_critical(title: str, content: str, func: ty.Callable = logger.critical) -> None:
+        """Notify the user of an error."""
+        EVENTS.evt_notification_critical.emit(title, content)
+        func(content)
 
     def _indicate_success(self, source: ty.Optional[str] = None) -> None:
         if source and isinstance(source, str):

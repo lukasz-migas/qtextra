@@ -50,7 +50,12 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_action import QtQtaAction
     from qtextra.widgets.qt_button import QtActivePushButton, QtPushButton, QtRichTextButton
     from qtextra.widgets.qt_button_color import QtColorSwatch
-    from qtextra.widgets.qt_button_icon import QtImagePushButton, QtLockButton, QtToolbarPushButton
+    from qtextra.widgets.qt_button_icon import (
+        QtImagePushButton,
+        QtLabelledToolbarPushButton,
+        QtLockButton,
+        QtToolbarPushButton,
+    )
     from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
     from qtextra.widgets.qt_button_tool import QtToolButton
     from qtextra.widgets.qt_collapsible import QtCheckCollapsible
@@ -1920,16 +1925,19 @@ def make_toolbar_btn(
     xlarge: bool = False,
     xxlarge: bool = False,
     icon_kwargs: dict | None = None,
-) -> QtToolbarPushButton:
+    title: str = "",
+) -> QtToolbarPushButton | QtLabelledToolbarPushButton:
     """Make button."""
-    from qtextra.widgets.qt_button_icon import QtToolbarPushButton
+    from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, QtToolbarPushButton
 
     if icon_kwargs is None:
         icon_kwargs = {}
 
-    widget = QtToolbarPushButton(parent=parent)
+    widget = QtLabelledToolbarPushButton(parent=parent) if title else QtToolbarPushButton(parent=parent)
     widget.set_qta(name, **icon_kwargs)
     widget.setText(text)
+    if title:
+        widget.set_label(title)
     widget.set_default_size(
         xxsmall=xxsmall,
         xsmall=xsmall,
