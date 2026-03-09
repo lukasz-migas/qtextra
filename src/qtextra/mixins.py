@@ -253,31 +253,31 @@ class IndicatorMixin:
         func(msg)
 
     @staticmethod
-    def on_notification_info(title: str, content: str, func: ty.Callable = logger.info) -> None:
+    def on_notification_info(content: str, title: str = "Info", func: ty.Callable = logger.info) -> None:
         """Notify the user of an info."""
         EVENTS.evt_notification_info.emit(title, content)
         func(content)
 
     @staticmethod
-    def on_notification_success(title: str, content: str, func: ty.Callable = logger.success) -> None:
+    def on_notification_success(content: str, title: str = "Success", func: ty.Callable = logger.success) -> None:
         """Notify the user of an success."""
         EVENTS.evt_notification_success.emit(title, content)
         func(content)
 
     @staticmethod
-    def on_notification_warning(title: str, content: str, func: ty.Callable = logger.warning) -> None:
+    def on_notification_warning(content: str, title: str = "Warning", func: ty.Callable = logger.warning) -> None:
         """Notify the user of a warning."""
         EVENTS.evt_notification_warning.emit(title, content)
         func(content)
 
     @staticmethod
-    def on_notification_error(title: str, content: str, func: ty.Callable = logger.error) -> None:
+    def on_notification_error(content: str, title: str = "Error", func: ty.Callable = logger.error) -> None:
         """Notify the user of an error."""
         EVENTS.evt_notification_error.emit(title, content)
         func(content)
 
     @staticmethod
-    def on_notification_critical(title: str, content: str, func: ty.Callable = logger.critical) -> None:
+    def on_notification_critical(content: str, title: str = "Error", func: ty.Callable = logger.critical) -> None:
         """Notify the user of an error."""
         EVENTS.evt_notification_critical.emit(title, content)
         func(content)

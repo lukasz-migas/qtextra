@@ -211,6 +211,8 @@ class QtColorSwatch(QFrame):
             self.evt_color_changed.emit(_color)
         if force:
             self._update_swatch_style(_color)
+            return None
+        return None
 
     # Alias methods to offer Qt-like interface
     hexColor = hex_color

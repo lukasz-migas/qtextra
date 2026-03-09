@@ -16,6 +16,7 @@ from qtextra.utils.appdirs import USER_CONFIG_DIR
 class ConfigBase(QObject):
     """Configuration file base."""
 
+    CONFIG_DIR = USER_CONFIG_DIR
     DEFAULT_CONFIG_NAME: str = "config.json"
     DEFAULT_CONFIG_GROUPS: ty.Tuple[str, ...] = ()
 
@@ -24,9 +25,9 @@ class ConfigBase(QObject):
     evt_config_loaded = Signal()
 
     @property
-    def output_path(self) -> str:
+    def output_path(self) -> Path:
         """Get default output path."""
-        return os.path.join(USER_CONFIG_DIR, self.DEFAULT_CONFIG_NAME)
+        return self.CONFIG_DIR / self.DEFAULT_CONFIG_NAME
 
     @property
     def saved(self) -> bool:
@@ -44,7 +45,7 @@ class ConfigBase(QObject):
         config = {}
         config = self._get_config_parameters(config)
 
-        # write to json file
+        # write to a JSON file
         write_json_data(path, config)
         self.saved = True
         logger.debug(f"Saved themes to `{path}`")
@@ -68,7 +69,7 @@ class ConfigBase(QObject):
                             logger.warning(
                                 f"Could not set `{key}` as the types were not similar enough to ensure compliance."
                                 f"\nCurrent value={current_value} ({type(current_value)});"
-                                f" New value={new_value} ({type(current_value)})"
+                                f" New value={new_value} ({type(current_value)})",
                             )
                             if _alternative_value is not None:
                                 setattr(self, key, _alternative_value)
@@ -120,18 +121,16 @@ class ConfigBase(QObject):
         if current_type == new_type:
             if hasattr(self, f"{name}_choices"):
                 choices = getattr(self, f"{name}_choices")
-                if isinstance(choices, (list, tuple)):
-                    if new_value not in choices:
-                        return False, current_value
+                if isinstance(choices, (list, tuple)) and new_value not in choices:
+                    return False, current_value
             return True, None
-        else:
-            if hasattr(self, f"{name}_validator"):
-                validator = getattr(self, f"{name}_validator")
-                try:
-                    new_value = validator(new_value)
-                    return True, new_value
-                except Exception:
-                    pass
+        if hasattr(self, f"{name}_validator"):
+            validator = getattr(self, f"{name}_validator")
+            try:
+                new_value = validator(new_value)
+                return True, new_value
+            except Exception:
+                pass
         if current_type in [int, float] and new_type in [int, float]:
             return True, None
         if current_type in [list, tuple] and new_type in [list, tuple]:
@@ -142,7 +141,8 @@ class ConfigBase(QObject):
 
 
 def _get_previous_configs(
-    base_dir: ty.Optional[str] = None, filename: str = "qtextra-config.json"
+    base_dir: ty.Optional[str] = None,
+    filename: str = "qtextra-config.json",
 ) -> ty.Dict[str, str]:
     """Return dictionary of version : path of previous configuration files."""
     if base_dir is None:

@@ -159,7 +159,7 @@ class QtPanelWidget(QWidget):
     def add_widget(
         self,
         name: str,
-        tooltip: str | None = None,
+        tooltip: str = "",
         widget: QWidget | None = None,
         location: str = "top",
         title: str | None = None,
@@ -195,9 +195,10 @@ class QtPanelWidget(QWidget):
             large=True,
             title=title,
         )
+        if hasattr(button, "hidden_label"):
+            button.hidden_label = self._label_hidden
         button.setObjectName(name)
-        if tooltip:
-            button.setToolTip(tooltip)
+        button.setToolTip(tooltip)
 
         # get action button
         self._button_dict[button] = self._add_before(button) if location == "top" else self._add_after(button)
@@ -301,7 +302,6 @@ class QtPanelWidget(QWidget):
     def disable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Disable widget."""
         if button in self._hidden_dict:
-            logger.debug("Button is already hidden")
             return
         action = self._button_dict[button]
         self._hidden_dict[button] = action

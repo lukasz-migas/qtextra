@@ -76,7 +76,6 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     "none": "mdi6.cancel",
     "move": "ei.move",
     "move_handle": "ei.move",
-    "lasso": "mdi6.lasso",
     "marker": "fa5s.map-marker-alt",
     "zoom": "mdi.magnify",
     "erase": "ph.eraser-fill",
@@ -302,7 +301,7 @@ def check_icon_mapping() -> None:
         icons[value].append(key)
     for icon, keys in icons.items():
         if len(keys) > 1:
-            print(f"Icon '{icon}' is mapped to multiple keys: {keys}")
+            logger.warning(f"Icon '{icon}' is mapped to multiple keys: {keys}")
 
 
 def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key: str = "") -> None:
@@ -312,9 +311,9 @@ def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key:
         v_exist = QTA_MAPPING.get(k)
         v_new = mapping[k]
         if v_exist and v_exist == v_new and not silent:
-            print(f"Warning: Icon mapping already exists for '{k}'")
+            logger.warning(f"Warning: Icon mapping already exists for '{k}'")
         if v_exist and v_exist != v_new and not silent:
-            print(f"Warning: Icon mapping for '{k}' is being overwritten from '{v_exist}' to '{v_new}'")
+            logger.warning(f"Warning: Icon mapping for '{k}' is being overwritten from '{v_exist}' to '{v_new}'")
         QTA_MAPPING[k] = v_new
 
 
