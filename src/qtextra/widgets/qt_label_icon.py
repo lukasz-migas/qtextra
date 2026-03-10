@@ -43,6 +43,11 @@ class QtKeepAspectLabel(QLabel):
         self._setPixmap()
         return super().resizeEvent(event)
 
+    def setPath(self, path: PathLike) -> None:
+        """Set path."""
+        self.path = path
+        self._setPixmap()
+
 
 class QtActiveIcon(QLabel):
     """Active icon that shows activity."""

@@ -136,11 +136,11 @@ class QtInfoToast(QFrame):
     def __initLayout(self):
         self.hBoxLayout.setContentsMargins(6, 6, 6, 6)
         self.hBoxLayout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)
+        self.hBoxLayout.setSpacing(0)
+
         self.textLayout.setSizeConstraint(QHBoxLayout.SizeConstraint.SetMinimumSize)
         self.textLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.textLayout.setContentsMargins(1, 8, 0, 8)
-
-        self.hBoxLayout.setSpacing(0)
         self.textLayout.setSpacing(5)
 
         # add icon to layout
@@ -170,6 +170,7 @@ class QtInfoToast(QFrame):
         self.hBoxLayout.addSpacing(12)
         self.hBoxLayout.addWidget(self.closeButton, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
+        self.setMinimumWidth(400)
         self._adjustText()
 
     def __fadeOut(self):
@@ -184,12 +185,14 @@ class QtInfoToast(QFrame):
         w = 900 if not self.parent() else (self.parent().width() - 50)
 
         # adjust title
-        chars = max(min(w / 10, 120), 30)
+        width = 300
+        chars = max(min(w / 3, width), 30)
         self.titleLabel.setText(TextWrap.wrap(self.title, chars, False)[0])
 
         # adjust content
-        chars = max(min(w / 9, 120), 30)
+        chars = max(min(w / 2.5, width), 30)
         self.contentLabel.setText(TextWrap.wrap(self.content, chars, False)[0])
+        self.setMinimumWidth(int(chars))
         self.adjustSize()
 
     def addWidget(self, widget: QWidget, stretch=0):
@@ -631,10 +634,10 @@ if __name__ == "__main__":  # pragma: no cover
             pop = choice(pop)
             pop = pop(
                 title="Title",
-                content="Here is a message.\nA couple of lines long.\nAnother line",
+                content="Here is a message. A couple of lines long.\nAnother line starts here.",
                 parent=frame,
                 position=choice(list(ToastPosition)),
-                duration=3000,
+                duration=100000,
                 orientation=Qt.Orientation.Vertical,
             )
 

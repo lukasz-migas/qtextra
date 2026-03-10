@@ -8,7 +8,9 @@ from qtpy.QtGui import QColor
 
 
 def get_text_color(
-    background: QColor | str, light_color: QColor | None = None, dark_color: QColor | None = None
+    background: QColor | str,
+    light_color: QColor | None = None,
+    dark_color: QColor | None = None,
 ) -> QColor:
     """Select color depending on whether the background is light or dark.
 
@@ -29,6 +31,22 @@ def get_text_color(
         background = QColor(background)
     is_dark = is_dark_color(background)
     return dark_color if is_dark else light_color
+
+
+def get_background_color(
+    text: QColor | str,
+    light_color: QColor | None = None,
+    dark_color: QColor | None = None,
+) -> QColor:
+    """Select background color depending on whether the text is light or dark."""
+    if light_color is None:
+        light_color = QColor("#FFFFFF")
+    if dark_color is None:
+        dark_color = QColor("#000000")
+    if not isinstance(text, QColor):
+        text = QColor(text)
+    is_dark = is_dark_color(text)
+    return light_color if is_dark else dark_color
 
 
 def qt_rgb_to_hex(color: str) -> str:

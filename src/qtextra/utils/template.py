@@ -7,7 +7,7 @@ from ast import literal_eval
 from pydantic_extra_types.color import Color
 
 from qtextra.config import is_dark as is_dark_theme
-from qtextra.utils.color import get_text_color, hex_to_qt_rgb, rgb_to_hex
+from qtextra.utils.color import get_background_color, get_text_color, hex_to_qt_rgb, rgb_to_hex
 
 try:
     from qtpy import QT_VERSION
@@ -54,6 +54,12 @@ def color_for_background(color: ty.Union[str, Color]) -> str:
     """Return color that will stand out against background color."""
     color = _get_color(color)
     return get_text_color(rgb_to_hex(color, 1)).name()
+
+
+def background_for_color(color: ty.Union[str, Color]) -> str:
+    """Return background color that will stand out against text color."""
+    color = _get_color(color)
+    return get_background_color(rgb_to_hex(color, 1)).name()
 
 
 def darken_or_lighten(color: ty.Union[str, Color], percentage: float = 10) -> str:

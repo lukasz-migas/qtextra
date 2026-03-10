@@ -712,16 +712,20 @@ class QtToolbarPushButton(QtImagePushButton):
         """Show a tooltip if it's available."""
         if not self._text or self._tooltip is not None:
             return
-        self._tooltip = QtToolTip.init(
-            self,
-            title="",
-            content=self._text,
-            icon=None,
-            parent=self,
-            tail_position=TipPosition.LEFT,
-            is_closable=False,
-            duration=-1,
-        )
+        try:
+            self._tooltip = QtToolTip.init(
+                self,
+                title="",
+                content=self._text,
+                icon=None,
+                parent=self,
+                tail_position=TipPosition.LEFT,
+                is_closable=True,
+                duration=-1,
+            )
+        except AttributeError:
+            # fallback to QToolTip if QtToolTip is not available
+            QToolTip.showText(self._get_position(), self._text, self)
 
     def event(self, evt: QEvent) -> bool:  # type: ignore[override]
         """Override event handler to quickly display/hide a tooltip."""
