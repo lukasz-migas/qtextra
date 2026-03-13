@@ -5,10 +5,8 @@ from __future__ import annotations
 import typing as ty
 from contextlib import contextmanager
 
-from koyo.timer import MeasureTimer
-from loguru import logger
-from qtpy.QtCore import Signal, Slot  # type: ignore[attr-defined]
-from qtpy.QtWidgets import QFrame, QListWidget, QListWidgetItem, QSizePolicy, QWidget
+from qtpy.QtCore import Qt, Signal, Slot  # type: ignore[attr-defined]
+from qtpy.QtWidgets import QFrame, QLabel, QListWidget, QListWidgetItem, QScrollArea, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
 
@@ -16,20 +14,29 @@ _W = ty.TypeVar("_W")  # Widget
 _M = ty.TypeVar("_M")  # Model
 
 
+class QListWidgetItemWithModel(QListWidgetItem):
+    """Type stub only — never instantiate directly."""
+
+    item_model: _M
+
+
 class QtListItem(QFrame):
     """List item that is shown inside the QtListWidget."""
 
     # event triggered whenever an item is checked
-    _evt_checked = Signal(QListWidgetItem, bool)
+    _evt_checked = Signal(object, bool)
     # event triggered whenever an item is removed
-    evt_remove = Signal(QListWidgetItem)
+    evt_remove = Signal(object)
     # event triggered when double click occurred
-    evt_double_clicked = Signal(QListWidgetItem, bool)
+    evt_double_clicked = Signal(object, bool)
     # event triggered whenever the item is active
-    evt_active = Signal(QListWidgetItem)
+    evt_active = Signal(object)
+
+    # Widgets
+    name_label: QLabel
 
     # Attributes
-    item: QListWidgetItem = None
+    item: _M | QListWidgetItemWithModel | None = None
     _is_checked: bool = False
     _mode: bool = False
 
@@ -40,12 +47,18 @@ class QtListItem(QFrame):
     @property
     def item_model(self) -> _M:
         """Get item model."""
-        return self.item.item_model
+        try:
+            return self.item.item_model
+        except (AttributeError, ValueError):
+            return self.item
 
     @item_model.setter
     def item_model(self, item_model: _M):
         """Update item model."""
-        self.item.item_model = item_model
+        try:
+            self.item.item_model = item_model
+        except (AttributeError, ValueError):
+            self.item = item_model
         self._set_from_model()
 
     @property
@@ -96,8 +109,66 @@ class QtListItem(QFrame):
         self._set_from_model()
         self.parent().update()
 
+    def _toggle_visibility(self, visible: bool) -> None:
+        """Toggle visibility."""
+        self.setVisible(visible)
+        if not visible:
+            self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
+        else:
+            self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+        self.updateGeometry()
 
-class QtListWidget(QListWidget):
+        if self.parent() and self.parent().layout():
+            self.parent().layout().invalidate()
+            self.parent().layout().activate()
+
+
+class ListMixin:
+    """Mixin class for list widgets."""
+
+    def teardown(self) -> None:
+        """Teardown method."""
+
+    def refresh_list(self):
+        """Refresh list of items. This method should be re-implemented by subclasses."""
+
+    def closeEvent(self, event):
+        """Close event."""
+        self.teardown()
+        return super().closeEvent(event)
+
+    @property
+    def n_rows(self) -> int:
+        """Return the current number of rows in the widget."""
+        return self.count()
+
+    def get_all_checked(self, *, reverse: bool = False) -> list[int]:
+        """Get list of checked items."""
+        checked = []
+        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
+            if widget.is_checked:
+                checked.append(index)
+        if reverse:
+            return list(reversed(checked))
+        return checked
+
+    def get_all_unchecked(self) -> list[int]:
+        """Get list of checked items."""
+        checked = []
+        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
+            if not widget.is_checked:
+                checked.append(index)
+        return checked
+
+    def get_index_for_hash_id(self, hash_id: str) -> int:
+        """Get the index of the item."""
+        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
+            if widget.hash_id == hash_id:
+                return index
+        return -1
+
+
+class QtListWidget(QListWidget, ListMixin):
     """List of notifications."""
 
     evt_updated = Signal(int)
@@ -106,7 +177,7 @@ class QtListWidget(QListWidget):
     evt_remove = Signal(object)
     evt_cleared = Signal()
 
-    _is_setup = False
+    _is_setup: bool = False
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -114,17 +185,6 @@ class QtListWidget(QListWidget):
         self.setMinimumHeight(12)
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.setUniformItemSizes(True)
-
-    def closeEvent(self, event):
-        """Close event."""
-        self.teardown()
-        return super().closeEvent(event)
-
-    def teardown(self) -> None:
-        """Teardown method."""
-
-    def refresh_list(self):
-        """Refresh list of items. This method should be re-implemented by subclasses."""
 
     def _get_menu(self):
         menu = hp.make_menu(self, "Actions")
@@ -138,17 +198,12 @@ class QtListWidget(QListWidget):
                 items.append((widget.hash_id, state))
         return items
 
-    def _make_widget(self, item: QListWidgetItem):
-        raise NotImplementedError("Must implement method")
-
     def _check_existing(self, item_model: _M) -> bool:
         """Method should be modified actually implement checking functionality."""
         return False
 
-    @property
-    def n_rows(self) -> int:
-        """Return the current number of rows in the widget."""
-        return self.count()
+    def _make_widget(self, item: QListWidgetItem):
+        raise NotImplementedError("Must implement method")
 
     def widget_iter(self) -> ty.Iterator[_W]:
         """Iterate through list of widgets."""
@@ -176,27 +231,9 @@ class QtListWidget(QListWidget):
         if indices is None:
             indices = range(self.count())
         for index in indices:
-            item = self.item(index)
+            item: QListWidgetItemWithModel = self.item(index)
             if item:
                 yield item.item_model
-
-    def get_all_checked(self, *, reverse: bool = False) -> list[int]:
-        """Get list of checked items."""
-        checked = []
-        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
-            if widget.is_checked:
-                checked.append(index)
-        if reverse:
-            return list(reversed(checked))
-        return checked
-
-    def get_all_unchecked(self) -> list[int]:
-        """Get list of checked items."""
-        checked = []
-        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
-            if not widget.is_checked:
-                checked.append(index)
-        return checked
 
     def get_hash_ids(self, indices: ty.Iterator[int]) -> list[str]:
         """Get list of names."""
@@ -225,24 +262,10 @@ class QtListWidget(QListWidget):
         item = self.item(index)
         return item, self.itemWidget(item)
 
-    def get_index_for_hash_id(self, hash_id: str) -> int:
-        """Get the index of the item."""
-        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
-            if widget.hash_id == hash_id:
-                return index
-        return -1
-
     def get_item_model_for_index(self, index: int) -> _M:
         """Get item's model."""
-        item = self.item(index)
+        item: QListWidgetItemWithModel = self.item(index)
         return item.item_model
-
-    def get_item_for_item_model(self, item_model: _M) -> ty.Optional[QListWidgetItem]:
-        """Get the item by its model."""
-        for item, _item_model, _ in self.item_model_widget_iter():  # type: ignore[var-annotated]
-            if _item_model is item_model or _item_model == item_model:
-                return item
-        return None
 
     def get_widget_for_hash_id(self, hash_id: str) -> _W:
         """Return item's widget."""
@@ -250,6 +273,13 @@ class QtListWidget(QListWidget):
         if index == -1:
             return None
         return self.get_item_widget_for_index(index)[1]
+
+    def get_item_for_item_model(self, item_model: _M) -> ty.Optional[QListWidgetItem]:
+        """Get the item by its model."""
+        for item, _item_model, _ in self.item_model_widget_iter():  # type: ignore[var-annotated]
+            if _item_model is item_model or _item_model == item_model:
+                return item
+        return None
 
     def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
         """Get the widget by its model."""
@@ -265,7 +295,7 @@ class QtListWidget(QListWidget):
 
     @Slot(QListWidgetItem)
     @Slot(QListWidgetItem, bool)
-    def remove_item(self, item: QListWidgetItem, force: bool = False):
+    def remove_item(self, item: QListWidgetItemWithModel, force: bool = False):
         """Remove item from the list."""
         self.evt_pre_remove.emit(item)
         self.takeItem(self.indexFromItem(item).row())
@@ -307,7 +337,8 @@ class QtListWidget(QListWidget):
         """Refresh widget UI."""
         for index in range(self.count()):
             widget = self.itemWidget(self.item(index))
-            widget.refresh()
+            if hasattr(widget, "refresh"):
+                widget.refresh()
 
     def reset_data(self) -> None:
         """Reset data."""
@@ -323,7 +354,7 @@ class QtListWidget(QListWidget):
         except AttributeError:
             item = QListWidgetItem()
         item.item_model = item_model
-        widget = self._make_widget(item)
+        widget: QWidget = self._make_widget(item)
         widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         item.setSizeHint(widget.sizeHint())
         self.addItem(item)
@@ -339,7 +370,7 @@ class QtListWidget(QListWidget):
         item = QListWidgetItem(parent=self)
         item.item_model = item_model
         self.insertItem(index, item)
-        widget = self._make_widget(item)
+        widget: QWidget = self._make_widget(item)
         widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         item.setSizeHint(widget.sizeHint())
         self.setItemWidget(item, widget)
@@ -357,12 +388,108 @@ class QtListWidget(QListWidget):
         yield
         self.setUpdatesEnabled(True)
 
-    @contextmanager
-    def measure_time(self, message: str = "Task took", print_: bool = False):
-        """Measure time."""
-        with MeasureTimer() as timer:
-            yield
-        msg = f"{message} {timer()}"
-        logger.debug(msg)
-        if print_:
-            print(msg)
+
+class QtListScrollWidget(QScrollArea, ListMixin):
+    """Widget with similar functionality as QtListWidget but with scroll area."""
+
+    evt_updated = Signal(int)
+    evt_added = Signal(object)
+    evt_pre_remove = Signal(object)
+    evt_remove = Signal(object)
+    evt_cleared = Signal()
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.widgets: dict[str, QtListItem] = {}
+
+        # setup UI
+        scroll_widget = QWidget()
+        self.setWidget(scroll_widget)
+        self._layout = hp.make_v_layout(parent=scroll_widget, spacing=2, margin=1, stretch_after=True)
+
+        self.setWidgetResizable(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)  # type: ignore[attr-defined]
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # type: ignore[attr-defined]
+
+    def _make_widget(self, item_model: _M) -> QWidget:
+        raise NotImplementedError("Must implement method")
+
+    def count(self) -> int:
+        """Return the current number of rows in the widget."""
+        return len(self.widgets)
+
+    def widget_iter(self) -> ty.Iterable[QtListWidget]:
+        """Iterate over widgets."""
+        yield from self.widgets.values()
+
+    def model_iter(self, indices: ty.Sequence[int] | None = None, reverse: bool = False) -> ty.Iterator[_M]:
+        """Iterate through list of ions."""
+        if indices is None:
+            indices = range(self.count())
+        keys = list(self.widgets.keys())
+        keys = [keys[i] for i in indices if i < len(keys)]
+        if reverse and keys:
+            keys.reverse()
+        for key in keys:
+            yield self.widgets[key].item_model
+
+    def _check_existing(self, item_model: _M) -> bool:
+        """Check if item with the same model already exists."""
+        raise NotImplementedError("Must implement method")
+
+    def append_item(self, item_model: _M) -> ty.Optional[QWidget]:
+        """Append an item."""
+        if self._check_existing(item_model):
+            return None
+        widget = self._make_widget(item_model)
+        widget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+        self.widgets[item_model.unique_id] = widget
+        self._layout.insertWidget(0, widget)
+        self.evt_added.emit(item_model)
+        self.evt_updated.emit(self.count())
+        return widget
+
+    def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
+        """Get the widget by its model."""
+        return self.widgets.get(item_model.unique_id)
+
+    def remove_item(self, item_model: _M, force: bool = False):
+        """Remove item from the list."""
+        self.evt_pre_remove.emit(item_model)
+        widget = self.widgets.get(item_model.unique_id)
+        if widget:
+            self._layout.removeWidget(widget)
+            widget.deleteLater()
+        self.widgets.pop(item_model.unique_id, None)
+        del widget
+        self.evt_remove.emit(item_model)
+        self.evt_updated.emit(self.count())
+
+    def remove_by_item_model(self, item_model: _M, force: bool = False, **_kwargs: ty.Any):
+        """Remove item from the list based on the item model."""
+        self.remove_item(item_model, force)
+
+    def get_item_widget_for_index(self, index: int) -> tuple[_M, _W]:
+        """GEt widget and item model for a specified index."""
+        keys = list(self.widgets.keys())
+        if index < 0 or index >= len(keys):
+            raise IndexError("Index out of range")
+        key = keys[index]
+        widget = self.widgets[key]
+        return widget.item_model, widget
+
+    def get_widget_for_hash_id(self, hash_id: str) -> _W:
+        """Return item's widget."""
+        index = self.get_index_for_hash_id(hash_id)
+        if index == -1:
+            return None
+        return self.get_item_widget_for_index(index)[1]
+
+    def get_item_for_index(self, index: int) -> _W:
+        """Return item's widget."""
+        return self.get_item_widget_for_index(index)[0]
+
+    def get_widget_for_index(self, index: int) -> _W:
+        """Return item's widget."""
+        return self.get_item_widget_for_index(index)[1]

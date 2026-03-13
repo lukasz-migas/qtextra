@@ -1964,6 +1964,7 @@ def make_swatch(
     tooltip: str = "",
     value: ty.Optional[ty.Union[str, np.ndarray]] = None,
     size: tuple[int, int] | None = None,
+    func: Callback | None = None,
     **kwargs: ty.Any,
 ) -> QtColorSwatch:
     """Make color swatch."""
@@ -1975,6 +1976,8 @@ def make_swatch(
     widget = QtColorSwatch(parent, initial_color=value, tooltip=tooltip)
     if size:
         widget.setFixedSize(QSize(*size))
+    if func:
+        [widget.evt_color_changed.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 
@@ -3055,7 +3058,7 @@ def confirm_with_text(
 
     if request not in message:
         if "<b>confirm</b>" not in message:
-            raise ValueError(f"Request string ({request}) must be part of the message.")  # noqa: TRY003
+            raise ValueError(f"Request string ({request}) must be part of the message.")
         message = message.replace("<b>confirm</b>", f"<b>{request}</b>")
     dlg = QtConfirmWithTextDialog(parent, title, message, request)
     return bool(dlg.exec_())
@@ -3419,7 +3422,7 @@ def make_progress_widget(
 ) -> tuple[Qw.QHBoxLayout | None, Qw.QWidget, Qw.QProgressBar | QtLabeledProgressBar, Qw.QPushButton | None]:
     """Create a progress widget and all other elements."""
     if with_cancel and not with_layout:
-        raise ValueError("Cannot have cancel button without layout.")  # noqa: TRY003
+        raise ValueError("Cannot have cancel button without layout.")
 
     progress_widget = Qw.QWidget(widget)
     progress_widget.hide()

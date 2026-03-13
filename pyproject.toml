@@ -185,20 +185,21 @@ extend-ignore = [
     "D413", # Missing blank line after last section
     "D416", # Section name should end with a colon
     "E501",
-    "UP006",
-    "UP007",
-    "TC001",
-    "TC002",
-    "TC003",
     "S101",  # Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
     "B019",
     "S311",
     "C901", # too complex
     "S603",
     # temporary
+    "UP006",
+    "UP007",
+    "TC001",
+    "TC002",
+    "TC003",
     "D205", # 1 blank line required between summary line and description
     "S606",
     "S607",
+    "TRY003", # tryceratops - avoid specifying long messages outside the exception class
 ]
 
 [tool.ruff.lint.per-file-ignores]

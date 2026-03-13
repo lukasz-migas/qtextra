@@ -1,0 +1,23 @@
+/* ------------ QtListItem / QtListWidget ------------ */
+QtListItem {
+    background-color: {{ background }};
+    border: 2px solid {{ darken_or_lighten(highlight, 50) }};
+    border-radius: 2px;
+}
+QtListItem QLabel {
+    background: none;
+}
+
+QtListItem:hover {
+    border: 2px solid {{ highlight }};
+}
+
+QtListItem[mode=True], QtListItem[mode=True]:hover {
+    border: 2px solid {{ current }};
+}
+
+
+QtListWidget::item, QtListScrollWidget::item {
+  background: transparent;
+}
+

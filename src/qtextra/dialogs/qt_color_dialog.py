@@ -55,13 +55,17 @@ class QtColorListDialog(QtDialog):
         self.colormap = hp.make_combobox(
             self,
             ["custom", "viridis", "inferno", "magma", "plasma", "cividis", "twilight"],
+            func=self.on_set_colormap,
         )
-        self.colormap.currentTextChanged.connect(self.on_set_colormap)
-        self.randomize_btn = hp.make_qta_btn(self, "shuffle", tooltip="Randomize colors", medium=False)
+        self.randomize_btn = hp.make_qta_btn(
+            self,
+            "shuffle",
+            tooltip="Randomize colors",
+            medium=False,
+            func=self.on_randomize,
+        )
 
-        self.randomize_btn.clicked.connect(self.on_randomize)
-        self.invert = hp.make_checkbox(self, "Invert", tooltip="Reverse colors")
-        self.invert.stateChanged.connect(self.on_set_colormap)
+        self.invert = hp.make_checkbox(self, "Invert", tooltip="Reverse colors", func=self.on_set_colormap)
         hp.disable_widgets(self.invert, disabled=self.colormap.currentText() == "custom")
 
         layout = QHBoxLayout()
@@ -73,8 +77,6 @@ class QtColorListDialog(QtDialog):
         self.button_box = QDialogButtonBox(self)
         self.button_box.setStandardButtons(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.button_box.setCenterButtons(True)
-
-        # bind events
         self.button_box.button(QDialogButtonBox.StandardButton.Ok).clicked.connect(self.accept)
         self.button_box.button(QDialogButtonBox.StandardButton.Cancel).clicked.connect(self.reject)
 

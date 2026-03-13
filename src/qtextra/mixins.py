@@ -277,7 +277,11 @@ class IndicatorMixin:
         func(content)
 
     @staticmethod
-    def on_notification_critical(content: str, title: str = "Error", func: ty.Callable = logger.critical) -> None:
+    def on_notification_critical(
+        content: str,
+        title: str = "Critical error",
+        func: ty.Callable = logger.critical,
+    ) -> None:
         """Notify the user of an error."""
         EVENTS.evt_notification_critical.emit(title, content)
         func(content)
