@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import operator
 import typing as ty
 from contextlib import contextmanager, suppress
@@ -13,19 +14,32 @@ from natsort.natsort import index_natsorted, order_by_index
 from qtpy.QtCore import (  # type: ignore[attr-defined]
     QAbstractTableModel,
     QModelIndex,
+    QPointF,
+    QRect,
+    QRectF,
     QSize,
     QSortFilterProxyModel,
     Qt,
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QKeyEvent, QPainter, QTextDocument
-from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QStyledItemDelegate, QStyleOptionViewItem, QTableView
+from qtpy.QtGui import QBrush, QColor, QKeyEvent, QPainter, QPainterPath, QPen, QPolygonF, QTextDocument, QTextOption
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
+    QDoubleSpinBox,
+    QHeaderView,
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionProgressBar,
+    QStyleOptionViewItem,
+    QTableView,
+    QToolTip,
+)
 from superqt.utils import ensure_main_thread
 
 from qtextra.config import THEMES
 from qtextra.helpers import make_qta_icon, qt_signals_blocked
-from qtextra.utils.color import get_text_color
 from qtextra.utils.table_config import TableConfig
 from qtextra.utils.utilities import connect
 
@@ -66,6 +80,418 @@ class WrapTextDelegate(QStyledItemDelegate):
         document.setDefaultFont(option.font)
         document.setHtml(text)
         return QSize(document.idealWidth(), int(document.size().height() / 4.5))
+
+
+class WordWrapDelegate(QStyledItemDelegate):
+    """Wrap text delegate."""
+
+    def paint(self, painter, option, index):
+        painter.save()
+
+        # draw standard background (selection etc.)
+        opt = option
+        self.initStyleOption(opt, index)
+        style = opt.widget.style() if opt.widget else None
+        if style:
+            style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, opt.widget)
+
+        # get text
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        if not text:
+            painter.restore()
+            return
+
+        rect = option.rect.adjusted(4, 2, -4, -2)
+
+        # set text color depending on selection
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.setPen(option.palette.color(option.palette.ColorRole.HighlightedText))
+        else:
+            painter.setPen(option.palette.color(option.palette.ColorRole.Text))
+
+        # enable wrapping
+        text_option = QTextOption()
+        text_option.setWrapMode(QTextOption.WrapMode.WordWrap)
+        text_option.setAlignment(opt.displayAlignment)
+
+        painter.drawText(rect, text, text_option)
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        if not text:
+            return super().sizeHint(option, index)
+
+        # approximate width available
+        width = option.rect.width() if option.rect.width() > 0 else 200
+
+        metrics = option.fontMetrics
+        rect = metrics.boundingRect(
+            QRect(0, 0, width, 10000),
+            Qt.TextFlag.TextWordWrap,
+            text,
+        )
+        return rect.size()
+
+
+class WordWrapFasterDelegate(QStyledItemDelegate):
+    """Wrap text delegate."""
+
+    def sizeHint(self, option, index):
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        if not text:
+            return super().sizeHint(option, index)
+
+        width = option.rect.width()
+        if width <= 0:
+            width = 200  # fallback
+
+        metrics = option.fontMetrics
+        rect = metrics.boundingRect(
+            0,
+            0,
+            width,
+            10000,
+            Qt.TextFlag.TextWordWrap,
+            text,
+        )
+
+        # small padding
+        return rect.size() + QSize(8, 4)
+
+
+class ColorSwatchDelegate(QStyledItemDelegate):
+    """Color swatch delegate."""
+
+    def paint(self, painter, option, index):
+        """Paint."""
+        painter.save()
+
+        # draw normal item background/selection/etc
+        opt = option
+        self.initStyleOption(opt, index)
+        style = opt.widget.style() if opt.widget is not None else None
+        if style is not None:
+            style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, opt.widget)
+
+        color = index.data(Qt.ItemDataRole.UserRole)
+        if color is not None:
+            color = QColor(color)
+            if color.isValid():
+                rect = option.rect.adjusted(6, 6, -6, -6)
+
+                # choose a contrasting border
+                if option.state & QStyle.StateFlag.State_Selected:
+                    border = Qt.GlobalColor.white
+                    pen_width = 2
+                else:
+                    border = Qt.GlobalColor.black
+                    pen_width = 1
+
+                painter.setBrush(QBrush(color))
+                painter.setPen(QPen(border, pen_width))
+                painter.drawRect(rect)
+
+        painter.restore()
+
+
+class ElidedTextDelegate(QStyledItemDelegate):
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+        option.textElideMode = Qt.TextElideMode.ElideRight
+
+
+class TruncationTooltipDelegate(QStyledItemDelegate):
+    def helpEvent(self, event, view, option, index):
+        if event is None or view is None:
+            return False
+
+        text = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
+        rect = option.rect.adjusted(4, 0, -4, 0)
+        elided = option.fontMetrics.elidedText(text, Qt.TextElideMode.ElideRight, rect.width())
+
+        if elided != text:
+            QToolTip.showText(event.globalPos(), text, view)
+            return True
+        return super().helpEvent(event, view, option, index)
+
+
+class ProgressBarDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        value = index.data(Qt.ItemDataRole.DisplayRole)
+        if value is None:
+            return super().paint(painter, option, index)
+
+        try:
+            value = float(value)
+        except Exception:
+            return super().paint(painter, option, index)
+
+        progress = QStyleOptionProgressBar()
+        progress.rect = option.rect.adjusted(4, 4, -4, -4)
+        progress.minimum = 0
+        progress.maximum = 100
+        progress.progress = int(round(value))
+        progress.text = f"{value:.0f}%"
+        progress.textVisible = True
+
+        style = option.widget.style() if option.widget else None
+        if style:
+            style.drawControl(QStyle.ControlElement.CE_ProgressBar, progress, painter, option.widget)
+            return None
+        return None
+
+
+class StarRatingDelegate(QStyledItemDelegate):
+    def _star_polygon(self, cx, cy, r_outer, r_inner, n=5):
+        pts = []
+        for i in range(2 * n):
+            angle = -math.pi / 2 + i * math.pi / n
+            r = r_outer if i % 2 == 0 else r_inner
+            pts.append(QPointF(cx + r * math.cos(angle), cy + r * math.sin(angle)))
+        return QPolygonF(pts)
+
+    def paint(self, painter, option, index):
+        value = index.data(Qt.ItemDataRole.DisplayRole)
+        try:
+            rating = int(value)
+        except Exception:
+            return super().paint(painter, option, index)
+
+        painter.save()
+        painter.setRenderHint(painter.RenderHint.Antialiasing, True)
+
+        rect = option.rect.adjusted(4, 4, -4, -4)
+        star_size = min(rect.height(), 16)
+        spacing = 4
+        total = 5
+
+        x = rect.x()
+        y = rect.center().y()
+
+        for i in range(total):
+            poly = self._star_polygon(x + star_size / 2, y, star_size / 2, star_size / 4)
+            painter.setPen(QPen(Qt.GlobalColor.black, 1))
+            painter.setBrush(QBrush(Qt.GlobalColor.yellow if i < rating else Qt.GlobalColor.NoBrush))
+            painter.drawPolygon(poly)
+            x += star_size + spacing
+
+        painter.restore()
+        return None
+
+
+class BadgeDelegate(QStyledItemDelegate):
+    COLORS = {
+        "ok": QColor("#2e7d32"),
+        "warning": QColor("#ed6c02"),
+        "error": QColor("#d32f2f"),
+        "info": QColor("#0288d1"),
+    }
+
+    def paint(self, painter, option, index):
+        opt = option
+        self.initStyleOption(opt, index)
+        style = opt.widget.style() if opt.widget else None
+        if style:
+            style.drawControl(QStyle.ControlElement.CE_ItemViewItem, opt, painter, opt.widget)
+
+        text = str(index.data(Qt.ItemDataRole.DisplayRole) or "").strip()
+        key = text.lower()
+        color = self.COLORS.get(key, QColor("#666666"))
+
+        painter.save()
+        rect = option.rect.adjusted(6, 6, -6, -6)
+        painter.setRenderHint(painter.RenderHint.Antialiasing, True)
+        painter.setBrush(QBrush(color))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(rect, 8, 8)
+
+        painter.setPen(Qt.GlobalColor.white)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
+        painter.restore()
+
+
+class ToggleDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        value = index.data(Qt.ItemDataRole.CheckStateRole)
+        checked = value == Qt.CheckState.Checked
+
+        painter.save()
+        painter.setRenderHint(painter.RenderHint.Antialiasing, True)
+
+        rect = option.rect.adjusted(8, 8, -8, -8)
+        radius = rect.height() / 2
+
+        bg = QColor("#4caf50") if checked else QColor("#9e9e9e")
+        painter.setBrush(QBrush(bg))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(QRectF(rect), radius, radius)
+
+        d = rect.height() - 4
+        x = rect.right() - d - 2 if checked else rect.left() + 2
+        knob = QRectF(x, rect.top() + 2, d, d)
+        painter.setBrush(QBrush(Qt.GlobalColor.white))
+        painter.drawEllipse(knob)
+
+        painter.restore()
+
+
+class HyperlinkDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        text = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
+        painter.save()
+
+        color = (
+            option.palette.color(option.palette.HighlightedText)
+            if option.state & option.state.State_Selected
+            else QColor("#4dabf7")
+        )
+        painter.setPen(QPen(color))
+        font = painter.font()
+        font.setUnderline(True)
+        painter.setFont(font)
+
+        rect = option.rect.adjusted(4, 0, -4, 0)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft, text)
+        painter.restore()
+
+
+class HeatmapDelegate(QStyledItemDelegate):
+    def __init__(self, vmin=0.0, vmax=1.0, parent=None):
+        super().__init__(parent)
+        self.vmin = vmin
+        self.vmax = vmax
+
+    def paint(self, painter, option, index):
+        value = index.data(Qt.ItemDataRole.DisplayRole)
+        try:
+            x = float(value)
+        except Exception:
+            return super().paint(painter, option, index)
+
+        t = 0.0 if self.vmax <= self.vmin else (x - self.vmin) / (self.vmax - self.vmin)
+        t = max(0.0, min(1.0, t))
+
+        painter.save()
+        color = QColor(255, 0, 0, int(120 * t))
+        painter.fillRect(option.rect, QBrush(color))
+        painter.restore()
+
+        super().paint(painter, option, index)
+        return None
+
+
+class BarDelegate(QStyledItemDelegate):
+    def __init__(self, vmin=0.0, vmax=1.0, parent=None):
+        super().__init__(parent)
+        self.vmin = vmin
+        self.vmax = vmax
+
+    def paint(self, painter, option, index):
+        value = index.data(Qt.ItemDataRole.DisplayRole)
+        try:
+            x = float(value)
+        except Exception:
+            return super().paint(painter, option, index)
+
+        t = 0.0 if self.vmax <= self.vmin else (x - self.vmin) / (self.vmax - self.vmin)
+        t = max(0.0, min(1.0, t))
+
+        painter.save()
+        bar_rect = option.rect.adjusted(4, 6, -4, -6)
+        bar_rect.setWidth(int(bar_rect.width() * t))
+        painter.fillRect(bar_rect, QBrush(QColor(100, 180, 255, 140)))
+        painter.restore()
+
+        super().paint(painter, option, index)
+        return None
+
+
+class SparklineDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        values = index.data(Qt.UserRole)
+        if values is None:
+            return super().paint(painter, option, index)
+
+        arr = np.asarray(values, dtype=float)
+        if arr.size < 2 or not np.isfinite(arr).any():
+            return super().paint(painter, option, index)
+
+        painter.save()
+        rect = option.rect.adjusted(4, 4, -4, -4)
+
+        finite = np.isfinite(arr)
+        arr = arr.copy()
+        arr[~finite] = np.nan
+        ymin = np.nanmin(arr)
+        ymax = np.nanmax(arr)
+        if ymax == ymin:
+            ymax = ymin + 1.0
+
+        xs = np.linspace(rect.left(), rect.right(), arr.size)
+        ys = rect.bottom() - (arr - ymin) / (ymax - ymin) * rect.height()
+
+        path = QPainterPath()
+        started = False
+        for x, y, ok in zip(xs, ys, np.isfinite(arr)):
+            if not ok:
+                started = False
+                continue
+            p = QPointF(float(x), float(y))
+            if not started:
+                path.moveTo(p)
+                started = True
+            else:
+                path.lineTo(p)
+
+        painter.setRenderHint(painter.RenderHint.Antialiasing, True)
+        painter.setPen(QPen(option.palette.color(option.palette.Text), 1.5))
+        painter.drawPath(path)
+        painter.restore()
+        return None
+
+
+class ComboBoxDelegate(QStyledItemDelegate):
+    def __init__(self, items, parent=None):
+        super().__init__(parent)
+        self.items = list(items)
+
+    def createEditor(self, parent, option, index):
+        editor = QComboBox(parent)
+        editor.addItems(self.items)
+        return editor
+
+    def setEditorData(self, editor, index):
+        value = str(index.data(Qt.ItemDataRole.EditRole) or index.data(Qt.ItemDataRole.DisplayRole) or "")
+        i = editor.findText(value)
+        if i >= 0:
+            editor.setCurrentIndex(i)
+
+    def setModelData(self, editor, model, index):
+        model.setData(index, editor.currentText(), Qt.ItemDataRole.EditRole)
+
+
+class DoubleSpinBoxDelegate(QStyledItemDelegate):
+    def __init__(self, minimum=0.0, maximum=1.0, step=0.1, decimals=3, parent=None):
+        super().__init__(parent)
+        self.minimum = minimum
+        self.maximum = maximum
+        self.step = step
+        self.decimals = decimals
+
+    def createEditor(self, parent, option, index):
+        editor = QDoubleSpinBox(parent)
+        editor.setRange(self.minimum, self.maximum)
+        editor.setSingleStep(self.step)
+        editor.setDecimals(self.decimals)
+        return editor
+
+    def setEditorData(self, editor, index):
+        value = index.data(Qt.ItemDataRole.EditRole) or index.data(Qt.ItemDataRole.DisplayRole) or 0
+        editor.setValue(float(value))
+
+    def setModelData(self, editor, model, index):
+        model.setData(index, editor.value(), Qt.ItemDataRole.EditRole)
 
 
 class MultiFilterMode(str, Enum):
@@ -350,43 +776,91 @@ class QtCheckableItemModel(QAbstractTableModel):
         column = index.column()
         is_color = column in self.color_columns
 
-        # check the background color
+        # provide actual swatch color to delegate
+        if role == Qt.ItemDataRole.UserRole and is_color:
+            color = self._table[row][column]
+            if isinstance(color, str) and "#" in color:
+                return QColor(color)
+            if isinstance(color, np.ndarray):
+                return QColor(*(255 * color).astype(int))
+            if isinstance(color, QColor):
+                return color
+            return None
+
+        # background color
         if role == Qt.ItemDataRole.BackgroundRole:
-            if is_color:
-                color = self._table[row][column]
-                if isinstance(color, str) and "#" in color:
-                    return QBrush(QColor(color))
-                elif isinstance(color, np.ndarray):
-                    return QBrush(QColor(*(255 * color).astype("int")))
-                if isinstance(color, QColor):
-                    return QBrush(color)
             return QBrush()
-        # check text color
-        elif role == Qt.ItemDataRole.ForegroundRole:
+        # text color
+        if role == Qt.ItemDataRole.ForegroundRole:
             if is_color:
-                bg_color = self._table[row][column]
-                if isinstance(bg_color, str) and "#" in bg_color:
-                    return QBrush(get_text_color(QColor(bg_color)))
-            # let's use slightly different color html
+                return QBrush()  # no text in swatch cells anyway
             if column in self.html_columns:
                 return QBrush(QColor(LINK_COLOR))
             return QBrush(QColor(TEXT_COLOR))
-        # check value
-        elif role == Qt.ItemDataRole.DisplayRole:
+        # value
+        if role == Qt.ItemDataRole.DisplayRole:
             if column not in self.icon_columns and column not in self.checkable_columns and not is_color:
-                value = self._table[row][column]
-                return value
-        # check the alignment role
+                return self._table[row][column]
+        # alignment
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             return self.text_alignment
         # check state
         elif role == Qt.ItemDataRole.CheckStateRole and column in self.checkable_columns:
             return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
         # icon state
-        elif role == Qt.ItemDataRole.DecorationRole:
-            if column in self.icon_columns:
-                value = self._table[row][column]
-                return make_qta_icon(value)
+        elif role == Qt.ItemDataRole.DecorationRole and column in self.icon_columns:
+            value = self._table[row][column]
+            return make_qta_icon(value)
+        return None
+
+    # def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
+    #     """Parse data."""
+    #     if not index.isValid():
+    #         return None
+    #
+    #     row = index.row()
+    #     column = index.column()
+    #     is_color = column in self.color_columns
+    #
+    #     # check the background color
+    #     if role == Qt.ItemDataRole.BackgroundRole:
+    #         if is_color:
+    #             color = self._table[row][column]
+    #             if isinstance(color, str) and "#" in color:
+    #                 return QBrush(QColor(color))
+    #             if isinstance(color, np.ndarray):
+    #                 return QBrush(QColor(*(255 * color).astype("int")))
+    #             if isinstance(color, QColor):
+    #                 return QBrush(color)
+    #         return QBrush()
+    #     # check text color
+    #     if role == Qt.ItemDataRole.ForegroundRole:
+    #         if is_color:
+    #             bg_color = self._table[row][column]
+    #             if isinstance(bg_color, str) and "#" in bg_color:
+    #                 return QBrush(get_text_color(QColor(bg_color)))
+    #         # let's use slightly different color html
+    #         if column in self.html_columns:
+    #             return QBrush(QColor(LINK_COLOR))
+    #         return QBrush(QColor(TEXT_COLOR))
+    #     # check value
+    #     if role == Qt.ItemDataRole.DisplayRole:
+    #         if column not in self.icon_columns and column not in self.checkable_columns and not is_color:
+    #             return self._table[row][column]
+    #         return None
+    #     # check the alignment role
+    #     if role == Qt.ItemDataRole.TextAlignmentRole:
+    #         return self.text_alignment
+    #     # check state
+    #     if role == Qt.ItemDataRole.CheckStateRole and column in self.checkable_columns:
+    #         return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
+    #     # icon state
+    #     if role == Qt.ItemDataRole.DecorationRole:
+    #         if column in self.icon_columns:
+    #             value = self._table[row][column]
+    #             return make_qta_icon(value)
+    #         return None
+    #     return None
 
     def headerData(self, col: int, orientation: Qt.Orientation, role: Qt.ItemDataRole | None = None) -> str | None:
         """Get header data."""
@@ -429,10 +903,7 @@ class QtCheckableItemModel(QAbstractTableModel):
             change = old_value != value
         else:
             old_value = index.data()
-            if isinstance(old_value, np.ndarray):
-                change = np.any(old_value != value)
-            else:
-                change = old_value != value
+            change = np.any(old_value != value) if isinstance(old_value, np.ndarray) else old_value != value
 
         self._table[row][column] = value
         if change:
@@ -550,7 +1021,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         return self.original_index[row]
 
     def get_initial_indices(self, index: list) -> list:
-        """Get list of all initial indices."""
+        """Get a list of all initial indices."""
         return [self.get_initial_index(row) for row in index]
 
     def get_sort_index(self, row: int) -> int:
@@ -783,7 +1254,8 @@ class QtCheckableTableView(QTableView):
                     continue
                 sizing_ = column_metadata["sizing"]
                 mode = sizing.get(
-                    sizing_, QHeaderView.ResizeMode.Stretch if column_id else QHeaderView.ResizeMode.Fixed
+                    sizing_,
+                    QHeaderView.ResizeMode.Stretch if column_id else QHeaderView.ResizeMode.Fixed,
                 )
             else:
                 # The first column should always be a QCheckbox
@@ -816,6 +1288,9 @@ class QtCheckableTableView(QTableView):
         self._is_init = True
         for col in resizable:
             header.setSectionResizeMode(col, QHeaderView.ResizeMode.Interactive)
+        delegate = ColorSwatchDelegate(self)
+        for column_id in model.color_columns:
+            self.setItemDelegateForColumn(column_id, delegate)
         model.data_changed()
 
     def set_column_resize_mode(self, index: int, mode: QHeaderView.ResizeMode = QHeaderView.ResizeMode.Stretch):
@@ -970,10 +1445,7 @@ class QtCheckableTableView(QTableView):
     def _validate_data(self, data: list, n_cols: ty.Optional[int] = None) -> None:
         """Validate data."""
         if n_cols is None:
-            if self._header_columns is not None:
-                n_cols = len(self._header_columns)
-            else:
-                n_cols = self.n_cols
+            n_cols = len(self._header_columns) if self._header_columns is not None else self.n_cols
         for _data in data:
             if len(_data) != n_cols:
                 logger.warning("Data is of incorrect size")
@@ -983,8 +1455,7 @@ class QtCheckableTableView(QTableView):
 
         This returns the native data that is stored in the model.
         """
-        data = self.model().get_data()
-        return data
+        return self.model().get_data()
 
     def get_all_checked(self) -> list[int]:
         """Get all checked."""
@@ -1113,7 +1584,10 @@ class QtCheckableTableView(QTableView):
             model.update_column(col, values, match_to_sort)
 
     def update_values(
-        self, row: int, column_value: ty.Dict[int, ty.Union[str, int, float, bool]], match_to_sort: bool = True
+        self,
+        row: int,
+        column_value: ty.Dict[int, ty.Union[str, int, float, bool]],
+        match_to_sort: bool = True,
     ) -> None:
         """Update multiple columns for a particular row."""
         if match_to_sort:
@@ -1137,8 +1611,7 @@ class QtCheckableTableView(QTableView):
     def find_indices_of(self, col_id: int, value: ty.Any) -> list[int]:
         """Find index of value. Return -1 if not found."""
         col_data = self.get_col_data(col_id)
-        indices = [i for i, x in enumerate(col_data) if x == value]
-        return indices
+        return [i for i, x in enumerate(col_data) if x == value]
 
     def find_index_of_value_with_indices(self, col_id: int, value: ty.Any, indices: list[int]) -> int:
         """Find index of value. Return -1 if not found."""
@@ -1154,9 +1627,8 @@ class QtCheckableTableView(QTableView):
             self.header.setSortIndicatorShown(False)
             if self.enable_all_check:
                 self.model().toggle_all_rows()
-            return
-        else:
-            self.header.setSortIndicatorShown(True)
+            return None
+        self.header.setSortIndicatorShown(True)
         order = self.horizontalHeader().sortIndicatorOrder()
         return QTableView.sortByColumn(self, index, order)
 

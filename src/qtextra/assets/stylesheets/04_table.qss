@@ -12,3 +12,21 @@ QtDataFrameWidget > TableView {
     selection-color: {{ lighten(highlight, 50) }};
     selection-background-color: {{ background }};
 }
+
+
+QtCheckableTableView{
+    background-color: {{ darken(background, 10) }};
+    border: 2px solid {{ foreground }};
+    border-radius: 2px;
+}
+
+QtCheckableTableView QHeaderView {
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+}
+
+/*QtCheckableTableView::item:selected {*/
+/*    !*background: transparent;*!*/
+/*    background: palette(highlight);*/
+/*    color: palette(highlighted-text);*/
+/*}*/

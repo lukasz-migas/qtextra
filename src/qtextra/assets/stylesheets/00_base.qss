@@ -748,7 +748,7 @@ QStatusBar::item{
   border: None;
 }
 
-/* ----------------- QtCheckableTableView ----------------- */
+/* ----------------- QTableView / QHeaderView ----------------- */
 
 QHeaderView::section {
     color: {{ text }};

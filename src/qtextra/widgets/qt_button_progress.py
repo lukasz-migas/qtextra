@@ -57,7 +57,7 @@ class QtActiveProgressBarButton(QWidget):
 
     @property
     def step(self) -> int:
-        """Set current step."""
+        """Set a current step."""
         return self.progress_bar.value()
 
     @step.setter

@@ -157,6 +157,34 @@ def insert_widget_in_form_layout(
     layout.insertRow(row, label, widget_or_layout)
 
 
+def remove_from_layout(layout: Qw.QVBoxLayout | Qw.QHBoxLayout, index: int) -> None:
+    """Remove a row (widget or sub-layout) at the given index from a QVBoxLayout."""
+    item = layout.itemAt(index)
+    if item is None:
+        return
+
+    # an item is a widget
+    if item.widget() is not None:
+        item.widget().deleteLater()
+    # an item is a sub-layout — delete all its children first
+    elif item.layout() is not None:
+        sub = item.layout()
+        while sub.count():
+            child = sub.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+    layout.removeItem(item)
+
+
+def update_label_in_layout(layout: Qw.QVBoxLayout, index: int, label: str) -> None:
+    """Update label in QVBoxLayout."""
+    item = layout.itemAt(index)
+    if item and item.widget() and isinstance(item.widget(), Qw.QLabel):
+        item.widget().setText(label)
+    elif item and item.layout():
+        update_label_in_layout(item.layout(), 0, label)
+
+
 def make_hbox_layout(
     widget: Qw.QWidget | None = None,
     spacing: int = 0,
@@ -1382,6 +1410,7 @@ def make_combobox(
     expand: bool = True,
     object_name: str | None = None,
     data: dict | None = None,
+    klass: Qw.QWidget | Qw.QComboBox = Qw.QComboBox,
     **kwargs: ty.Any,
 ) -> Qw.QComboBox:
     """Make QComboBox."""
@@ -1391,7 +1420,7 @@ def make_combobox(
         value = default
     if options is not None:
         items = options
-    widget = Qw.QComboBox(parent)
+    widget = klass(parent)
     if items:
         widget.addItems(items)
     if object_name:
@@ -1520,6 +1549,7 @@ def make_searchable_combobox(
     default: str | None = None,
     expand: bool = True,
     object_name: str | None = None,
+    hide: bool = False,
     data=None,
     **kwargs: ty.Any,
 ) -> QtSearchableComboBox:
@@ -1533,6 +1563,7 @@ def make_searchable_combobox(
     if value is None:
         value = default
     widget = QtSearchableComboBox(parent)
+    widget.setHidden(hide)
     if items:
         widget.addItems(items)
     if object_name:
@@ -2071,6 +2102,7 @@ def make_checkbox(
     model: ty.Callable | None = None,
     properties: dict[str, ty.Any] | None = None,
     object_name: str = "",
+    hide: bool = False,
     **kwargs: ty.Any,
 ) -> Qw.QCheckBox:
     """Make checkbox."""
@@ -2092,6 +2124,7 @@ def make_checkbox(
         [widget.stateChanged.connect(func_) for func_ in _validate_func(func)]
     if clicked:
         widget.clicked.connect(clicked)
+    widget.setHidden(hide)
     set_properties(widget, properties)
     return widget
 
@@ -2368,6 +2401,7 @@ def make_toggle(
     parent: Qw.QWidget | None,
     *label: str,
     func: Callback | None = None,
+    func_index: Callback | None = None,
     tooltip: str = "",
     value: str = "",
     orientation: Orientation = "horizontal",
@@ -2379,6 +2413,8 @@ def make_toggle(
     widget = QtToggleGroup.from_schema(parent, label, tooltip=tooltip, value=value, orientation=orientation, **kwargs)
     if func:
         [widget.evt_changed.connect(func_) for func_ in _validate_func(func)]
+    if func_index:
+        [widget.evt_index_changed.connect(func_) for func_ in _validate_func(func_index)]
     return widget
 
 
@@ -3160,7 +3196,7 @@ def enable_with_opacity(
         DeprecationWarning,
         stacklevel=2,
     )
-    disable_with_opacity(obj, widget_list, not enabled, min_opacity)
+    disable_with_opacity(obj, *widget_list, disabled=not enabled, min_opacity=min_opacity)
 
 
 def disable_with_opacity(

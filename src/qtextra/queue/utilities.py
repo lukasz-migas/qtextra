@@ -81,9 +81,9 @@ def listify_multiple(
 
 def pad_str(value: ty.Any, suffix: str = "") -> str:
     """Pad string with quotes around out."""
-    if IS_WIN:
-        return f'"{value!s}{suffix}"'
-    return f"{value!s}{suffix}"
+    # if IS_WIN:
+    return f'"{value!s}{suffix}"'
+    # return f"{value!s}{suffix}"
 
 
 def get_icon_state(errors: list[str]) -> tuple[str, str]:

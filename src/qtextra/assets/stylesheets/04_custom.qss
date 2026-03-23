@@ -188,17 +188,6 @@ QWidget[drag=true] {
     border-radius: 2px;
 }
 
-QtCheckableTableView{
-    background-color: {{ darken(background, 10) }};
-    border: 2px solid {{ foreground }};
-    border-radius: 2px;
-}
-
-QtCheckableTableView QHeaderView {
-    font-size: {{ increase(font_size, 1) }};
-    font-weight: bold;
-}
-
 QComboBox#filter_combo {
     max-height: 14px;
     background-color: {{ darken(background, 10) }};

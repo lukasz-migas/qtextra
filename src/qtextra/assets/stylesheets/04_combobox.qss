@@ -1,0 +1,40 @@
+_ScrollablePanel > QWidget {
+    background: {{ background }};
+}
+
+_ScrollablePanel > QScrollArea {
+    background: transparent;
+    border: none;
+}
+
+_ScrollablePanel > QScrollBar:vertical {
+    width: 6px;
+    background: transparent;
+    margin: 0;
+}
+_ScrollablePanel > QScrollBar::handle:vertical {
+    background: #d0d4da;
+    border-radius: 3px;
+    min-height: 20px;
+}
+_ScrollablePanel > QScrollBar::add-line:vertical,
+_ScrollablePanel > QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+_PopupPanel > QWidget {
+    background: {{ background }};
+}
+
+_SearchPanel > QLineEdit {
+    border: 1px solid #d0d4da;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #f8f9fb;
+}
+_SearchPanel > QLineEdit:focus {
+    border-color: #4472C4;
+    background: white;
+}
