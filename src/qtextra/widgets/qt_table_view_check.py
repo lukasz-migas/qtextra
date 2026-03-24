@@ -1598,17 +1598,18 @@ if __name__ == "__main__":  # pragma: no cover
         .add("Name", "name")
         .add("City", "city")
         .add("Score", "score")
-        .add("Active", "active", dtype="bool")
+        .add("Active", "active", dtype="bool", checkable=True)
+        .add("Color", "color", dtype="str", is_color=True)
     )
-    table = QtCheckableTableView(frame)
-    table.setup_model_from_config(config)
+    table = QtCheckableTableView(frame, config=config, enable_all_check=True)
+    # table.setup_model_from_config(config)
     table.add_data(
         [
-            [True, "Alice", "Berlin", 92, True],
-            [False, "Bob", "Paris", 78, False],
-            [True, "Carol", "Berlin", 85, True],
-            [False, "Dave", "London", 60, False],
-            [True, "Eve", "Tokyo", 99, True],
+            [True, "Alice", "Berlin", 92, True, "#ff00ff"],
+            [False, "Bob", "Paris", 78, False, "#00ffff"],
+            [True, "Carol", "Berlin", 85, True, "#ff0000"],
+            [False, "Dave", "London", 60, False, "#ff0000"],
+            [True, "Eve", "Tokyo", 99, True, "#00ff0f"],
         ],
     )
     ha.addWidget(table)
