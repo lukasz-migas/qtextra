@@ -6,7 +6,7 @@ import typing as ty
 
 from qtpy.QtCore import QRectF, Qt, Signal
 from qtpy.QtGui import QFontMetrics, QPainter
-from qtpy.QtWidgets import QHBoxLayout, QWidget
+from qtpy.QtWidgets import QHBoxLayout, QLineEdit, QWidget
 
 from qtextra.config import QtStyler
 from qtextra.widgets._qt_combobox import _BTN_H, _base_font, _BaseButton, _draw_chevron, _MultiItemRow, _ScrollablePanel
@@ -19,12 +19,33 @@ class _MultiPanel(_ScrollablePanel):
         super().__init__(parent)
         self._selected: set[str] = set()
         self._rows: list[_MultiItemRow] = []
+
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("Search...")
+        self._search.textChanged.connect(self._filter)
+        self._outer_l.insertWidget(0, self._search)
+
         for text in items:
             row = _MultiItemRow(text)
             row.toggled_item.connect(self._on_toggle)
             self._inner_l.addWidget(row)
             self._rows.append(row)
         self._finalize_height()
+
+    def _filter(self, text: str):
+        """Filter visible rows by search text."""
+        q = text.lower()
+        for row in self._rows:
+            row.setVisible(q in row._label.lower())
+        self._finalize_height()
+
+    def show_below(self, widget, min_width=0):
+        """Show panel below widget, resetting the search field."""
+        self._search.clear()
+        self._filter("")
+        super().show_below(widget, min_width)
+        self._finalize_height()
+        self._search.setFocus()
 
     def _on_toggle(self, text: str, checked: bool):
         if checked:
@@ -118,6 +139,7 @@ class MultiSelectComboBox(QWidget):
         self._selected: list[str] = []
         self._panel = _MultiPanel(items or [], parent=self)
         self._panel.evt_selection_changed.connect(self._on_change)
+        self._panel.evt_hidden.connect(lambda: self._btn.set_open(False))
         self._build()
 
     def _build(self):
@@ -155,8 +177,29 @@ if __name__ == "__main__":  # pragma: no cover
 
     app, frame, ha = qframe(False)
     combo = MultiSelectComboBox(
-        items=["Python", "JavaScript", "TypeScript", "Rust", "Go", "C++", "Swift", "Kotlin"],
-        placeholder="Choose languages…",
+        items=[
+            "Apple",
+            "Apricot",
+            "Banana",
+            "Blueberry",
+            "Cherry",
+            "Cranberry",
+            "Grape",
+            "Guava",
+            "Kiwi",
+            "Lemon",
+            "Lime",
+            "Mango",
+            "Orange",
+            "Papaya",
+            "Peach",
+            "Pear",
+            "Pineapple",
+            "Plum",
+            "Strawberry",
+            "Watermelon",
+        ],
+        placeholder="Choose fruit…",
     )
     combo.evt_selection_changed.connect(lambda s: print(f"Multi: {s}"))
     ha.addWidget(combo)

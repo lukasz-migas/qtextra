@@ -123,6 +123,7 @@ class QtSearchComboBox(QWidget):
         self._placeholder = placeholder
         self._panel = _SearchPanel(items or [], parent=self)
         self._panel.itemSelected.connect(self._on_select)
+        self._panel.evt_hidden.connect(lambda: self._btn.set_open(False))
         self._build()
 
     def _build(self):

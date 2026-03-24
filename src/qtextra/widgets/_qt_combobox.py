@@ -83,9 +83,15 @@ class _BaseButton(QAbstractButton):
 class _PopupPanel(QWidget):
     """Floating popup card that closes when clicking outside."""
 
+    evt_hidden = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def hideEvent(self, event):
+        self.evt_hidden.emit()
+        super().hideEvent(event)
 
     def _card_rect(self):
         return QRectF(2, 2, self.width() - 4, self.height() - 4)

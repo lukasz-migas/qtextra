@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest tests/widgets/test_qt_combobox.py -v)"
+    ]
+  }
+}

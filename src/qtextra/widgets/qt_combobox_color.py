@@ -22,6 +22,7 @@ class ColorSwatchComboBox(QWidget):
         self._placeholder = placeholder
         self._panel = _SwatchPanel(parent=self)
         self._panel.evt_color_selected.connect(self._on_select)
+        self._panel.evt_hidden.connect(lambda: self._btn.set_open(False))
         self._build()
 
     def _build(self):
@@ -61,12 +62,13 @@ class ColorSwatchComboBox(QWidget):
 class _SwatchPanel(_PopupPanel):
     evt_color_selected = Signal(QColor, str)
 
-    COLS = 10
     CELL = 28
-    GAP = 4
+    MIN_GAP = 2
+    PADDING = 20  # total horizontal padding inside the popup
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._cols = 8  # initial fallback, recalculated in show_below
         outer = QVBoxLayout(self)
         outer.setContentsMargins(10, 10, 10, 10)
         outer.setSpacing(6)
@@ -74,19 +76,34 @@ class _SwatchPanel(_PopupPanel):
         self._grid_w = QWidget()
         self._grid = QGridLayout(self._grid_w)
         self._grid.setContentsMargins(0, 0, 0, 0)
-        self._grid.setSpacing(self.GAP)
+        self._grid.setSpacing(self.MIN_GAP)
         self._cells: list[_SwatchCell] = []
-        self._count = 0
         outer.addWidget(self._grid_w)
 
     def add_swatch(self, color: QColor, name: str):
-        row = self._count // self.COLS
-        col = self._count % self.COLS
+        idx = len(self._cells)
         cell = _SwatchCell(color, name, size=self.CELL)
         cell.clicked.connect(lambda _, c=color, n=name: self._pick(c, n))
-        self._grid.addWidget(cell, row, col)
+        self._grid.addWidget(cell, idx // self._cols, idx % self._cols)
         self._cells.append(cell)
-        self._count += 1
+        self.adjustSize()
+
+    def _rebuild_grid(self, cols: int):
+        """Redistribute all cells with a new column count."""
+        if cols == self._cols:
+            return
+        self._cols = cols
+        for i, cell in enumerate(self._cells):
+            self._grid.removeWidget(cell)
+            self._grid.addWidget(cell, i // cols, i % cols)
+        self.adjustSize()
+
+    def show_below(self, widget, min_width=0):
+        """Recalculate columns from available width before showing."""
+        avail = max(widget.width(), min_width) - self.PADDING
+        cols = max(1, avail // (self.CELL + self.MIN_GAP))
+        self._rebuild_grid(cols)
+        super().show_below(widget, min_width)
         self.adjustSize()
 
     def _pick(self, color: QColor, name: str):
