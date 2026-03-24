@@ -126,7 +126,7 @@ class ChangelogDialog(QtFramelessTool):
 
 
 def get_path(path_to_file: PathLike) -> Path:
-    """Get formatted path."""
+    """Get a formatted path."""
     path_to_file = Path(path_to_file)
     if path_to_file.suffix == ".zip":
         return path_to_file.parent / path_to_file.stem
