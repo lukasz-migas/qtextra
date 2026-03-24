@@ -1,0 +1,18 @@
+/* ------------- QtToolTip / ToolTipBubble ------------- */
+
+ToolTipBubble QLabel#titleLabel {
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+    color: {{ text }};
+    background: transparent;
+    padding: 0px 2px;
+    margin: 0px;
+}
+
+ToolTipBubble QLabel#contentLabel {
+    font-size: {{ font_size }};
+    color: {{ text }};
+    background: transparent;
+    padding: 0px 2px;
+    margin: 0px;
+}
