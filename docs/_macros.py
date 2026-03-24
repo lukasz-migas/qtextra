@@ -101,7 +101,7 @@ def define_env(env: MacrosPlugin):
                   show_bases: False
                   show_root_toc_entry: False
                   show_root_heading: False
-            """
+            """,
             )
 
         return out

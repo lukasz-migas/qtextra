@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import typing as ty
 
 import numpy as np
@@ -144,7 +145,7 @@ class QtArrayTableModel(QAbstractTableModel):
                 return QBrush(color)
             return QBrush()
         # text color
-        elif role == Qt.ItemDataRole.ForegroundRole:
+        if role == Qt.ItemDataRole.ForegroundRole:
             if self.colors and self.normalizer:
                 value = self.normalizer(self.df.iloc[index.row(), index.column()])
                 index = find_nearest_index_single(self.color_list, value)
@@ -152,15 +153,19 @@ class QtArrayTableModel(QAbstractTableModel):
                 return QBrush(get_text_color(color))
             return QBrush(QColor(TEXT_COLOR))
         # display value
-        elif role == Qt.ItemDataRole.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             value = self.df.iloc[index.row(), index.column()]
             return self.fmt.format(value)
         # check alignment role
-        elif role == Qt.ItemDataRole.TextAlignmentRole:
+        if role == Qt.ItemDataRole.TextAlignmentRole:
             return Qt.AlignmentFlag.AlignCenter
+        return None
 
     def headerData(
-        self, index: QModelIndex, orientation: Qt.Orientation, role: Qt.ItemDataRole | None = None
+        self,
+        index: QModelIndex,
+        orientation: Qt.Orientation,
+        role: Qt.ItemDataRole | None = None,
     ) -> str | None:
         """Get header data."""
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
@@ -198,10 +203,8 @@ class QtArrayTableModel(QAbstractTableModel):
     def sort(self, column: int, order: Qt.SortOrder = ...) -> None:
         """Sort data."""
         self.beginResetModel()
-        try:
+        with contextlib.suppress(TypeError):
             self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.SortOrder.AscendingOrder)
-        except TypeError:
-            pass
         self.endResetModel()
 
 

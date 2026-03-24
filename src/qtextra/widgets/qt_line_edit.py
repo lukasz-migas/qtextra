@@ -93,16 +93,18 @@ class QValuedLineEdit(QtW.QLineEdit):
         if a0.modifiers() == Qt.KeyboardModifier.NoModifier:
             if a0.key() == Qt.Key.Key_Up:
                 self.stepUp()
-            elif a0.key() == Qt.Key.Key_PageUp:
+                return None
+            if a0.key() == Qt.Key.Key_PageUp:
                 self.stepUp(large=True)
-            elif a0.key() == Qt.Key.Key_Down:
+                return None
+            if a0.key() == Qt.Key.Key_Down:
                 self.stepDown()
-            elif a0.key() == Qt.Key.Key_PageDown:
+                return None
+            if a0.key() == Qt.Key.Key_PageDown:
                 self.stepDown(large=True)
-            else:
-                return super().keyPressEvent(a0)
-        else:
+                return None
             return super().keyPressEvent(a0)
+        return super().keyPressEvent(a0)
 
     def minimum(self):
         return self.validator().bottom()
@@ -126,7 +128,7 @@ class QIntLineEdit(QValuedLineEdit):
     def stepUp(self, large: bool = False):
         text = self.text()
         if text == "":
-            return None
+            return
         val = int(text)
         diff: int = 100 if large else 1
         self.setText(str(min(val + diff, self.validator().top())))
@@ -134,7 +136,7 @@ class QIntLineEdit(QValuedLineEdit):
     def stepDown(self, large: bool = False):
         text = self.text()
         if text == "":
-            return None
+            return
         val = int(text)
         diff: int = 100 if large else 1
         self.setText(str(max(val - diff, self.validator().bottom())))
@@ -154,7 +156,7 @@ class QDoubleLineEdit(QValuedLineEdit):
     def _step_up_or_down(self, large: bool, op):
         text = self.text()
         if text == "":
-            return None
+            return
         if "e" in text:
             val_text, exp_text = text.split("e")
             if large:
@@ -165,7 +167,7 @@ class QDoubleLineEdit(QValuedLineEdit):
                     Decimal(val_text) * 10**exp_ > self.validator().top()
                     or Decimal(val_text) * 10**exp_ < self.validator().bottom()
                 ):
-                    return None
+                    return
                 self.setText(val_text + "e" + str(exp_))
             else:
                 val_min = self.validator().bottom() / 10 ** int(exp_text)
@@ -187,8 +189,7 @@ class QDoubleLineEdit(QValuedLineEdit):
         if not isinstance(exponent, int):
             return None
         ten = Decimal("10")
-        diff = ten ** (exponent + 2) if large else ten**exponent
-        return diff
+        return ten ** (exponent + 2) if large else ten**exponent
 
 
 class QCommaSeparatedIntLineEdit(QtW.QLineEdit):

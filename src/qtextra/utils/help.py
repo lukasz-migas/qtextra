@@ -42,7 +42,9 @@ def sort_errors(errors: list[str]) -> list[str]:
     """Sort errors with the order: 'hints', 'errors', 'warnings'."""
     errors = errors or []
     return sorted(
-        errors, key=lambda x: ('class="hint"' in x, 'class="error"' in x, 'class="warning"' in x), reverse=True
+        errors,
+        key=lambda x: ('class="hint"' in x, 'class="error"' in x, 'class="warning"' in x),
+        reverse=True,
     )
 
 

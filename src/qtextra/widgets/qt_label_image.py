@@ -87,7 +87,7 @@ class ImageViewer(QGraphicsView):
 
         # Set up smooth transformation for better quality zoom
         self.setRenderHints(
-            self.renderHints() | QPainter.RenderHint.SmoothPixmapTransform | QPainter.RenderHint.Antialiasing
+            self.renderHints() | QPainter.RenderHint.SmoothPixmapTransform | QPainter.RenderHint.Antialiasing,
         )
 
         # Load the initial image if provided
@@ -188,12 +188,11 @@ class PixmapLabel(QLabel):
 
     def _resize_pixmap(self):
         if self._pixmap is None or self.pixmap() is None:
-            return
+            return None
 
         width = self.width()
         height = self.height()
-        pixmap = self._pixmap.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
-        return pixmap
+        return self._pixmap.scaled(width, height, Qt.AspectRatioMode.KeepAspectRatio)
 
 
 class QImageLabel(QLabel):

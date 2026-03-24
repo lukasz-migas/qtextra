@@ -38,7 +38,7 @@ if __name__ == "__main__":  # pragma: no cover
             parent=frame,
             text="This is a lot of text that should be cut because its way too long for such a short label\n" * 5,
             multiline=True,
-        )
+        ),
     )
     frame.show()
     sys.exit(app.exec_())

@@ -12,9 +12,8 @@ from loguru import logger as logger_
 from qtpy.QtCore import QObject, QProcess, QTimer, Signal  # type: ignore[attr-defined]
 
 from qtextra.queue.task import Task
-from qtextra.queue.utilities import _safe_call, escape_ansi, iterable_callbacks
+from qtextra.queue.utilities import _safe_call, decode, escape_ansi, iterable_callbacks
 from qtextra.typing import Callback, TaskState
-from qtextra.queue.utilities import decode
 
 
 class Queue(SimpleQueue):

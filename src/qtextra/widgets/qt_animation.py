@@ -228,6 +228,7 @@ class QtAnimationBase(QObject):
             return self.finish()
         self.step = 1 if fps > 0 else -1  # negative fps plays in reverse
         self.interval = 1000 / abs(fps)
+        return None
 
     @Slot(str)
     def set_loop_mode(self, mode: str):
@@ -289,7 +290,7 @@ class QtAnimationBase(QObject):
         requested frame_range, if entered.
         """
         if self._stop:
-            return
+            return None
 
         self.current += self.step * self.dim_range[2]
         if self.current < self.min_point:
@@ -315,3 +316,4 @@ class QtAnimationBase(QObject):
         # using a singleShot timer here instead of timer.start() because
         # it makes it easier to update the interval using signals/slots
         self.timer.singleShot(int(self.interval), self.advance)
+        return None

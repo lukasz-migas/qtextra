@@ -33,11 +33,20 @@ class QtConfirmCloseDialog(QDialog):
             close_btn = hp.make_btn(self, "Close", tooltip="Close the app.", properties={"type": "error"})
         else:
             cancel_btn = hp.make_qta_btn(
-                self, "cancel", label="Cancel", standout=True, tooltip="Cancel and return to the app."
+                self,
+                "cancel",
+                label="Cancel",
+                standout=True,
+                tooltip="Cancel and return to the app.",
             )
             save_btn = hp.make_qta_btn(self, "save", label="Save", standout=True, tooltip="Save and close the app.")
             close_btn = hp.make_qta_btn(
-                self, "warning", color="orange", label="Close", standout=True, tooltip="Close the app."
+                self,
+                "warning",
+                color="orange",
+                label="Close",
+                standout=True,
+                tooltip="Close the app.",
             )
 
         icon_label = hp.make_qta_label(self, "warning", color="orange")
@@ -88,9 +97,8 @@ class QtConfirmCloseDialog(QDialog):
 
     def accept(self):
         """Accept."""
-        if self.do_not_ask.isChecked():
-            if self.config and self.attr is not None:
-                setattr(self.config, self.attr, False)
+        if self.do_not_ask.isChecked() and self.config and self.attr is not None:
+            setattr(self.config, self.attr, False)
         return super().accept()
 
 

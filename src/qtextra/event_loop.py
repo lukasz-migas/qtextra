@@ -208,7 +208,7 @@ def run(*, force=False, max_loop_level=1, _func_name="run"):
     app = QApplication.instance()
     if not app:
         raise RuntimeError(
-            "No Qt app has been created. One can be created by calling `get_app()` or qtpy.QtWidgets.QApplication([])"
+            "No Qt app has been created. One can be created by calling `get_app()` or qtpy.QtWidgets.QApplication([])",
         )
     if not app.topLevelWidgets() and not force:
         warn(

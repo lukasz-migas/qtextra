@@ -59,7 +59,7 @@ class QFormatter(Formatter):
                 [
                     self._style[token],
                 ]
-                * len(value)
+                * len(value),
             )
 
 

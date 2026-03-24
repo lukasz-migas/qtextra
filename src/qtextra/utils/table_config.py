@@ -42,10 +42,7 @@ class TableConfig(MutableMapping[int, Column]):
 
     def __getitem__(self, tag: ty.Union[int, str]) -> ty.Any:
         """Get item id."""
-        if isinstance(tag, int):
-            val = self._dict[tag]
-        else:
-            val = self.find_col_id(tag)
+        val = self._dict[tag] if isinstance(tag, int) else self.find_col_id(tag)
         if val == -1:
             raise KeyError("Could not retrieve value")
         return val
@@ -131,21 +128,16 @@ class TableConfig(MutableMapping[int, Column]):
     def find_col_id(self, tag: str) -> int:
         """Find column id by the tag."""
         for col_id, col_info in self.items():
-            if col_info["tag"] == tag:
-                return col_id
-            elif col_info["name"] == tag:
+            if col_info["tag"] == tag or col_info["name"] == tag:
                 return col_id
         return -1
 
     def get_column(self, tag: int | str) -> Column | None:
         """Get column by tag."""
         for col_id, col_info in self.items():
-            if isinstance(tag, int):
-                if col_id == tag:
-                    return col_info
-            if col_info["tag"] == tag:
+            if isinstance(tag, int) and col_id == tag:
                 return col_info
-            elif col_info["name"] == tag:
+            if col_info["tag"] == tag or col_info["name"] == tag:
                 return col_info
         return None
 

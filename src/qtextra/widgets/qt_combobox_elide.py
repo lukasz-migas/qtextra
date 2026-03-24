@@ -39,7 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
             "Short text",
             "This is a very long text that likely needs truncation",
             "Another extremely long text example to demonstrate ellipses…",
-        ]
+        ],
     )
     combo.setEditable(False)
     combo.show()

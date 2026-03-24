@@ -103,21 +103,21 @@ class QtaMixin:
         """Get icon size for name."""
         if name == "xxsmall":
             return "xxsmall_icon", (10, 10)
-        elif name in ("xsmall", "small"):
+        if name in ("xsmall", "small"):
             return "xsmall_icon", (16, 16)
-        elif name == "normal":
+        if name == "normal":
             return "normal_icon", (20, 20)
-        elif name == "average":
+        if name == "average":
             return "average_icon", (24, 24)
-        elif name == "medium":
+        if name == "medium":
             return "medium_icon", (28, 28)
-        elif name == "large":
+        if name == "large":
             return "large_icon", (32, 32)
-        elif name == "xlarge":
+        if name == "xlarge":
             return "xlarge_icon", (60, 60)
-        elif name == "xxlarge":
+        if name == "xxlarge":
             return "xxlarge_icon", (80, 80)
-        elif name == "xxxlarge":
+        if name == "xxxlarge":
             return "xxxlarge_icon", (120, 120)
         return "average_icon", (24, 24)
 

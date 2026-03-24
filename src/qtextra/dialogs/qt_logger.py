@@ -84,7 +84,10 @@ class QtLogger(QWidget):
 
         toolbar = QtMiniToolbar(self, Qt.Orientation.Vertical)
         toolbar.insert_qta_tool(
-            "folder", tooltip="Open directory with logs", func=self.on_open_log_dir, hidden=self.log_dir is None
+            "folder",
+            tooltip="Open directory with logs",
+            func=self.on_open_log_dir,
+            hidden=self.log_dir is None,
         )
         toolbar.insert_qta_tool("paint_palette", tooltip="Change theme", func=self.swap_theme)
 
@@ -102,7 +105,13 @@ class QtLogger(QWidget):
         self.handler = QtHandler(parent=self)
         connect(self.handler.evt_signal, self.update_log, state=True)
         self.log_id = logger.add(
-            self.handler, level=0, backtrace=True, diagnose=True, catch=True, enqueue=True, format=LOG_FMT
+            self.handler,
+            level=0,
+            backtrace=True,
+            diagnose=True,
+            catch=True,
+            enqueue=True,
+            format=LOG_FMT,
         )
 
     def closeEvent(self, evt):
@@ -158,9 +167,10 @@ class QtLogger(QWidget):
         """Iteratively go through each line of the previous log and change the color to match the current theme."""
 
         def _get_log_level():
-            for _level in self.LOG_LEVELS.keys():
+            for _level in self.LOG_LEVELS:
                 if _level in status:
                     return self.LOG_LEVELS[_level]
+            return None
 
         old_log = self.textedit.toPlainText()
         old_log = old_log.split("\n")

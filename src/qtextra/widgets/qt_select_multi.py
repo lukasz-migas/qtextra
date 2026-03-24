@@ -98,10 +98,7 @@ class SelectionWidget(QtFramelessPopup):
 
     def reject(self) -> None:
         """Return state."""
-        if self.cancel_clicked:
-            options = self.original_options
-        else:
-            options = self.selected_options
+        options = self.original_options if self.cancel_clicked else self.selected_options
         self.evt_update.emit(options)
         super().reject()
 
@@ -134,7 +131,9 @@ class SelectionWidget(QtFramelessPopup):
         self.table.evt_checked.connect(self.on_check)
         hp.set_font(self.table, THEMES.get_font_size())
         self.table.setup_model(
-            self.TABLE_CONFIG.header, self.TABLE_CONFIG.no_sort_columns, self.TABLE_CONFIG.hidden_columns
+            self.TABLE_CONFIG.header,
+            self.TABLE_CONFIG.no_sort_columns,
+            self.TABLE_CONFIG.hidden_columns,
         )
         self.table_proxy = MultiColumnSingleValueProxyModel(self)
         self.table_proxy.setSourceModel(self.table.model())
@@ -157,25 +156,29 @@ class SelectionWidget(QtFramelessPopup):
                     alignment=Qt.AlignmentFlag.AlignHCenter,
                     wrap=True,
                     enable_url=True,
-                )
+                ),
             )
         layout.addRow(self.table)
         layout.addRow(
             hp.make_h_layout(
                 hp.make_qta_btn(self, "visible_on", func=self.on_show_selected, tooltip="Only show checked items."),
                 hp.make_qta_btn(
-                    self, "visible_off", func=self.on_show_unselected, tooltip="Only show unchecked items."
+                    self,
+                    "visible_off",
+                    func=self.on_show_unselected,
+                    tooltip="Only show unchecked items.",
                 ),
                 hp.make_qta_btn(self, "clear", func=self.on_show_selected_clear, tooltip="Clear checked filter."),
                 self.filter_by_option,
                 stretch_id=(3,),
                 spacing=2,
-            )
+            ),
         )
         layout.addRow(
             hp.make_h_layout(
-                hp.make_btn(self, "OK", func=self.accept), hp.make_btn(self, "Cancel", func=self.on_cancel)
-            )
+                hp.make_btn(self, "OK", func=self.accept),
+                hp.make_btn(self, "Cancel", func=self.on_cancel),
+            ),
         )
         return layout
 
@@ -213,7 +216,10 @@ class QtMultiSelect(QWidget):
             self._clear_action.triggered.connect(self.clear_current)
 
         self._list_action = hp.make_action(
-            self, "list", func=self.on_select, tooltip="Click here to select one or more options"
+            self,
+            "list",
+            func=self.on_select,
+            tooltip="Click here to select one or more options",
         )
         self.text_edit.addAction(self._list_action, self.text_edit.ActionPosition.LeadingPosition)
 
@@ -260,10 +266,7 @@ class QtMultiSelect(QWidget):
             value = default
         if items and "enum" in items:
             options = items["enum"]
-        if isinstance(value, str):
-            values = value.split(";") if value else []
-        else:
-            values = value
+        values = (value.split(";") if value else []) if isinstance(value, str) else value
 
         if sort:
             options = natsorted(options) if options else []

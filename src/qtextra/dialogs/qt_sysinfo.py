@@ -87,7 +87,10 @@ class QtSystemInfo(QDialog):
 
     @staticmethod
     def show_sys_info(
-        system_info: str, citation_info: str, title: str = "System Information", parent: QWidget | None = None
+        system_info: str,
+        citation_info: str,
+        title: str = "System Information",
+        parent: QWidget | None = None,
     ) -> None:
         """Display the 'About napari' dialog box.
 

@@ -65,6 +65,7 @@ class QtToolTipView(PopoutView):
 
         h = self.vBoxLayout.sizeHint().height() - 2
         self.imageLabel.scaledToHeight(h)
+        return None
 
     def _addImageToLayout(self):
         self.imageLabel.setHidden(self.imageLabel.isNull())
@@ -335,7 +336,7 @@ class PopupToolTip(QtToolTip):
     ):
         super().__init__(view, target, duration, tail_position, parent, delete_on_close)
         self.setWindowFlags(
-            Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint
+            Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint,
         )
 
 

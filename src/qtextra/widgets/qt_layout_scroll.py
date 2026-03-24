@@ -34,8 +34,7 @@ class QtScrollableLayoutWidget(QScrollArea):
         item = self._main_layout.itemAt(index)
         if not item:
             return None
-        widget = item.widget()
-        return widget
+        return item.widget()
 
     def setSpacing(self, spacing: int) -> None:
         """Set spacing."""

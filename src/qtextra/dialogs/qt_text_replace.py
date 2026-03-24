@@ -116,7 +116,9 @@ class QtTextReplace(QtDialog):
         self.table.setCornerButtonEnabled(False)
         hp.set_font(self.table, 10)
         self.table.setup_model(
-            self.TABLE_CONFIG.header, self.TABLE_CONFIG.no_sort_columns, self.TABLE_CONFIG.hidden_columns
+            self.TABLE_CONFIG.header,
+            self.TABLE_CONFIG.no_sort_columns,
+            self.TABLE_CONFIG.hidden_columns,
         )
 
         self.search_edit = hp.make_line_edit(
@@ -147,7 +149,7 @@ class QtTextReplace(QtDialog):
             hp.make_h_layout(
                 hp.make_btn(self, "OK", func=self.accept),
                 hp.make_btn(self, "Cancel", func=self.reject),
-            )
+            ),
         )
         return layout
 

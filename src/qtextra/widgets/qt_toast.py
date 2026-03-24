@@ -69,7 +69,12 @@ class QtToast(SubWindowBase):
         layout.addWidget(self._timer_indicator)
 
     def show_message(
-        self, title: str, message: str, icon: str = "info", position: str = "top_right", duration: int = 5000
+        self,
+        title: str,
+        message: str,
+        icon: str = "info",
+        position: str = "top_right",
+        duration: int = 5000,
     ) -> None:
         """Show message."""
         self.POSITION = position

@@ -93,7 +93,7 @@ class PopUpAniStackedWidget(QStackedWidget):
                 deltaX=deltaX,
                 deltaY=deltaY,
                 ani=QPropertyAnimation(widget, b"pos"),
-            )
+            ),
         )
 
     def removeWidget(self, widget: QWidget):

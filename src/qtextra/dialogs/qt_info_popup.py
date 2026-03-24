@@ -21,7 +21,11 @@ class InfoDialog(QtFramelessPopup):
         header_layout = self._make_title_handle("Help information")
 
         self.label = hp.make_scrollable_label(
-            self, wrap=True, enable_url=True, selectable=True, object_name="title_label"
+            self,
+            wrap=True,
+            enable_url=True,
+            selectable=True,
+            object_name="title_label",
         )
 
         layout = hp.make_form_layout(parent=self)
@@ -38,7 +42,8 @@ if __name__ == "__main__":
     _ = qapplication()  # analysis:ignore
 
     dlg = InfoDialog(
-        None, "This is some <b>useful</b> information.<br>Visit <a href='https://example.com'>Example</a>."
+        None,
+        "This is some <b>useful</b> information.<br>Visit <a href='https://example.com'>Example</a>.",
     )
     apply_style(dlg)
     dlg.show()

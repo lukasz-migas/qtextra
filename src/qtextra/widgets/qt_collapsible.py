@@ -23,7 +23,11 @@ class QtCheckCollapsible(QCollapsible):
     """
 
     def __init__(
-        self, title: str = "", parent: QWidget | None = None, icon: str = "info", warning_icon: str = "warning"
+        self,
+        title: str = "",
+        parent: QWidget | None = None,
+        icon: str = "info",
+        warning_icon: str = "warning",
     ):
         super().__init__(title, parent)
         self.checkbox = QCheckBox()

@@ -228,7 +228,10 @@ class TaskInfoDialog(QtDialog):
         self.command_table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         hp.set_font(self.command_table, font_size=11)
         self.command_table.setup_model(
-            TABLE_CONFIG.header, TABLE_CONFIG.no_sort_columns, TABLE_CONFIG.hidden_columns, text_alignment="left"
+            TABLE_CONFIG.header,
+            TABLE_CONFIG.no_sort_columns,
+            TABLE_CONFIG.hidden_columns,
+            text_alignment="left",
         )
         self.command_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.command_table.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
@@ -268,7 +271,7 @@ class TaskInfoDialog(QtDialog):
                 hp.make_btn(self, "Scroll to top", func=self.on_scroll_to_top),
                 hp.make_btn(self, "Scroll to end", func=self.on_scroll_to_end),
                 stretch_after=True,
-            )
+            ),
         )
 
         tabs = QTabWidget(self)

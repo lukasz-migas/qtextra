@@ -51,7 +51,7 @@ class TelemetryOptInDialog(QtDialog):
             Reports are collected via <a href="https://sentry.io/">Sentry.io</a>
             <br><br>
             Here is an example error log that would be sent from your system:
-            """
+            """,
         )
         info.setWordWrap(True)
         info.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
@@ -65,7 +65,7 @@ class TelemetryOptInDialog(QtDialog):
         self.send_locals.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         _lbl = QLabel(
             "<small><b>greatly</b> improves interpretability of errors, but may "
-            "leak personal identifiable information like file paths</small>"
+            "leak personal identifiable information like file paths</small>",
         )
         _lbl.setWordWrap(True)
         _lbl.setStyleSheet("color: #999;")

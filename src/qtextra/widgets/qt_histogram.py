@@ -163,10 +163,7 @@ class QHistogramView(QBaseGraphicsView):
 
     def wheelEvent(self, event: QWheelEvent):
         delta = event.angleDelta().y()
-        if delta > 0:
-            factor = 1.1
-        else:
-            factor = 1 / 1.1
+        factor = 1.1 if delta > 0 else 1 / 1.1
         x0, x1 = self._view_range
         xcursor = self.mapToScene(event.pos()).x()
         x0 = max((x0 - xcursor) / factor + xcursor, self._minmax[0])
@@ -242,9 +239,8 @@ class QClimLineItem(QGraphicsRectItem):
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent):
-        if event.buttons() & Qt.MouseButton.LeftButton:
-            if self._is_dragging:
-                self._drag_event(event)
+        if event.buttons() & Qt.MouseButton.LeftButton and self._is_dragging:
+            self._drag_event(event)
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
         self._is_dragging = False
@@ -355,10 +351,7 @@ class QHistogramItem(QGraphicsPathItem):
     def set_histogram_from_array(self, arr: npt.NDArray) -> tuple[float, float]:
         """Set the histogram from an array."""
         _min, _max = quick_min_max(arr)
-        if arr.dtype in ("uint8", "uint8"):
-            _nbin = 64
-        else:
-            _nbin = 256
+        _nbin = 64 if arr.dtype in ("uint8", "uint8") else 256
         _nbin = min(_nbin, int(np.prod(arr.shape[-2:])) // 2)
         # draw histogram
         if arr.dtype.kind == "b":

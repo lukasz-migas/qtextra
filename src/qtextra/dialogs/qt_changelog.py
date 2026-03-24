@@ -63,7 +63,7 @@ class ChangelogDialog(QtFramelessTool):
             self.download_btn.hide()
         if self.path_to_out is not None and self.path_to_out.exists():
             self.progress_label.setText(
-                f"<a href='{self.path_to_out.as_uri()}'>Open {self.path_to_out} - it's been previously downloaded.</a>"
+                f"<a href='{self.path_to_out.as_uri()}'>Open {self.path_to_out} - it's been previously downloaded.</a>",
             )
             self.progress_label.show()
             self.download_btn.hide()
@@ -134,7 +134,9 @@ def get_path(path_to_file: PathLike) -> Path:
 
 
 def report_hook(
-    progress_bar: QProgressBar, label: QLabel, pbar: tqdm
+    progress_bar: QProgressBar,
+    label: QLabel,
+    pbar: tqdm,
 ) -> ty.Callable[[int, int, ty.Optional[int]], None]:
     """Download progress."""
     last_b = [0]
@@ -166,7 +168,10 @@ def report_hook(
 
 
 def download_file(
-    url: str, path_to_file: PathLike, reporthook: ty.Callable, pbar: tqdm
+    url: str,
+    path_to_file: PathLike,
+    reporthook: ty.Callable,
+    pbar: tqdm,
 ) -> ty.Generator[str, None, None] | tuple[tqdm, str]:
     """Download data."""
     path_to_file = Path(path_to_file)

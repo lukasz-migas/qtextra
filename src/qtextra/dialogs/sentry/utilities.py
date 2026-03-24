@@ -146,20 +146,19 @@ def get_sample_event(**kwargs) -> dict:
     settings["transport"] = _transport
     settings.update(kwargs)
 
-    with sentry_sdk.Client(**settings) as client:
-        with sentry_sdk.Hub(client) as hub:
-            # remove locals that wouldn't really be there
-            del settings, _transport, kwargs, client
-            try:
-                some_variable = 1  # noqa
-                another_variable = "my_string"  # noqa
-                1 / 0  # noqa
-            except Exception:
-                with sentry_sdk.new_scope() as scope:
-                    for k, v in _get_tags().items():
-                        scope.set_tag(k, v)
-                    del v, k, scope
-                    hub.capture_exception()
+    with sentry_sdk.Client(**settings) as client, sentry_sdk.Hub(client) as hub:
+        # remove locals that wouldn't really be there
+        del settings, _transport, kwargs, client
+        try:
+            some_variable = 1  # noqa
+            another_variable = "my_string"  # noqa
+            1 / 0  # noqa
+        except Exception:
+            with sentry_sdk.new_scope() as scope:
+                for k, v in _get_tags().items():
+                    scope.set_tag(k, v)
+                del v, k, scope
+                hub.capture_exception()
 
     with suppress(KeyError, IndexError):
         # remove the mock hub from the event

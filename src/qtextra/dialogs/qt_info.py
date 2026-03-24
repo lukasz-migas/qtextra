@@ -61,11 +61,15 @@ class InfoDialog(QtFramelessPopup):
                     hp.make_btn(self, "Scroll to top", func=self.on_scroll_to_top),
                     hp.make_btn(self, "Scroll to end", func=self.on_scroll_to_end),
                     stretch_after=True,
-                )
+                ),
             )
         else:
             self.label = hp.make_scrollable_label(
-                self, wrap=True, enable_url=True, selectable=True, object_name="title_label"
+                self,
+                wrap=True,
+                enable_url=True,
+                selectable=True,
+                object_name="title_label",
             )
 
         layout.addRow(self.label)

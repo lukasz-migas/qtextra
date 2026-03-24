@@ -17,7 +17,7 @@ layout.addWidget(
         n_dots=7,
         interval=100,  # in milliseconds
         size=30,  # size of dots
-    )
+    ),
 )
 
 # QtActiveWidget is simple widget with GIF playing in an infinite loop
@@ -26,7 +26,7 @@ layout.addWidget(
         text="Action in progress...",
         size=(128, 128),
         which="infinity",  # also choose from dots, oval, circle, square
-    )
+    ),
 )
 
 widget.show()

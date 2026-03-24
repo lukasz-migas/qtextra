@@ -14,8 +14,7 @@ def setup_widget():
     """Setup panel"""
 
     def _widget() -> CLIQueueHandler:
-        widget = CLIQueueHandler()
-        return widget
+        return CLIQueueHandler()
 
     return _widget
 
@@ -103,7 +102,9 @@ class TestCLIQueueHandler:
             qtbot.assertNotEmitted(queue.evt_errored),
         ):
             task = Task(
-                task_id="345", task_name="Task 3", commands=[["sleep", "0.5"], ["echo", "Hello World"]]
+                task_id="345",
+                task_name="Task 3",
+                commands=[["sleep", "0.5"], ["echo", "Hello World"]],
             )  # error in command
             task_id = queue.add_task(task)
             assert task_id == task.task_id, "Task ID should be the same"
@@ -125,7 +126,9 @@ class TestCLIQueueHandler:
             qtbot.assertNotEmitted(queue.evt_errored),
         ):
             task = Task(
-                task_id="456", task_name="Task 4", commands=[["sleep", "0.5"], ["echo", "Hello World"]]
+                task_id="456",
+                task_name="Task 4",
+                commands=[["sleep", "0.5"], ["echo", "Hello World"]],
             )  # error in command
             task_id = queue.add_task(task)
             assert task_id == task.task_id, "Task ID should be the same"

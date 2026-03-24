@@ -43,7 +43,7 @@ from qtpy.QtGui import (
 )
 from superqt import QElidingLabel, QEnumComboBox, QLabeledDoubleSlider, QLabeledSlider
 
-from qtextra.typing import Callback, Connectable, GifOption, IconType, OptionalCallback, Orientation
+from qtextra.typing import Callback, Connectable, GifOption, IconType, Orientation
 
 if ty.TYPE_CHECKING:
     from qtextra.utils.table_config import TableConfig

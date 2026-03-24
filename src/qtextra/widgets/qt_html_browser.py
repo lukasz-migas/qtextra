@@ -29,7 +29,9 @@ def make_html_viewer(parent: QWidget) -> ty.Any:
         manager = panel_help.page().networkAccessManager()
         cache = QNetworkDiskCache()
         cache_dir = os.path.join(
-            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.CacheLocation), "help", "help-view-cache"
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.CacheLocation),
+            "help",
+            "help-view-cache",
         )
         cache.setCacheDirectory(cache_dir)
         manager.setCache(cache)

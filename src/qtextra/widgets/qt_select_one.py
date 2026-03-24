@@ -41,7 +41,11 @@ class QtPickOptionBase(QDialog):
         # btn_layout.addStretch(1)
         for label, option in self.options.items():
             btn = hp.make_btn(
-                self, label, object_name="pick_option_button", func=partial(self.on_accept, option=option), wrap=True
+                self,
+                label,
+                object_name="pick_option_button",
+                func=partial(self.on_accept, option=option),
+                wrap=True,
             )
             btn_layout.addWidget(btn)
             self.responses[btn.text()] = option
@@ -56,7 +60,7 @@ class QtPickOptionBase(QDialog):
                 wrap=True,
                 object_name="pick_option_label",
                 alignment=Qt.AlignmentFlag.AlignCenter,
-            )
+            ),
         )
         if widget:
             layout.addWidget(widget, stretch=True)

@@ -259,7 +259,13 @@ class QtTagManager(QWidget):
     ) -> None:
         """Add tags."""
         for tag in options:
-            self.add_tag(tag, allow_action=allow_action, allow_check=allow_check, hide_check=hide_check, set_property=set_property)
+            self.add_tag(
+                tag,
+                allow_action=allow_action,
+                allow_check=allow_check,
+                hide_check=hide_check,
+                set_property=set_property,
+            )
 
     @Slot(str)  # type: ignore[misc]
     def remove_tag(self, hash_id: str) -> None:
@@ -315,7 +321,10 @@ class QtTagManager(QWidget):
         return self._clear_btn
 
     def add_filter(
-        self, placeholder: str = "Type-in tag name...", max_width: int = 150, case_sensitive: bool = False
+        self,
+        placeholder: str = "Type-in tag name...",
+        max_width: int = 150,
+        case_sensitive: bool = False,
     ) -> None:
         """Add filter."""
         if self._filter_edit is not None:
@@ -323,7 +332,10 @@ class QtTagManager(QWidget):
 
         self.case_sensitive = case_sensitive
         self._filter_edit = hp.make_line_edit(
-            self, placeholder=placeholder, func_changed=self._handle_filter_by, func_clear=self._handle_filter_by
+            self,
+            placeholder=placeholder,
+            func_changed=self._handle_filter_by,
+            func_clear=self._handle_filter_by,
         )
         if max_width:
             self._filter_edit.setMaximumWidth(max_width)

@@ -34,10 +34,10 @@ DARK_THEME = {
     "success": "rgb(30, 215, 96)",
     "progress": "rgb(179, 98, 0)",
     "current": "rgb(0, 122, 204)",
-    "syntax_style": "native",
     "console": "rgb(0, 0, 0)",
     "canvas": "rgb(0, 0, 0)",
     "standout": "rgb(255, 255, 0)",
+    "syntax_style": "native",
     "font_size": "14pt",
     "header_size": "18pt",
 }
@@ -56,10 +56,10 @@ LIGHT_THEME = {
     "success": "rgb(30, 215, 96)",
     "progress": "rgb(255, 175, 77)",
     "current": "rgb(30, 215, 96)",
-    "syntax_style": "default",
     "console": "rgb(255, 255, 255)",
     "canvas": "rgb(255, 255, 255)",
     "standout": "rgb(255, 252, 0)",
+    "syntax_style": "default",
     "font_size": "14pt",
     "header_size": "18pt",
 }
@@ -702,6 +702,82 @@ def build_theme_svgs(theme_name: str) -> str:
 def is_dark() -> bool:
     """Check if theme is dark."""
     return THEMES.is_dark
+
+
+class QtStyler:
+    """Styling class for Qt widgets."""
+
+    @classmethod
+    def background(cls) -> QColor:
+        """The color of the background widget."""
+        return THEMES.get_qt_color("background")
+
+    @classmethod
+    def foreground(cls) -> QColor:
+        """The color of the foreground widget."""
+        return THEMES.get_qt_color("foreground")
+
+    @classmethod
+    def primary(cls) -> QColor:
+        """The color of the primary widget."""
+        return THEMES.get_qt_color("primary")
+
+    @classmethod
+    def secondary(cls) -> QColor:
+        """The color of the secondary widget."""
+        return THEMES.get_qt_color("secondary")
+
+    @classmethod
+    def highlight(cls) -> QColor:
+        """The color of the highlight widget."""
+        return THEMES.get_qt_color("highlight")
+
+    @classmethod
+    def highlight_muted(cls) -> QColor:
+        """The color of the highlight widget."""
+        color = THEMES.get_qt_color("highlight")
+        return color.lighter(50) if is_dark() else color.darker(50)
+
+    @classmethod
+    def text(cls) -> QColor:
+        """The color of the text widget."""
+        return THEMES.get_qt_color("text")
+
+    @classmethod
+    def text_muted(cls) -> QColor:
+        """The muted color of the text widget."""
+        color = THEMES.get_qt_color("text")
+        return color.lighter(50) if is_dark() else color.darker(50)
+
+    @classmethod
+    def icon(cls) -> QColor:
+        """The color of the icon widget."""
+        return THEMES.get_qt_color("icon")
+
+    @classmethod
+    def warning(cls) -> QColor:
+        """The color of the warning widget."""
+        return THEMES.get_qt_color("warning")
+
+    @classmethod
+    def error(cls) -> QColor:
+        """The color of the error widget."""
+        return THEMES.get_qt_color("error")
+
+    @classmethod
+    def success(cls) -> QColor:
+        """The color of the success widget."""
+        return THEMES.get_qt_color("success")
+
+    @classmethod
+    def progress(cls) -> QColor:
+        """The color of the progress widget."""
+        return THEMES.get_qt_color("progress")
+
+    @classmethod
+    def current(cls) -> QColor:
+        """The color of the current widget."""
+        return THEMES.get_qt_color("current")
 
 
 THEMES: Themes = Themes()

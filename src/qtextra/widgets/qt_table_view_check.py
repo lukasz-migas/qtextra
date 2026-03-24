@@ -231,7 +231,7 @@ class ProgressBarDelegate(QStyledItemDelegate):
         progress.rect = option.rect.adjusted(4, 4, -4, -4)
         progress.minimum = 0
         progress.maximum = 100
-        progress.progress = int(round(value))
+        progress.progress = round(value)
         progress.text = f"{value:.0f}%"
         progress.textVisible = True
 

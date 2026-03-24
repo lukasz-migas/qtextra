@@ -75,7 +75,10 @@ class QtLineProgressBar(QProgressBar):
                 direction = widget._direction or QtLineProgressBar.Direction
                 height = widget._height or QtLineProgressBar.Height
                 widget.setGeometry(
-                    0, 0 if direction == QtLineProgressBar.TOP else obj.height() - height, obj.width(), height
+                    0,
+                    0 if direction == QtLineProgressBar.TOP else obj.height() - height,
+                    obj.width(),
+                    height,
                 )
         return super().eventFilter(obj, event)
 

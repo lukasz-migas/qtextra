@@ -25,11 +25,11 @@ def test_qt_logger_02(qt_logger, qtbot):
 
     expected = "light"
     qt_logger.logger.set_theme(expected)
-    assert qt_logger.logger.THEME == expected
+    assert expected == qt_logger.logger.THEME
 
     expected = "dark"
     qt_logger.logger.set_theme(expected)
-    assert qt_logger.logger.THEME == expected
+    assert expected == qt_logger.logger.THEME
 
 
 def test_qt_logger_03(qt_logger, qtbot):

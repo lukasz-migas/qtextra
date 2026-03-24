@@ -200,10 +200,7 @@ class QueueList(QScrollArea):
 
     def check_if_exists(self, task: Task) -> bool:
         """Check if task exists."""
-        for task_ in self.task_iter():
-            if task.task_id == task_.task_id:
-                return True
-        return False
+        return any(task.task_id == task_.task_id for task_ in self.task_iter())
 
     def on_task_queued(self, task: Task) -> None:
         """Task started."""
@@ -240,7 +237,9 @@ class QueueList(QScrollArea):
     def on_clear_queue(self, force: bool = False) -> None:
         """Clear the table, but first ask for confirmation."""
         if force or hp.confirm(
-            self, "Are you sure you wish to remove <b>all</b> tasks from the list?", "Clear queue..."
+            self,
+            "Are you sure you wish to remove <b>all</b> tasks from the list?",
+            "Clear queue...",
         ):
             self.purge_all()
 

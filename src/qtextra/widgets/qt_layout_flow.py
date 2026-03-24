@@ -132,6 +132,7 @@ class QtAnimatedFlowLayout(QLayout):
         for i, item in enumerate(self._items):
             if item.widget() is widget:
                 return self.takeAt(i)
+        return None
 
     def removeAllWidgets(self):
         """Remove all widgets from layout."""
@@ -260,8 +261,7 @@ class QtFlowLayout(QFlowLayout):
         item = self.itemAt(index)
         if not item:
             return None
-        widget = item.widget()
-        return widget
+        return item.widget()
 
     def removeWidgetOrLayout(self, index: int) -> None:
         """Remove widget or layout based on index position."""

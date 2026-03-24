@@ -45,7 +45,10 @@ class QtDirectoryWidget(QFrame):
         self.checkbox = hp.make_checkbox(self, tooltip="Click here to check item", func=self._on_check)
 
         self.path_label = hp.make_eliding_label2(
-            self, str(path), elide=Qt.TextElideMode.ElideRight, tooltip="Directory path"
+            self,
+            str(path),
+            elide=Qt.TextElideMode.ElideRight,
+            tooltip="Directory path",
         )
         self.path_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         self.path_label.setMinimumWidth(600)

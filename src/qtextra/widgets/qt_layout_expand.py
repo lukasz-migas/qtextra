@@ -87,13 +87,12 @@ class QtExpandLayout(QLayout):
         return y - rect.y()
 
     def eventFilter(self, obj, e):
-        if obj in self.__widgets:
-            if e.type() == QEvent.Type.Resize:
-                re = QResizeEvent(e)
-                ds = re.size() - re.oldSize()  # type:QSize
-                if ds.height() != 0 and ds.width() == 0:
-                    w = self.parentWidget()
-                    w.resize(w.width(), w.height() + ds.height())
+        if obj in self.__widgets and e.type() == QEvent.Type.Resize:
+            re = QResizeEvent(e)
+            ds = re.size() - re.oldSize()  # type:QSize
+            if ds.height() != 0 and ds.width() == 0:
+                w = self.parentWidget()
+                w.resize(w.width(), w.height() + ds.height())
 
         return super().eventFilter(obj, e)
 

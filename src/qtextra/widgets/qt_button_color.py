@@ -1,13 +1,15 @@
 """Color button."""
 
+from __future__ import annotations
+
 import typing as ty
 
 import numpy as np
 from koyo.color import ColorType, rgbs_to_hex
 from koyo.color import transform_color as _transform_color
-from qtpy.QtCore import QEvent, QSize, Qt, Signal, Slot
-from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QColorDialog, QFrame, QPushButton, QWidget
+from qtpy.QtCore import QEvent, QRectF, QSize, Qt, Signal, Slot
+from qtpy.QtGui import QBrush, QColor, QPainter, QPen
+from qtpy.QtWidgets import QAbstractButton, QColorDialog, QFrame, QPushButton, QWidget
 
 BASE_COLOR = "#FFFFFF"
 AnyColorType = ty.Union[ColorType, QColor]
@@ -219,6 +221,123 @@ class QtColorSwatch(QFrame):
     setColor = set_color
 
 
+class ColorCircleButton(QAbstractButton):
+    """Circular push-button that opens a QColorDialog on click.
+
+    Signals
+    -------
+    colorChanged(QColor)
+        Emitted whenever the user picks a new color and confirms it.
+    """
+
+    colorChanged = Signal(QColor)
+
+    def __init__(
+        self,
+        color: QColor | str = "#4db8ff",
+        diameter: int = 32,
+        selected: bool = False,
+        parent=None,
+    ):
+        super().__init__(parent)
+        self._color = QColor(color)
+        self._diameter = diameter
+        self._selected = selected
+        self._hovered = False
+
+        self.setCheckable(False)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFixedSize(self.sizeHint())
+
+        # Track hover manually so we can repaint
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    @property
+    def color(self) -> QColor:
+        return QColor(self._color)
+
+    def set_color(self, color: QColor | str) -> None:
+        self._color = QColor(color)
+        self.update()
+
+    @property
+    def selected(self) -> bool:
+        return self._selected
+
+    def set_selected(self, value: bool) -> None:
+        self._selected = value
+        self.update()
+
+    # ------------------------------------------------------------------
+    # Qt overrides
+    # ------------------------------------------------------------------
+
+    def sizeHint(self) -> QSize:
+        # Extra 4 px padding so the ring/shadow isn't clipped
+        pad = 6
+        s = self._diameter + pad * 2
+        return QSize(s, s)
+
+    def paintEvent(self, _event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        w, h = self.width(), self.height()
+        cx, cy = w / 2, h / 2
+        r = self._diameter / 2  # circle radius
+
+        # --- selected ring (white circle slightly larger than fill) ---
+        if self._selected:
+            ring_r = r + 3
+            p.setPen(QPen(QColor("white"), 2.5, Qt.PenStyle.SolidLine))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(QRectF(cx - ring_r, cy - ring_r, ring_r * 2, ring_r * 2))
+
+        # --- hover: lighten the fill color slightly ---
+        fill = QColor(self._color)
+        if self._hovered:
+            fill = fill.lighter(115)
+
+        # --- main filled circle ---
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QBrush(fill))
+        p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
+
+        p.end()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._open_color_dialog()
+        super().mousePressEvent(event)
+
+    def _open_color_dialog(self):
+        new_color = QColorDialog.getColor(
+            self._color,
+            self,
+            "Pick a color",
+            QColorDialog.ShowAlphaChannel,
+        )
+        if new_color.isValid():
+            self._color = new_color
+            self.update()
+            self.colorChanged.emit(QColor(self._color))
+
+    # hover tracking
+    def enterEvent(self, event):
+        self._hovered = True
+        self.update()
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self._hovered = False
+        self.update()
+        super().leaveEvent(event)
+
+
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
@@ -236,6 +355,21 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(ww)
     ww = QtColorSwatch(initial_color=(255, 123, 32))
     ha.addWidget(ww)
+
+    buttons: list[ColorCircleButton] = []
+
+    def _on_color_changed(btn: ColorCircleButton, color: QColor):
+        # Mark the clicked button as selected, deselect others
+        for b in buttons:
+            b.set_selected(b is btn)
+        print(f"Color picked: {color.name(QColor.HexArgb)}")
+
+    for i, hex_color in enumerate(["#4db8ff", "#4db8ff", "#4db8ff", "#2a6ebb", "#22264b", "#b3a0d6"]):
+        btn = ColorCircleButton(color=hex_color, diameter=32)
+        btn.set_selected(i == 1)  # second button selected by default
+        btn.colorChanged.connect(lambda c, b=btn: _on_color_changed(b, c))
+        ha.addWidget(btn)
+        buttons.append(btn)
 
     frame.show()
     sys.exit(app.exec_())

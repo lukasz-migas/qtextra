@@ -6,7 +6,6 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QVBoxLayout, QWidget
 
 from qtextra import helpers as hp
-from qtextra.widgets.qt_label import QtWelcomeLabel
 
 
 class MessageWidget(QWidget):

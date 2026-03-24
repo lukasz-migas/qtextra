@@ -21,7 +21,7 @@ def create_popout():
                 position=position,
             )
             for position in Position
-        ]
+        ],
     )
     pop.show()
 

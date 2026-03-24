@@ -150,7 +150,12 @@ class QtTutorial(QDialog):
         self._step_indicator.setObjectName("step_indicator")
         self._step_indicator.setTextVisible(False)
         self._close_btn = hp.make_qta_btn(
-            header_widget, "cross", small=True, medium=False, func=self.close, tooltip="Close popup."
+            header_widget,
+            "cross",
+            small=True,
+            medium=False,
+            func=self.close,
+            tooltip="Close popup.",
         )
 
         header_layout = QHBoxLayout(header_widget)
@@ -253,7 +258,10 @@ class QtTutorial(QDialog):
         self._animation.start()
 
     def move_to_widget(
-        self, widget: QWidget, position: str = "right", position_offset: tuple[int, int] = (0, 0)
+        self,
+        widget: QWidget,
+        position: str = "right",
+        position_offset: tuple[int, int] = (0, 0),
     ) -> None:
         """Move tutorial to specified widget."""
         position = Position(position)
@@ -355,7 +363,7 @@ if __name__ == "__main__":  # pragma: no cover
                     position=position,
                 )
                 for position in Position
-            ]
+            ],
         )
         pop.show()
 

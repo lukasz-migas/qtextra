@@ -33,7 +33,7 @@ class QtMiniToolbar(QFrame):
         self.layout_.setContentsMargins(0, 0, 0, 0)
         if add_spacer:
             self.layout_.addSpacerItem(
-                hp.make_h_spacer() if self.orientation == Qt.Orientation.Horizontal else hp.make_v_spacer()
+                hp.make_h_spacer() if self.orientation == Qt.Orientation.Horizontal else hp.make_v_spacer(),
             )
 
         self.max_size = 28

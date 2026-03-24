@@ -28,11 +28,7 @@ def get_docs_path() -> Path:
     """Get path to docs directory."""
     base_path = Path(sys.executable).parent
 
-    if running_as_pyinstaller_app():
-        docs_path = base_path
-    else:
-        docs_path = base_path.parent
-    return docs_path
+    return base_path if running_as_pyinstaller_app() else base_path.parent
 
 
 def check_url(url: str) -> bool:
@@ -155,7 +151,11 @@ def get_system_info(as_html=False) -> str:
 
 
 def connect(
-    connectable: Connectable, func: ty.Callable, state: bool = True, source: str = "", silent: bool = False
+    connectable: Connectable,
+    func: ty.Callable,
+    state: bool = True,
+    source: str = "",
+    silent: bool = False,
 ) -> None:
     """Function that connects/disconnects."""
     try:

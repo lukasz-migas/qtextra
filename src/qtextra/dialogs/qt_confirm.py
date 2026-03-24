@@ -35,7 +35,7 @@ class QtConfirmWithTextDialog(QDialog):
             hp.make_h_layout(
                 self.ok_btn,
                 hp.make_btn(self, "No", func=self.reject, tooltip="Cancel and return to the app."),
-            )
+            ),
         )
         self.setLayout(layout)
         self.validate()

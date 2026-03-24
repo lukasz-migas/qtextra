@@ -103,7 +103,10 @@ class QtSelectionList(QWidget):
         """Initialize the user interface."""
         self._layout = hp.make_form_layout(parent=self)
         self.filter_by = hp.make_line_edit(
-            self, placeholder="Type in text to filter...", func_changed=self.on_filter, func_clear=self.on_filter
+            self,
+            placeholder="Type in text to filter...",
+            func_changed=self.on_filter,
+            func_clear=self.on_filter,
         )
         self.filter_by.setMinimumWidth(200)
         hp.set_expanding_sizer_policy(self.filter_by, horz=True)
@@ -147,14 +150,14 @@ class QtSelectionList(QWidget):
         if self.double_click_to_select:
             self.list_widget.itemDoubleClicked.connect(
                 lambda item: item.setCheckState(
-                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
-                )
+                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
+                ),
             )
         if self.enable_single_click:
             self.list_widget.itemClicked.connect(
                 lambda item: item.setCheckState(
-                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
-                )
+                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
+                ),
             )
         # self.list_widget.setAlternatingRowColors(True)
         self._layout.addRow(self.list_widget)
@@ -250,7 +253,7 @@ class QtSelectionList(QWidget):
             if item.isHidden():
                 continue
             item.setCheckState(
-                Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked
+                Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
             )
 
     def get_checked(self) -> list[str]:

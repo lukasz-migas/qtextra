@@ -44,7 +44,11 @@ class QtTileWidget(QFrame):
         self._tile = tile
         # layout: Title, image, description
         self._title = hp.make_label(
-            self, self._tile.title, wrap=True, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="large_text"
+            self,
+            self._tile.title,
+            wrap=True,
+            alignment=Qt.AlignmentFlag.AlignHCenter,
+            object_name="large_text",
         )
         self._title.adjustSize()
         if self._tile.icon:

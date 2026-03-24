@@ -19,7 +19,7 @@ layout.setVerticalSpacing(2)
 layout.setHorizontalSpacing(2)
 widget.setLayout(layout)
 
-for name in QTA_MAPPING.keys():
+for name in QTA_MAPPING:
     qta_name, qta_kws = get_icon(name)
     label = QtQtaLabel()
     label.set_qta(qta_name, **qta_kws)

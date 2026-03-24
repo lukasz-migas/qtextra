@@ -17,7 +17,9 @@ if ty.TYPE_CHECKING:
 
 
 def set_values_from_dict(
-    data: dict[str, str | int | float | bool], widgets: dict[str, Qw.QWidget], block: bool = True
+    data: dict[str, str | int | float | bool],
+    widgets: dict[str, Qw.QWidget],
+    block: bool = True,
 ) -> None:
     """Set config to widgets."""
     for key, value in data.items():
@@ -102,7 +104,11 @@ def _add_widgets(
                 new_layout.insertWidget(0, wdg)
         else:
             new_layout = qp.make_h_layout(
-                *before_widgets, db_widget, *widgets, stretch_id=len(before_widgets), spacing=spacing
+                *before_widgets,
+                db_widget,
+                *widgets,
+                stretch_id=len(before_widgets),
+                spacing=spacing,
             )
         qp.insert_widget_in_form_layout(layout, row, db_label, new_layout)
     return widget, layout
@@ -142,25 +148,24 @@ def _insert_after_widget(
 
 def guess_widget_cls(schema: dict) -> str:
     """Guess widget class."""
-    if "type" in schema:
-        item_type = schema["type"]
-    else:
-        item_type = schema["anyOf"][0]["type"]
+    item_type = schema["type"] if "type" in schema else schema["anyOf"][0]["type"]
     if item_type in ["string", "array"]:
         if schema.get("enum"):
             return "combo_box"
         return "line_edit"
-    elif item_type == "boolean":
+    if item_type == "boolean":
         return "checkbox"
-    elif item_type == "integer":
+    if item_type == "integer":
         return "int_spin_box"
-    elif item_type == "number":
+    if item_type == "number":
         return "double_spin_box"
     raise ValueError(f"Could not parse '{item_type}'")
 
 
 def get_widget_for_schema(
-    parent: Qw.QWidget, schema: dict, func: OptionalCallback = None
+    parent: Qw.QWidget,
+    schema: dict,
+    func: OptionalCallback = None,
 ) -> tuple[
     Qw.QLabel | Qw.QLineEdit | Qw.QCheckBox | Qw.QSpinBox | Qw.QDoubleSpinBox | Qw.QComboBox | QtMultiSelect,
     QtToggleGroup | Qw.QHBoxLayout | None,
@@ -169,7 +174,7 @@ def get_widget_for_schema(
     from qtextra.widgets.qt_select_multi import QtMultiSelect
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
-    widget_cls = schema.get("widget_cls", None)
+    widget_cls = schema.get("widget_cls")
     if widget_cls is None:
         widget_cls = guess_widget_cls(schema)
     if isinstance(widget_cls, tuple):
@@ -260,22 +265,22 @@ def get_value_from_widget(widget: Qw.QWidget) -> ty.Any:
 
     if isinstance(widget, Qw.QLineEdit):
         return widget.text()
-    elif isinstance(widget, Qw.QCheckBox):
+    if isinstance(widget, Qw.QCheckBox):
         return widget.isChecked()
-    elif isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
+    if isinstance(widget, (Qw.QDoubleSpinBox, Qw.QSpinBox)):
         return widget.value()
-    elif isinstance(widget, Qw.QComboBox):
+    if isinstance(widget, Qw.QComboBox):
         return widget.currentText()
-    elif isinstance(widget, Qw.QLabel):
+    if isinstance(widget, Qw.QLabel):
         return widget.text()
-    elif isinstance(widget, QtCheckableComboBox):
+    if isinstance(widget, QtCheckableComboBox):
         return widget.checked_texts()
-    elif isinstance(widget, QtMultiSelect):
+    if isinstance(widget, QtMultiSelect):
         checked = widget.get_checked()
         if widget.n_max == 1:
             return checked[0] if checked else None
         return checked
-    elif isinstance(widget, QtToggleGroup):
+    if isinstance(widget, QtToggleGroup):
         return widget.value
     raise ValueError(f"Unknown widget class {widget}")
 

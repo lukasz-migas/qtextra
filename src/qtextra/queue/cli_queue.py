@@ -69,7 +69,7 @@ class CLIQueueHandler(QObject):
         self.finished_queue: ty.List[str] = []
         self._evt_cancel.connect(self._kill)  # type: ignore[unused-ignore]
 
-        self.actions: list[dict] = list()
+        self.actions: list[dict] = []
 
         atexit.register(self.close)
 

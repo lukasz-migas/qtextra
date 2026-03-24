@@ -111,7 +111,11 @@ class TaskWidget(QFrame):
             func=self.on_start_task,
         )
         self.retry_btn = hp.make_qta_btn(
-            self, "retry", tooltip="Retry running task if the task has failed.", normal=True, func=self._on_retry_task
+            self,
+            "retry",
+            tooltip="Retry running task if the task has failed.",
+            normal=True,
+            func=self._on_retry_task,
         )
         self.pause_btn = QtPauseButton(self)
         self.pause_btn.set_normal()
@@ -257,7 +261,7 @@ class TaskWidget(QFrame):
                 self.dlg_info.raise_()
             except RuntimeError:
                 self.dlg_info = None
-                logger.error("Failed to show task info dialog.")
+                logger.exception("Failed to show task info dialog.")
                 self.on_task_info()
 
     def update_progress(self) -> None:

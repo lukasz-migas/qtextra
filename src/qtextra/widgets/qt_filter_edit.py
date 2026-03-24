@@ -28,12 +28,18 @@ class QtFilterEdit(QWidget):
         super().__init__(parent)
 
         self.text_edit = hp.make_line_edit(
-            self, placeholder=placeholder, func_changed=self.emit_current_filters, func=self.on_add
+            self,
+            placeholder=placeholder,
+            func_changed=self.emit_current_filters,
+            func=self.on_add,
         )
         self.clear_action = hp.make_action(self, "clear", func=self.on_remove_all, tooltip="Remove all filters.")
         self.text_edit.addAction(self.clear_action, self.text_edit.ActionPosition.TrailingPosition)
         self.add_action = hp.make_action(
-            self, "add", func=self.on_add_action, tooltip="Add currently entered text as a filter."
+            self,
+            "add",
+            func=self.on_add_action,
+            tooltip="Add currently entered text as a filter.",
         )
         self.text_edit.addAction(self.add_action, self.text_edit.ActionPosition.TrailingPosition)
 
@@ -54,11 +60,11 @@ class QtFilterEdit(QWidget):
         if above:
             self._main_layout.addRow(self._filter_layout)
             self._main_layout.addRow(
-                hp.make_h_layout(self.text_edit, self.switch_toggle, spacing=1, margin=0, stretch_id=(0,))
+                hp.make_h_layout(self.text_edit, self.switch_toggle, spacing=1, margin=0, stretch_id=(0,)),
             )
         else:
             self._main_layout.addRow(
-                hp.make_h_layout(self.text_edit, self.switch_toggle, spacing=1, margin=0, stretch_id=(0,))
+                hp.make_h_layout(self.text_edit, self.switch_toggle, spacing=1, margin=0, stretch_id=(0,)),
             )
             self._main_layout.addRow(self._filter_layout)
         self.setLayout(self._main_layout)
