@@ -1,3 +1,15 @@
+/* ----------------- QHeaderView / QTableView ----------------- */
+
+QHeaderView::section {
+    color: {{ text }};
+    background-color: {{ background }};
+    border-width: 0px 2px 2px 2px;
+    border-style: dotted;
+    border-color: {{ foreground }};
+}
+
+/* ----------------- QtDataFrameWidget ----------------- */
+
 QtDataFrameWidget > HeaderView {
     font-weight: bold;
     background-color: {{ background }};
@@ -13,6 +25,7 @@ QtDataFrameWidget > TableView {
     selection-background-color: {{ background }};
 }
 
+/* ----------------- QtCheckableTableView ----------------- */
 
 QtCheckableTableView{
     background-color: {{ darken(background, 10) }};

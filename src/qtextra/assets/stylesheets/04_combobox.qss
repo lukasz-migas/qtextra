@@ -1,3 +1,79 @@
+/* ----------------- QComboBox ------------------ */
+
+QComboBox {
+  border-radius: 2px;
+  background-color: {{ foreground }};
+  padding: 3px 10px 3px 8px; /* top right bottom left */
+  font-size: {{ increase(font_size, 1) }};
+}
+
+QComboBox:on {
+  border-radius: 0px;
+}
+
+QComboBox:disabled {
+  background-color: {{ opacity(foreground, 75) }};
+  border: 1px solid;
+  border-color: {{ foreground }};
+  color: {{ opacity(text, 90) }};
+}
+
+QWidget[emphasized="true"]  QComboBox {
+  background-color: {{ primary }};
+}
+
+QComboBox::drop-down {
+  width: 26px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+QComboBox::down-arrow {
+   image: url("theme_{{ id }}:/drop_down_50.svg");
+   width: 14px;
+   height: 14px;
+}
+
+QComboBox::down-arrow:on {
+  /* when the dropdown is open */
+}
+
+QComboBox#filter_combo {
+    max-height: 14px;
+    background-color: {{ darken(background, 10) }};
+    border: 2px solid {{ foreground }};
+    border-radius: 2px;
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+}
+
+/* ----------------- QListView ------------------ */
+
+QListView {
+  /* controls the color of the open dropdown menu */
+  background-color: {{ foreground }};
+  color: {{ text }};
+  border-radius: 4px;
+}
+
+QListView:item:hover {
+    background-color: {{ lighten(highlight, 20) }};
+}
+
+QListView:item:selected {
+    background-color: {{ highlight }};
+}
+
+QListView::indicator:unchecked {
+  image: url("theme_{{ id }}:/2d.svg");
+}
+
+QListView::indicator:checked {
+  image: url("theme_{{ id }}:/check.svg");
+}
+
+/* ----------------- Custom combobox popup ------------------ */
+
 QScrollArea#combobox_scroll {
     background: {{ background }};
     border: none;

@@ -1,0 +1,97 @@
+/* ----------------- QtFramelessPopup ----------------- */
+
+QtFramelessPopup {
+    border: 2px solid {{ highlight }};
+}
+
+QtFramelessPopup#move_handle:focus {
+    background-color: {{ darken(background, 10) }};
+}
+
+/* ----------------- QtFramelessTool ----------------- */
+
+QtFramelessTool {
+    border: 2px solid {{ foreground }};
+}
+
+/* ----------------- QDialog ----------------- */
+
+QDialog#confirm_dialog > QLabel {
+    font-size: {{ increase(font_size, 3) }};
+}
+
+QtConfirmCloseDialog QLabel {
+    font-size: {{ increase(font_size, 4) }};
+}
+
+/* ------------- QMainWindow separator --------- */
+
+QMainWindow::separator {
+  width: 4px;
+  height: 4px;
+  border: none;
+  background-color: {{ background }};
+}
+
+QMainWindow::separator:hover {
+  background: {{ foreground }};
+}
+
+QMainWindow::separator:horizontal {
+  image: url("theme_{{ id }}:/horizontal_separator.svg");
+}
+
+QMainWindow::separator:vertical {
+  image: url("theme_{{ id }}:/vertical_separator.svg");
+}
+
+/* ------------- DockWidget title bar --------- */
+
+#QtCustomTitleBar {
+  padding-top:3px;
+  background-color: {{ background }};
+}
+
+#QtCustomTitleBar:hover {
+  background-color: {{ darken(background, 10) }};
+}
+
+#QtCustomTitleBarLine {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QPushButton {
+  background-color: none;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+#QtCustomTitleBar > QPushButton:hover {
+  background-color: {{ foreground }};
+}
+
+#QtCustomTitleBar > QLabel {
+  color: {{ primary }};
+  font-size: 11pt;
+}
+
+#QTitleBarCloseButton{
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    image: url("theme_{{ id }}:/delete_shape.svg");
+}
+
+#QTitleBarFloatButton{
+    image: url("theme_{{ id }}:/pop_out.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}
+
+#QTitleBarHideButton{
+    image: url("theme_{{ id }}:/visibility_off.svg");
+    width: 10px;
+    height: 8px;
+    padding: 2 1 2 1;
+}

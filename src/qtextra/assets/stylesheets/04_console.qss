@@ -1,0 +1,24 @@
+/* ----------------- QtConsole / QTextEdit ------------------ */
+
+QtConsole {
+  min-height: 100px;
+}
+
+QtConsole > QTextEdit, QtTextDialog > QTextEdit, TaskInfoDialog > QTextEdit {
+  background-color: {{ console }};
+  background-clip: padding;
+  color: {{ text }};
+  selection-background-color: {{ highlight }};
+  margin: 10px;
+  font-family: Menlo, Consolas, "Ubuntu Mono", "Roboto Mono", "DejaVu Sans Mono", monospace;
+}
+
+.inverted {
+  background-color: {{ background }};
+  color: {{ foreground }};
+}
+.error { color: #b72121; }
+.in-prompt-number { font-weight: bold; }
+.out-prompt-number { font-weight: bold; }
+.in-prompt { color: #6ab825; }
+.out-prompt { color: #b72121; }

@@ -1,0 +1,56 @@
+/* ----------------- QSlider ------------------ */
+
+QSlider {
+   background-color: none;
+}
+
+QSlider::groove:horizontal {
+   border: 0px;
+   background-color: {{ foreground }};
+   height: 6px;
+   border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+   background-color: {{ highlight }};
+   border: 0px;
+   width: 16px;
+   margin-top: -5px;
+   margin-bottom: -5px;
+   border-radius: 8px;
+}
+
+QSlider::handle:hover {
+   background-color: {{ secondary }};
+}
+
+QSlider::sub-page:horizontal {
+    background: {{ primary }};
+    border-radius: 2px;
+}
+
+QWidget[emphasized="true"] QSlider::groove:horizontal {
+   background: {{ primary }};
+}
+
+QWidget[emphasized="true"] QSlider::handle:horizontal {
+   background: {{ secondary }};
+}
+
+QWidget[emphasized="true"] QSlider::sub-page:horizontal {
+    background: {{ highlight }};
+}
+
+QWidget[emphasized="true"] QSlider::handle:hover {
+   background-color: {{ lighten(secondary, 5) }};
+}
+
+/* ----------------- QRangeSlider ------------------ */
+
+QRangeSlider {
+  qproperty-barColor: {{ primary }};
+}
+
+QWidget[emphasized="true"] QRangeSlider {
+  qproperty-barColor: {{ highlight }};
+}

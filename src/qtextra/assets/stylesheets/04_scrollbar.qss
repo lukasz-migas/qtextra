@@ -1,0 +1,131 @@
+/* ----------------- QScrollBar ------------------ */
+
+QScrollBar {
+  border: none;
+  border-radius: 2px;
+  background: {{ foreground }};
+}
+
+QWidget[emphasized="true"] QScrollBar {
+  background: {{ primary }};
+}
+
+QScrollBar:horizontal {
+    min-height: 13px;
+    max-height: 13px;
+    margin: 0px 16px;
+}
+
+QScrollBar:vertical {
+    max-width: 13px;
+    margin: 16px 0px;
+}
+
+QScrollBar::handle {
+  background: {{ highlight }};
+  border-radius: 2px;
+}
+
+QWidget[emphasized="true"] QScrollBar::handle {
+  background: {{ secondary }};
+}
+
+QScrollBar::handle:horizontal {
+    min-width: 26px;
+}
+
+QScrollBar::handle:vertical {
+    min-height: 26px;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+    border: none;
+    border-radius: 2px;
+    background: {{ foreground }};
+    subcontrol-origin: margin;
+}
+
+QWidget[emphasized="true"] QScrollBar::add-line,
+QWidget[emphasized="true"] QScrollBar::sub-line {
+    background: {{ primary }};
+}
+
+QScrollBar::add-line:horizontal {
+    width: 13px;
+    subcontrol-position: right;
+}
+
+QScrollBar::sub-line:horizontal {
+    width: 13px;
+    subcontrol-position: left;
+}
+
+QScrollBar::add-line:vertical {
+    height: 13px;
+    subcontrol-position: bottom;
+}
+
+QScrollBar::sub-line:vertical {
+    height: 13px;
+    subcontrol-position: top;
+}
+
+QScrollBar::add-line:horizontal:pressed,
+QScrollBar::sub-line:horizontal:pressed {
+    background: {{ highlight }};
+}
+
+QWidget[emphasized="true"] QScrollBar::add-line:horizontal:pressed,
+QWidget[emphasized="true"] QScrollBar::sub-line:horizontal:pressed {
+    background: {{ secondary }};
+}
+
+QScrollBar:left-arrow:horizontal {
+    image: url("theme_{{ id }}:/left_arrow.svg");
+}
+
+QScrollBar::right-arrow:horizontal {
+    image: url("theme_{{ id }}:/right_arrow.svg");
+}
+
+QScrollBar:up-arrow:vertical {
+    image: url("theme_{{ id }}:/up_arrow.svg");
+}
+
+QScrollBar::down-arrow:vertical {
+    image: url("theme_{{ id }}:/down_arrow.svg");
+}
+
+QScrollBar::left-arrow,
+QScrollBar::right-arrow,
+QScrollBar::up-arrow,
+QScrollBar::down-arrow {
+  min-height: 13px;
+  min-width: 13px;
+  max-height: 13px;
+  max-width: 13px;
+  padding: 1px 2px;
+  margin: 0;
+  border: 0;
+  border-radius: 2px;
+  background: {{ foreground }};
+}
+
+QScrollBar::left-arrow:hover,
+QScrollBar::right-arrow:hover,
+QScrollBar::up-arrow:hover,
+QScrollBar::down-arrow:hover {
+  background-color: {{ primary }};
+}
+
+QScrollBar::left-arrow:pressed,
+QScrollBar::right-arrow:pressed,
+QScrollBar::up-arrow:pressed,
+QScrollBar::down-arrow:pressed {
+  background-color: {{ highlight }};
+}
+
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background: none;
+}

@@ -1,0 +1,82 @@
+/* ----------------- QAbstractSpinBox ------------------ */
+
+QAbstractSpinBox {
+  background-color: {{ foreground }};
+  border: none;
+  padding: 1px 10px;
+  min-width: 70px;
+  min-height: 18px;
+  border-radius: 2px;
+  font-size: {{ font_size }};
+}
+
+QLabeledSlider > QAbstractSpinBox {
+  min-width: 10px;
+  padding: 0px;
+  font-size: {{ decrease(font_size, 1) }};
+}
+
+QWidget[emphasized="true"] QAbstractSpinBox {
+  background-color: {{ primary }};
+}
+
+QAbstractSpinBox::up-button,
+QAbstractSpinBox::down-button {
+    subcontrol-origin: margin;
+    width: 20px;
+    height: 20px;
+    border: 1px solid {{ background }};
+    background: {{ darken(background, 20) }};
+}
+
+QAbstractSpinBox::up-button:hover,
+QAbstractSpinBox::down-button:hover {
+        background: {{ darken(background, 40) }};
+}
+
+QWidget[emphasized="true"] QAbstractSpinBox::up-button:hover,
+QWidget[emphasized="true"] QAbstractSpinBox::down-button:hover {
+  background-color: {{ highlight }};
+}
+
+QAbstractSpinBox::up-button:pressed,
+QAbstractSpinBox::down-button:pressed {
+  background-color: {{ highlight }};
+}
+
+QWidget[emphasized="true"] QAbstractSpinBox::up-button:pressed,
+QWidget[emphasized="true"] QAbstractSpinBox::down-button:pressed {
+  background-color: {{ lighten(highlight, 15) }};
+}
+
+QAbstractSpinBox::up-button {
+  subcontrol-position: center right;
+  right: 0px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+QAbstractSpinBox::down-button {
+  subcontrol-position: center left;
+  left: 0px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+QAbstractSpinBox::up-arrow,
+QAbstractSpinBox::down-arrow {
+   width: 10px;
+   height: 10px;
+}
+
+QAbstractSpinBox::up-arrow {
+   image: url("theme_{{ id }}:/plus_50.svg");
+}
+
+QAbstractSpinBox::down-arrow {
+   image: url("theme_{{ id }}:/minus_50.svg");
+}
+
+QLabeledRangeSlider > QAbstractSpinBox {
+  min-width: 5px;
+}

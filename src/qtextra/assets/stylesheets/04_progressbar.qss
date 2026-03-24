@@ -1,0 +1,51 @@
+/* ----------------- QProgressBar ------------------ */
+
+QProgressBar {
+    border: 1px solid {{ foreground }};
+    border-radius: 2px;
+    text-align: center;
+    padding: 0px;
+    font-size: {{ font_size }};
+}
+
+QProgressBar::horizontal {
+  height: 18px;
+}
+
+QProgressBar::vertical {
+  width: 18px;
+}
+
+QProgressBar::chunk {
+    width: 1px;
+    background-color: vgradient({{ highlight }} - {{ foreground }});
+}
+
+/* ----------------- QProgressBar variants ------------------ */
+
+QProgressBar#progress_timer {
+    border: 0px;
+    padding: 2x;
+    margin: 2px;
+    max-height: 4px;
+    background-color: {{ background }};
+}
+
+QProgressBar::chunk#progress_timer {
+    width: 1px;
+    background-color: {{ success }};
+}
+
+QProgressBar#step_indicator {
+    border: 1px;
+    border-color: {{ foreground }};
+    padding: 2x;
+    margin: 2px;
+    max-height: 10px;
+    background-color: {{ foreground }};
+}
+
+QProgressBar::chunk#step_indicator {
+    width: 5px;
+    background-color: {{ success }};
+}

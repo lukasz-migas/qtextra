@@ -1,0 +1,51 @@
+/* ----------------- QRadioButton ------------------ */
+
+QRadioButton {
+  background: none;
+  font-size: {{ increase(font_size, 1) }};
+}
+
+QRadioButton::indicator{
+  height: 16px;
+  width: 16px;
+  border-radius: 8px;
+}
+
+QRadioButton::indicator::unchecked {
+  background: {{ foreground }};
+}
+
+QRadioButton::indicator:unchecked:hover {
+  background: {{ lighten(foreground, 5) }};
+}
+
+QRadioButton::indicator::checked {
+    background: {{ highlight }};
+}
+
+QRadioButton::indicator::checked {
+  image: url("theme_{{ id }}:/circle.svg");
+  height: 6px;
+  width: 6px;
+  padding: 5px;
+}
+
+QWidget[emphasized="true"] > QRadioButton {
+   background: {{ foreground }};
+}
+
+QWidget[emphasized="true"] > QRadioButton::indicator::unchecked {
+   background-color: {{ primary }};
+}
+
+QWidget[emphasized="true"] > QRadioButton:disabled {
+  background-color: {{ foreground }};
+}
+
+QWidget[emphasized="true"] > QRadioButton::indicator:checked {
+  background-color: {{ secondary }};
+}
+
+QWidget[emphasized="true"] > QRadioButton::indicator:unchecked:hover {
+  background: {{ lighten(primary, 5) }};
+}
