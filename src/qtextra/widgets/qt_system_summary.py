@@ -9,14 +9,15 @@ import numba
 import psutil
 from koyo.utilities import human_readable_byte_size
 from numba.cuda import CudaSupportError
-from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
-MEM_USAGE_ERROR = 4e9  # 4 Gb
-MEM_USAGE_WARNING = 16e9  # 16 Gb
-MEM_ERROR = 8e9
+MEM_USAGE_ERROR = 4e9  # 4 GB — app is using a lot
+MEM_USAGE_WARNING = 16e9  # 16 GB
+
+MEM_ERROR = 8e9  # less than this is critically low free/total RAM
 MEM_WARNING = 32e9
 
 CPU_N_ERROR = 30
@@ -26,97 +27,78 @@ CPU_PERCENT_ERROR = 50
 CPU_PERCENT_WARNING = 30
 
 
-def style_if(widget, value: int, error_if: int, warn_if: int, less: bool = True) -> None:
-    """Style widget based on value."""
+def style_if(widget: QWidget, value: float, error_if: float, warn_if: float, less: bool = True) -> None:
+    """Apply a status object-name to *widget* based on whether *value* is above/below thresholds."""
     if less:
-        if value < error_if:
-            object_name = "error_status_label"
-        elif value < warn_if:
-            object_name = "warning_status_label"
-        else:
-            object_name = "success_status_label"
+        object_name = (
+            "error_status_label"
+            if value < error_if
+            else "warning_status_label"
+            if value < warn_if
+            else "success_status_label"
+        )
     else:
-        if value > error_if:
-            object_name = "error_status_label"
-        elif value > warn_if:
-            object_name = "warning_status_label"
-        else:
-            object_name = "success_status_label"
+        object_name = (
+            "error_status_label"
+            if value > error_if
+            else "warning_status_label"
+            if value > warn_if
+            else "success_status_label"
+        )
     hp.update_widget_style(widget, object_name)
 
 
 class QtSystemSummaryWidget(QWidget):
-    """System information."""
+    """System information summary — refreshes every 5 seconds."""
 
     _update_gpu: bool = True
 
     def __init__(self, parent: QWidget | None = None):
         QWidget.__init__(self, parent)
 
-        # CPU summary
-        self.group_box_layout = hp.make_form_layout(parent=self, spacing=1)
-        self.group_box_layout.addRow(hp.make_h_line_with_text("CPU Summary"))
+        layout = hp.make_form_layout(parent=self, spacing=1)
 
-        # CPU freq
-        self.cpu_freq_stats_label = QLabel("", self)
-        self.group_box_layout.addRow("Current CPU frequency:", self.cpu_freq_stats_label)
-        # Number of cores
-        self.nb_cores_label = QLabel("", self)
-        self.group_box_layout.addRow("Number of CPU cores:", self.nb_cores_label)
-        self.cpu_load_label0 = QLabel("", self)
-        self.group_box_layout.addRow("CPU load over last 1 min:", self.cpu_load_label0)
-        self.cpu_load_label1 = QLabel("", self)
-        self.group_box_layout.addRow("CPU load over last 5 min:", self.cpu_load_label1)
-        self.cpu_load_label2 = QLabel("", self)
-        self.group_box_layout.addRow("CPU load over last 15 min:", self.cpu_load_label2)
+        # ── CPU ───────────────────────────────────────────────────────────────
+        layout.addRow(hp.make_h_line_with_text("CPU Summary"))
+        self.cpu_freq_label = hp.make_label(self, "")
+        layout.addRow("Current CPU frequency:", self.cpu_freq_label)
+        self.nb_cores_label = hp.make_label(self, "")
+        layout.addRow("Number of CPU cores:", self.nb_cores_label)
+        self.cpu_load_label0 = hp.make_label(self, "")
+        layout.addRow("CPU load (last 1 min):", self.cpu_load_label0)
+        self.cpu_load_label1 = hp.make_label(self, "")
+        layout.addRow("CPU load (last 5 min):", self.cpu_load_label1)
+        self.cpu_load_label2 = hp.make_label(self, "")
+        layout.addRow("CPU load (last 15 min):", self.cpu_load_label2)
 
-        # Memory summary
-        self.group_box_layout.addRow(hp.make_h_line_with_text("Memory Summary"))
-        virtual = psutil.virtual_memory()
-        available = virtual.available
-        total = virtual.total
+        # ── Memory ────────────────────────────────────────────────────────────
+        layout.addRow(hp.make_h_line_with_text("Memory Summary"))
+        self.process_memory_label = hp.make_label(self, "")
+        layout.addRow("App memory:", self.process_memory_label)
+        self.free_memory_label = hp.make_label(self, "")
+        layout.addRow("Free memory:", self.free_memory_label)
+        self.total_memory_label = hp.make_label(self, "")
+        layout.addRow("Total memory:", self.total_memory_label)
 
-        try:
-            mem = psutil.Process().memory_info().rss
-        except Exception:
-            mem = 0
-        self.process_memory_label = QLabel(f"{human_readable_byte_size(mem)}, ({round(100 * mem / total, 2)}%)", self)
-        self.group_box_layout.addRow("App Memory:", self.process_memory_label)
-        style_if(self.process_memory_label, mem, MEM_USAGE_ERROR, MEM_USAGE_WARNING, less=False)
-
-        self.free_memory_label = QLabel(
-            f"{human_readable_byte_size(available)}, ({round(100 * available / total, 2)}%)",
-            self,
-        )
-        self.group_box_layout.addRow("Free Memory:", self.free_memory_label)
-        style_if(self.free_memory_label, available, MEM_ERROR, MEM_WARNING)
-
-        self.total_memory_label = QLabel(f"{human_readable_byte_size(total)}", self)
-        self.group_box_layout.addRow("Total Memory:", self.total_memory_label)
-        style_if(self.total_memory_label, total, MEM_ERROR, MEM_WARNING)
-
-        # GPU summary
-        self.group_box_layout.addRow(hp.make_h_line_with_text("GPU Summary"))
+        # ── GPU ───────────────────────────────────────────────────────────────
+        layout.addRow(hp.make_h_line_with_text("GPU Summary"))
 
         try:
             cuda_gpu_name = numba.cuda.get_current_device().name.decode()
         except CudaSupportError:
             cuda_gpu_name = "N/A"
 
-        self.cuda_gpu_label = QLabel(f"{cuda_gpu_name}", self)
-        self.group_box_layout.addRow("CUDA GPU:", self.cuda_gpu_label)
-
+        self.cuda_gpu_label = hp.make_label(self, cuda_gpu_name)
+        layout.addRow("CUDA GPU:", self.cuda_gpu_label)
         hp.set_object_name(
             self.cuda_gpu_label,
             object_name="success_status_label" if cuda_gpu_name != "N/A" else "error_status_label",
         )
 
-        self.cudatoolkit_label = QLabel("", self)
-        self.group_box_layout.addRow("CUDA Toolkit:", self.cudatoolkit_label)
-        self.gpu_memory_free_label = QLabel("", self)
-        self.group_box_layout.addRow("Free GPU Memory:", self.gpu_memory_free_label)
-        self.gpu_memory_total_label = QLabel("", self)
-        self.group_box_layout.addRow("Total GPU Memory:", self.gpu_memory_total_label)
+        self.gpu_memory_free_label = hp.make_label(self, "")
+        layout.addRow("Free GPU memory:", self.gpu_memory_free_label)
+        self.gpu_memory_total_label = hp.make_label(self, "")
+        layout.addRow("Total GPU memory:", self.gpu_memory_total_label)
 
         hp.make_periodic_timer(self, self.update_all, delay=5000, start=True)
         self.update_all()
@@ -129,27 +111,26 @@ class QtSystemSummaryWidget(QWidget):
 
     def update_cpu(self) -> None:
         """Update CPU stats."""
-        with suppress(FileNotFoundError):
-            cpu = round(psutil.cpu_freq().current, 2)
-        cpu = f"{cpu} Mhz" if cpu else "N/A"
-        self.cpu_freq_stats_label.setText(f"{cpu}")
+        cpu_str = "N/A"
+        with suppress(FileNotFoundError, AttributeError):
+            freq = psutil.cpu_freq()
+            if freq is not None:
+                cpu_str = f"{round(freq.current, 2)} MHz"
+        self.cpu_freq_label.setText(cpu_str)
 
-        # Number of cores
         n_cpu = os.cpu_count() or 1
-        self.nb_cores_label.setText(f"{n_cpu // 2}")
-        style_if(self.nb_cores_label, n_cpu // 2, CPU_N_ERROR, CPU_N_WARNING)
+        n_physical = n_cpu // 2
+        self.nb_cores_label.setText(str(n_physical))
+        style_if(self.nb_cores_label, n_physical, CPU_N_ERROR, CPU_N_WARNING)
 
-        cpu_load_values = [(elem * 16) for elem in psutil.getloadavg()]
-        cpu_1min = "100.0+" if cpu_load_values[0] >= 100.0 else round(cpu_load_values[0], 2)
-        self.cpu_load_label0.setText(f"{cpu_1min}%")
-        cpu_5min = "100.0+" if cpu_load_values[1] >= 100.0 else round(cpu_load_values[1], 2)
-        self.cpu_load_label1.setText(f"{cpu_5min}%")
-        cpu_15min = "100.0+" if cpu_load_values[2] >= 100.0 else round(cpu_load_values[2], 2)
-        self.cpu_load_label2.setText(f"{cpu_15min}%")
-
-        style_if(self.cpu_load_label0, cpu_load_values[0], CPU_PERCENT_ERROR, CPU_PERCENT_WARNING)
-        style_if(self.cpu_load_label1, cpu_load_values[1], CPU_PERCENT_ERROR, CPU_PERCENT_WARNING)
-        style_if(self.cpu_load_label2, cpu_load_values[2], CPU_PERCENT_ERROR, CPU_PERCENT_WARNING)
+        cpu_load_values = [elem * 16 for elem in psutil.getloadavg()]
+        for label, value in zip(
+            (self.cpu_load_label0, self.cpu_load_label1, self.cpu_load_label2),
+            cpu_load_values,
+        ):
+            text = "100.0+%" if value >= 100.0 else f"{round(value, 2)}%"
+            label.setText(text)
+            style_if(label, value, CPU_PERCENT_ERROR, CPU_PERCENT_WARNING, less=False)
 
     def update_mem(self) -> None:
         """Update memory stats."""
@@ -161,55 +142,58 @@ class QtSystemSummaryWidget(QWidget):
             mem = psutil.Process().memory_info().rss
         except Exception:
             mem = 0
-        self.process_memory_label.setText(f"{human_readable_byte_size(mem)}, ({round(100 * mem / total, 2)}%)")
+
+        pct = round(100 * mem / total, 2) if total else 0
+        self.process_memory_label.setText(f"{human_readable_byte_size(mem)} ({pct}%)")
         style_if(self.process_memory_label, mem, MEM_USAGE_ERROR, MEM_USAGE_WARNING, less=False)
 
-        self.free_memory_label.setText(f"{human_readable_byte_size(available)}, ({round(100 * available / total, 2)}%)")
+        avail_pct = round(100 * available / total, 2) if total else 0
+        self.free_memory_label.setText(f"{human_readable_byte_size(available)} ({avail_pct}%)")
         style_if(self.free_memory_label, available, MEM_ERROR, MEM_WARNING)
 
-        self.total_memory_label.setText(f"{human_readable_byte_size(total)}")
+        self.total_memory_label.setText(human_readable_byte_size(total))
         style_if(self.total_memory_label, total, MEM_ERROR, MEM_WARNING)
 
     def update_gpu(self) -> None:
-        """Update GPU stats."""
-        # cuda_toolkit = numba.cuda.cudadrv.nvvm.is_available()
-        # self.cudatoolkit_label.setText(f"{'present' if cuda_toolkit else 'absent'}")
-        # if numba.cuda.cudadrv.nvvm.is_available():
-        #     self.cudatoolkit_label.setStyleSheet("QLabel {color: green;}")
-        # else:
-        #     self.cudatoolkit_label.setStyleSheet("QLabel {color: red;}")
-
+        """Update GPU memory stats."""
         if not self._update_gpu:
             return
 
         try:
-            cuda_memory_free = numba.cuda.current_context().get_memory_info().free
-            cuda_memory_total = numba.cuda.current_context().get_memory_info().total
+            ctx = numba.cuda.current_context()
+            mem_info = ctx.get_memory_info()
+            cuda_memory_free = mem_info.free
+            cuda_memory_total = mem_info.total
         except CudaSupportError:
             cuda_memory_free = 0
             cuda_memory_total = 0
             self._update_gpu = False
 
-        self.gpu_memory_free_label.setText(f"{human_readable_byte_size(cuda_memory_free)}")
-        self.gpu_memory_total_label.setText(f"{human_readable_byte_size(cuda_memory_total)}")
+        self.gpu_memory_free_label.setText(human_readable_byte_size(cuda_memory_free))
+        self.gpu_memory_total_label.setText(human_readable_byte_size(cuda_memory_total))
+
         if cuda_memory_total == 0:
             hp.set_object_name(
-                self.gpu_memory_total_label,
                 self.gpu_memory_free_label,
+                self.gpu_memory_total_label,
                 object_name="error_status_label",
             )
         else:
-            if numba.cuda.current_context().get_memory_info().total < 8000000000:
-                hp.set_object_name(self.gpu_memory_free_label, object_name="warning_status_label")
-            else:
-                hp.set_object_name(self.gpu_memory_free_label, object_name="success_status_label")
-
-            if cuda_memory_free / cuda_memory_total < 0.4:
-                hp.set_object_name(self.gpu_memory_free_label, object_name="error_status_label")
-            elif cuda_memory_free / cuda_memory_total < 0.8:
-                hp.set_object_name(self.gpu_memory_free_label, object_name="warning_status_label")
-            else:
-                hp.set_object_name(self.gpu_memory_free_label, object_name="success_status_label")
+            hp.set_object_name(
+                self.gpu_memory_total_label,
+                object_name="warning_status_label" if cuda_memory_total < 8_000_000_000 else "success_status_label",
+            )
+            free_ratio = cuda_memory_free / cuda_memory_total
+            hp.set_object_name(
+                self.gpu_memory_free_label,
+                object_name=(
+                    "error_status_label"
+                    if free_ratio < 0.4
+                    else "warning_status_label"
+                    if free_ratio < 0.8
+                    else "success_status_label"
+                ),
+            )
 
 
 class SystemSummaryPopup(QtFramelessTool):
@@ -218,7 +202,7 @@ class SystemSummaryPopup(QtFramelessTool):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent=parent)
 
-    def make_panel(self) -> QVBoxLayout:
+    def make_panel(self):
         """Create widget."""
         layout = hp.make_v_layout(spacing=0, margin=0)
         layout.addLayout(self._make_hide_layout("System summary"))
@@ -243,4 +227,4 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(hp.make_btn(parent=frame, text="Open popup", func=_make_popup))
 
     frame.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
