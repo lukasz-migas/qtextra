@@ -73,9 +73,9 @@ class TableConfig(MutableMapping[int, Column]):
         return [value["order"] for value in self.values() if value["hidden"]]
 
     def update_attribute(self, name: str, attr: str, value: ty.Any) -> None:
-        """Update attribute value."""
-        for name_, meta_ in self.items():
-            if name == name_:
+        """Update attribute value by column name or tag."""
+        for _, meta_ in self.items():
+            if meta_["name"] == name or meta_["tag"] == name:
                 meta_[attr] = value
 
     def add(
@@ -92,7 +92,7 @@ class TableConfig(MutableMapping[int, Column]):
         sizing: str | ColumnSizing = "stretch",
         checkable: bool = False,
         selectable: bool = True,
-        resizeable: bool = False,
+        resizable: bool = False,
     ) -> TableConfig:
         """Add an item to the configuration."""
         self.last_index += 1
@@ -113,7 +113,7 @@ class TableConfig(MutableMapping[int, Column]):
             "tooltip": tooltip,
             "sizing": sizing,
             "selectable": selectable,
-            "resizeable": resizeable,
+            "resizable": resizable,
         }
         if is_color:
             self.color_columns.append(self.last_index)

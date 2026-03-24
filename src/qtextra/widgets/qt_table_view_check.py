@@ -272,7 +272,7 @@ class StarRatingDelegate(QStyledItemDelegate):
         for i in range(total):
             poly = self._star_polygon(x + star_size / 2, y, star_size / 2, star_size / 4)
             painter.setPen(QPen(Qt.GlobalColor.black, 1))
-            painter.setBrush(QBrush(Qt.GlobalColor.yellow if i < rating else Qt.GlobalColor.NoBrush))
+            painter.setBrush(QBrush(Qt.GlobalColor.yellow) if i < rating else QBrush(Qt.BrushStyle.NoBrush))
             painter.drawPolygon(poly)
             x += star_size + spacing
 
@@ -342,8 +342,8 @@ class HyperlinkDelegate(QStyledItemDelegate):
         painter.save()
 
         color = (
-            option.palette.color(option.palette.HighlightedText)
-            if option.state & option.state.State_Selected
+            option.palette.color(option.palette.ColorRole.HighlightedText)
+            if option.state & QStyle.StateFlag.State_Selected
             else QColor("#4dabf7")
         )
         painter.setPen(QPen(color))
@@ -409,7 +409,7 @@ class BarDelegate(QStyledItemDelegate):
 
 class SparklineDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
-        values = index.data(Qt.UserRole)
+        values = index.data(Qt.ItemDataRole.UserRole)
         if values is None:
             return super().paint(painter, option, index)
 
@@ -565,9 +565,10 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, text: str, column: int) -> None:
         """Set filter by column."""
-        if not text and column in self.filters_by_text:
-            del self.filters_by_text[column]
-        self.filters_by_text[column] = str(text).lower()
+        if not text:
+            self.filters_by_text.pop(column, None)
+        else:
+            self.filters_by_text[column] = str(text).lower()
         self.invalidateFilter()
         self.evt_filtered.emit()
 
@@ -813,55 +814,6 @@ class QtCheckableItemModel(QAbstractTableModel):
             return make_qta_icon(value)
         return None
 
-    # def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
-    #     """Parse data."""
-    #     if not index.isValid():
-    #         return None
-    #
-    #     row = index.row()
-    #     column = index.column()
-    #     is_color = column in self.color_columns
-    #
-    #     # check the background color
-    #     if role == Qt.ItemDataRole.BackgroundRole:
-    #         if is_color:
-    #             color = self._table[row][column]
-    #             if isinstance(color, str) and "#" in color:
-    #                 return QBrush(QColor(color))
-    #             if isinstance(color, np.ndarray):
-    #                 return QBrush(QColor(*(255 * color).astype("int")))
-    #             if isinstance(color, QColor):
-    #                 return QBrush(color)
-    #         return QBrush()
-    #     # check text color
-    #     if role == Qt.ItemDataRole.ForegroundRole:
-    #         if is_color:
-    #             bg_color = self._table[row][column]
-    #             if isinstance(bg_color, str) and "#" in bg_color:
-    #                 return QBrush(get_text_color(QColor(bg_color)))
-    #         # let's use slightly different color html
-    #         if column in self.html_columns:
-    #             return QBrush(QColor(LINK_COLOR))
-    #         return QBrush(QColor(TEXT_COLOR))
-    #     # check value
-    #     if role == Qt.ItemDataRole.DisplayRole:
-    #         if column not in self.icon_columns and column not in self.checkable_columns and not is_color:
-    #             return self._table[row][column]
-    #         return None
-    #     # check the alignment role
-    #     if role == Qt.ItemDataRole.TextAlignmentRole:
-    #         return self.text_alignment
-    #     # check state
-    #     if role == Qt.ItemDataRole.CheckStateRole and column in self.checkable_columns:
-    #         return Qt.CheckState.Checked if self._table[row][column] else Qt.CheckState.Unchecked
-    #     # icon state
-    #     if role == Qt.ItemDataRole.DecorationRole:
-    #         if column in self.icon_columns:
-    #             value = self._table[row][column]
-    #             return make_qta_icon(value)
-    #         return None
-    #     return None
-
     def headerData(self, col: int, orientation: Qt.Orientation, role: Qt.ItemDataRole | None = None) -> str | None:
         """Get header data."""
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
@@ -1044,13 +996,10 @@ class QtCheckableItemModel(QAbstractTableModel):
         return -1
 
     def get_row_id_for_values(self, *column_and_values: ty.Tuple[int, ty.Union[str, int, float]]) -> int:
-        """Find value index."""
+        """Find first row where all (col_id, value) pairs match. Returns -1 if not found."""
         for row_id, row in enumerate(self._table):
-            for col_id, value in column_and_values:
-                if row[col_id] != value:
-                    break
-                if all(row[col_id] == value for col_id, value in column_and_values):
-                    return row_id
+            if all(row[col_id] == value for col_id, value in column_and_values):
+                return row_id
         return -1
 
     @ensure_main_thread
@@ -1248,6 +1197,7 @@ class QtCheckableTableView(QTableView):
 
         resizable = []
         for column_id in range(n_cols):
+            column_metadata = None
             if config:
                 column_metadata = config.get(column_id)
                 if not column_metadata:
@@ -1261,10 +1211,10 @@ class QtCheckableTableView(QTableView):
                 # The first column should always be a QCheckbox
                 mode = QHeaderView.ResizeMode.Fixed if column_id == 0 else QHeaderView.ResizeMode.Stretch
             header.setSectionResizeMode(column_id, mode)
-            if config:
+            if config and column_metadata is not None:
                 if mode == QHeaderView.ResizeMode.Fixed:
                     header.resizeSection(column_id, config.get_width(column_id))
-                elif mode == QHeaderView.ResizeMode.Stretch and column_metadata["resizeable"]:
+                elif mode == QHeaderView.ResizeMode.Stretch and column_metadata["resizable"]:
                     resizable.append(column_id)
 
         # set column width for the first column (checkbox)
@@ -1427,21 +1377,6 @@ class QtCheckableTableView(QTableView):
         if n_items == 0:
             self.init()
 
-    def add_index(self, rows: list[str]):
-        """Add vertical index."""
-        # header.set
-        # for i, row in enumerate(rows):
-        #     header.setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
-        #     header.item
-
-    def add_data_without_set(self, data: list[list]) -> None:
-        """Add data."""
-        n_items = self.n_rows
-        self._validate_data(data)
-        self.model().add_data(data)
-        if n_items == 0:
-            self.init()
-
     def _validate_data(self, data: list, n_cols: ty.Optional[int] = None) -> None:
         """Validate data."""
         if n_cols is None:
@@ -1510,14 +1445,14 @@ class QtCheckableTableView(QTableView):
     def get_col_data(self, col_id: int) -> list[ty.Any]:
         """Get data from model."""
         data = self.model().get_data()
-        if col_id <= self.n_cols:
+        if col_id < self.n_cols:
             data = [row[col_id] for row in data]
         return data
 
     def get_row_data(self, row_id: int) -> list:
         """Get data from model."""
         data = self.model().get_data()
-        if row_id <= self.n_rows:
+        if row_id < self.n_rows:
             data = data[row_id]
         return data
 
@@ -1531,7 +1466,7 @@ class QtCheckableTableView(QTableView):
     def get_value(self, col_id: int, row_id: int) -> ty.Any:
         """Get data from model."""
         data = self.model().get_data()
-        if row_id <= self.n_rows and col_id <= self.n_cols:
+        if row_id < self.n_rows and col_id < self.n_cols:
             data = data[row_id][col_id]
         return data
 
@@ -1647,3 +1582,36 @@ class QtCheckableTableView(QTableView):
     def create_index(self, row: int = 0, column: int = 0) -> QModelIndex:
         """Create index."""
         return self.model().createIndex(row, column)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.utils.dev import qframe
+
+    app, frame, ha = qframe(False)
+    frame.setMinimumSize(900, 500)
+
+    config = (
+        TableConfig()
+        .add("", "check", dtype="bool")
+        .add("Name", "name")
+        .add("City", "city")
+        .add("Score", "score")
+        .add("Active", "active", dtype="bool")
+    )
+    table = QtCheckableTableView(frame)
+    table.setup_model_from_config(config)
+    table.add_data(
+        [
+            [True, "Alice", "Berlin", 92, True],
+            [False, "Bob", "Paris", 78, False],
+            [True, "Carol", "Berlin", 85, True],
+            [False, "Dave", "London", 60, False],
+            [True, "Eve", "Tokyo", 99, True],
+        ],
+    )
+    ha.addWidget(table)
+
+    frame.show()
+    sys.exit(app.exec())

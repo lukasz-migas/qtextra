@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(python -m pytest tests/widgets/test_qt_combobox.py -v)",
-      "Bash(grep -n \"QToolBar\\\\|toolbar\\\\|ToolBar\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/assets/stylesheets/*.qss)"
+      "Bash(grep -n \"QToolBar\\\\|toolbar\\\\|ToolBar\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/assets/stylesheets/*.qss)",
+      "Bash(python -m pytest tests/widgets/test_qt_table_view.py -v --tb=short)",
+      "Bash(python -m pytest tests/widgets/test_qt_table_view.py::TestTableView::test_get_col_data tests/widgets/test_qt_table_view.py::TestModel::test_get_row_id tests/widgets/test_qt_table_view.py::TestTableView::test_set_value -v --tb=long)",
+      "Bash(python:*)"
     ]
   }
 }
