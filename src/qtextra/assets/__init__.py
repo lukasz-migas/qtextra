@@ -142,6 +142,8 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     "not_notified": "mdi6.bell-off",
     "auto": "mdi6.brightness-auto",
     "double_click": "mdi6.gesture-double-tap",
+    "network": "fa5s.network-wired",
+    "font_size": "ei.fontsize",
     # file format
     "gif": "mdi6.file-gif-box",
     "pdf": "mdi6.file-pdf-box",

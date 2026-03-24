@@ -121,33 +121,52 @@ QtDeleteButton:pressed {
   background-color: {{ warning }};
 }
 
+/* ----------------- QToolBar ----------------- */
+QToolBar {
+    background-color: {{ background }};
+    border: none;
+    spacing: 2px;
+    padding: 2px;
+}
+
+QToolBar::separator {
+    background-color: {{ foreground }};
+    width: 1px;
+    margin: 4px 3px;
+}
+
+QToolBar::handle {
+    width: 0px;
+    height: 0px;
+}
+
 /* ----------------- QtToolbarPushButton ----------------- */
-QtToolbarPushButton{
-    min-width : 32px;
-    max-width : 32px;
-    min-height : 32px;
-    max-height : 32px;
+QtToolbarPushButton {
+    min-width: 32px;
+    max-width: 32px;
+    min-height: 32px;
+    max-height: 32px;
     padding: 5px;
-    border: 1px;
+    border: 1px solid transparent;
+    border-radius: 4px;
     margin: 1px;
-    background-color: {{ darken(background, 5) }};
+    background-color: transparent;
 }
 
-QtToolbarPushButton::checked{
-    background-color: {{ foreground }};
+QtToolbarPushButton:checked {
     border: 3px solid {{ success }};
+    background-color: {{ background }};
+    border-radius: 4px;
 }
 
-QtToolbarPushButton::unchecked{
-    background-color: {{ canvas }};
-}
-
-QtToolbarPushButton::pressed{
+QtToolbarPushButton:pressed {
     background-color: {{ foreground }};
+    border-radius: 4px;
 }
 
-QtToolbarPushButton::hover{
+QtToolbarPushButton:hover {
     background-color: {{ primary }};
+    border-radius: 4px;
 }
 
 /* ----------------- QtPauseButton / QtLockButton ----------------- */

@@ -106,7 +106,10 @@ class QtSystemInfo(QDialog):
             Parent of the dialog, to correctly inherit and apply theme.
             Default is None.
         """
+        from qtextra.config import THEMES
+
         d = QtSystemInfo(system_info, citation_info, title=title, parent=parent)
+        THEMES.set_theme_stylesheet(d)
         d.setObjectName("DialogSystemInfo")
         d.setWindowTitle(title)
         d.setWindowModality(Qt.WindowModality.ApplicationModal)

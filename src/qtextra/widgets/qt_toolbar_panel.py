@@ -221,8 +221,8 @@ class QtPanelWidget(QWidget):
         button.setCheckable(True)
         index = self.get_index(button)
 
-        # create custom tooltip if it's possible
-        if hasattr(widget, "_make_html_description"):
+        # create a custom tooltip if it's possible
+        if not tooltip and hasattr(widget, "_make_html_description"):
             tooltip = widget._make_html_description()  # type: ignore[union-attr]
 
         # about_widget = None

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -m pytest tests/widgets/test_qt_combobox.py -v)"
+      "Bash(python -m pytest tests/widgets/test_qt_combobox.py -v)",
+      "Bash(grep -n \"QToolBar\\\\|toolbar\\\\|ToolBar\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/assets/stylesheets/*.qss)"
     ]
   }
 }

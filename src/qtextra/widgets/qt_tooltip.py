@@ -693,7 +693,7 @@ if __name__ == "__main__":  # pragma: no cover
 
         from qtextra.utils.dev import qframe
 
-        app, frame, ha = qframe()
+        app, frame, ha = qframe(horz=False)
 
         def _popup():
             QtToolTip.init(

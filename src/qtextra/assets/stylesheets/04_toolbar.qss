@@ -1,0 +1,13 @@
+/* ----------------- QtPanelToolbar ----------------- */
+
+QWidget#toolbarSpacer{
+    background: none;
+}
+
+QtPanelToolbar {
+    background-color: {{ darken(background, 5) }};
+}
+
+QtPanelToolbar  QToolBar {
+    background-color: {{ darken(background, 5) }};
+}

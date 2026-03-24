@@ -694,7 +694,8 @@ class QtToolbarPushButton(QtImagePushButton):
         self.opacity_anim.currentLoopChanged.connect(self._loop_update)
         self.opacity_anim.finished.connect(self.stop_pulse)
 
-        self.tooltip_timer = hp.make_periodic_timer(self, self._show_tooltip, 1500, start=False)
+        self.tooltip_timer = hp.make_periodic_timer(self, self._show_tooltip, 700, start=False)
+        self.tooltip_timer.setSingleShot(True)
 
         self.evt_click.connect(self.stop_pulse)
 
@@ -707,6 +708,10 @@ class QtToolbarPushButton(QtImagePushButton):
         pos = self.mapToGlobal(rect.topRight())
         pos -= QPoint(0, 22)
         return pos
+
+    def _on_tooltip_closed(self) -> None:
+        """Reset tooltip reference when closed externally (e.g. via close button)."""
+        self._tooltip = None
 
     def _show_tooltip(self) -> None:
         """Show a tooltip if it's available."""
@@ -723,6 +728,7 @@ class QtToolbarPushButton(QtImagePushButton):
                 is_closable=True,
                 duration=-1,
             )
+            self._tooltip.destroyed.connect(self._on_tooltip_closed)
         except AttributeError:
             # fallback to QToolTip if QtToolTip is not available
             QToolTip.showText(self._get_position(), self._text, self)
@@ -735,7 +741,8 @@ class QtToolbarPushButton(QtImagePushButton):
             evt.ignore()
         elif evt.type() == QEvent.Type.Leave:
             self.tooltip_timer.stop()
-            self._tooltip = hp.close_widget(self._tooltip)
+            hp.close_widget(self._tooltip)
+            self._tooltip = None
         return super().event(evt)
 
     @Slot(int)  # type: ignore[misc]
@@ -811,7 +818,7 @@ class QtToolbarPushButton(QtImagePushButton):
 
 
 class QtLabelledToolbarPushButton(QWidget):
-    """Push button with label."""
+    """Push button with a label."""
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._label_hidden = False

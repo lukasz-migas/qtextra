@@ -151,7 +151,6 @@ def qframe(
     if with_layout:
         if horz:
             layout = QtWidgets.QHBoxLayout()
-            layout.addWidget(theme_toggle_btn(frame))
         else:
             layout = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
