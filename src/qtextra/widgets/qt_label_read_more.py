@@ -13,6 +13,10 @@ class QReadMoreLessLabel(QWidget):
 
         self.text = text
         self.readmore = False
+        self.readmore_text = None
+        self.readmore_left = ""
+        self.readmore_right = ""
+        self.readless_text = ""
 
         # Explanation text
         self.explanation_layout = QHBoxLayout()
@@ -21,7 +25,6 @@ class QReadMoreLessLabel(QWidget):
 
         if "<moreless>" in text:
             self.readless_text, self.readmore_text = text.split("<moreless>")
-            self.readmore_text = text
             self.readmore_left, self.readmore_right = self.readmore_text.split("<split>")
             text_left = self.readless_text + ("" if self.readmore_right.strip() == "" else "<b>Read more...</b>")
             text_right = ""
@@ -42,7 +45,7 @@ class QReadMoreLessLabel(QWidget):
         self.explanation_text_right.setTextFormat(Qt.TextFormat.RichText)
         self.explanation_layout.addWidget(self.explanation_text_right, 50)
 
-        if self.readmore_text is not None and self.readmore_text.strip() == "":
+        if self.readmore_text is not None and self.readmore_right.strip() == "":
             self.vertical_break.setHidden(True)
             self.explanation_text_right.setHidden(True)
 

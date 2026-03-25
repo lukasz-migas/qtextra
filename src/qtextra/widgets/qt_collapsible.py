@@ -92,7 +92,13 @@ class QtCheckCollapsible(QCollapsible):
 
     def addLayout(self, layout: QLayout):
         """Add layout to the central content widget's layout."""
-        self._content.layout().addLayout(layout)
+        content_layout = self._content.layout()
+        if hasattr(content_layout, "addLayout"):
+            content_layout.addLayout(layout)
+        elif hasattr(content_layout, "addRow"):
+            content_layout.addRow(layout)
+        else:
+            raise ValueError("Layout does not support adding child layouts.")
 
     def addRow(self, label: str | QWidget | QLayout, widget: QWidget | None = None):
         """Add layout to the central content widget's layout."""

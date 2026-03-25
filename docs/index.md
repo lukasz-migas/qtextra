@@ -1,22 +1,30 @@
 # qtextra
 
-A bunch of *extra* widgets and components for PyQt/PySide
+`qtextra` provides higher-level widgets, dialogs, and helpers for Qt
+applications built with PyQt or PySide through `qtpy`.
 
-Here, you will find a bunch of extra widgets and components that you can use in your PySide/PyQt (using qtpy) applications.
-The goal is to provide a set of widgets that are not available in the standard PyQt/PySide libraries, or that are not easy to use.
+The library focuses on application-facing components that are either missing
+from the standard Qt bindings or awkward to assemble repeatedly in product
+code. It also ships optional styling assets so the widgets are easier to adopt
+consistently across a larger UI.
+
+## Highlights
+
+- Reusable widgets for input, progress, status, and selection flows
+- Dialog helpers for confirmations, console output, changelogs, and more
+- Theme-aware icons and stylesheet assets
+- Examples and targeted widget docs for common integration patterns
 
 Components are tested on:
 
 - macOS, Windows & Linux
-- Python 3.9 and above
+- Python 3.10 and above
 - PyQt5 (5.11 and above) & PyQt6
 - Pyside2 (5.11 and above) & PySide6
 
-
-This repository is fairly similar in scope to [superqt](https://github.com/pyapp-kit/superqt) which aims to provide a number of useful 
-widgets (in fact we use a couple of them in this library). The main difference is that we aimed to provide a more opinionated 
-style (with stylesheets available in the [assets](src/qtextra/assets/stylesheets) directory) and focus on providing a wider
-range of widgets.
+The project has some overlap with [superqt](https://github.com/pyapp-kit/superqt),
+but `qtextra` is more opinionated about application ergonomics and bundled
+styles.
 
 ## Installation
 
@@ -30,4 +38,5 @@ conda install -c conda-forge qtextra
 
 ## Usage
 
-See the [Widgets](./widgets/index.md) and [Dialogs](./dialogs/index.md) pages for features offered by superqt.
+Start with the [Widgets](./widgets/index.md) and [Dialogs](./dialogs/index.md)
+pages, then browse the runnable examples in [`examples/`](../examples).
