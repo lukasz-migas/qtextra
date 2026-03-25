@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 import qtawesome as qta
 import qtpy.QtWidgets as Qw
+from koyo.decorators import renamed_parameter
 from koyo.system import IS_MAC, IS_WIN
 from koyo.typing import PathLike
 from loguru import logger
@@ -283,7 +284,7 @@ def make_grid_layout(
         if isinstance(margin, int):
             margin = (margin, margin, margin, margin)
         layout.setContentsMargins(*margin)
-    if column_to_stretch:
+    if column_to_stretch is not None:
         if isinstance(column_to_stretch, int):
             column_to_stretch = {column_to_stretch: 1}
         for column, stretch in column_to_stretch.items():
@@ -505,21 +506,21 @@ def get_font(font_size: int, font_weight: int = QFont.Weight.Normal) -> QFont:
 
 def set_sizer_policy(
     widget: Qw.QWidget,
-    min_size: ty.Union[QSize, tuple[int]] = None,
-    max_size: ty.Union[QSize, tuple[int]] = None,
+    min_size: QSize | tuple[int, int] | None = None,
+    max_size: QSize | tuple[int, int] | None = None,
     h_stretch: bool = False,
     v_stretch: bool = False,
-):
-    """Set sizer policy."""
+) -> None:
+    """Set the size policy and optional min/max size of a widget."""
     size_policy = Qw.QSizePolicy(Qw.QSizePolicy.Policy.Minimum, Qw.QSizePolicy.Policy.Preferred)
     size_policy.setHorizontalStretch(h_stretch)
     size_policy.setVerticalStretch(v_stretch)
     size_policy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
     widget.setSizePolicy(size_policy)
-    if min_size:
-        widget.setMinimumSize(QSize(min_size))
-    if max_size:
-        widget.setMaximumSize(QSize(max_size))
+    if min_size is not None:
+        widget.setMinimumSize(QSize(*min_size) if isinstance(min_size, tuple) else min_size)
+    if max_size is not None:
+        widget.setMaximumSize(QSize(*max_size) if isinstance(max_size, tuple) else max_size)
 
 
 def set_expanding_sizer_policy(
@@ -664,8 +665,10 @@ def run_process(
             process.readyReadStandardOutput.connect(
                 lambda: func_stdout(process.readAllStandardOutput().data().decode()),
             )
-            process.readyReadStandardError.connect(lambda: func_stdout(process.readAllStandardError().data().decode()))
         if func_error:
+            process.readyReadStandardError.connect(
+                lambda: func_error(process.readAllStandardError().data().decode()),
+            )
             [process.errorOccurred.connect(func_error_) for func_error_ in _validate_func(func_error)]
         process.startDetached()
     else:
@@ -2034,20 +2037,20 @@ def make_swatch_grid(
             layout.addWidget(swatch)
             swatches.append(swatch)
     else:
-        _i = 0
         layout = Qw.QVBoxLayout()  # type: ignore[assignment]
         layout.setSpacing(4)
+        global_idx = 0
         for _colors in chunks(colors, 10):
             row_layout = Qw.QHBoxLayout()
             row_layout.setSpacing(4)
             row_layout.addSpacerItem(make_h_spacer())
-            for _i, color in enumerate(_colors):
+            for color in _colors:
                 swatch = make_swatch(parent, color, value=color)
                 swatch.setMinimumSize(*size)
-                swatch.evt_color_changed.connect(partial(func, _i))
+                swatch.evt_color_changed.connect(partial(func, global_idx))
                 row_layout.addWidget(swatch)
                 swatches.append(swatch)
-                _i += 1
+                global_idx += 1
             row_layout.addSpacerItem(make_h_spacer())
             layout.addLayout(row_layout)
     return layout, swatches
@@ -2071,8 +2074,8 @@ def show_menu(menu: Qw.QMenu | None = None, func_menu: ty.Callable | None = None
 def make_bitmap_tool_btn(
     parent: Qw.QWidget | None,
     icon: QIcon,
-    min_size: ty.Optional[tuple[int]] = None,
-    max_size: ty.Optional[tuple[int]] = None,
+    min_size: tuple[int, int] | None = None,
+    max_size: tuple[int, int] | None = None,
     tooltip: str | None = None,
 ) -> QtToolButton:
     """Make bitmap button."""
@@ -2684,7 +2687,7 @@ def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning") -> Non
     dlg.setWindowFlags(dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
     dlg.setWindowTitle(title)
     dlg.setText(message)
-    dlg.exec_()
+    dlg.exec()
 
 
 def notification(
@@ -2949,7 +2952,7 @@ def get_color(
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
     new_color: ty.Optional[ty.Union[str, np.ndarray]] = None
-    if dlg.exec_():
+    if dlg.exec():
         new_color = dlg.currentColor()
         if as_hex:
             new_color = new_color.name()
@@ -2998,7 +3001,7 @@ def confirm(
 ) -> bool:
     """Confirm action."""
     dlg = _get_confirm_dlg(parent, message, title, alignment=alignment, color=color, resizable=resizable)
-    return bool(dlg.exec_())
+    return bool(dlg.exec())
 
 
 def confirm_dont_ask_again(
@@ -3013,10 +3016,7 @@ def confirm_dont_ask_again(
 ) -> bool:
     """Confirm action."""
     if not config or not attr:
-
-        def func(_):
-            return None
-
+        func = None
         value = False
     else:
         func = partial(lambda value: config.update(**{attr: bool(value)}))
@@ -3025,7 +3025,7 @@ def confirm_dont_ask_again(
     dlg = _get_confirm_dlg(parent, message, title, alignment=alignment, color=color, resizable=resizable)
     layout = dlg.layout()
     layout.addWidget(make_checkbox(dlg, "Don't ask again", func=func, value=value))
-    return bool(dlg.exec_())
+    return bool(dlg.exec())
 
 
 def choose(
@@ -3041,7 +3041,7 @@ def choose(
         options = {opt: opt for opt in options}
 
     dlg = QtScrollablePickOption(parent, text, options, orientation=orientation)
-    if dlg.exec_():
+    if dlg.exec():
         return dlg.option
     return None
 
@@ -3060,7 +3060,7 @@ def choose_from_list(
     dlg = SelectionWidget(parent, title=title, text=text, n_max=0 if multiple else 1)
     dlg.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
     dlg.set_options(options, selected)
-    if dlg.exec_() == Qw.QDialog.DialogCode.Accepted:
+    if dlg.exec() == Qw.QDialog.DialogCode.Accepted:
         if not multiple and dlg.options:
             return dlg.options[0]
         return dlg.options
@@ -3080,7 +3080,7 @@ def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "War
     layout.addWidget(make_label(dlg, message, enable_url=True, wrap=True), stretch=True)
     layout.addWidget(make_btn(dlg, "Ok", func=dlg.reject))
     dlg.setLayout(layout)
-    return bool(dlg.exec_())
+    return bool(dlg.exec())
 
 
 def confirm_with_text(
@@ -3097,7 +3097,7 @@ def confirm_with_text(
             raise ValueError(f"Request string ({request}) must be part of the message.")
         message = message.replace("<b>confirm</b>", f"<b>{request}</b>")
     dlg = QtConfirmWithTextDialog(parent, title, message, request)
-    return bool(dlg.exec_())
+    return bool(dlg.exec())
 
 
 def get_text(parent: QObject | None, label: str = "New value", title: str = "Text", value: str = "") -> str | None:
@@ -3681,7 +3681,7 @@ def show_left_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: 
 
 
 def show_right_of_mouse(widget_to_show: Qw.QWidget, show: bool = True, x_offset: int = 0, y_offset: int = 0) -> None:
-    """Show the popup dialog left of the mouse cursor position."""
+    """Show the popup dialog to the right of the mouse cursor position."""
     pos = QCursor().pos()  # mouse position
     sz_hint = widget_to_show.sizeHint()
     widget_height = max(sz_hint.height(), widget_to_show.minimumHeight()) / 2
@@ -3755,7 +3755,7 @@ def show_in_center_of_widget(
     x_offset: int = 0,
     y_offset: int = 0,
 ) -> None:
-    """Show a popup dialog above the widget."""
+    """Show a popup dialog centered on the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.top() + rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
@@ -3775,7 +3775,7 @@ def show_right_of_widget(
     x_offset: int = 0,
     y_offset: int = 0,
 ) -> None:
-    """Show a popup dialog above the widget."""
+    """Show a popup dialog to the right of the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.right()), int(rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
@@ -3794,7 +3794,7 @@ def show_left_of_widget(
     x_offset: int = 0,
     y_offset: int = 0,
 ) -> None:
-    """Show a popup dialog above the widget."""
+    """Show a popup dialog to the left of the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left()), int(rect.top() - rect.height() / 2)))
     sz_hint = widget_to_show.sizeHint()
@@ -3834,7 +3834,7 @@ def show_below_widget(
     x_offset: int = 0,
     y_offset: int = 0,
 ) -> None:
-    """Show popup dialog above the widget."""
+    """Show popup dialog below the widget."""
     rect = parent.rect()
     pos = parent.mapToGlobal(QPoint(int(rect.left() + rect.width() / 2), int(rect.bottom())))
     sz_hint = widget_to_show.sizeHint()
@@ -3886,14 +3886,15 @@ def get_current_screen() -> ty.Any:
     return None
 
 
-def get_current_screen_geometry(avaliable: bool = True) -> QRect:
+@renamed_parameter({"avaliable": "available"})
+def get_current_screen_geometry(available: bool = True) -> QRect:
     """Get current screen geometry."""
     screen = get_current_screen() or Qw.QApplication.primaryScreen()
 
     # this should not happen
     if not screen:
         return QRect(0, 0, 1920, 1080)
-    return screen.availableGeometry() if avaliable else screen.geometry()
+    return screen.availableGeometry() if available else screen.geometry()
 
 
 def copy_text_to_clipboard(text: str) -> None:
