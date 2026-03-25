@@ -167,7 +167,7 @@ class QtSearchableComboBox(QComboBox):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setEditable(True)
-        self.completer_object = QCompleter()
+        self.completer_object = QCompleter(parent=self)
         self.completer_object.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.completer_object.setModelSorting(QCompleter.ModelSorting.CaseSensitivelySortedModel)
         self.completer_object.setFilterMode(Qt.MatchFlag.MatchContains)

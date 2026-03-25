@@ -713,6 +713,12 @@ class QtStyler:
         return THEMES.get_qt_color("background")
 
     @classmethod
+    def background_muted(cls) -> QColor:
+        """The color of the highlight widget."""
+        color = THEMES.get_qt_color("background")
+        return color.lighter(10) if is_dark() else color.darker(20)
+
+    @classmethod
     def foreground(cls) -> QColor:
         """The color of the foreground widget."""
         return THEMES.get_qt_color("foreground")
