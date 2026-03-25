@@ -19,7 +19,7 @@ Components are tested on:
 - macOS, Windows & Linux
 - Python 3.10 and above
 - PyQt5 (5.11 and above) & PyQt6
-- Pyside2 (5.11 and above) & PySide6
+- PySide2 (5.11 and above) & PySide6
 
 The project overlaps somewhat with [superqt](https://github.com/pyapp-kit/superqt),
 but it leans more heavily into application-ready widgets and bundled styling in
@@ -67,6 +67,7 @@ app.exec_()
 
 ## Documentation
 
+- Automatic widget generation: [`docs/auto.md`](docs/auto.md)
 - User guides: [`docs/`](docs)
 - Widgets overview: [`docs/widgets/index.md`](docs/widgets/index.md)
 - Dialogs overview: [`docs/dialogs/index.md`](docs/dialogs/index.md)

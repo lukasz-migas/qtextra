@@ -20,7 +20,7 @@ Components are tested on:
 - macOS, Windows & Linux
 - Python 3.10 and above
 - PyQt5 (5.11 and above) & PyQt6
-- Pyside2 (5.11 and above) & PySide6
+- PySide2 (5.11 and above) & PySide6
 
 The project has some overlap with [superqt](https://github.com/pyapp-kit/superqt),
 but `qtextra` is more opinionated about application ergonomics and bundled
@@ -40,3 +40,8 @@ conda install -c conda-forge qtextra
 
 Start with the [Widgets](./widgets/index.md) and [Dialogs](./dialogs/index.md)
 pages, then browse the runnable examples in [`examples/`](../examples).
+
+## Utilities
+
+- [Automatic widget generation](./auto.md): schema-driven helpers in
+  `qtextra.auto` for building forms and synchronizing values

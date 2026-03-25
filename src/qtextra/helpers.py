@@ -108,27 +108,25 @@ def make_form_layout(
 
 def find_row_for_widget(layout: Qw.QFormLayout, widget: Qw.QWidget) -> int | None:
     """Find row for widget in form layout."""
-    row = None
     for row in range(layout.rowCount()):
         item = layout.itemAt(row, Qw.QFormLayout.ItemRole.FieldRole)
         if item == widget:
-            break
+            return row
         if item and item.widget() == widget:
-            break
+            return row
         item = layout.itemAt(row, Qw.QFormLayout.ItemRole.LabelRole)
         if item and item.widget() == widget:
-            break
-    return row
+            return row
+    return None
 
 
 def find_row_for_label_in_form_layout(layout: Qw.QFormLayout, label: str) -> int | None:
     """Find index at which label is located in form layout."""
-    row = None
     for row in range(layout.rowCount()):
         item = layout.itemAt(row, Qw.QFormLayout.ItemRole.LabelRole)
         if item and item.widget().text() == label:
-            break
-    return row
+            return row
+    return None
 
 
 def remove_widget_in_form_layout(layout: Qw.QFormLayout, label: str):
