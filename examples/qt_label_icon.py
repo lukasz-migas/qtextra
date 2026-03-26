@@ -4,7 +4,6 @@ from qtpy.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 from qtextra._example_helpers import divider, section
 from qtextra.assets import QTA_MAPPING, get_icon
-from qtextra.config import THEMES
 from qtextra.widgets.qt_label_icon import QtPulsingAttentionLabel, QtQtaLabel, QtWarningPulseLabel
 from qtextra.widgets.qt_layout_flow import QtAnimatedFlowLayout
 
@@ -33,8 +32,8 @@ for qta_name, theme_color in [
 ]:
     label = QtPulsingAttentionLabel(
         qta_name=qta_name,
-        color_from=THEMES.get_hex_color(theme_color),
-        color_to=THEMES.get_hex_color("icon"),
+        color_from_key=theme_color,
+        color_to_key="icon",
         interval=1000,
     )
     label.setToolTip(f"Pulsing attention — {qta_name}")

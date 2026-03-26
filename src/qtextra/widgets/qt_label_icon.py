@@ -200,8 +200,8 @@ class QtPulsingAttentionLabel(QtQtaLabel):
 
         label = QtPulsingAttentionLabel(
             qta_name="warning",
-            color_from=THEMES.get_hex_color("warning"),
-            color_to=THEMES.get_hex_color("icon"),
+            color_from_key="warning",
+            color_to_key="icon",
         )
         label.setToolTip("Needs your attention!")
         layout.addWidget(label)
@@ -210,14 +210,16 @@ class QtPulsingAttentionLabel(QtQtaLabel):
     def __init__(
         self,
         qta_name: str = "warning",
-        color_from: str | None = None,
-        color_to: str | None = None,
+        color_from_key: str = "warning",
+        color_to_key: str = "icon",
         interval: int = 1000,
         **kwargs: ty.Any,
     ):
         super().__init__(large=True, **kwargs)
-        self._color_from = QColor(color_from or THEMES.get_hex_color("warning"))
-        self._color_to = QColor(color_to or THEMES.get_hex_color("icon"))
+        self._color_from_key = color_from_key
+        self._color_to_key = color_to_key
+        self._color_from = QColor(THEMES.get_hex_color(color_from_key))
+        self._color_to = QColor(THEMES.get_hex_color(color_to_key))
 
         self._pulse_animation = QVariantAnimation(self)
         self._pulse_animation.setStartValue(0.0)
@@ -230,6 +232,16 @@ class QtPulsingAttentionLabel(QtQtaLabel):
         self.set_qta(qta_name, color=self._color_from.name())
         self._pulse_animation.start()
 
+    def _refresh_colors(self) -> None:
+        """Re-read colors from the active theme."""
+        self._color_from = QColor(THEMES.get_hex_color(self._color_from_key))
+        self._color_to = QColor(THEMES.get_hex_color(self._color_to_key))
+
+    def _update_qta(self) -> None:
+        """Refresh colors from the active theme, then update the icon."""
+        self._refresh_colors()
+        super()._update_qta()
+
     def _on_pulse(self, value: float) -> None:
         r = int(self._color_from.red() + (self._color_to.red() - self._color_from.red()) * value)
         g = int(self._color_from.green() + (self._color_to.green() - self._color_from.green()) * value)
@@ -238,6 +250,13 @@ class QtPulsingAttentionLabel(QtQtaLabel):
         if self._qta_data:
             name, kws = self._qta_data
             self._set_icon(name, **kws, color=color.name())
+
+    def pulse(self, state: bool) -> None:
+        """Enable or disable the pulse animation."""
+        if state:
+            self.start_pulsing()
+        else:
+            self.stop_pulsing()
 
     def start_pulsing(self) -> None:
         """Start the pulse animation."""
@@ -494,8 +513,8 @@ if __name__ == "__main__":  # pragma: no cover
     ]:
         label = QtPulsingAttentionLabel(
             qta_name=qta_name,
-            color_from=THEMES.get_hex_color(theme_color),
-            color_to=THEMES.get_hex_color("icon"),
+            color_from_key=theme_color,
+            color_to_key="icon",
             interval=1000,
         )
         label.setToolTip(f"Pulsing attention — {qta_name}")
@@ -503,8 +522,8 @@ if __name__ == "__main__":  # pragma: no cover
 
         label = QtPulsingAttentionLabel(
             qta_name=qta_name,
-            color_from=THEMES.get_hex_color(theme_color),
-            color_to=THEMES.get_hex_color("icon"),
+            color_from_key=theme_color,
+            color_to_key="icon",
             interval=500,
         )
         label.setToolTip(f"Pulsing attention — {qta_name}")
@@ -514,7 +533,7 @@ if __name__ == "__main__":  # pragma: no cover
     lay = QHBoxLayout()
     ha.addLayout(lay)
     for state in QtQtaNotificationLabel.STATES:
-        btn = QtQtaNotificationLabel("error")
+        btn = QtQtaNotificationLabel(state)
         btn.set_large()
         lay.addWidget(btn)
         btn.state = state
