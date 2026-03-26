@@ -6,6 +6,7 @@ import warnings
 
 import pytest
 from qtpy.QtCore import QSize, Qt
+from qtpy.QtGui import QAction, QIntValidator
 from qtpy.QtWidgets import QApplication, QCheckBox, QComboBox, QLabel, QWidget
 
 import qtextra.helpers as hp
@@ -85,6 +86,52 @@ class TestMakeLayouts:
         qtbot.addWidget(w)
         layout = hp.make_form_layout(parent=w, spacing=4)
         assert layout.spacing() == 4
+
+    def test_make_form_layout_with_rows_and_stretch_after(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        field = QLabel("Value")
+        layout = hp.make_form_layout(("Name", field), parent=w, stretch_after=True)
+        assert layout.rowCount() == 2
+        assert layout.itemAt(0, layout.ItemRole.FieldRole).widget() is field
+
+
+class TestFormLayoutHelpers:
+    def test_find_row_helpers_and_remove_insert(self, qtbot):
+        parent = QWidget()
+        qtbot.addWidget(parent)
+        layout = hp.make_form_layout(parent=parent)
+        first = QLabel("First value")
+        second = QLabel("Second value")
+        layout.addRow("First", first)
+        layout.addRow("Second", second)
+
+        assert hp.find_row_for_widget(layout, first) == 0
+        assert hp.find_row_for_label_in_form_layout(layout, "Second") == 1
+        assert hp.find_row_for_widget(layout, QLabel("missing")) is None
+        assert hp.find_row_for_label_in_form_layout(layout, "Missing") is None
+
+        row, label_widget, field_widget = hp.remove_widget_in_form_layout(layout, "First")
+        assert row == 0
+        assert label_widget.text() == "First"
+        assert field_widget is first
+        assert layout.rowCount() == 1
+
+        replacement = QLabel("Replacement")
+        hp.insert_widget_in_form_layout(layout, row, label_widget, replacement)
+        assert layout.rowCount() == 2
+        assert hp.find_row_for_widget(layout, replacement) == 0
+
+    def test_remove_widget_in_form_layout_missing_label(self, qtbot):
+        parent = QWidget()
+        qtbot.addWidget(parent)
+        layout = hp.make_form_layout(parent=parent)
+        layout.addRow("First", QLabel("First value"))
+
+        row, label_widget, field_widget = hp.remove_widget_in_form_layout(layout, "Missing")
+        assert row is None
+        assert label_widget is None
+        assert field_widget is None
 
     def test_deprecated_make_hbox_layout(self, qtbot):
         with warnings.catch_warnings(record=True) as w:
@@ -216,6 +263,20 @@ class TestMakeCombobox:
         cb = hp.make_combobox(w, tooltip="my tip")
         assert cb.toolTip() == "my tip"
 
+    def test_func_index_callback(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        received = []
+        cb = hp.make_combobox(w, items=["A", "B"], func_index=lambda t: received.append(t))
+        cb.setCurrentText("B")
+        assert received[-1] == "B"
+
+    def test_object_name(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        cb = hp.make_combobox(w, items=["A"], object_name="combo_name")
+        assert cb.objectName() == "combo_name"
+
 
 class TestMakeCheckbox:
     def test_text_and_value(self, qtbot):
@@ -250,6 +311,100 @@ class TestMakeCheckbox:
         qtbot.addWidget(w)
         chk = hp.make_checkbox(w, hide=True)
         assert chk.isHidden()
+
+    def test_clicked_callback_and_properties(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        clicked = []
+        chk = hp.make_checkbox(w, clicked=lambda state: clicked.append(state), properties={"role": "primary"})
+        chk.click()
+        assert clicked == [True]
+        assert chk.property("role") == "primary"
+
+
+class TestMakeLineEdit:
+    def test_default_placeholder_and_object_name(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        line = hp.make_line_edit(w, default="Alpha", placeholder="Enter", object_name="line_name")
+        assert line.text() == "Alpha"
+        assert line.placeholderText() == "Enter"
+        assert line.objectName() == "line_name"
+
+    def test_validator_and_callbacks(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        changed = []
+        entered = []
+        cleared = []
+        line = hp.make_line_edit(
+            w,
+            validator=QIntValidator(0, 10, w),
+            func_changed=lambda text: changed.append(text),
+            func_enter=lambda: entered.append(True),
+            func_clear=lambda: cleared.append(True),
+        )
+        assert line.validator() is not None
+        line.setText("5")
+        line.returnPressed.emit()
+        action = line.findChild(QAction)
+        if action:
+            action.trigger()
+        assert changed[-1] == "5"
+        assert entered == [True]
+        assert cleared == [True]
+
+
+class TestSpinBoxes:
+    def test_make_int_spin_box_options(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        seen = []
+        spin = hp.make_int_spin_box(
+            w,
+            minimum=1,
+            maximum=9,
+            step_size=2,
+            value=3,
+            prefix="$",
+            suffix="px",
+            keyboard_tracking=False,
+            func=lambda value: seen.append(value),
+            properties={"role": "number"},
+        )
+        spin.setValue(5)
+        assert spin.minimum() == 1
+        assert spin.maximum() == 9
+        assert spin.singleStep() == 2
+        assert spin.prefix() == "$"
+        assert spin.suffix() == "px"
+        assert spin.keyboardTracking() is False
+        assert spin.property("role") == "number"
+        assert seen[-1] == 5
+
+    def test_make_double_spin_box_options(self, qtbot):
+        w = QWidget()
+        qtbot.addWidget(w)
+        seen = []
+        spin = hp.make_double_spin_box(
+            w,
+            minimum=0.5,
+            maximum=2.5,
+            step_size=0.5,
+            value=1.5,
+            n_decimals=2,
+            prefix="~",
+            suffix="s",
+            func=lambda value: seen.append(value),
+        )
+        spin.setValue(2.0)
+        assert spin.minimum() == 0.5
+        assert spin.maximum() == 2.5
+        assert spin.singleStep() == 0.5
+        assert spin.decimals() == 2
+        assert spin.prefix() == "~"
+        assert spin.suffix() == "s"
+        assert seen[-1] == 2.0
 
 
 class TestMakeSlider:
@@ -513,6 +668,59 @@ class TestSeparators:
         qtbot.addWidget(parent)
         widget = hp.make_h_line_with_text("Section", parent=parent)
         assert widget is not None
+
+
+class TestSignalHelpers:
+    def test_qt_signals_blocked_blocks_and_restores(self, qtbot):
+        widget = QCheckBox()
+        qtbot.addWidget(widget)
+        seen = []
+        widget.stateChanged.connect(seen.append)
+
+        with hp.qt_signals_blocked(widget):
+            widget.setChecked(True)
+
+        assert widget.isChecked() is True
+        assert seen == []
+
+        widget.setChecked(False)
+        assert seen[-1] == 0
+
+    def test_qt_signals_blocked_passthrough(self, qtbot):
+        widget = QCheckBox()
+        qtbot.addWidget(widget)
+        seen = []
+        widget.stateChanged.connect(seen.append)
+
+        with hp.qt_signals_blocked(widget, block_signals=False):
+            widget.setChecked(True)
+
+        assert seen[-1] == 2
+
+
+class TestMiscHelpers:
+    def test_safe_float(self):
+        assert hp.safe_float("1.25") == 1.25
+        assert hp.safe_float("bad", default=3.5) == 3.5
+        assert hp.safe_float(None, default=4.0) == 4.0
+
+    def test_make_auto_update_layout(self, qtbot):
+        parent = QWidget()
+        qtbot.addWidget(parent)
+        seen = []
+        button, checkbox, layout = hp.make_auto_update_layout(parent, lambda: seen.append("clicked"))
+
+        assert button.text() == "Update"
+        assert checkbox.text() == "Auto-update"
+        assert checkbox.isChecked() is True
+        assert button.isEnabled() is False
+        assert layout.count() == 2
+
+        checkbox.setChecked(False)
+        assert button.isEnabled() is True
+
+        button.click()
+        assert seen == ["clicked"]
 
 
 # ── make_swatch_grid index fix ─────────────────────────────────────────────────
