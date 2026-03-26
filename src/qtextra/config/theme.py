@@ -2,6 +2,7 @@
 
 import re
 import typing as ty
+import warnings
 from functools import lru_cache
 from itertools import product
 from pathlib import Path
@@ -371,8 +372,16 @@ class Themes(ConfigBase):
 
     def get_hex_color(self, name: str) -> str:
         """Get color in hex format."""
-        color: Color = getattr(self.active, name)
-        return color.as_hex(format="long")
+        try:
+            color: Color = getattr(self.active, name)
+            return color.as_hex(format="long")
+        except RecursionError:
+            warnings.warn(
+                f"Failed to get hex color for {name}. This may be caused by a recursive reference in the theme"
+                f" configuration.",
+                stacklevel=2,
+            )
+            return "#000000"
 
     def get_qt_color(self, name: str) -> QColor:
         """Get QColor."""

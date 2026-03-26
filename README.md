@@ -68,6 +68,7 @@ app.exec_()
 ## Documentation
 
 - Automatic widget generation: [`docs/auto.md`](docs/auto.md)
+- Mixins reference: [`docs/mixins.md`](docs/mixins.md)
 - User guides: [`docs/`](docs)
 - Widgets overview: [`docs/widgets/index.md`](docs/widgets/index.md)
 - Dialogs overview: [`docs/dialogs/index.md`](docs/dialogs/index.md)

@@ -22,7 +22,7 @@ DOC_DIR = Path(get_docs_path())
 
 
 class DocumentationMixin:
-    """Documentation mixin."""
+    """Helpers for exposing help and tutorial affordances on Qt widgets."""
 
     DOC_HTML_LINK: str = ""
 
@@ -40,7 +40,7 @@ class DocumentationMixin:
         html_link: str = "",
         parent: QWidget | None = None,
     ) -> ty.Tuple[QPushButton, QHBoxLayout]:
-        """Make info button."""
+        """Build a compact layout containing tutorial and help buttons."""
         if not html_link:
             html_link = self.DOC_HTML_LINK
 
@@ -71,11 +71,11 @@ class DocumentationMixin:
         return info_btn, layout
 
     def _open_tutorial(self) -> None:
-        """Launch tutorial for this panel."""
+        """Launch tutorial content for the current panel."""
 
     @staticmethod
     def _open_info_link(html_link: str) -> None:
-        """Open link."""
+        """Open a documentation link or emit a warning for invalid links."""
         # local docs
         if html_link.startswith("docs/"):
             html_link = (DOC_DIR / html_link).as_uri()
@@ -87,7 +87,7 @@ class DocumentationMixin:
 
 
 class ConfigMixin:
-    """Configuration mixin."""
+    """Helpers for populating widget state from persisted settings."""
 
     _initialized_config: bool = False
     _is_setting_config: bool = False
@@ -96,8 +96,10 @@ class ConfigMixin:
     def setting_config(self) -> ty.Generator[None, None, None]:
         """Disable updates by temporarily setting the `_is_setting_config` flag."""
         self._is_setting_config = True
-        yield
-        self._is_setting_config = False
+        try:
+            yield
+        finally:
+            self._is_setting_config = False
 
     def on_set_from_config(self) -> None:
         """Init from config."""
@@ -110,10 +112,10 @@ class ConfigMixin:
 
 
 class TimerMixin:
-    """Timer mixin."""
+    """Helpers for periodic and one-shot timers plus simple timing instrumentation."""
 
     def _add_periodic_timer(self, interval: int, fcn: ty.Callable | None, start: bool = True) -> QTimer:
-        """Create timer to execute some action."""
+        """Create a repeating timer owned by the current widget."""
         timer = QTimer(self)  # type: ignore[arg-type]
         timer.setInterval(interval)
         if fcn:
@@ -125,8 +127,12 @@ class TimerMixin:
         return timer
 
     def _add_single_shot_timer(self, delay: int, fcn: ty.Callable) -> QTimer:
+        """Create a one-shot timer owned by the current widget."""
         timer = QTimer(self)  # type: ignore[arg-type]
-        timer.singleShot(delay, fcn)
+        timer.setSingleShot(True)
+        timer.setInterval(delay)
+        timer.timeout.connect(fcn)
+        timer.start()
         return timer
 
     @contextmanager  # type: ignore[arg-type]
@@ -149,6 +155,7 @@ class MinimizeMixin:
     clearFocus: ty.Callable[..., ty.Any]
 
     def _make_hide_handle(self) -> tuple[QPushButton, QHBoxLayout]:
+        """Create a handle layout containing a minimize button."""
         hide_btn = hp.make_qta_btn(
             self,  # type: ignore[arg-type]
             "minimise",
@@ -187,6 +194,7 @@ class CloseMixin:
         return self._make_close_handle(title=title)[1]
 
     def _make_close_handle(self, title: str = "") -> tuple[QPushButton, QHBoxLayout]:
+        """Create a handle layout containing a close button."""
         self._close_handle = hp.make_qta_btn(
             self,
             "cross",
@@ -210,7 +218,7 @@ class CloseMixin:
 
 
 class IndicatorMixin:
-    """Mixin class to instantiate certain methods."""
+    """Helpers for emitting toast, message-bar, and notification signals."""
 
     evt_indicate = Signal(str)
     evt_indicate_about = Signal(str, str)
@@ -230,7 +238,7 @@ class IndicatorMixin:
 
     @staticmethod
     def on_notify_success(msg: str, func: ty.Callable = logger.success) -> None:
-        """Notify the user of an success."""
+        """Notify the user of a success."""
         EVENTS.evt_msg_success.emit(msg)
         func(msg)
 
@@ -254,25 +262,25 @@ class IndicatorMixin:
 
     @staticmethod
     def on_notification_info(content: str, title: str = "Info", func: ty.Callable = logger.info) -> None:
-        """Notify the user of an info."""
+        """Show an informational notification."""
         EVENTS.evt_notification_info.emit(title, content)
         func(content)
 
     @staticmethod
     def on_notification_success(content: str, title: str = "Success", func: ty.Callable = logger.success) -> None:
-        """Notify the user of an success."""
+        """Show a success notification."""
         EVENTS.evt_notification_success.emit(title, content)
         func(content)
 
     @staticmethod
     def on_notification_warning(content: str, title: str = "Warning", func: ty.Callable = logger.warning) -> None:
-        """Notify the user of a warning."""
+        """Show a warning notification."""
         EVENTS.evt_notification_warning.emit(title, content)
         func(content)
 
     @staticmethod
     def on_notification_error(content: str, title: str = "Error", func: ty.Callable = logger.error) -> None:
-        """Notify the user of an error."""
+        """Show an error notification."""
         EVENTS.evt_notification_error.emit(title, content)
         func(content)
 
@@ -282,7 +290,7 @@ class IndicatorMixin:
         title: str = "Critical error",
         func: ty.Callable = logger.critical,
     ) -> None:
-        """Notify the user of an error."""
+        """Show a critical notification."""
         EVENTS.evt_notification_critical.emit(title, content)
         func(content)
 
@@ -303,7 +311,7 @@ class IndicatorMixin:
 
 
 class DragAndDropMixin:
-    """Handle drag-and-drop event."""
+    """Handle drag-and-drop events while updating the central widget styling."""
 
     centralWidget: ty.Callable[..., QWidget]
 

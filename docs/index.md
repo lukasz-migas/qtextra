@@ -43,5 +43,6 @@ pages, then browse the runnable examples in [`examples/`](../examples).
 
 ## Utilities
 
+- [Mixins](./mixins.md): reusable behavior blocks for dialogs and widgets
 - [Automatic widget generation](./auto.md): schema-driven helpers in
   `qtextra.auto` for building forms and synchronizing values
