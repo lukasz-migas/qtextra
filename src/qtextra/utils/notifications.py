@@ -26,8 +26,8 @@ from datetime import datetime
 from enum import auto
 from types import TracebackType
 
+from koyo.typing import StringEnum
 from loguru import logger
-from napari.utils.misc import StringEnum
 
 try:
     from napari.utils.events import Event, EventEmitter

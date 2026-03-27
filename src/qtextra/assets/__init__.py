@@ -313,9 +313,9 @@ def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key:
         v_exist = QTA_MAPPING.get(k)
         v_new = mapping[k]
         if v_exist and v_exist == v_new and not silent:
-            logger.warning(f"Warning: Icon mapping already exists for '{k}'")
+            logger.trace(f"Warning: Icon mapping already exists for '{k}'")
         if v_exist and v_exist != v_new and not silent:
-            logger.warning(f"Warning: Icon mapping for '{k}' is being overwritten from '{v_exist}' to '{v_new}'")
+            logger.trace(f"Warning: Icon mapping for '{k}' is being overwritten from '{v_exist}' to '{v_new}'")
         QTA_MAPPING[k] = v_new
 
 

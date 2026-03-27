@@ -297,7 +297,7 @@ if __name__ == "__main__":  # pragma: no cover
     va.addWidget(table)
     table.set_data(
         np.asarray([[-1, 0, 1], [1, 0, -1]]),
-        # np.random.randint(-255, 255, (5, 5)) / 255,
+        # np.random.default_rng().integers(-255, 255, (5, 5)) / 255,
         fmt="{:.2f}",
         colormap="coolwarm",
         min_val=-1,

@@ -913,8 +913,8 @@ class TrackingSpacer(Qw.QFrame):
 if __name__ == "__main__":  # pragma: no cover
 
     def _get_new_data():
-        shape = np.random.randint(10, 100, 2)
-        df = pd.DataFrame(np.random.randint(-255, 255, shape) / 255)
+        shape = np.random.default_rng().integers(10, 100, 2)
+        df = pd.DataFrame(np.random.default_rng().integers(-255, 255, shape) / 255)
         df.columns = ["Column " + str(i) for i in range(df.shape[1])]
         return df
 

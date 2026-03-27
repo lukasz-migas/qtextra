@@ -433,11 +433,11 @@ if __name__ == "__main__":  # pragma: no cover
     app, frame, ha = qframe(horz=False)
     frame.setMinimumSize(600, 600)
     hist = QHistogramView()
-    hist.set_histogram_from_array(np.random.randint(0, 65332, 100), (0, 65332), minmax=(0, 65332))
+    hist.set_histogram_from_array(np.random.default_rng().integers(0, 65332, 100), (0, 65332), minmax=(0, 65332))
     ha.addWidget(hist)
 
     hist = QHistogramView()
-    hist.set_histogram_from_array(np.random.randint(0, 255, (100, 100, 3)), (0, 255), is_rgb=True, minmax=(0, 255))
+    hist.set_histogram_from_array(np.random.default_rng().integers(0, 255, (100, 100, 3)), (0, 255), is_rgb=True, minmax=(0, 255))
     ha.addWidget(hist)
 
     frame.show()
