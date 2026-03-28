@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as ty
 from pathlib import Path
 
-from koyo.utilities import get_module_path
+from koyo.system import get_module_path
 from loguru import logger
 
 from qtextra.typing import IconType

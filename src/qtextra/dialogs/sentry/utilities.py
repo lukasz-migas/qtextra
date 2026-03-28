@@ -21,7 +21,7 @@ except ImportError:  # pragma: no cover
 from getpass import getuser
 
 import sentry_sdk
-from koyo.utilities import running_as_pyinstaller_app
+from koyo.system import running_as_pyinstaller_app
 
 sentry_sdk.set_user({"username": getuser(), "ip_address": "{{auto}}"})
 

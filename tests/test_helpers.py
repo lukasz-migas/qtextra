@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import warnings
 
-import pytest
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QAction, QIntValidator
-from qtpy.QtWidgets import QApplication, QCheckBox, QComboBox, QLabel, QWidget
+from qtpy.QtWidgets import QCheckBox, QLabel, QWidget
 
 import qtextra.helpers as hp
-
 
 # ── layout helpers ─────────────────────────────────────────────────────────────
 
@@ -523,8 +521,6 @@ class TestGetCurrentScreenGeometry:
         assert rect.height() > 0
 
     def test_full_geometry_when_false(self, qtbot):
-        from qtpy.QtCore import QRect
-
         rect_avail = hp.get_current_screen_geometry(available=True)
         rect_full = hp.get_current_screen_geometry(available=False)
         # Full geometry is >= available geometry

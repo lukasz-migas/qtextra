@@ -6,7 +6,7 @@ import os
 import sys
 import typing as ty
 
-from koyo.utilities import is_installed
+from koyo.system import is_installed
 from loguru import logger
 from qtpy.QtCore import QEvent, Qt, QTimer, Signal
 from qtpy.QtWidgets import QApplication, QDialog, QDockWidget, QLayout, QMainWindow, QWidget

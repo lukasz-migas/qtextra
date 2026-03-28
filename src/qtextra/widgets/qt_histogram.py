@@ -437,7 +437,9 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(hist)
 
     hist = QHistogramView()
-    hist.set_histogram_from_array(np.random.default_rng().integers(0, 255, (100, 100, 3)), (0, 255), is_rgb=True, minmax=(0, 255))
+    hist.set_histogram_from_array(
+        np.random.default_rng().integers(0, 255, (100, 100, 3)), (0, 255), is_rgb=True, minmax=(0, 255)
+    )
     ha.addWidget(hist)
 
     frame.show()

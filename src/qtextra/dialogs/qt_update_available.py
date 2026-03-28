@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import QApplication, QWidget
+from qtpy.QtWidgets import QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtDialog

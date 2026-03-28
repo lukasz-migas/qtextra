@@ -7,7 +7,7 @@ import typing as ty
 from functools import lru_cache
 from pathlib import Path
 
-from koyo.utilities import running_as_pyinstaller_app
+from koyo.system import running_as_pyinstaller_app
 from loguru import logger
 
 from qtextra.typing import Connectable
