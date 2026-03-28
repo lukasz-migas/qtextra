@@ -540,6 +540,14 @@ class FilterProxyModelBase(QSortFilterProxyModel):
         """Filter rows."""
         raise NotImplementedError("Must implement method")
 
+    def _invalidate_row_filter(self) -> None:
+        """Refresh row filtering using the non-deprecated Qt API when available."""
+        invalidate_rows_filter = getattr(self, "invalidateRowsFilter", None)
+        if invalidate_rows_filter is not None:
+            invalidate_rows_filter()
+            return
+        self.invalidateFilter()
+
     def find_visible_rows(self) -> tuple[list[int], list[int]]:
         """Find visible rows."""
         visible_rows = []
@@ -569,7 +577,7 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
             self.filters_by_text.pop(column, None)
         else:
             self.filters_by_text[column] = str(text).lower()
-        self.invalidateFilter()
+        self._invalidate_row_filter()
         self.evt_filtered.emit()
 
     def setFilterByState(self, value: bool | None, column: int) -> None:
@@ -578,7 +586,7 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
             del self.filters_by_state[column]
         else:
             self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
-        self.invalidateFilter()
+        self._invalidate_row_filter()
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
@@ -639,7 +647,7 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
             self.filters_by_text[column] = [filt.lower() for filt in filters]
             if column_mode:
                 self.column_compare_funcs[column] = any if column_mode == MultiFilterMode.OR else all
-        self.invalidateFilter()
+        self._invalidate_row_filter()
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
@@ -674,7 +682,7 @@ class SingleColumnMultiValueProxyModel(FilterProxyModelBase):
             filters = [filters]
 
         self.filters = [filt.lower() for filt in filters]
-        self.invalidateFilter()
+        self._invalidate_row_filter()
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
