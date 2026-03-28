@@ -288,4 +288,5 @@ ignore = [
     "examples/**/*",
     "MANIFEST.in",
     "uv.lock",
+    ".claude/*",
 ]
