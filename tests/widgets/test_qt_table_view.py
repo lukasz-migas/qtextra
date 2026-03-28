@@ -292,6 +292,40 @@ class TestTableView:
 
 
 class TestFilterProxy:
+    def test_filter_uses_begin_end_filter_change_when_available(self, qtbot, monkeypatch):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("City", "city")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Alice", "Berlin"], ["Bob", "Paris"]])
+
+        proxy = MultiColumnSingleValueProxyModel()
+        proxy.setSourceModel(w.model())
+
+        calls: list[object] = []
+
+        class _Direction:
+            Rows = "rows"
+
+        monkeypatch.setattr(
+            MultiColumnSingleValueProxyModel,
+            "beginFilterChange",
+            lambda self: calls.append("begin"),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            MultiColumnSingleValueProxyModel,
+            "endFilterChange",
+            lambda self, direction=None: calls.append(("end", direction)),
+            raising=False,
+        )
+        monkeypatch.setattr(MultiColumnSingleValueProxyModel, "Direction", _Direction, raising=False)
+
+        proxy.setFilterByColumn("berlin", 1)
+
+        assert calls == ["begin", ("end", "rows")]
+        assert proxy.rowCount() == 1
+
     def test_filter_single_value(self, qtbot):
         w = QtCheckableTableView(None)
         qtbot.addWidget(w)
