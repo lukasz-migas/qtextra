@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import warnings
 
+import pytest
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QAction, QIntValidator
 from qtpy.QtWidgets import QCheckBox, QLabel, QWidget
@@ -132,18 +133,28 @@ class TestFormLayoutHelpers:
         assert field_widget is None
 
     def test_deprecated_make_hbox_layout(self, qtbot):
+        parent = QWidget()
+        qtbot.addWidget(parent)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            layout = hp.make_hbox_layout(spacing=2)
+            layout = hp.make_hbox_layout(parent, spacing=2)
             assert any("make_hbox_layout" in str(x.message) for x in w)
         assert layout.spacing() == 2
+        assert layout.parent() is parent
 
     def test_deprecated_make_vbox_layout(self, qtbot):
+        parent = QWidget()
+        qtbot.addWidget(parent)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            layout = hp.make_vbox_layout(spacing=3)
+            layout = hp.make_vbox_layout(parent, spacing=3)
             assert any("make_vbox_layout" in str(x.message) for x in w)
         assert layout.spacing() == 3
+        assert layout.parent() is parent
+
+    def test_make_h_layout_rejects_none_widget(self):
+        with pytest.raises(TypeError, match="Unsupported item"):
+            hp.make_h_layout(None)
 
 
 # ── widget factory functions ───────────────────────────────────────────────────

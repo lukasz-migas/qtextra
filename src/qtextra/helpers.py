@@ -191,7 +191,7 @@ def make_hbox_layout(
 ) -> Qw.QHBoxLayout:
     """Make a horizontal box layout."""
     warnings.warn("`make_hbox_layout` is deprecated, use `make_h_layout` instead.", DeprecationWarning, stacklevel=2)
-    return make_h_layout(widget, spacing=spacing, margin=content_margins)
+    return make_h_layout(spacing=spacing, margin=content_margins, parent=widget)
 
 
 def make_h_layout(
@@ -233,7 +233,7 @@ def make_vbox_layout(
 ) -> Qw.QVBoxLayout:
     """Make a vertical box layout."""
     warnings.warn("`make_vbox_layout` is deprecated, use `make_v_layout` instead.", DeprecationWarning, stacklevel=2)
-    return make_v_layout(widget, spacing=spacing, margin=content_margins)
+    return make_v_layout(spacing=spacing, margin=content_margins, parent=widget)
 
 
 def make_v_layout(
@@ -368,7 +368,7 @@ def _set_in_layout(
             layout.addLayout(widget)
         elif isinstance(widget, Qw.QSpacerItem):
             layout.addSpacerItem(widget)
-        else:
+        elif isinstance(widget, Qw.QWidget):
             if widget_alignment:
                 widget_alignment_ = (
                     widget_alignment.get(i, None) if isinstance(widget_alignment, dict) else widget_alignment
@@ -379,6 +379,11 @@ def _set_in_layout(
                     layout.addWidget(widget)
             else:
                 layout.addWidget(widget)
+        else:
+            raise TypeError(
+                f"Unsupported item at index {i} for {type(layout).__name__}: "
+                f"{type(widget).__name__}. Expected QWidget, QSpacerItem, or QLayout."
+            )
     if stretch_id is not None:
         if isinstance(stretch_id, int):
             stretch_id = (stretch_id,)
