@@ -540,6 +540,27 @@ class FilterProxyModelBase(QSortFilterProxyModel):
         """Filter rows."""
         raise NotImplementedError("Must implement method")
 
+    def _update_row_filter(self, update_func: ty.Callable[[], None]) -> None:
+        """Refresh row filtering using the Qt 6.10+ begin/end filter change API when available."""
+        begin_filter_change = getattr(self, "beginFilterChange", None)
+        end_filter_change = getattr(self, "endFilterChange", None)
+        if begin_filter_change is not None and end_filter_change is not None:
+            begin_filter_change()
+            update_func()
+            direction = getattr(type(self), "Direction", None)
+            if direction is not None and hasattr(direction, "Rows"):
+                end_filter_change(direction.Rows)
+            else:
+                end_filter_change()
+            return
+
+        update_func()
+        invalidate_rows_filter = getattr(self, "invalidateRowsFilter", None)
+        if invalidate_rows_filter is not None:
+            invalidate_rows_filter()
+            return
+        self.invalidateFilter()
+
     def find_visible_rows(self) -> tuple[list[int], list[int]]:
         """Find visible rows."""
         visible_rows = []
@@ -565,20 +586,24 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, text: str, column: int) -> None:
         """Set filter by column."""
-        if not text:
-            self.filters_by_text.pop(column, None)
-        else:
-            self.filters_by_text[column] = str(text).lower()
-        self.invalidateFilter()
+        def update_filter() -> None:
+            if not text:
+                self.filters_by_text.pop(column, None)
+            else:
+                self.filters_by_text[column] = str(text).lower()
+
+        self._update_row_filter(update_filter)
         self.evt_filtered.emit()
 
     def setFilterByState(self, value: bool | None, column: int) -> None:
         """Set filter by value."""
-        if value is None and column in self.filters_by_state:
-            del self.filters_by_state[column]
-        else:
-            self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
-        self.invalidateFilter()
+        def update_filter() -> None:
+            if value is None and column in self.filters_by_state:
+                del self.filters_by_state[column]
+            else:
+                self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
+
+        self._update_row_filter(update_filter)
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
@@ -628,18 +653,19 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, filters: list[str], column: int, column_mode: MultiFilterMode | None = None) -> None:
         """Set filter by column."""
-        if not filters:
-            if column in self.filters_by_text:
-                del self.filters_by_text[column]
-            if column in self.column_compare_funcs:
-                del self.column_compare_funcs[column]
-        if not isinstance(filters, list):
-            filters = [filters]
-        if filters:
-            self.filters_by_text[column] = [filt.lower() for filt in filters]
-            if column_mode:
-                self.column_compare_funcs[column] = any if column_mode == MultiFilterMode.OR else all
-        self.invalidateFilter()
+        def update_filter() -> None:
+            if not filters:
+                if column in self.filters_by_text:
+                    del self.filters_by_text[column]
+                if column in self.column_compare_funcs:
+                    del self.column_compare_funcs[column]
+            normalized_filters = filters if isinstance(filters, list) else [filters]
+            if normalized_filters:
+                self.filters_by_text[column] = [filt.lower() for filt in normalized_filters]
+                if column_mode:
+                    self.column_compare_funcs[column] = any if column_mode == MultiFilterMode.OR else all
+
+        self._update_row_filter(update_filter)
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
@@ -668,13 +694,13 @@ class SingleColumnMultiValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, filters: list[str], column: int | None = None) -> None:
         """Set filter by column."""
-        if column is not None:
-            self.column = column
-        if not isinstance(filters, list):
-            filters = [filters]
+        def update_filter() -> None:
+            if column is not None:
+                self.column = column
+            normalized_filters = filters if isinstance(filters, list) else [filters]
+            self.filters = [filt.lower() for filt in normalized_filters]
 
-        self.filters = [filt.lower() for filt in filters]
-        self.invalidateFilter()
+        self._update_row_filter(update_filter)
         self.evt_filtered.emit()
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:

@@ -65,3 +65,26 @@ def test_qt_tool_button_wrong(setup_widget, make_menu, get_icon_path, qtbot):
 
     with pytest.raises(ValueError) as __:
         widget.set_menu("not a menu", print)
+
+
+def test_qt_tool_button_menu_action_invokes_callback(setup_widget, make_menu):
+    widget = setup_widget()
+    menu = make_menu()
+    seen = []
+
+    widget.set_menu(menu, lambda action: seen.append(action.text()))
+    menu.actions()[0].trigger()
+
+    assert seen == ["Action 1"]
+
+
+def test_qt_tool_button_set_menu_without_autopop_does_not_connect_pressed(setup_widget, make_menu, monkeypatch):
+    widget = setup_widget()
+    menu = make_menu()
+    popup_calls = []
+    monkeypatch.setattr(menu, "popup", lambda *args: popup_calls.append(args))
+
+    widget.set_menu(menu, auto_pop=False)
+    widget.pressed.emit()
+
+    assert popup_calls == []
