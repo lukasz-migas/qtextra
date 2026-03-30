@@ -3294,6 +3294,8 @@ def add_flash_animation(
     """
     from koyo.color import transform_color
 
+    remove_flash_animation(widget)
+
     color = transform_color(color)[0]
     color = (255 * color).astype("int")
 
@@ -3309,15 +3311,15 @@ def add_flash_animation(
     # if we don't, the widget will actually be black and white.
     widget._flash_animation.finished.connect(partial(remove_flash_animation, widget))
 
-    widget._flash_animation.start()
-
-    # now  set an actual time for the flashing and an intermediate color
     widget._flash_animation.setDuration(duration)
     widget._flash_animation.setKeyValueAt(0.5, QColor(*color))
+    widget._flash_animation.start()
 
 
 def add_highlight_animation(widget: Qw.QWidget, n_flashes: int = 3, duration: float = 250):
     """Add multiple rounds of flashes to widget."""
+    remove_flash_animation(widget)
+
     effect = Qw.QGraphicsColorizeEffect(widget)
     widget.setGraphicsEffect(effect)
 
@@ -3330,11 +3332,9 @@ def add_highlight_animation(widget: Qw.QWidget, n_flashes: int = 3, duration: fl
     # if we don't, the widget will actually be black and white.
     widget._flash_animation.finished.connect(partial(remove_flash_animation, widget))
 
-    widget._flash_animation.start()
-
-    # now  set an actual time for the flashing and an intermediate color
     widget._flash_animation.setDuration(duration)
     widget._flash_animation.setKeyValueAt(0.5, QColor(255, 255, 255, 255))
+    widget._flash_animation.start()
 
 
 def remove_flash_animation(widget: Qw.QWidget):
