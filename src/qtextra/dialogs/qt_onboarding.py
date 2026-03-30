@@ -11,7 +11,6 @@ from qtpy.QtWidgets import (
     QCheckBox,
     QFrame,
     QHBoxLayout,
-    QLabel,
     QSizePolicy,
     QStackedWidget,
     QVBoxLayout,

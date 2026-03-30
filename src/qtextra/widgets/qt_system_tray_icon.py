@@ -1,6 +1,5 @@
 """Modified SystemTrayIcon."""
 
-
 from qtpy.QtWidgets import QSystemTrayIcon
 
 

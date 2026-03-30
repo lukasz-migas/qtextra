@@ -586,6 +586,7 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, text: str, column: int) -> None:
         """Set filter by column."""
+
         def update_filter() -> None:
             if not text:
                 self.filters_by_text.pop(column, None)
@@ -597,6 +598,7 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
 
     def setFilterByState(self, value: bool | None, column: int) -> None:
         """Set filter by value."""
+
         def update_filter() -> None:
             if value is None and column in self.filters_by_state:
                 del self.filters_by_state[column]
@@ -653,6 +655,7 @@ class MultiColumnMultiValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, filters: list[str], column: int, column_mode: MultiFilterMode | None = None) -> None:
         """Set filter by column."""
+
         def update_filter() -> None:
             if not filters:
                 if column in self.filters_by_text:
@@ -694,6 +697,7 @@ class SingleColumnMultiValueProxyModel(FilterProxyModelBase):
 
     def setFilterByColumn(self, filters: list[str], column: int | None = None) -> None:
         """Set filter by column."""
+
         def update_filter() -> None:
             if column is not None:
                 self.column = column

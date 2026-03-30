@@ -104,6 +104,7 @@ QTA_MAPPING: ty.Dict[str, IconType] = {
     "graph": "mdi.graph",
     "reload": "mdi6.cached",
     "replace": "msc.replace",
+    "replace_all": "msc.replace-all",
     "save": "fa5s.save",
     "screenshot": "mdi.camera-outline",
     "github": "fa5b.github",
