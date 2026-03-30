@@ -209,7 +209,7 @@ class TestMakeLabel:
         called = []
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
-            lbl = hp.make_label(w, activated_func=lambda url: called.append(url))
+            hp.make_label(w, activated_func=lambda url: called.append(url))
             assert any("activated_func" in str(x.message) for x in warns)
 
     def test_deprecated_click_func(self, qtbot):
@@ -578,18 +578,26 @@ class TestHyper:
 
 class TestValidateFunc:
     def test_single_callable(self):
-        f = lambda: None
+        def f():
+            return None
+
         result = hp._validate_func(f)
         assert result == [f]
 
     def test_list_of_callables(self):
-        f1 = lambda: None
-        f2 = lambda: None
+        def f1():
+            return None
+
+        def f2():
+            return None
+
         result = hp._validate_func([f1, f2])
         assert result == [f1, f2]
 
     def test_filters_non_callables(self):
-        f = lambda: None
+        def f():
+            return None
+
         result = hp._validate_func([f, "not_callable", None])
         assert result == [f]
 
@@ -772,3 +780,15 @@ class TestMakeSwatchGrid:
         # Indices should be 0..11 (not resetting to 0..1 after the 10th swatch)
         assert len(received_indices) == 12
         assert sorted(received_indices) == list(range(12))
+
+
+def test_add_flash_animation(qtbot):
+    widget = QWidget()
+    qtbot.addWidget(widget)
+    assert widget.graphicsEffect() is None
+    hp.add_flash_animation(widget, duration=50)
+    assert widget.graphicsEffect() is not None
+    assert hasattr(widget, "_flash_animation")
+    qtbot.wait(400)
+    assert widget.graphicsEffect() is None
+    assert not hasattr(widget, "_flash_animation")
