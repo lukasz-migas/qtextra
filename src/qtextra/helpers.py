@@ -382,7 +382,7 @@ def _set_in_layout(
         else:
             raise TypeError(
                 f"Unsupported item at index {i} for {type(layout).__name__}: "
-                f"{type(widget).__name__}. Expected QWidget, QSpacerItem, or QLayout."
+                f"{type(widget).__name__}. Expected QWidget, QSpacerItem, or QLayout.",
             )
     if stretch_id is not None:
         if isinstance(stretch_id, int):
@@ -1160,6 +1160,7 @@ def make_click_label(
     func: Callback | None = None,
     bold: bool = False,
     elide: Qt.TextElideMode = Qt.TextElideMode.ElideNone,
+    alignment: Qt.AlignmentFlag | None = None,
     tooltip: str = "",
 ) -> QtClickableLabel:
     """Make clickable label."""
@@ -1171,6 +1172,8 @@ def make_click_label(
         set_bold(widget, bold)
     if tooltip:
         widget.setToolTip(tooltip)
+    if alignment is not None:
+        widget.setAlignment(alignment)
     if func:
         [widget.evt_clicked.connect(func_) for func_ in _validate_func(func)]
     return widget
