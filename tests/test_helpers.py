@@ -789,6 +789,6 @@ def test_add_flash_animation(qtbot):
     hp.add_flash_animation(widget, duration=50)
     assert widget.graphicsEffect() is not None
     assert hasattr(widget, "_flash_animation")
-    qtbot.wait(400)
+    qtbot.waitUntil(lambda: widget.graphicsEffect() is None, timeout=1500)
     assert widget.graphicsEffect() is None
     assert not hasattr(widget, "_flash_animation")
