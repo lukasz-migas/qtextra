@@ -3310,10 +3310,14 @@ def add_flash_animation(
     # let's make sure to remove the animation from the widget because
     # if we don't, the widget will actually be black and white.
     widget._flash_animation.finished.connect(partial(remove_flash_animation, widget))
+    widget._flash_cleanup_timer = QTimer(widget)
+    widget._flash_cleanup_timer.setSingleShot(True)
+    widget._flash_cleanup_timer.timeout.connect(partial(remove_flash_animation, widget))
 
     widget._flash_animation.setDuration(duration)
     widget._flash_animation.setKeyValueAt(0.5, QColor(*color))
     widget._flash_animation.start()
+    widget._flash_cleanup_timer.start(max(duration * max(n_loop, 1) + 100, 150))
 
 
 def add_highlight_animation(widget: Qw.QWidget, n_flashes: int = 3, duration: float = 250):
@@ -3331,10 +3335,14 @@ def add_highlight_animation(widget: Qw.QWidget, n_flashes: int = 3, duration: fl
     # let's make sure to remove the animation from the widget because
     # if we don't, the widget will actually be black and white.
     widget._flash_animation.finished.connect(partial(remove_flash_animation, widget))
+    widget._flash_cleanup_timer = QTimer(widget)
+    widget._flash_cleanup_timer.setSingleShot(True)
+    widget._flash_cleanup_timer.timeout.connect(partial(remove_flash_animation, widget))
 
     widget._flash_animation.setDuration(duration)
     widget._flash_animation.setKeyValueAt(0.5, QColor(255, 255, 255, 255))
     widget._flash_animation.start()
+    widget._flash_cleanup_timer.start(max(int(duration * max(n_flashes, 1)) + 100, 150))
 
 
 def remove_flash_animation(widget: Qw.QWidget):
@@ -3347,7 +3355,13 @@ def remove_flash_animation(widget: Qw.QWidget):
     """
     widget.setGraphicsEffect(None)
     if hasattr(widget, "_flash_animation"):
+        with suppress(RuntimeError):
+            widget._flash_animation.stop()
         del widget._flash_animation
+    if hasattr(widget, "_flash_cleanup_timer"):
+        with suppress(RuntimeError):
+            widget._flash_cleanup_timer.stop()
+        del widget._flash_cleanup_timer
 
 
 def expand_animation(
