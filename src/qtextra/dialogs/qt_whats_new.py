@@ -50,9 +50,6 @@ class WhatsNewPage(BaseModel):
     gradient_end: str = "#F9C5A7"
 
 
-# ── Gradient background ───────────────────────────────────────────────────────
-
-
 class _GradientBackground(QWidget):
     """Paints a diagonal linear gradient background."""
 
@@ -74,9 +71,6 @@ class _GradientBackground(QWidget):
         grad.setColorAt(0.0, self._top)
         grad.setColorAt(1.0, self._bottom)
         p.fillRect(self.rect(), grad)
-
-
-# ── Dot navigation indicator ──────────────────────────────────────────────────
 
 
 class _DotIndicator(QWidget):
@@ -140,9 +134,6 @@ class _DotIndicator(QWidget):
                 p.drawEllipse(QPoint(cx, cy), self._DOT_R, self._DOT_R)
 
 
-# ── Numbered callout badge ─────────────────────────────────────────────────────
-
-
 class _CalloutBadge(QWidget):
     """Filled circle with a number inside, used for bullet callouts."""
 
@@ -167,9 +158,6 @@ class _CalloutBadge(QWidget):
         p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, str(self._number))
 
 
-# ── Single page card ──────────────────────────────────────────────────────────
-
-
 class _PageCard(QWidget):
     """One carousel slide: title + HTML body + optional bullets + optional image."""
 
@@ -185,7 +173,6 @@ class _PageCard(QWidget):
         root.setContentsMargins(48, 36, 48, 20)
         root.setSpacing(40)
 
-        # ── Left column ───────────────────────────────────────────────────────
         left = hp.make_v_layout(spacing=12)
 
         title_lbl = hp.make_label(self, page.title, bold=True, wrap=True, font_size=22)
@@ -204,7 +191,6 @@ class _PageCard(QWidget):
         left.addStretch()
         root.addLayout(left, 1)
 
-        # ── Right column – image / icon ────────────────────────────────────────
         if page.image_path and Path(page.image_path).exists():
             img_lbl = hp.make_label(self, alignment=Qt.AlignmentFlag.AlignCenter)
             pix = QPixmap(page.image_path).scaled(
@@ -220,9 +206,6 @@ class _PageCard(QWidget):
             icon_lbl.setStyleSheet("font-size: 96px; background: transparent;")
             icon_lbl.setFixedSize(self._IMG_W, self._IMG_H)
             root.addWidget(icon_lbl, 0, Qt.AlignmentFlag.AlignCenter)
-
-
-# ── Main dialog ───────────────────────────────────────────────────────────────
 
 
 class WhatsNewDialog(QtDialog):
@@ -252,8 +235,7 @@ class WhatsNewDialog(QtDialog):
         self.setFixedSize(self.CARD_W, self.CARD_H + 100)
         self._go_to(0, animate=False)
 
-    # ── UI construction ───────────────────────────────────────────────────────
-
+    # noinspection PyAttributeOutsideInit
     def make_panel(self):
         """Build and return the dialog layout."""
         first = self._pages[0] if self._pages else WhatsNewPage()
@@ -273,7 +255,7 @@ class WhatsNewDialog(QtDialog):
         self._dots.evt_clicked.connect(self._go_to)
         self._skip_btn = hp.make_btn(self, "Skip", func=self.reject, object_name="cancel_btn")
         self._prev_btn = hp.make_btn(self, "‹ Previous", func=self._prev, bold=True)
-        self._next_btn = hp.make_btn(self, "Next ›", func=self._next, object_name="success_btn")
+        self._next_btn = hp.make_btn(self, "Next ›", func=self._next)
 
         # Equal-stretch left/right sections keep dots perfectly centred
         left_l = hp.make_h_layout(self._skip_btn, margin=0, stretch_after=True)
@@ -291,8 +273,6 @@ class WhatsNewDialog(QtDialog):
         layout.addWidget(self._bg, 1)
         return layout
 
-    # ── Navigation ────────────────────────────────────────────────────────────
-
     def _go_to(self, idx: int, animate: bool = True) -> None:
         if idx < 0 or idx >= len(self._pages):
             return
@@ -308,6 +288,7 @@ class WhatsNewDialog(QtDialog):
 
         is_last = idx == len(self._pages) - 1
         self._next_btn.setText("Done" if is_last else "Next ›")
+        hp.set_object_name(self._next_btn, object_name="success_btn" if is_last else "")
 
         with contextlib.suppress(RuntimeError):
             self._next_btn.clicked.disconnect()
@@ -329,8 +310,6 @@ class WhatsNewDialog(QtDialog):
 
     def _prev(self) -> None:
         self._go_to(self._current - 1)
-
-    # ── Convenience ───────────────────────────────────────────────────────────
 
     @staticmethod
     def show_if_new(
@@ -418,7 +397,6 @@ if __name__ == "__main__":  # pragma: no cover
     ]
 
     app = QApplication(sys.argv)
-
     dlg = WhatsNewDialog(DEMO_PAGES, version="3.0")
     apply_style(dlg)
     result = dlg.exec()
