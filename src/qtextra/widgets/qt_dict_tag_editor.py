@@ -75,7 +75,7 @@ class QtDictTagEditor(QWidget):
         self.remove_button.clicked.connect(self.remove_selected_item)
 
         self.clear_button = QPushButton("Clear", self)
-        self.clear_button.clicked.connect(self.clear_items)
+        self.clear_button.clicked.connect(self.confirm_clear_items)
 
         self.key_edit.returnPressed.connect(self.add_current_item)
         self.value_edit.returnPressed.connect(self.add_current_item)
@@ -198,6 +198,13 @@ class QtDictTagEditor(QWidget):
         self._resize_columns()
         if emit_signal:
             self._emit_items_changed()
+
+    def confirm_clear_items(self) -> bool:
+        """Ask for confirmation before clearing all items."""
+        if not hp.confirm(self, "Are you sure you want to clear all items?", "Clear items?"):
+            return False
+        self.clear_items()
+        return True
 
     def has_item(self, key: str) -> bool:
         """Return whether a key is present."""
@@ -366,6 +373,7 @@ class QtDictTagEditor(QWidget):
     removeItem = remove_item
     removeSelectedItem = remove_selected_item
     clearItems = clear_items
+    confirmClearItems = confirm_clear_items
     hasItem = has_item
     setItems = set_items
     getItems = items

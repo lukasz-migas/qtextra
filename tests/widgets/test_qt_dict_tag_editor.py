@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from qtpy.QtGui import QDoubleValidator, QIntValidator
 
+import qtextra.helpers as hp
 from qtextra.widgets.qt_dict_tag_editor import QtDictTagEditor
 
 
@@ -160,3 +161,25 @@ def test_qt_dict_tag_editor_rejects_unsupported_value_type(qtbot):
 
     with pytest.raises(TypeError):
         widget.add_item("bad", [])
+
+
+def test_qt_dict_tag_editor_confirm_clear_items(monkeypatch, qtbot):
+    widget = QtDictTagEditor()
+    qtbot.addWidget(widget)
+    widget.set_items({"alpha": 1})
+
+    monkeypatch.setattr(hp, "confirm", lambda *args, **kwargs: True)
+
+    assert widget.confirm_clear_items() is True
+    assert widget.export_dict() == {}
+
+
+def test_qt_dict_tag_editor_confirm_clear_items_cancelled(monkeypatch, qtbot):
+    widget = QtDictTagEditor()
+    qtbot.addWidget(widget)
+    widget.set_items({"alpha": 1})
+
+    monkeypatch.setattr(hp, "confirm", lambda *args, **kwargs: False)
+
+    assert widget.confirm_clear_items() is False
+    assert widget.export_dict() == {"alpha": 1}
