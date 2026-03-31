@@ -1,8 +1,11 @@
-"""sentry utilities."""
+"""Sentry utilities."""
+
+from __future__ import annotations
 
 import logging
 import os
 import platform
+import socket
 import typing as ty
 import warnings
 from contextlib import suppress
@@ -23,35 +26,96 @@ from getpass import getuser
 import sentry_sdk
 from koyo.system import running_as_pyinstaller_app
 
-sentry_sdk.set_user({"username": getuser(), "ip_address": "{{auto}}"})
-
 # disable logging from sentry_sdk
 logging.getLogger("sentry_sdk").setLevel(logging.ERROR)
 warnings.filterwarnings("ignore", category=ResourceWarning, module="sentry_sdk")
 
-VERSION: str = os.getenv("QTEXTRA_TELEMETRY_VERSION", "")
-SENTRY_DSN: str = os.getenv("QTEXTRA_TELEMETRY_SENTRY_DSN", "")
-SHOW_HOSTNAME: bool = os.getenv("QTEXTRA_TELEMETRY_SHOW_HOSTNAME", "0") in ("1", "True")
-SHOW_LOCALS: bool = os.getenv("QTEXTRA_TELEMETRY_SHOW_LOCALS", "1") in ("1", "True")
-DEBUG: bool = os.getenv("QTEXTRA_TELEMETRY_DEBUG") in ("1", "True")
 PACKAGE: str = os.getenv("QTEXTRA_TELEMETRY_PACKAGE", "qtextra")
+ENVIRONMENT: str = os.getenv("QTEXTRA_TELEMETRY_ENVIRONMENT", "desktop")
+SAMPLE_DSN = "https://public@example.ingest.sentry.io/1"
 
 
-def strip_sensitive_data(event: dict, hint: dict):
+def env_flag(name: str, default: bool = False) -> bool:
+    """Return a bool parsed from an environment variable."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_float(name: str, default: float | None) -> float | None:
+    """Return a float parsed from an environment variable."""
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    try:
+        return float(value)
+    except ValueError:
+        return default
+
+
+def get_username() -> str:
+    """Return the current username if available."""
+    with suppress(Exception):
+        return getuser()
+    return "unknown"
+
+
+def get_sentry_dsn() -> str:
+    """Return the configured Sentry DSN."""
+    return os.getenv("QTEXTRA_TELEMETRY_SENTRY_DSN", "")
+
+
+def get_show_hostname() -> bool:
+    """Return whether the hostname should be attached to events."""
+    return env_flag("QTEXTRA_TELEMETRY_SHOW_HOSTNAME", default=False)
+
+
+def get_show_locals() -> bool:
+    """Return whether local variables should be attached to stack frames."""
+    return env_flag("QTEXTRA_TELEMETRY_SHOW_LOCALS", default=True)
+
+
+def get_debug() -> bool:
+    """Return whether Sentry debug logging is enabled."""
+    return env_flag("QTEXTRA_TELEMETRY_DEBUG", default=False)
+
+
+def get_version() -> str:
+    """Return the configured release version override, if any."""
+    return os.getenv("QTEXTRA_TELEMETRY_VERSION", "")
+
+
+def get_traces_sample_rate() -> float | None:
+    """Return the traces sample rate."""
+    return env_float("QTEXTRA_TELEMETRY_TRACES_SAMPLE_RATE", 1.0)
+
+
+def get_profiles_sample_rate() -> float | None:
+    """Return the profiles sample rate."""
+    return env_float("QTEXTRA_TELEMETRY_PROFILES_SAMPLE_RATE", 1.0)
+
+
+def get_server_name() -> str:
+    """Return the hostname to send to Sentry, if enabled."""
+    return socket.gethostname() if get_show_hostname() else ""
+
+
+def strip_sensitive_data(event: dict, hint: dict) -> dict:
     """Pre-send hook to strip sensitive data from `event` dict.
     https://docs.sentry.io/platforms/python/configuration/filtering/#filtering-error-events.
     """
-    # modify event here
-
     # strip `abs_paths` from stack_trace to hide local paths
     with suppress(KeyError, IndexError):
         for exc in event["exception"]["values"]:
             for frame in exc["stacktrace"]["frames"]:
                 frame.pop("abs_path", None)
         # only include the name of the executable in sys.argv (remove paths)
-        if args := event["extra"]["sys.argv"]:
+        if args := event.get("extra", {}).get("sys.argv"):
             args[0] = args[0].split(os.sep)[-1]
-    if DEBUG:  # pragma: no cover
+    if not get_show_hostname():
+        event.pop("server_name", None)
+    if get_debug():  # pragma: no cover
         pprint(event)
     logger.trace(f"Sending sentry event - ({hint})")
     return event
@@ -69,7 +133,7 @@ def is_editable_install(dist_name: str) -> bool:
     return all(loc not in root for loc in installed_paths)
 
 
-def try_get_git_sha(package: ty.Optional[str] = None) -> str:
+def try_get_git_sha(package: str | None = None) -> str:
     """Try to return a git sha, for `dist_name` and detect if dirty.
     Return empty string on failure.
     """
@@ -85,32 +149,33 @@ def try_get_git_sha(package: ty.Optional[str] = None) -> str:
         out = run(["git", "-C", ff, "diff", "--no-ext-diff", "--quiet", "--exit-code"])
         if out.returncode:  # pragma: no cover
             sha += "-dirty"
-        return sha
-    except Exception:  # pragma: no cover
+    except (metadata.PackageNotFoundError, FileNotFoundError, OSError):  # pragma: no cover
         return ""
+    else:
+        return sha
 
 
 @lru_cache
-def get_release(package: ty.Optional[str] = None) -> str:
+def get_release(package: str | None = None) -> str:
     """Get the current release string for `package`.
     If the package is an editable install, it will return the current git sha.
     Otherwise return version string from package metadata.
     """
     package = package or PACKAGE
-    try:
-        with suppress(ModuleNotFoundError, ImportError):
-            if is_editable_install(package):
-                sha = try_get_git_sha(package)
-                if sha:
-                    return sha
-            return metadata.version(package)
-    except Exception:
-        pass
+    with suppress(ModuleNotFoundError, ImportError, metadata.PackageNotFoundError, OSError):
+        if is_editable_install(package):
+            sha = try_get_git_sha(package)
+            if sha:
+                return sha
+        return metadata.version(package)
     return "UNDETECTED"
 
 
 def _get_tags() -> dict:
-    tags = {"platform.system": platform.system()}
+    tags = {
+        "platform.system": platform.system(),
+        "platform.platform": platform.platform(),
+    }
 
     with suppress(ImportError):
         from napari.utils.info import _sys_name
@@ -128,43 +193,68 @@ def _get_tags() -> dict:
     with suppress(ModuleNotFoundError, ImportError):
         tags["editable_install"] = str(is_editable_install(PACKAGE))
     tags["frozen"] = running_as_pyinstaller_app()
-    tags["username"] = getuser()
     return tags
 
 
-def get_sample_event(**kwargs) -> dict:
+def configure_user() -> None:
+    """Set the Sentry user after the SDK has been initialized."""
+    sentry_sdk.set_user({"username": get_username(), "ip_address": "{{auto}}"})
+
+
+def configure_scope_tags(scope: ty.Any | None = None) -> None:
+    """Apply common tags to the current scope or to a provided scope."""
+    setter = scope.set_tag if scope is not None else sentry_sdk.set_tag
+    for key, value in _get_tags().items():
+        setter(key, value)
+
+
+def get_sentry_settings(**overrides: ty.Any) -> dict[str, ty.Any]:
+    """Return Sentry SDK settings derived from environment variables."""
+    settings = {
+        "dsn": get_sentry_dsn(),
+        "release": get_version() or get_release(),
+        # When enabled, local variables are sent along with stackframes.
+        # This can have a performance and PII impact.
+        "include_local_variables": get_show_locals(),
+        "traces_sample_rate": get_traces_sample_rate(),
+        "profiles_sample_rate": get_profiles_sample_rate(),
+        # Empty server name prevents the SDK from auto-discovering the hostname.
+        "server_name": get_server_name(),
+        "send_default_pii": True,
+        "before_send": strip_sensitive_data,
+        "debug": get_debug(),
+        "environment": ENVIRONMENT,
+        "integrations": INTEGRATIONS,
+        "auto_enabling_integrations": False,
+        "profiler_mode": "thread",
+    }
+    settings.update(overrides)
+    return settings
+
+
+def get_sample_event(**kwargs: ty.Any) -> dict:
     """Return an example event as would be generated by an exception."""
-    EVENT = {}
+    event: dict[str, ty.Any] = {}
 
-    def _transport(event: dict):
-        nonlocal EVENT
-        EVENT = event
+    def _transport(payload: dict) -> None:
+        nonlocal event
+        event = payload
 
-    settings = SENTRY_SETTINGS.copy()
-    settings["release"] = get_release()
-    settings["dsn"] = ""
-    settings["transport"] = _transport
-    settings.update(kwargs)
+    settings = get_sentry_settings(dsn=SAMPLE_DSN, transport=_transport, **kwargs)
 
-    with sentry_sdk.Client(**settings) as client, sentry_sdk.Hub(client) as hub:
-        # remove locals that wouldn't really be there
-        del settings, _transport, kwargs, client
+    client = sentry_sdk.Client(**settings)
+    scope = sentry_sdk.Scope(client=client)
+    configure_scope_tags(scope)
+    try:
         try:
             some_variable = 1  # noqa
             another_variable = "my_string"  # noqa
             1 / 0  # noqa
-        except Exception:
-            with sentry_sdk.new_scope() as scope:
-                for k, v in _get_tags().items():
-                    scope.set_tag(k, v)
-                del v, k, scope
-                hub.capture_exception()
-
-    with suppress(KeyError, IndexError):
-        # remove the mock hub from the event
-        frames = EVENT["exception"]["values"][0]["stacktrace"]["frames"]
-        del frames[-1]["vars"]["hub"]
-    return EVENT
+        except ZeroDivisionError as exc:
+            scope.capture_exception(exc)
+    finally:
+        client.close()
+    return event
 
 
 SENTRY_LOGURU = LoguruIntegration(
@@ -175,60 +265,4 @@ SENTRY_LOGURU = LoguruIntegration(
 INTEGRATIONS = [SENTRY_LOGURU]
 
 
-SENTRY_SETTINGS = {
-    "dsn": SENTRY_DSN,
-    "release": VERSION,
-    # When enabled, local variables are sent along with stackframes.
-    # This can have a performance and PII impact.
-    # Enabled by default on platforms where this is available.
-    "include_local_variables": SHOW_LOCALS,
-    # A number between 0 and 1, controlling the percentage chance
-    # a given transaction will be sent to Sentry.
-    # (0 represents 0% while 1 represents 100%.)
-    # Applies equally to all transactions created in the app.
-    # Either this or traces_sampler must be defined to enable tracing.
-    "enable_tracing": True,
-    "traces_sample_rate": 1.0,
-    # When provided, the name of the server is sent along and persisted
-    # in the event. For many integrations the server name actually
-    # corresponds to the device hostname, even in situations where the
-    # machine is not actually a server. Most SDKs will attempt to
-    # auto-discover this value. (computer name: potentially PII)
-    # "server_name": "",
-    # If this flag is enabled, certain personally identifiable information (PII)
-    # is added by active integrations. By default, no such data is sent.
-    "send_default_pii": True,
-    # This function is called with an SDK-specific event object, and can return a
-    # modified event object or nothing to skip reporting the event.
-    # This can be used, for instance, for manual PII stripping before sending.
-    "before_send": strip_sensitive_data,
-    "debug": DEBUG,
-    # -------------------------
-    "environment": platform.platform(),
-    # max_breadcrumbs=DEFAULT_MAX_BREADCRUMBS,
-    # shutdown_timeout=2,
-    "integrations": INTEGRATIONS,
-    # in_app_include=[],
-    # in_app_exclude=[],
-    # default_integrations=True,
-    # dist=None,
-    # transport=None,
-    # transport_queue_size=DEFAULT_QUEUE_SIZE,
-    # sample_rate=1.0,
-    # http_proxy=None,
-    # https_proxy=None,
-    # ignore_errors=[],
-    # max_request_body_size="medium",
-    # before_breadcrumb=None,
-    # attach_stacktrace=False,
-    # ca_certs=None,
-    # propagate_traces=True,
-    # traces_sampler=None,
-    # auto_session_tracking=True,
-    "auto_enabling_integrations": False,
-    "profiles_sample_rate": 1.0,
-    "profiler_mode": "thread",
-    # "_experiments": {
-    #     "profiles_sample_rate": 1.0,
-    # },
-}
+SENTRY_SETTINGS = get_sentry_settings()

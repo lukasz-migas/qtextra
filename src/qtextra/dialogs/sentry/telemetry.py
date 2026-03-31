@@ -4,12 +4,9 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QCheckBox,
     QDialogButtonBox,
-    QHBoxLayout,
     QLabel,
-    QSizePolicy,
     QTextEdit,
     QVBoxLayout,
-    QWidget,
 )
 
 from qtextra.dialogs.sentry.utilities import PACKAGE, get_sample_event
@@ -22,71 +19,91 @@ class TelemetryOptInDialog(QtDialog):
 
     def __init__(self, parent=None, with_locals=False) -> None:
         parent = get_parent(parent)
-        super().__init__(parent=parent)
+        super().__init__(parent=parent, title=f"{PACKAGE} Error Reporting")
         self._mock_initialized = False
         self._no = False
         self._send_locals = False
 
         self.send_locals.setChecked(with_locals)
         self._update_example()
-        self.resize(720, 740)
+        self.resize(760, 700)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QVBoxLayout:
         """Dialog to provide feedback."""
         btn_box = QDialogButtonBox()
-        btn_box.addButton(f"Yes, send my bug reports to {PACKAGE}", QDialogButtonBox.AcceptRole)
-        no = btn_box.addButton("No, I'd prefer not to send bug reports", QDialogButtonBox.RejectRole)
+        btn_box.addButton("Enable error reporting", QDialogButtonBox.ButtonRole.AcceptRole)
+        no = btn_box.addButton("Not now", QDialogButtonBox.ButtonRole.RejectRole)
         no.clicked.connect(self._set_no)
 
         btn_box.accepted.connect(self.accept)
         btn_box.rejected.connect(self.reject)
 
         info = QLabel(
-            f"""<h3>{PACKAGE} error reporting</h3>
-            <br><br>
-            Would you like to help us improve '{PACKAGE}' by automatically sending
-            bug reports when an error is detected in '{PACKAGE}'?
-            <br><br>
-            Reports are collected via <a href="https://sentry.io/">Sentry.io</a>
-            <br><br>
-            Here is an example error log that would be sent from your system:
+            f"""
+            <h3>Help improve {PACKAGE}</h3>
+            <p>
+            If {PACKAGE} crashes or raises an unexpected exception, you can let it send an error
+            report to <a href="https://sentry.io/">Sentry</a>. The report helps maintainers fix
+            bugs faster without asking you to manually collect logs.
+            </p>
+            <p>
+            The preview below shows the kind of structured event payload that would be sent. You can
+            decide whether local variables from stack frames should be included.
+            </p>
             """,
         )
         info.setWordWrap(True)
         info.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         info.setOpenExternalLinks(True)
 
+        summary = QLabel(
+            """
+            <b>Included by default</b>: traceback, package version, Qt backend, platform metadata.<br>
+            <b>Optional</b>: local variables from stack frames.<br>
+            <b>Not shown in this preview</b>: any custom tags your application adds during startup.
+            """,
+        )
+        summary.setWordWrap(True)
+
+        preview_title = QLabel("<b>Example payload</b>")
+        preview_title.setToolTip("This is a sample event generated locally so you can inspect the payload shape.")
+
         self.txt = QTextEdit()
         self.txt.setReadOnly(True)
+        self.txt.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        self.txt.setToolTip("A sample Sentry event showing the metadata and traceback that would be sent.")
+        self.txt.setObjectName("sentry_payload_preview")
 
         self.send_locals = QCheckBox("Include local variables")
         self.send_locals.stateChanged.connect(self._update_example)
-        self.send_locals.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-        _lbl = QLabel(
-            "<small><b>greatly</b> improves interpretability of errors, but may "
-            "leak personal identifiable information like file paths</small>",
+        self.send_locals.setToolTip(
+            "When enabled, local variables from the failing stack frame are attached to the event. "
+            "This is often the most useful debugging context, but it can include sensitive values.",
         )
-        _lbl.setWordWrap(True)
-        _lbl.setStyleSheet("color: #999;")
 
-        _lbl2 = QLabel("<small>You may change your settings at any time in the Help menu.</small>")
-        _lbl2.setStyleSheet("color: #999;")
-        _lbl2.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        locals_hint = QLabel(
+            "<small>Recommended for development builds. Disable it if your application handles "
+            "sensitive file paths, tokens, or document contents.</small>",
+        )
+        locals_hint.setWordWrap(True)
+        locals_hint.setStyleSheet("color: #999;")
 
-        w = QWidget()
-        layout = QHBoxLayout()
-        layout.addWidget(self.send_locals)
-        layout.addWidget(_lbl)
-        layout.setContentsMargins(0, 0, 0, 0)
-        w.setLayout(layout)
+        footer = QLabel(
+            "<small>You can change this choice later from your application's settings or Help menu.</small>"
+        )
+        footer.setStyleSheet("color: #999;")
+        footer.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
         main_layout = QVBoxLayout()
         main_layout.addWidget(info)
+        main_layout.addWidget(summary)
+        main_layout.addWidget(preview_title)
         main_layout.addWidget(self.txt)
-        main_layout.addWidget(w)
+        main_layout.addWidget(self.send_locals)
+        main_layout.addWidget(locals_hint)
         main_layout.addWidget(btn_box)
-        main_layout.addWidget(_lbl2)
+        main_layout.addWidget(footer)
         return main_layout
 
     def _set_no(self):
@@ -100,7 +117,9 @@ class TelemetryOptInDialog(QtDialog):
             import yaml
 
             estring = yaml.safe_dump(event, indent=4, width=120)
-        except Exception:
+        except ImportError:
+            estring = pformat(event, indent=2, width=120)
+        except yaml.YAMLError:
             estring = pformat(event, indent=2, width=120)
         self.txt.setText(estring)
 

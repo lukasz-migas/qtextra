@@ -1,0 +1,13 @@
+    QTextEdit#sentry_payload_preview {
+        background: rgba(20, 24, 33, 0.96);
+        border: 1px solid rgba(120, 138, 168, 0.35);
+        border-radius: 10px;
+        color: #e7edf7;
+        font-family: Menlo, Consolas, 'SF Mono', monospace;
+        font-size: 12px;
+        padding: 8px;
+    }
+    QTextEdit#sentry_payload_preview:focus {
+        border: 1px solid
+        rgba(96, 165, 250, 0.65);
+    }

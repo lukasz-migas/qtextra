@@ -17,3 +17,8 @@ For concrete usage patterns, browse the runnable examples in
 
 The dialog pages are still sparse compared with the widget pages. Expanding
 them is a good next contribution target.
+
+## Documented Dialogs
+
+- [Sentry Dialogs](./sentry.md): telemetry opt-in, crash reporting setup, and
+  feedback environment variables
