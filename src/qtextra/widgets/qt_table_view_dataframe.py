@@ -8,6 +8,7 @@ QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView 
 from __future__ import annotations
 
 import contextlib
+import typing as ty
 
 import numpy as np
 import pandas as pd
@@ -18,6 +19,11 @@ from loguru import logger
 from qtpy.QtCore import Qt
 
 from qtextra.widgets._qt_table_models import BaseTabularTableModel, is_float_like
+
+try:
+    import polars as pl
+except ImportError:  # pragma: no cover - optional dependency
+    pl = None
 
 AUTO_SIZE_SAMPLE = 100
 AUTO_SIZE_COLUMN_LIMIT = 200
@@ -41,6 +47,27 @@ def _text_width(metrics: Qg.QFontMetrics, text: str) -> int:
     return metrics.horizontalAdvance(text)
 
 
+def _normalize_tabular_data(
+    data: pd.DataFrame | pd.Series | ty.Any | None,
+    *,
+    inplace: bool = True,
+) -> pd.DataFrame:
+    """Normalize supported tabular inputs to a pandas DataFrame."""
+    if data is None:
+        return pd.DataFrame()
+    if isinstance(data, pd.Series):
+        data = data.to_frame()
+    if isinstance(data, pd.DataFrame):
+        return data if inplace else data.copy()
+    if pl is not None:
+        if isinstance(data, pl.Series):
+            return data.to_frame().to_pandas()
+        if isinstance(data, pl.DataFrame):
+            return data.to_pandas()
+    msg = f"Unsupported tabular data type: {type(data)!r}"
+    raise TypeError(msg)
+
+
 class QtDataFrameWidget(Qw.QWidget):
     """
     Displays a DataFrame as a table.
@@ -53,16 +80,13 @@ class QtDataFrameWidget(Qw.QWidget):
     def __init__(
         self,
         parent: Qw.QWidget | None,
-        df: pd.DataFrame | None,
+        df: ty.Any | None,
         inplace: bool = True,
         editable: bool = False,
         stretch: bool = False,
     ):
         super().__init__(parent)
-        if df is None:
-            df = pd.DataFrame()
-        if not inplace:
-            df = df.copy()
+        df = _normalize_tabular_data(df, inplace=inplace)
 
         # Indicates whether the widget has been shown yet. Set to True in
         self._loaded = False
@@ -145,8 +169,7 @@ class QtDataFrameWidget(Qw.QWidget):
 
     def set_data(self, df):
         """Set data header."""
-        if df is None:
-            df = pd.DataFrame()
+        df = _normalize_tabular_data(df)
         self._loaded = False
         self.setUpdatesEnabled(False)
         try:
@@ -187,8 +210,8 @@ class QtDataFrameWidget(Qw.QWidget):
 
     def _sync_corner_spacer(self):
         """Keep the top-left corner aligned with the row and column headers."""
-        width = self.indexHeader.sizeHint().width()
-        height = self.columnHeader.sizeHint().height()
+        width = self.indexHeader.header_extent()
+        height = self.columnHeader.header_extent()
         self.cornerSpacer.setFixedSize(width, height)
 
     def _init_sizes(self):
@@ -307,9 +330,10 @@ class DataTableModel(BaseTabularTableModel):
 
     def __init__(self, df, parent=None):
         super().__init__(parent, editable=True)
+        df = _normalize_tabular_data(df)
         self.df = df
         self._values = df.to_numpy(copy=False)
-        self.set_shape(len(df), 1 if isinstance(df, pd.Series) else df.columns.shape[0])
+        self.set_shape(len(df), df.columns.shape[0])
 
     def headerData(self, section, orientation, role=None):
         # Headers for DataTableView are hidden. Header data is shown in HeaderView
@@ -369,6 +393,7 @@ class DataTableView(Qw.QTableView):
 
     def set_data(self, df):
         """Set data model."""
+        df = _normalize_tabular_data(df)
         with contextlib.suppress(Exception):
             self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
         model = DataTableModel(df)
@@ -449,7 +474,7 @@ class HeaderModel(Qc.QAbstractTableModel):
 
     def __init__(self, df, orientation, parent=None):
         super().__init__(parent)
-        self.df = df
+        self.df = _normalize_tabular_data(df)
         self.orientation = orientation
 
     def columnCount(self, parent=None):
@@ -561,6 +586,7 @@ class HeaderView(Qw.QTableView):
 
     def set_data(self, df):
         """Update dataframe."""
+        df = _normalize_tabular_data(df)
         self.df = df
         with contextlib.suppress(Exception):
             self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
@@ -569,6 +595,7 @@ class HeaderView(Qw.QTableView):
         self.clearSpans()
         self.setSpans()
         self.initSize()
+        self._apply_extent()
         self.updateGeometry()
 
     # Header
@@ -659,6 +686,27 @@ class HeaderView(Qw.QTableView):
                     text = self.model().data(index, Qt.ItemDataRole.DisplayRole) or ""
                     width = max(width, _text_width(metrics, text))
                 self.setColumnWidth(col, min(width + HEADER_PADDING, MAX_COLUMN_WIDTH))
+
+    def header_extent(self) -> int:
+        """Return the visible extent needed by this header."""
+        if self.orientation == Qt.Orientation.Horizontal:
+            extent = 2 * self.frameWidth()
+            for row in range(self.model().rowCount()):
+                extent += self.rowHeight(row)
+            return extent
+
+        extent = 2 * self.frameWidth()
+        for column in range(self.model().columnCount()):
+            extent += self.columnWidth(column)
+        return extent
+
+    def _apply_extent(self) -> None:
+        """Constrain the header widget to its content extent."""
+        extent = self.header_extent()
+        if self.orientation == Qt.Orientation.Horizontal:
+            self.setFixedHeight(extent)
+        else:
+            self.setFixedWidth(extent)
 
     # This sets spans to group together adjacent cells with the same values
     def setSpans(self):
