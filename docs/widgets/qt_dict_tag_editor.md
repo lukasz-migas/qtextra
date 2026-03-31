@@ -8,7 +8,7 @@ Editable key-value tables for small dictionaries with search and typed values.
 
 ## Example
 
-Source: [`examples/qt_dict_tag_editor.py`](../../examples/qt_dict_tag_editor.py)
+Source: `examples/qt_dict_tag_editor.py`
 
 {{ include_example('qt_dict_tag_editor.py') }}
 ## Notes

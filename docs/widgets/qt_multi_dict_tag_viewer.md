@@ -8,7 +8,7 @@ Read-only multi-record dictionary viewing with a synchronized summary widget.
 
 ## Example
 
-Source: [`examples/qt_multi_dict_tag_viewer.py`](../../examples/qt_multi_dict_tag_viewer.py)
+Source: `examples/qt_multi_dict_tag_viewer.py`
 
 {{ include_example('qt_multi_dict_tag_viewer.py') }}
 ## API

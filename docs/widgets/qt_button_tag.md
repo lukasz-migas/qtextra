@@ -8,7 +8,7 @@ Interactive tag chips with filtering and add/remove affordances.
 
 ## Example
 
-Source: [`examples/qt_button_tag.py`](../../examples/qt_button_tag.py)
+Source: `examples/qt_button_tag.py`
 
 {{ include_example('qt_button_tag.py') }}
 ## Notes

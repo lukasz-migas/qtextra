@@ -34,9 +34,13 @@ def define_env(env: MacrosPlugin):
         codeblocks = [block[6:].strip() for block in page.markdown.split("```") if block.startswith("python")]
         if codeblocks and _should_build_images():
             print("Building widget image:", dest)
-            dest.unlink(missing_ok=True)
-            _capture_source(dest, codeblocks[0], width=width)
-            print("Grabbed widget image:", dest)
+            try:
+                _capture_source(_temp_dest(dest), codeblocks[0], width=width)
+                _temp_dest(dest).replace(dest)
+                print("Grabbed widget image:", dest)
+            except Exception as exc:
+                _temp_dest(dest).unlink(missing_ok=True)
+                print(f"WARNING: failed to build widget image for '{page.title}': {exc}")
         return _image_markdown(page, dest, width=width, alt=page.title)
 
     @env.macro
@@ -52,9 +56,13 @@ def define_env(env: MacrosPlugin):
         dest = IMAGES / f"{example.stem}.png"
         if _should_build_images():
             print("Building example image:", example)
-            dest.unlink(missing_ok=True)
-            _capture_source(dest, _read_example(example), width=width)
-            print("Grabbed example image:", dest)
+            try:
+                _capture_source(_temp_dest(dest), _read_example(example), width=width)
+                _temp_dest(dest).replace(dest)
+                print("Grabbed example image:", dest)
+            except Exception as exc:
+                _temp_dest(dest).unlink(missing_ok=True)
+                print(f"WARNING: failed to build example image for '{example.name}': {exc}")
         return _image_markdown(page, dest, width=width, alt=example.stem.replace("_", " "))
 
     @env.macro
@@ -145,12 +153,18 @@ def _resolve_example(path: str | Path) -> Path:
     return example
 
 
+def _temp_dest(dest: Path) -> Path:
+    return dest.with_suffix(".tmp.png")
+
+
 def _read_example(path: str | Path) -> str:
     example = _resolve_example(path)
     return example.read_text(encoding="utf-8")
 
 
 def _image_markdown(page, dest: Path, width: int, alt: str) -> str:
+    if not dest.exists():
+        return f"*Preview unavailable for `{alt}`.*\n\n"
     page_dir = Path(page.file.src_uri).parent
     relative = Path(os.path.relpath(dest, DOCS / page_dir))
     return f"![{alt}]({relative.as_posix()}){{ loading=lazy; width={width} }}\n\n"
@@ -185,6 +199,7 @@ def _build_environment():
 
 def _grab(dest: str | Path, width: int) -> list[Path]:
     """Grab the visible top-level widgets of the application."""
+    from qtpy.QtCore import QPoint, QRect
     from qtpy.QtGui import QColor, QImage, QPainter
     from qtpy.QtTest import QTest
     from qtpy.QtWidgets import QApplication
@@ -205,31 +220,44 @@ def _grab(dest: str | Path, width: int) -> list[Path]:
     if not widgets:
         raise RuntimeError("No visible top-level widgets were available to grab.")
 
-    images = []
+    captures = []
     for widget in widgets:
         widget.activateWindow()
         widget.raise_()
         app.processEvents()
         QTest.qWait(100)
         pixmap = widget.grab()
-        images.append(_normalize_capture(pixmap))
+        image = _normalize_capture(pixmap)
+        geometry = widget.frameGeometry()
+        scale_x = image.width() / max(1, geometry.width())
+        scale_y = image.height() / max(1, geometry.height())
+        captures.append(
+            {
+                "image": image,
+                "geometry": geometry,
+                "offset": QPoint(
+                    int(round(geometry.left() * scale_x)),
+                    int(round(geometry.top() * scale_y)),
+                ),
+            },
+        )
 
     padding = 16
-    spacing = 20
-    max_width = max(image.width() for image in images)
-    total_height = sum(image.height() for image in images) + spacing * (len(images) - 1)
+    union = QRect()
+    for capture in captures:
+        rect = QRect(capture["offset"], capture["image"].size())
+        union = union.united(rect)
 
     background = app.palette().color(app.activeWindow().backgroundRole()) if app.activeWindow() else QColor("white")
-    canvas = QImage(max_width + padding * 2, total_height + padding * 2, QImage.Format.Format_ARGB32)
+    canvas = QImage(union.width() + padding * 2, union.height() + padding * 2, QImage.Format.Format_ARGB32)
     canvas.fill(background)
 
     painter = QPainter(canvas)
     painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
-    y = padding
-    for image in images:
-        x = padding + (max_width - image.width()) // 2
-        painter.drawImage(x, y, image)
-        y += image.height() + spacing
+    for capture in captures:
+        x = padding + capture["offset"].x() - union.left()
+        y = padding + capture["offset"].y() - union.top()
+        painter.drawImage(x, y, capture["image"])
     painter.end()
     canvas.save(str(dest))
 

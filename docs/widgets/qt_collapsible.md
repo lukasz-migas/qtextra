@@ -8,7 +8,7 @@ A `superqt.QCollapsible` variant with checkbox, action button, and warning state
 
 ## Example
 
-Source: [`examples/qt_collapsible.py`](../../examples/qt_collapsible.py)
+Source: `examples/qt_collapsible.py`
 
 {{ include_example('qt_collapsible.py') }}
 ## Notes

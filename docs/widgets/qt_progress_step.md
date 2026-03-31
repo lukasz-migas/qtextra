@@ -8,7 +8,7 @@ Step-based progress visualization for multi-stage workflows.
 
 ## Example
 
-Source: [`examples/qt_progress_step.py`](../../examples/qt_progress_step.py)
+Source: `examples/qt_progress_step.py`
 
 {{ include_example('qt_progress_step.py') }}
 ## API

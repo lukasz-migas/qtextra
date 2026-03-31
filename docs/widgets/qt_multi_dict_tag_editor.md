@@ -8,7 +8,7 @@ Edit multiple named dictionaries together with an aggregate summary view.
 
 ## Example
 
-Source: [`examples/qt_multi_dict_tag_editor.py`](../../examples/qt_multi_dict_tag_editor.py)
+Source: `examples/qt_multi_dict_tag_editor.py`
 
 {{ include_example('qt_multi_dict_tag_editor.py') }}
 ## Notes

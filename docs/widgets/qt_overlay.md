@@ -8,7 +8,7 @@ Floating labels and message widgets anchored to another widget.
 
 ## Example
 
-Source: [`examples/qt_overlay.py`](../../examples/qt_overlay.py)
+Source: `examples/qt_overlay.py`
 
 {{ include_example('qt_overlay.py') }}
 ## Notes

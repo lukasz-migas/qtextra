@@ -8,7 +8,7 @@ Filter-token entry widgets for building simple search and match expressions.
 
 ## Example
 
-Source: [`examples/qt_filter_edit.py`](../../examples/qt_filter_edit.py)
+Source: `examples/qt_filter_edit.py`
 
 {{ include_example('qt_filter_edit.py') }}
 ## Notes

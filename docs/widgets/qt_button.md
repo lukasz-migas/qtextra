@@ -8,7 +8,7 @@ Theme-aware push buttons with activity and rich-text display helpers.
 
 ## Example
 
-Source: [`examples/qt_button.py`](../../examples/qt_button.py)
+Source: `examples/qt_button.py`
 
 {{ include_example('qt_button.py') }}
 ## Notes

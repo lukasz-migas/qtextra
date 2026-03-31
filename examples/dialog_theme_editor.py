@@ -10,12 +10,13 @@ app = QApplication([])
 
 preview_target = QtSampleWidget()
 preview_target.setWindowTitle("Theme target")
+preview_target.resize(900, 700)
 THEMES.apply(preview_target)
 preview_target.show()
 
 editor = DialogThemeEditor(None, dlg=preview_target)
 editor.resize(300, 700)
 THEMES.apply(editor)
-editor.show_right_of_widget(preview_target, y_offset=editor.height())
+editor.show_right_of_widget(preview_target)
 
 app.exec_()

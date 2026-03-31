@@ -8,7 +8,7 @@ Theme-aware static and animated icon labels built on QtAwesome mappings.
 
 ## Example
 
-Source: [`examples/qt_label_icon.py`](../../examples/qt_label_icon.py)
+Source: `examples/qt_label_icon.py`
 
 {{ include_example('qt_label_icon.py') }}
 ## Notes

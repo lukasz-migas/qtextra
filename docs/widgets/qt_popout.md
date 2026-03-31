@@ -8,7 +8,7 @@ Contextual popouts that point back to a target widget.
 
 ## Example
 
-Source: [`examples/qt_popout.py`](../../examples/qt_popout.py)
+Source: `examples/qt_popout.py`
 
 {{ include_example('qt_popout.py') }}
 ## Notes

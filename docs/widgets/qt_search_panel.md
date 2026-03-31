@@ -8,7 +8,7 @@ Reusable search and replace panel for text editors and plain-text views.
 
 ## Example
 
-Source: [`examples/qt_search_panel.py`](../../examples/qt_search_panel.py)
+Source: `examples/qt_search_panel.py`
 
 {{ include_example('qt_search_panel.py') }}
 ## Notes

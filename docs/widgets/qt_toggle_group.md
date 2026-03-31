@@ -8,7 +8,7 @@ Compact grouped toggle buttons with exclusive and multi-select modes.
 
 ## Example
 
-Source: [`examples/qt_toggle_group.py`](../../examples/qt_toggle_group.py)
+Source: `examples/qt_toggle_group.py`
 
 {{ include_example('qt_toggle_group.py') }}
 ## Notes

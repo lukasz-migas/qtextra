@@ -80,20 +80,20 @@ QWidget[emphasized="true"] QScrollBar::sub-line:horizontal:pressed {
     background: {{ secondary }};
 }
 
-QScrollBar:left-arrow:horizontal {
-    image: url("theme_{{ id }}:/left_arrow.svg");
+QScrollBar::left-arrow:horizontal {
+    image: url("theme_{{ id }}://left_arrow.svg");
 }
 
 QScrollBar::right-arrow:horizontal {
-    image: url("theme_{{ id }}:/right_arrow.svg");
+    image: url("theme_{{ id }}://right_arrow.svg");
 }
 
-QScrollBar:up-arrow:vertical {
-    image: url("theme_{{ id }}:/up_arrow.svg");
+QScrollBar::up-arrow:vertical {
+    image: url("theme_{{ id }}://up_arrow.svg");
 }
 
 QScrollBar::down-arrow:vertical {
-    image: url("theme_{{ id }}:/down_arrow.svg");
+    image: url("theme_{{ id }}://down_arrow.svg");
 }
 
 QScrollBar::left-arrow,

@@ -8,7 +8,7 @@ Attach count and dot badges to existing widgets without changing their layout.
 
 ## Example
 
-Source: [`examples/qt_notification_badge.py`](../../examples/qt_notification_badge.py)
+Source: `examples/qt_notification_badge.py`
 
 {{ include_example('qt_notification_badge.py') }}
 ## Notes

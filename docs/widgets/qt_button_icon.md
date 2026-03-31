@@ -8,7 +8,7 @@ A family of icon buttons for toggles, state indicators, and common toolbar actio
 
 ## Example
 
-Source: [`examples/qt_button_icon.py`](../../examples/qt_button_icon.py)
+Source: `examples/qt_button_icon.py`
 
 {{ include_example('qt_button_icon.py') }}
 ## Notes

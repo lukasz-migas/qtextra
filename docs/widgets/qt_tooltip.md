@@ -8,7 +8,7 @@ Custom tooltip bubbles with tail positions, optional images, and styled content.
 
 ## Example
 
-Source: [`examples/qt_tooltip.py`](../../examples/qt_tooltip.py)
+Source: `examples/qt_tooltip.py`
 
 {{ include_example('qt_tooltip.py') }}
 ## API

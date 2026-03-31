@@ -13,12 +13,12 @@
 
 {{ show_example('dialog_theme_editor.py', 760) }}
 
-Source: [`examples/dialog_theme_editor.py`](../../examples/dialog_theme_editor.py)
+Source: `examples/dialog_theme_editor.py`
 
 {{ include_example('dialog_theme_editor.py') }}
 
 If `dlg` is omitted, the editor opens its built-in preview dialog using the
-sample widget from [`qt_theme_sample.py`](../../src/qtextra/dialogs/qt_theme_sample.py).
+sample widget from `src/qtextra/dialogs/qt_theme_sample.py`.
 
 ## Notes
 

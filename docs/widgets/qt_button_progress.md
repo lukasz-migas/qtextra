@@ -8,7 +8,7 @@ A button that pairs a progress bar with inline activity and cancel affordances.
 
 ## Example
 
-Source: [`examples/qt_button_progress.py`](../../examples/qt_button_progress.py)
+Source: `examples/qt_button_progress.py`
 
 {{ include_example('qt_button_progress.py') }}
 ## Notes

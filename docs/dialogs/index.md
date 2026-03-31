@@ -4,8 +4,8 @@
 flows such as confirmations, changelogs, system information, logging, and
 embedded consoles.
 
-For concrete usage patterns, browse the runnable examples in
-[`examples/`](../examples), especially:
+For concrete usage patterns, browse the runnable examples in `examples/`,
+especially:
 
 - `dialog_changelog.py`
 - `dialog_color_list.py`

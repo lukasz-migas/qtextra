@@ -40,7 +40,7 @@ conda install -c conda-forge qtextra
 ## Usage
 
 Start with the [Widgets](./widgets/index.md) and [Dialogs](./dialogs/index.md)
-pages, then browse the runnable examples in [`examples/`](../examples).
+pages, then browse the runnable examples in `examples/`.
 
 The widget pages now pull code directly from those example scripts and include
 generated screenshots so the docs stay aligned with the runnable examples.

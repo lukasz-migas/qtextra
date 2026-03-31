@@ -8,7 +8,7 @@ Guided tutorial overlays that walk the user through a sequence of widgets.
 
 ## Example
 
-Source: [`examples/qt_tutorial.py`](../../examples/qt_tutorial.py)
+Source: `examples/qt_tutorial.py`
 
 {{ include_example('qt_tutorial.py') }}
 ## Notes

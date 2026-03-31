@@ -8,7 +8,7 @@ A compact system summary widget for application and runtime metadata.
 
 ## Example
 
-Source: [`examples/qt_system_summary.py`](../../examples/qt_system_summary.py)
+Source: `examples/qt_system_summary.py`
 
 {{ include_example('qt_system_summary.py') }}
 ## API

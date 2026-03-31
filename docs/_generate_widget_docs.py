@@ -318,7 +318,6 @@ def render_page(item: WidgetDoc) -> str:
     summary = f"# {item.title}\n\n{item.summary}\n"
 
     if item.example:
-        source = f"[`examples/{item.example}`](../../examples/{item.example})"
         example_block = dedent(
             f"""
             ## Screenshot
@@ -327,7 +326,7 @@ def render_page(item: WidgetDoc) -> str:
 
             ## Example
 
-            Source: {source}
+            Source: `examples/{item.example}`
 
             {{{{ include_example('{item.example}') }}}}
             """,

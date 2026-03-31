@@ -29,7 +29,7 @@ QComboBox::drop-down {
 }
 
 QComboBox::down-arrow {
-   image: url("theme_{{ id }}:/drop_down_50.svg");
+   image: url("theme_{{ id }}://drop_down_50.svg");
    width: 14px;
    height: 14px;
 }
@@ -65,11 +65,11 @@ QListView:item:selected {
 }
 
 QListView::indicator:unchecked {
-  image: url("theme_{{ id }}:/2d.svg");
+  image: url("theme_{{ id }}://2d.svg");
 }
 
 QListView::indicator:checked {
-  image: url("theme_{{ id }}:/check.svg");
+  image: url("theme_{{ id }}://check.svg");
 }
 
 /* ----------------- Custom combobox popup ------------------ */

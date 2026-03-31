@@ -8,7 +8,7 @@ Animated busy indicators for lightweight in-place activity feedback.
 
 ## Example
 
-Source: [`examples/qt_active_overlay.py`](../../examples/qt_active_overlay.py)
+Source: `examples/qt_active_overlay.py`
 
 {{ include_example('qt_active_overlay.py') }}
 ## Notes
