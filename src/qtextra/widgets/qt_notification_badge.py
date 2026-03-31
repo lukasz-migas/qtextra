@@ -31,7 +31,7 @@ class QtNotificationBadge(QtOverlay):
         "xl": 24,
     }
     STATE_COLOR_KEYS: dict[BadgeState, str] = {
-        "info": "current",  # TODO: add better info color
+        "info": "info",
         "success": "success",
         "warning": "warning",
         "error": "error",

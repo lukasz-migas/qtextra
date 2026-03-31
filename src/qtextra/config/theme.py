@@ -3,7 +3,7 @@
 import re
 import typing as ty
 import warnings
-from functools import lru_cache
+from functools import lru_cache, partial
 from itertools import product
 from pathlib import Path
 
@@ -33,6 +33,7 @@ DARK_THEME = {
     "warning": "rgb(255, 105, 60)",
     "error": "rgb(183, 52, 53)",
     "success": "rgb(30, 215, 96)",
+    "info": "rgb(82, 158, 255)",
     "progress": "rgb(179, 98, 0)",
     "current": "rgb(0, 122, 204)",
     "console": "rgb(0, 0, 0)",
@@ -55,6 +56,7 @@ LIGHT_THEME = {
     "warning": "rgb(255, 105, 60)",
     "error": "rgb(255, 18, 31)",
     "success": "rgb(30, 215, 96)",
+    "info": "rgb(0, 122, 204)",
     "progress": "rgb(255, 175, 77)",
     "current": "rgb(30, 215, 96)",
     "console": "rgb(255, 255, 255)",
@@ -111,6 +113,8 @@ class Theme(EventedModel):
         Color used to display text.
     warning : Color
         Color used to indicate something is wrong.
+    info : Color
+        Color used to indicate informational status.
     current : Color
         Color used to highlight Qt widget.
     """
@@ -132,6 +136,7 @@ class Theme(EventedModel):
     warning: Color
     error: Color
     success: Color
+    info: Color = Color("rgb(0, 122, 204)")
     current: Color
     progress: Color
     standout: Color
@@ -154,6 +159,7 @@ class Theme(EventedModel):
         "warning",
         "error",
         "success",
+        "info",
         "current",
         "progress",
         "standout",
@@ -220,6 +226,7 @@ class Themes(ConfigBase):
         "warning",  # color of warning
         "error",  # color of error
         "success",  # color of success
+        "info",  # color of informational state
         "progress",  # color of progress
         "current",  # color of current item
         "syntax_style",  # used by console
@@ -263,9 +270,6 @@ class Themes(ConfigBase):
                 _themes[name].icon = self.get_hex_color("icon")
         except ImportError:
             pass
-
-        for theme in self.themes.values():
-            theme.events.connect(lambda _: self.evt_theme_changed.emit())
 
     def __getitem__(self, item):
         return self.themes[item]
@@ -330,6 +334,8 @@ class Themes(ConfigBase):
         """Set theme."""
         if self._theme == value:
             return
+        if value not in self.themes:
+            raise ValueError(f"Unrecognized theme {value}. Available themes are {self.available_themes()}")
         self._theme = value
         # synchronize our icon with napari icon color
         try:
@@ -421,9 +427,9 @@ class Themes(ConfigBase):
             theme_name = self.theme
         if theme_name in self.themes:
             theme = self.themes[theme_name]
-            _theme = theme.copy()
+            _theme = theme.model_copy()
             if as_dict:
-                return _theme.model_dump()
+                return _theme.to_dict()
             return _theme
         raise ValueError(f"Unrecognized theme {theme_name}. Available themes are {self.available_themes()}")
 
@@ -440,7 +446,8 @@ class Themes(ConfigBase):
             theme_data = Theme(**theme_data)
 
         self.themes[name] = theme_data
-        self.themes[name].events.icon.connect(lambda _: self._emit_icon_color_change(name))
+        self.themes[name].events.icon.connect(partial(self._emit_icon_color_change, name), max_args=0)
+        self.themes[name].events.connect(self._emit_theme_changed, max_args=0)
         if register:
             self.register_themes([name])
 
@@ -479,7 +486,7 @@ class Themes(ConfigBase):
 
         if theme_name is None:
             theme_name = self.theme
-        palette = self.themes[theme_name].model_dump()
+        palette = self.themes[theme_name].to_dict()
         stylesheet = get_stylesheet()
         return template(stylesheet, **palette)
 
@@ -521,6 +528,10 @@ class Themes(ConfigBase):
         self.evt_theme_icon_changed.emit()
         logger.debug(f"Updating icon color for '{name}'...")
 
+    def _emit_theme_changed(self) -> None:
+        """Emit theme changed event."""
+        self.evt_theme_changed.emit()
+
     def _set_config_parameters(self, config: ty.Dict) -> None:
         """Set extra configuration parameters."""
         for config_group_title in ("themes",):
@@ -537,9 +548,7 @@ class Themes(ConfigBase):
                                     f"\nFailed with error=`{err}`",
                                 )
                     else:
-                        theme = Theme(**theme)
-                        theme.events.icon.connect(lambda _: self._emit_icon_color_change(theme_name))  # noqa: B023
-                        self.themes[theme_name] = theme
+                        self.add_theme(theme_name, theme)
                 except ValidationError as err:
                     logger.warning(
                         f"Skipping {theme_name} theme because it did not pass validation.\nFailed with error=`{err}`",
