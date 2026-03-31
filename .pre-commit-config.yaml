@@ -6,6 +6,15 @@ ci:
 default_install_hook_types: [pre-commit, pre-push]
 
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0  # Use the ref you want to point at
+    hooks:
+  # -   id: ...
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: no-commit-to-branch
+        args: [--branch=main]
+
   -   repo: https://github.com/hadialqattan/pycln
       rev: v2.6.0
       hooks:
@@ -22,12 +31,3 @@ repos:
         - id: ruff
           args: [--fix]
         - id: ruff-format
-
-  - repo: local
-    hooks:
-      - id: prevent-direct-push-to-main
-        name: prevent direct push to main
-        entry: ./scripts/prevent_direct_push_to_main.sh
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
