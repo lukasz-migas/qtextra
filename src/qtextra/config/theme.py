@@ -760,7 +760,7 @@ class QtStyler:
     def highlight_muted(cls) -> QColor:
         """The color of the highlight widget."""
         color = THEMES.get_qt_color("highlight")
-        return color.lighter(50) if is_dark() else color.darker(50)
+        return color.darker(20) if is_dark() else color.lighter(50)
 
     @classmethod
     def text(cls) -> QColor:
