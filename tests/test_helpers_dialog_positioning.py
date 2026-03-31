@@ -39,6 +39,18 @@ def _mock_mouse_screen(monkeypatch, cursor_pos: QPoint, screen_rect: QRect) -> N
     monkeypatch.setattr(QApplication, "primaryScreen", lambda: _FakeScreen(screen_rect))
 
 
+def _global_rect(widget: QWidget) -> QRect:
+    return QRect(widget.mapToGlobal(widget.rect().topLeft()), widget.rect().size())
+
+
+def _assert_vertically_centered(popup: QWidget, anchor_rect: QRect) -> None:
+    assert abs(popup.pos().y() + popup.height() / 2 - anchor_rect.center().y()) <= 1
+
+
+def _assert_horizontally_centered(popup: QWidget, anchor_rect: QRect) -> None:
+    assert abs(popup.pos().x() + popup.width() / 2 - anchor_rect.center().x()) <= 1
+
+
 def test_show_right_of_widget_centers_and_stays_to_the_right(qtbot, monkeypatch):
     screen_rect = QRect(0, 0, 500, 300)
     _mock_widget_screen(monkeypatch, screen_rect)
@@ -54,7 +66,9 @@ def test_show_right_of_widget_centers_and_stays_to_the_right(qtbot, monkeypatch)
 
     hp.show_right_of_widget(popup, parent, show=False)
 
-    assert popup.pos() == QPoint(180, 69)
+    parent_rect = _global_rect(parent)
+    assert popup.pos().x() == parent_rect.right() + 1
+    _assert_vertically_centered(popup, parent_rect)
 
 
 def test_show_right_of_widget_flips_left_when_right_side_would_overflow(qtbot, monkeypatch):
@@ -72,7 +86,9 @@ def test_show_right_of_widget_flips_left_when_right_side_would_overflow(qtbot, m
 
     hp.show_right_of_widget(popup, parent, show=False)
 
-    assert popup.pos() == QPoint(120, 69)
+    parent_rect = _global_rect(parent)
+    assert popup.pos().x() + popup.width() - 1 == parent_rect.left() - 1
+    _assert_vertically_centered(popup, parent_rect)
 
 
 def test_show_left_of_widget_centers_and_stays_to_the_left(qtbot, monkeypatch):
@@ -90,7 +106,9 @@ def test_show_left_of_widget_centers_and_stays_to_the_left(qtbot, monkeypatch):
 
     hp.show_left_of_widget(popup, parent, show=False)
 
-    assert popup.pos() == QPoint(80, 69)
+    parent_rect = _global_rect(parent)
+    assert popup.pos().x() + popup.width() - 1 == parent_rect.left() - 1
+    _assert_vertically_centered(popup, parent_rect)
 
 
 def test_show_above_widget_flips_below_when_top_would_overflow(qtbot, monkeypatch):
@@ -108,7 +126,9 @@ def test_show_above_widget_flips_below_when_top_would_overflow(qtbot, monkeypatc
 
     hp.show_above_widget(popup, parent, show=False)
 
-    assert popup.pos() == QPoint(179, 93)
+    parent_rect = _global_rect(parent)
+    assert popup.pos().y() == parent_rect.bottom() + 1
+    _assert_horizontally_centered(popup, parent_rect)
 
 
 def test_show_below_widget_flips_above_when_bottom_would_overflow(qtbot, monkeypatch):
@@ -126,7 +146,9 @@ def test_show_below_widget_flips_above_when_bottom_would_overflow(qtbot, monkeyp
 
     hp.show_below_widget(popup, parent, show=False)
 
-    assert popup.pos() == QPoint(179, 90)
+    parent_rect = _global_rect(parent)
+    assert popup.pos().y() + popup.height() - 1 == parent_rect.top() - 1
+    _assert_horizontally_centered(popup, parent_rect)
 
 
 def test_show_right_of_mouse_centers_on_cursor(qtbot, monkeypatch):
