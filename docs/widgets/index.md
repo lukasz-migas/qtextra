@@ -21,5 +21,7 @@ already documented with examples and API notes.
 - [QtActiveOverlay](./qt_active_overlay.md): animated activity indicators
 - [QtActiveProgressBarButton](./qt_button_progress.md): button with integrated
   progress state
+- [QtOverlay](./qt_overlay.md): floating labels and inline messages attached to
+  another widget
 - [QtStepProgressBar](./qt_progress_step.md): step-based progress indicator for
   multi-stage workflows
