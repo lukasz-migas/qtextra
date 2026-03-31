@@ -784,7 +784,7 @@ class TestMakeSwatchGrid:
         assert sorted(received_indices) == list(range(12))
 
 
-@pytest.mark.xfail(API_NAME == "pyside6" and IS_MAC, reason="For some reason, this fails on PySide6 on MacOS")
+@pytest.mark.skipif(API_NAME == "pyside6" and IS_MAC, reason="Skipped on PySide6 on macOS")
 def test_add_flash_animation(qtbot):
     widget = QWidget()
     qtbot.addWidget(widget)

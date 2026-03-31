@@ -39,8 +39,25 @@ class _MultiPanel(_ScrollablePanel):
             row.setVisible(q in row._label.lower())
         self._finalize_height()
 
+    def set_items(self, items: list[str]):
+        """Replace all available items."""
+        self._selected = set()
+        self._rebuild_rows(items)
+
+    def _rebuild_rows(self, items: list[str]):
+        while self._rows:
+            row = self._rows.pop()
+            self._inner_l.removeWidget(row)
+            row.deleteLater()
+        for text in items:
+            row = _MultiItemRow(text)
+            row.toggled_item.connect(self._on_toggle)
+            self._inner_l.addWidget(row)
+            self._rows.append(row)
+        self._finalize_height()
+
     def show_below(self, widget, min_width=0):
-        """Show panel below widget, resetting the search field."""
+        """Show a panel below the widget, resetting the search field."""
         self._search.clear()
         self._filter("")
         super().show_below(widget, min_width)
@@ -55,11 +72,13 @@ class _MultiPanel(_ScrollablePanel):
         self.evt_selection_changed.emit(sorted(self._selected, key=lambda x: [r._label for r in self._rows].index(x)))
 
     def set_selected(self, items: list[str]):
+        """Replace all available items."""
         self._selected = set(items)
         for r in self._rows:
             r.set_checked(r._label in self._selected)
 
     def selected(self) -> list[str]:
+        """Get selected rows."""
         order = [r._label for r in self._rows]
         return [x for x in order if x in self._selected]
 
@@ -69,7 +88,7 @@ class _MultiBtn(_BaseButton):
     _CHIP_PAD = 6
     _CHIP_GAP = 4
 
-    def __init__(self, placeholder, parent=None):
+    def __init__(self, placeholder: str, parent: QWidget | None = None):
         super().__init__(parent=parent)
         self._selected: list[str] = []
         self._placeholder = placeholder
@@ -128,7 +147,7 @@ class _MultiBtn(_BaseButton):
         p.end()
 
 
-class MultiSelectComboBox(QWidget):
+class QtMultiSelectComboBox(QWidget):
     """Combobox allowing multiple selections, shown as chips in the button."""
 
     evt_selection_changed = Signal(list)
@@ -163,11 +182,22 @@ class MultiSelectComboBox(QWidget):
         self.evt_selection_changed.emit(items)
 
     def selected(self) -> list[str]:
-        return list(self._selected)
+        """Return the selected items."""
+        return self._panel.selected()
+
+    def set_items(self, items: list[str]) -> None:
+        """Set the selected items."""
+        self._panel.set_selected([])
+        self._panel.set_items(items)
+        self._on_change([])
 
     def set_selected(self, items: list[str]):
+        """Set the selected items."""
         self._panel.set_selected(items)
         self._on_change(items)
+
+    # Alias methods to offer Qt-like interface
+    addItems = set_items
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -176,7 +206,7 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe(False)
-    combo = MultiSelectComboBox(
+    combo = QtMultiSelectComboBox(
         items=[
             "Apple",
             "Apricot",

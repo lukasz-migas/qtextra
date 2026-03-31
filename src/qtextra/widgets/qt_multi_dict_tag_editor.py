@@ -9,10 +9,7 @@ from qtpy.QtGui import QDoubleValidator, QIntValidator
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QAbstractScrollArea,
-    QComboBox,
     QHeaderView,
-    QLineEdit,
-    QPushButton,
     QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
@@ -20,14 +17,12 @@ from qtpy.QtWidgets import (
 )
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
+from qtextra.widgets.qt_combobox_multi import QtMultiSelectComboBox
 from qtextra.widgets.qt_dict_tag_editor import DictTagValue
 
 TYPE_ROLE = Qt.ItemDataRole.UserRole + 1
 VALUE_ROLE = Qt.ItemDataRole.UserRole + 2
 PRESENT_ROLE = Qt.ItemDataRole.UserRole + 3
-
-ALL_SAMPLES_LABEL = "All samples"
 
 
 class QtMultiDictTagEditor(QWidget):
@@ -54,44 +49,41 @@ class QtMultiDictTagEditor(QWidget):
         self.case_sensitive = case_sensitive
         self._default_value_placeholder = value_placeholder
         self._samples: list[str] = []
+        self._selected_target_samples: list[str] = []
         self._syncing_selection = False
         self._syncing_scroll = False
+        self._sort_key: tuple[str, int] = ("key", 0)
+        self._sort_order = Qt.SortOrder.AscendingOrder
 
-        self.search_edit = QLineEdit(self)
-        self.search_edit.setPlaceholderText(search_placeholder)
-        self.search_edit.setClearButtonEnabled(True)
-        self.search_edit.textChanged.connect(self._on_search_changed)
+        self.search_edit = hp.make_line_edit(self, placeholder=search_placeholder, func_changed=self._on_search_changed)
+        self.key_edit = hp.make_line_edit(self, placeholder=key_placeholder, func_enter=self.add_current_key)
+        self.value_edit = hp.make_line_edit(self, placeholder=value_placeholder, func_enter=self.apply_current_value)
 
-        self.key_edit = QLineEdit(self)
-        self.key_edit.setPlaceholderText(key_placeholder)
-        self.key_edit.setClearButtonEnabled(True)
+        self.type_toggle = hp.make_toggle(
+            self,
+            "str",
+            "int",
+            "float",
+            "None",
+            value="str",
+            orientation="horizontal",
+            func=self._on_type_changed,
+        )
 
-        self.value_edit = QLineEdit(self)
-        self.value_edit.setPlaceholderText(value_placeholder)
-        self.value_edit.setClearButtonEnabled(True)
+        self.sample_combo = QtMultiSelectComboBox(parent=self, placeholder="Select target samples...")
+        self.sample_combo.evt_selection_changed.connect(self._on_sample_selection_changed_from_combo)
 
-        self.type_combo = QComboBox(self)
-        self.type_combo.addItems(["str", "int", "float", "None"])
-        self.type_combo.currentTextChanged.connect(self._on_type_changed)
+        self.all_samples_button = hp.make_btn(self, "Select All", func=self.select_all_samples)
 
-        self.target_combo = QtCheckableComboBox(self)
-        self.target_combo.evt_checked.connect(self._on_target_checked)
+        self.target_summary = hp.make_label(self, "", wrap=True)
+        self.target_summary.setMinimumHeight(self.key_edit.sizeHint().height())
 
-        self.add_key_button = QPushButton("Add Key", self)
-        self.add_key_button.clicked.connect(self.add_current_key)
+        self.add_key_button = hp.make_btn(self, "Add Key", func=self.add_current_key)
+        self.apply_value_button = hp.make_btn(self, "Apply Value", func=self.apply_current_value)
+        self.remove_key_button = hp.make_btn(self, "Remove Key", func=self.remove_selected_key)
+        self.clear_button = hp.make_btn(self, "Clear", func=self.confirm_clear_items)
 
-        self.apply_value_button = QPushButton("Apply Value", self)
-        self.apply_value_button.clicked.connect(self.apply_current_value)
-
-        self.remove_key_button = QPushButton("Remove Key", self)
-        self.remove_key_button.clicked.connect(self.remove_selected_key)
-
-        self.clear_button = QPushButton("Clear", self)
-        self.clear_button.clicked.connect(self.confirm_clear_items)
-
-        self.key_edit.returnPressed.connect(self.add_current_key)
-        self.value_edit.returnPressed.connect(self.apply_current_value)
-        self._on_type_changed(self.type_combo.currentText())
+        self._on_type_changed(self.current_value_type())
 
         self.key_table = QTableWidget(0, 2, self)
         self.key_table.setHorizontalHeaderLabels(["Key", "Type"])
@@ -110,12 +102,28 @@ class QtMultiDictTagEditor(QWidget):
         self.key_table.verticalScrollBar().valueChanged.connect(self._sync_scroll_from_key_table)
         self.table.verticalScrollBar().valueChanged.connect(self._sync_scroll_from_sample_table)
 
+        self.key_table.horizontalHeader().sortIndicatorChanged.connect(self._on_key_sort_requested)
+        self.table.horizontalHeader().sortIndicatorChanged.connect(self._on_sample_sort_requested)
+
         search_row = hp.make_h_layout(self.search_edit, spacing=4, margin=0)
-        controls_row = hp.make_h_layout(
+        editor_row = hp.make_h_layout(
             self.key_edit,
             self.value_edit,
-            self.type_combo,
-            self.target_combo,
+            self.type_toggle,
+            spacing=4,
+            margin=0,
+            stretch_id=(0, 1),
+            stretch_ratio=(2, 2),
+        )
+
+        target_layout = hp.make_h_layout(
+            self.sample_combo,
+            self.all_samples_button,
+            spacing=0,
+            margin=0,
+            stretch_id=(0,),
+        )
+        buttons_row = hp.make_h_layout(
             self.add_key_button,
             self.apply_value_button,
             self.remove_key_button,
@@ -123,13 +131,19 @@ class QtMultiDictTagEditor(QWidget):
             spacing=4,
             margin=0,
         )
-        controls_row.setStretch(0, 2)
-        controls_row.setStretch(1, 2)
+        tables_row = hp.make_h_layout(self.key_table, self.table, spacing=0, margin=0, stretch_id=(0,))
 
-        tables_row = hp.make_h_layout(self.key_table, self.table, spacing=0, margin=0)
-        tables_row.setStretch(1, 1)
-
-        hp.make_v_layout(search_row, controls_row, tables_row, spacing=6, margin=0, parent=self)
+        hp.make_v_layout(
+            search_row,
+            editor_row,
+            target_layout,
+            self.target_summary,
+            buttons_row,
+            tables_row,
+            spacing=6,
+            margin=0,
+            parent=self,
+        )
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.set_samples(samples or [])
@@ -139,14 +153,21 @@ class QtMultiDictTagEditor(QWidget):
         """Return the configured sample names."""
         return list(self._samples)
 
+    def current_value_type(self) -> str:
+        """Return the currently selected value type."""
+        value = self.type_toggle.value
+        return "str" if not isinstance(value, str) else value
+
+    def set_current_value_type(self, value_type: str) -> None:
+        """Set the current value type and refresh validation."""
+        self.type_toggle.value = value_type
+        self._on_type_changed(value_type)
+
     def set_samples(self, samples: list[str]) -> None:
         """Set the active sample names."""
         cleaned = [sample.strip() for sample in samples if sample.strip()]
         self._samples = cleaned
-        with hp.qt_signals_blocked(self.target_combo):
-            self.target_combo.clear()
-            self.target_combo.addItem(ALL_SAMPLES_LABEL)
-            self.target_combo.addItems(self._samples)
+        self.sample_combo.set_items(self._samples)
         self.set_target_samples(list(self._samples))
         self._rebuild_table_headers()
         self._resize_columns()
@@ -197,6 +218,7 @@ class QtMultiDictTagEditor(QWidget):
                         row_values[sample] = items[sample][matched_key]
             self._set_row_values(row, row_values, emit_signal=False)
 
+        self._apply_sort()
         self._apply_filter()
         self._resize_columns()
         self._emit_items_changed()
@@ -227,6 +249,7 @@ class QtMultiDictTagEditor(QWidget):
         for sample in samples:
             self._set_sample_value(row, sample, value, present=True)
 
+        self._apply_sort()
         self._apply_filter()
         self._resize_columns()
         self.evt_key_added.emit(display_key)
@@ -261,6 +284,7 @@ class QtMultiDictTagEditor(QWidget):
             self._set_sample_value(row, sample, value, present=True)
             self.evt_value_changed.emit(display_key, sample, value)
 
+        self._apply_sort()
         self._apply_filter()
         self._resize_columns()
         self._emit_items_changed()
@@ -272,14 +296,14 @@ class QtMultiDictTagEditor(QWidget):
         if not key:
             return False
         try:
-            value = self._coerce_value(self.value_edit.text(), self.type_combo.currentText())
+            value = self._coerce_value(self.value_edit.text(), self.current_value_type())
         except ValueError:
             return False
         added = self.add_key(
             key,
             value,
             target_samples=self.current_target_samples(),
-            value_type=self.type_combo.currentText(),
+            value_type=self.current_value_type(),
         )
         if added:
             self.key_edit.clear()
@@ -300,7 +324,7 @@ class QtMultiDictTagEditor(QWidget):
             key = item.text()
 
         try:
-            value = self._coerce_value(self.value_edit.text(), self.type_combo.currentText())
+            value = self._coerce_value(self.value_edit.text(), self.current_value_type())
         except ValueError:
             return False
 
@@ -308,7 +332,7 @@ class QtMultiDictTagEditor(QWidget):
             key,
             value,
             target_samples=self.current_target_samples(),
-            value_type=self.type_combo.currentText(),
+            value_type=self.current_value_type(),
         )
 
     def remove_key(self, key: str) -> bool:
@@ -372,29 +396,27 @@ class QtMultiDictTagEditor(QWidget):
 
     def current_target_samples(self) -> list[str]:
         """Return the currently selected target samples."""
-        if not self._samples:
-            return []
-        all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
-        all_checked = all_index != -1 and self.target_combo.itemChecked(all_index)
-        selected = [sample for sample in self.target_combo.checked_texts() if sample in self._samples]
-        if all_checked or not selected or len(selected) == len(self._samples):
+        if len(self._selected_target_samples) == len(self._samples):
             return list(self._samples)
-        return selected
+        return list(self._selected_target_samples)
 
     def set_target_samples(self, samples: list[str]) -> None:
         """Set the selected target samples."""
         cleaned = [sample for sample in samples if sample in self._samples]
-        with hp.qt_signals_blocked(self.target_combo):
-            self.target_combo.set_checked_texts([])
-            if not cleaned or len(cleaned) == len(self._samples):
-                all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
-                if all_index != -1:
-                    self.target_combo.setItemChecked(all_index, True)
-            else:
-                all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
-                if all_index != -1:
-                    self.target_combo.setItemChecked(all_index, False)
-                self.target_combo.set_checked_texts(cleaned)
+        if not cleaned and self._samples:
+            cleaned = list(self._samples)
+        self._selected_target_samples = list(cleaned)
+        self.sample_combo.set_selected(list(cleaned))
+        self._refresh_target_summary()
+        self._update_target_controls()
+        self._on_target_changed()
+
+    def select_all_samples(self) -> None:
+        """Select every configured sample in the target picker."""
+        self._selected_target_samples = list(self._samples)
+        self.sample_combo.set_selected(list(self._samples))
+        self._refresh_target_summary()
+        self._update_target_controls()
         self._on_target_changed()
 
     def _configure_table(self, table: QTableWidget) -> None:
@@ -402,8 +424,11 @@ class QtMultiDictTagEditor(QWidget):
         table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.setSortingEnabled(False)
         table.verticalHeader().setVisible(False)
         table.horizontalHeader().setMinimumSectionSize(70)
+        table.horizontalHeader().setSectionsClickable(True)
+        table.horizontalHeader().setSortIndicatorShown(True)
         table.setWordWrap(False)
         table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
@@ -414,6 +439,9 @@ class QtMultiDictTagEditor(QWidget):
         self.key_table.setHorizontalHeaderLabels(["Key", "Type"])
         self.table.setColumnCount(len(self._samples))
         self.table.setHorizontalHeaderLabels(self._samples)
+        self.key_table.horizontalHeader().setSortIndicator(0, self._sort_order)
+        if self.table.columnCount():
+            self.table.horizontalHeader().setSortIndicator(0, self._sort_order)
 
     def _sample_column(self, sample: str) -> int:
         return self._samples.index(sample)
@@ -491,7 +519,7 @@ class QtMultiDictTagEditor(QWidget):
             return selected
         if target_sample is None:
             return list(self._samples)
-        if target_sample == ALL_SAMPLES_LABEL or target_sample not in self._samples:
+        if target_sample not in self._samples:
             return list(self._samples)
         return [target_sample]
 
@@ -531,7 +559,7 @@ class QtMultiDictTagEditor(QWidget):
             return
 
         self.key_edit.setText(key_item.text())
-        self.type_combo.setCurrentText(type_item.text())
+        self.set_current_value_type(type_item.text())
 
         samples = self.current_target_samples()
         if len(samples) == 1:
@@ -591,23 +619,30 @@ class QtMultiDictTagEditor(QWidget):
             return first
         return None
 
-    def _on_target_checked(self, index: int, checked: bool) -> None:
-        if index == self.target_combo.findText(ALL_SAMPLES_LABEL) and checked:
-            with hp.qt_signals_blocked(self.target_combo):
-                for row in range(1, self.target_combo.count()):
-                    self.target_combo.setItemChecked(row, False)
-        elif index > 0 and checked:
-            all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
-            if all_index != -1:
-                with hp.qt_signals_blocked(self.target_combo):
-                    self.target_combo.setItemChecked(all_index, False)
+    def _on_sample_selection_changed_from_combo(self, samples: list[str]) -> None:
+        cleaned = [sample for sample in samples if sample in self._samples]
+        self._selected_target_samples = cleaned
+        self._refresh_target_summary()
+        self._update_target_controls()
         self._on_target_changed()
+
+    def _refresh_target_summary(self) -> None:
+        if self._samples and len(self._selected_target_samples) == len(self._samples):
+            self.target_summary.setText("Targets: All samples")
+            return
+        if not self._selected_target_samples:
+            self.target_summary.setText("Targets: none")
+            return
+        self.target_summary.setText(f"Targets: {', '.join(self._selected_target_samples)}")
+
+    def _update_target_controls(self) -> None:
+        self.target_summary.setEnabled(True)
 
     def _on_target_changed(self) -> None:
         self._populate_inputs_from_selection()
         selected = self.current_target_samples()
         if len(selected) == len(self._samples):
-            self.evt_target_changed.emit(ALL_SAMPLES_LABEL)
+            self.evt_target_changed.emit("All samples")
         else:
             self.evt_target_changed.emit(", ".join(selected))
 
@@ -625,7 +660,73 @@ class QtMultiDictTagEditor(QWidget):
         self.key_table.verticalScrollBar().setValue(value)
         self._syncing_scroll = False
 
-    def _coerce_value(self, text: str, value_type: str) -> DictTagValue:
+    def _on_key_sort_requested(self, section: int, order: Qt.SortOrder) -> None:
+        self._sort_key = ("key", section)
+        self._sort_order = order
+        self._apply_sort()
+
+    def _on_sample_sort_requested(self, section: int, order: Qt.SortOrder) -> None:
+        self._sort_key = ("sample", section)
+        self._sort_order = order
+        self._apply_sort()
+
+    def _apply_sort(self) -> None:
+        selected_key = None
+        row = self._current_row()
+        if row >= 0 and self.key_table.item(row, 0) is not None:
+            selected_key = self.key_table.item(row, 0).text()
+
+        rows = [self._row_snapshot(index) for index in range(self.key_table.rowCount())]
+        reverse = self._sort_order == Qt.SortOrder.DescendingOrder
+        rows.sort(key=self._sort_value, reverse=reverse)
+        self._restore_rows(rows)
+
+        if selected_key:
+            new_row = self._find_row(selected_key)
+            if new_row is not None:
+                self._select_row(new_row, source="key")
+        self._apply_filter()
+        self._resize_columns()
+
+    def _row_snapshot(self, row: int) -> dict:
+        values: dict[str, tuple[bool, DictTagValue]] = {}
+        for sample in self._samples:
+            item = self.table.item(row, self._sample_column(sample))
+            present = False if item is None else bool(item.data(PRESENT_ROLE))
+            value = None if item is None else item.data(VALUE_ROLE)
+            values[sample] = (present, value)
+        key_item = self.key_table.item(row, 0)
+        type_item = self.key_table.item(row, 1)
+        return {
+            "key": "" if key_item is None else key_item.text(),
+            "type": "None" if type_item is None else type_item.text(),
+            "values": values,
+        }
+
+    def _restore_rows(self, rows: list[dict]) -> None:
+        self.key_table.setRowCount(0)
+        self.table.setRowCount(0)
+        for row_data in rows:
+            row = self._ensure_row(row_data["key"])
+            self._set_row_type(row, row_data["type"])
+            for sample, (present, value) in row_data["values"].items():
+                self._set_sample_value(row, sample, value, present=present)
+
+    def _sort_value(self, row_data: dict):
+        table_name, section = self._sort_key
+        if table_name == "key":
+            if section == 0:
+                return row_data["key"].casefold()
+            return row_data["type"].casefold()
+
+        sample = self._samples[section]
+        present, value = row_data["values"][sample]
+        if not present:
+            return (1, "")
+        return (0, "" if value is None else str(value).casefold())
+
+    @staticmethod
+    def _coerce_value(text: str, value_type: str) -> DictTagValue:
         if value_type == "str":
             return text
         if value_type == "int":
@@ -642,7 +743,8 @@ class QtMultiDictTagEditor(QWidget):
             return None
         raise ValueError(f"Unsupported value type: {value_type}")
 
-    def _infer_type(self, value: DictTagValue) -> str:
+    @staticmethod
+    def _infer_type(value: DictTagValue) -> str:
         if value is None:
             return "None"
         if isinstance(value, bool):
@@ -726,6 +828,7 @@ class QtMultiDictTagEditor(QWidget):
     getSampleNames = sample_names
     setTargetSamples = set_target_samples
     getTargetSamples = current_target_samples
+    setCurrentValueType = set_current_value_type
     addKey = add_key
     addCurrentKey = add_current_key
     setValue = set_value

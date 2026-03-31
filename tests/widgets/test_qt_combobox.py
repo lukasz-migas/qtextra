@@ -4,7 +4,7 @@ import pytest
 from qtpy.QtWidgets import QComboBox
 
 from qtextra.widgets._qt_combobox import _BaseButton, _ItemRow
-from qtextra.widgets.qt_combobox_multi import MultiSelectComboBox, _MultiItemRow, _MultiPanel
+from qtextra.widgets.qt_combobox_multi import QtMultiSelectComboBox, _MultiItemRow, _MultiPanel
 from qtextra.widgets.qt_combobox_search import (
     QtSearchableComboBox,
     QtSearchComboBox,
@@ -152,12 +152,12 @@ class TestMultiSelectComboBox:
 
     @pytest.fixture
     def combo(self, qtbot):
-        w = MultiSelectComboBox(items=self.ITEMS)
+        w = QtMultiSelectComboBox(items=self.ITEMS)
         qtbot.addWidget(w)
         return w
 
     def test_init_empty(self, qtbot):
-        w = MultiSelectComboBox()
+        w = QtMultiSelectComboBox()
         qtbot.addWidget(w)
         assert w.selected() == []
 

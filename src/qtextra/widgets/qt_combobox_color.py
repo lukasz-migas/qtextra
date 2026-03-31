@@ -10,7 +10,7 @@ from qtextra.config import QtStyler
 from qtextra.widgets._qt_combobox import _BTN_H, _base_font, _BaseButton, _draw_chevron, _PopupPanel
 
 
-class ColorSwatchComboBox(QWidget):
+class QtColorSwatchComboBox(QWidget):
     """Combobox showing a grid of color swatches with optional names."""
 
     evt_color_changed = Signal(QColor)
@@ -211,7 +211,7 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe(False)
-    combo = ColorSwatchComboBox(placeholder="Pick a color…")
+    combo = QtColorSwatchComboBox(placeholder="Pick a color…")
     combo.add_swatches(
         [
             ("#FFFFFF", "White"),

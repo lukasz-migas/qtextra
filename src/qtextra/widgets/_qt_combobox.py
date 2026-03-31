@@ -1,5 +1,7 @@
 """Combobox."""
 
+from __future__ import annotations
+
 from qtpy.QtCore import QPoint, QRectF, Qt, Signal
 from qtpy.QtGui import QColor, QFont, QPainter, QPen
 from qtpy.QtWidgets import QAbstractButton, QFrame, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
@@ -42,7 +44,7 @@ def _draw_chevron(painter: QPainter, cx: float, cy: float, close: bool = True):
 class _BaseButton(QAbstractButton):
     """Shared pill-shaped dropdown trigger button."""
 
-    def __init__(self, min_width=180, parent=None):
+    def __init__(self, min_width: int = 180, parent: QWidget | None = None):
         super().__init__(parent)
         self._open = False
         self._hovered = False
@@ -55,11 +57,11 @@ class _BaseButton(QAbstractButton):
         self._open = v
         self.update()
 
-    def _bg(self):
+    def _bg(self) -> QColor:
         if self._open:
             return QtStyler.background()
         if self._hovered:
-            return QtStyler.background_muted()
+            return QtStyler.primary()
         return QtStyler.background()
 
     def _draw_frame(self, p: QPainter):
