@@ -3,6 +3,7 @@
 from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
+from qtextra.widgets.qt_multi_dict_summary import QtMultiDictSummaryWidget
 from qtextra.widgets.qt_multi_dict_tag_viewer import QtMultiDictTagViewer
 
 app = QApplication([])
@@ -12,8 +13,10 @@ THEMES.apply(widget)
 
 layout = QVBoxLayout(widget)
 
-layout.addWidget(QLabel("QtMultiDictTagViewer"))
+layout.addWidget(QLabel("QtMultiDictTagViewer + standalone summary"))
 viewer = QtMultiDictTagViewer()
+summary = QtMultiDictSummaryWidget()
+viewer.evt_items_changed.connect(summary.set_items)
 viewer.set_items(
     {
         "sample_a": {
@@ -45,11 +48,13 @@ viewer.set_items(
         },
     },
 )
-layout.addWidget(viewer)
+body = QVBoxLayout()
+body.addWidget(viewer, stretch=1)
+body.addWidget(summary, stretch=1)
+layout.addLayout(body)
 
 layout.addWidget(QLabel("Read-only side-by-side dictionary display"))
 viewer.search_edit.setText("score")
-layout.addStretch()
 
 widget.resize(900, 420)
 widget.show()

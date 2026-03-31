@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from qtpy.QtCore import Qt
 
+from qtextra.widgets.qt_multi_dict_summary import QtMultiDictSummaryWidget
 from qtextra.widgets.qt_multi_dict_tag_viewer import QtMultiDictTagViewer
 
 
@@ -27,6 +28,26 @@ def test_qt_multi_dict_tag_viewer_exports_nested_dicts(qtbot):
     assert changed[-1] == widget.export_dicts()
     assert widget.key_table.columnCount() == 1
     assert widget.table.columnCount() == 2
+
+
+def test_qt_multi_dict_summary_widget_builds_condition_summary(qtbot):
+    widget = QtMultiDictSummaryWidget()
+    qtbot.addWidget(widget)
+    widget.set_items(
+        {
+            "sample_a": {"group": "control"},
+            "sample_b": {"group": "treated"},
+            "sample_c": {"group": "treated"},
+            "sample_d": {"group": "treated"},
+        },
+    )
+
+    summary = widget.summary_data()
+
+    assert summary["sample_count"] == 4
+    assert summary["key_count"] == 1
+    assert summary["keys"]["group"]["options"] == ["control", "treated"]
+    assert summary["keys"]["group"]["matches"]["treated"] == ["sample_b", "sample_c", "sample_d"]
 
 
 def test_qt_multi_dict_tag_viewer_search_filters_rows(qtbot):
@@ -101,3 +122,21 @@ def test_qt_multi_dict_tag_viewer_syncs_selection_and_gets_value(qtbot):
 
     widget.clear_items()
     assert widget.export_dicts() == {"sample_a": {}, "sample_b": {}}
+
+
+def test_qt_multi_dict_summary_widget_can_follow_viewer_data(qtbot):
+    viewer = QtMultiDictTagViewer()
+    summary = QtMultiDictSummaryWidget()
+    qtbot.addWidget(viewer)
+    qtbot.addWidget(summary)
+    viewer.evt_items_changed.connect(summary.set_items)
+
+    viewer.set_items(
+        {
+            "sample_a": {"alpha": 1},
+            "sample_b": {"alpha": 2},
+        },
+    )
+
+    assert summary.summary_data()["keys"]["alpha"]["matches"]["1"] == ["sample_a"]
+    assert summary.summary_data()["keys"]["alpha"]["matches"]["2"] == ["sample_b"]

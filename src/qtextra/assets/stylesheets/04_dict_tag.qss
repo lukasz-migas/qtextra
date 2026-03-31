@@ -1,0 +1,5 @@
+QFrame#multiDictSummaryCard {
+    border: 1px solid palette(mid);
+    border-radius: 10px;
+    background: {{ background }};
+}

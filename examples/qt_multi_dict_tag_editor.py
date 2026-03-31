@@ -3,6 +3,7 @@
 from qtpy.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
+from qtextra.widgets.qt_multi_dict_summary import QtMultiDictSummaryWidget
 from qtextra.widgets.qt_multi_dict_tag_editor import QtMultiDictTagEditor
 
 app = QApplication([])
@@ -12,8 +13,10 @@ THEMES.apply(widget)
 
 layout = QVBoxLayout(widget)
 
-layout.addWidget(QLabel("QtMultiDictTagEditor"))
+layout.addWidget(QLabel("QtMultiDictTagEditor + standalone summary"))
 editor = QtMultiDictTagEditor()
+summary = QtMultiDictSummaryWidget()
+editor.evt_items_changed.connect(summary.set_items)
 editor.set_items(
     {
         "sample_a": {
@@ -49,12 +52,14 @@ editor.set_items(
         },
     },
 )
-layout.addWidget(editor)
+body = QVBoxLayout()
+body.addWidget(editor, stretch=1)
+body.addWidget(summary, stretch=1)
+layout.addLayout(body)
 
 layout.addWidget(QLabel("Target one sample or all samples"))
 editor.set_target_samples(["sample_b", "sample_c"])
 editor.table.selectRow(0)
-layout.addStretch()
 
 widget.resize(900, 480)
 widget.show()
