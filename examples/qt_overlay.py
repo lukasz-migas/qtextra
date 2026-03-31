@@ -10,7 +10,7 @@ app = QApplication([])
 
 widget = QWidget()
 widget.setWindowTitle("QtOverlay Example")
-widget.resize(560, 320)
+widget.resize(700, 320)
 THEMES.apply(widget)
 
 layout = QVBoxLayout(widget)
@@ -22,7 +22,7 @@ QtOverlayLabel(
     parent=widget,
     widget=editor,
     text="Autosave is enabled",
-    alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
+    alignment=Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight,
 )
 
 overlay = QtOverlayDismissMessage(

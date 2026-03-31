@@ -7,7 +7,6 @@ from qtextra.widgets.qt_button_tag import QtTagManager
 
 app = QApplication([])
 widget = QtTagManager(allow_action=True, flow=False)
-widget.setMinimumWidth(500)
 THEMES.apply(widget)
 
 # add tags to the tag manager
@@ -19,5 +18,6 @@ widget.add_filter()
 widget.add_plus()
 widget.evt_changed.connect(lambda hash_id, state: print(f"Tag {hash_id} was {'checked' if state else 'unchecked'}"))
 
+widget.resize(700, 700)
 widget.show()
 app.exec_()

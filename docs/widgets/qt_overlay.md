@@ -1,51 +1,26 @@
 # QtOverlay
 
-Overlay widgets attach floating labels or message boxes to another widget
-without changing that widget's layout.
+Floating labels and message widgets anchored to another widget.
 
-```python
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication, QTextEdit, QVBoxLayout, QWidget
+## Screenshot
 
-from qtextra.config import THEMES
-from qtextra.widgets.qt_overlay import QtOverlayDismissMessage, QtOverlayLabel
+{{ show_example('qt_overlay.py', 560) }}
 
-app = QApplication([])
+## Example
 
-widget = QWidget()
-widget.setWindowTitle("QtOverlay Example")
-THEMES.apply(widget)
+Source: [`examples/qt_overlay.py`](../../examples/qt_overlay.py)
 
-layout = QVBoxLayout(widget)
-editor = QTextEdit()
-editor.setPlaceholderText("Overlay target")
-layout.addWidget(editor)
+{{ include_example('qt_overlay.py') }}
+## Notes
 
-hint = QtOverlayLabel(
-    parent=widget,
-    widget=editor,
-    text="Autosave is enabled",
-    alignment=Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
-)
+- Overlays automatically follow the anchor widget as it moves, resizes, shows, or hides.
 
-message = QtOverlayDismissMessage(
-    parent=widget,
-    widget=editor,
-    icon_name="info",
-    text="This editor is read-only until the file finishes loading.",
-    word_wrap=True,
-    dismiss_btn=True,
-    ok_btn=True,
-    ok_text="Understood",
-)
-message.display()
+## API
 
-widget.resize(520, 320)
-widget.show()
-app.exec_()
-```
+{{ show_members('qtextra.widgets.qt_overlay.QtOverlay') }}
 
-Use `QtOverlayLabel` for small contextual hints and `QtOverlayMessage` or
-`QtOverlayDismissMessage` when you need actions such as dismiss or accept.
-Overlays automatically follow the anchor widget when it moves, resizes, shows,
-or hides.
+{{ show_members('qtextra.widgets.qt_overlay.QtOverlayLabel') }}
+
+{{ show_members('qtextra.widgets.qt_overlay.QtOverlayMessage') }}
+
+{{ show_members('qtextra.widgets.qt_overlay.QtOverlayDismissMessage') }}

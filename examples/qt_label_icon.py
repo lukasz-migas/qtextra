@@ -4,6 +4,7 @@ from qtpy.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 from qtextra._example_helpers import divider, section
 from qtextra.assets import QTA_MAPPING, get_icon
+from qtextra.config import THEMES
 from qtextra.widgets.qt_label_icon import QtPulsingAttentionLabel, QtQtaLabel, QtWarningPulseLabel
 from qtextra.widgets.qt_layout_flow import QtAnimatedFlowLayout
 

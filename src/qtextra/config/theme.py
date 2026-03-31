@@ -326,6 +326,10 @@ class Themes(ConfigBase):
         self._light_end_time = value
         self.synchronize_theme()
 
+    def set_theme(self, value: str) -> None:
+        """Set theme."""
+        self.theme = value
+
     @property
     def theme(self) -> str:
         """Get theme."""

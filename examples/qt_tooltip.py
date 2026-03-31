@@ -1,6 +1,4 @@
-"""QtPopout example."""
-
-from random import choice
+"""QtToolTip example."""
 
 from qtpy.QtCore import QSize
 from qtpy.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
@@ -12,14 +10,14 @@ from qtextra.widgets.qt_tooltip import QtToolTip, TipPosition
 
 def create_popout():
     """Create a popout."""
-    tail_position = choice(list(TipPosition))
+    tail_position = TipPosition.BOTTOM
     QtToolTip.init(
         title=f"Displaying ToolTip with {tail_position}",
         content="Here you can add custom text that will be displayed below the title.",
         parent=widget,
         tail_position=tail_position,
         target=button,
-        is_closable=choice([True, False]),
+        is_closable=True,
         image=make_qta_icon("home").pixmap(QSize(32, 32))
         if tail_position in [TipPosition.LEFT, TipPosition.RIGHT]
         else None,
@@ -38,5 +36,6 @@ widget.setLayout(layout)
 layout.addWidget(button := QPushButton("Press me to see tooltip"))
 button.clicked.connect(create_popout)
 widget.show()
+create_popout()
 
 app.exec_()

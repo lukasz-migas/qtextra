@@ -111,3 +111,4 @@ _version.py
 docs/_auto_images/
 scratch/
 .claude/worktrees/
+docs/_build_home

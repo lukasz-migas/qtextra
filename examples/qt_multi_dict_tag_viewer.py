@@ -50,13 +50,13 @@ viewer.set_items(
 )
 body = QVBoxLayout()
 body.addWidget(viewer, stretch=1)
-body.addWidget(summary, stretch=1)
+body.addWidget(summary, stretch=2)
 layout.addLayout(body)
 
 layout.addWidget(QLabel("Read-only side-by-side dictionary display"))
 viewer.search_edit.setText("score")
 
-widget.resize(900, 420)
+widget.resize(900, 700)
 widget.show()
 
 app.exec_()

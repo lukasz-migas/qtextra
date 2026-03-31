@@ -1,37 +1,20 @@
 # QtActiveProgressBarButton
 
-Button with progress bar and activity indicator.
+A button that pairs a progress bar with inline activity and cancel affordances.
 
+## Screenshot
 
-```python
-from qtpy.QtWidgets import QApplication, QVBoxLayout, QWidget
+{{ show_example('qt_button_progress.py', 360) }}
 
-from qtextra.config import THEMES
-from qtextra.widgets.qt_button_progress import QtActiveProgressBarButton
+## Example
 
-app = QApplication([])
+Source: [`examples/qt_button_progress.py`](../../examples/qt_button_progress.py)
 
-widget = QWidget()
-THEMES.set_theme_stylesheet(widget)
+{{ include_example('qt_button_progress.py') }}
+## Notes
 
-layout = QVBoxLayout()
-widget.setLayout(layout)
+- Use it when you want the action trigger and the progress readout to stay visually connected.
 
-active_btn = QtActiveProgressBarButton(widget, "Click me")
-active_btn.setRange(0, 100)
-active_btn.setValue(10)
-active_btn.active = True
-layout.addWidget(active_btn)
-
-active_btn = QtActiveProgressBarButton(widget, "Click me")
-active_btn.setRange(0, 100)
-active_btn.setValue(10)
-layout.addWidget(active_btn)
-widget.show()
-
-app.exec_()
-```
-
-{{ show_widget(350) }}
+## API
 
 {{ show_members('qtextra.widgets.qt_button_progress.QtActiveProgressBarButton') }}

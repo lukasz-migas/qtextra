@@ -71,6 +71,14 @@ test = [
     "pytest-qt",
     "pytest-pretty",
 ]
+docs = [
+    "qtextra[console,sentry]",
+    "mkdocs-macros-plugin>=1.3.9",
+    "mkdocs-material>=9.6.20",
+    "mkdocstrings>=0.30.0",
+    "mkdocstrings-python>=1.18.2",
+    "mkdocs-video>=1.5.0",
+]
 dev = [
     "qtextra[test,reload]",
     "ipython",
@@ -129,7 +137,13 @@ repository = "https://github.com/lukasz-migas/qtextra"
 [tool.ruff]
 line-length = 120
 target-version = "py39"
-src = ["src", "tests"]
+src = [
+    "src",
+    "tests"
+]
+extend-exclude = [
+    "docs/*.py",
+]
 
 # https://beta.ruff.rs/docs/rules/
 [tool.ruff.lint]
