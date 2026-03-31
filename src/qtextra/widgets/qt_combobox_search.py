@@ -117,7 +117,7 @@ class QtSearchComboBox(QWidget):
 
     currentTextChanged = Signal(str)
 
-    def __init__(self, items: ty.Optional[list[str]] = None, placeholder: str = "Select…", parent=None):
+    def __init__(self, items: list[str] | None = None, placeholder: str = "Select…", parent=None):
         super().__init__(parent)
         self._text = ""
         self._placeholder = placeholder
@@ -152,9 +152,11 @@ class QtSearchComboBox(QWidget):
         self._panel.set_items(items)
 
     def current_text(self) -> str:
+        """Return current text displayed."""
         return self._text
 
     def set_current_text(self, t: str):
+        """Set current text to be displayed."""
         self._on_select(t)
 
     # Alias methods to offer Qt-like interface

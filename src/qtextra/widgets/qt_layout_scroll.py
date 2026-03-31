@@ -13,7 +13,7 @@ class QtScrollableLayoutWidget(QScrollArea):
 
     MIN_HEIGHT: int = 30
 
-    def __init__(self, parent: ty.Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
         self._widget = QWidget()
@@ -106,7 +106,7 @@ class QtScrollableHLayoutWidget(QtScrollableLayoutWidget):
 
     MIN_HEIGHT: int = 30
 
-    def __init__(self, parent: ty.Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -134,7 +134,7 @@ class QtScrollableVLayoutWidget(QtScrollableLayoutWidget):
 
     MIN_WIDTH: int = 30
 
-    def __init__(self, parent: ty.Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)

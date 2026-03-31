@@ -255,7 +255,7 @@ class NotificationManager:
     """
 
     records: ty.List[Notification]
-    _instance: ty.Optional[NotificationManager] = None
+    _instance: NotificationManager | None = None
 
     def __init__(self) -> None:
         self.records: ty.List[Notification] = []

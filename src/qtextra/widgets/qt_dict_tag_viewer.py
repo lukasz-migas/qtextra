@@ -164,9 +164,9 @@ class QtDictTagViewer(QWidget):
             )
         reverse = self._sort_order == Qt.SortOrder.DescendingOrder
         rows.sort(
-            key=lambda row_data: row_data["key"].casefold()
-            if self._sort_column == 0
-            else row_data["value_text"].casefold(),
+            key=lambda row_data: (
+                row_data["key"].casefold() if self._sort_column == 0 else row_data["value_text"].casefold()
+            ),
             reverse=reverse,
         )
         self.table.setRowCount(0)

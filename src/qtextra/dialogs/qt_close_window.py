@@ -19,7 +19,7 @@ class QtConfirmCloseDialog(QDialog):
         parent: QWidget,
         attr: str | None = None,
         save_func: ty.Callable | None = None,
-        config: ty.Optional[object] = None,
+        config: object | None = None,
         no_icon: bool = False,
     ) -> None:
         super().__init__(parent)

@@ -17,7 +17,7 @@ Orientation = ty.Literal["horizontal", "vertical"]
 class QtPickOptionBase(QDialog):
     """Select between options."""
 
-    option: ty.Optional[str] = None
+    option: str | None = None
     orientation: str | Orientation = "horizontal"
 
     def __init__(self, parent: QWidget, text: str, options: ty.Dict[str, ty.Any]):

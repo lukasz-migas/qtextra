@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import typing as ty
-
 from qtpy.QtCore import QRectF, Qt, Signal
 from qtpy.QtGui import QFontMetrics, QPainter
 from qtpy.QtWidgets import QHBoxLayout, QLineEdit, QWidget
@@ -152,7 +150,7 @@ class QtMultiSelectComboBox(QWidget):
 
     evt_selection_changed = Signal(list)
 
-    def __init__(self, items: ty.Optional[list[str]] = None, placeholder: str = "Select items…", parent=None):
+    def __init__(self, items: list[str] | None = None, placeholder: str = "Select items…", parent=None):
         super().__init__(parent)
         self._placeholder = placeholder
         self._selected: list[str] = []

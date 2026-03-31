@@ -534,7 +534,7 @@ class QtMultiStatePushButton(QtImagePushButton):
     evt_changed = Signal(str)
 
     _state: str = ""
-    _menu: ty.Optional[QWidget]
+    _menu: QWidget | None
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
@@ -754,7 +754,7 @@ class QtToolbarPushButton(QtImagePushButton):
 
     @Slot(str)  # type: ignore[misc]
     @Slot(str, str)  # type: ignore[misc]
-    def set_indicator(self, indicator_type: str, about: ty.Optional[str] = None) -> None:
+    def set_indicator(self, indicator_type: str, about: str | None = None) -> None:
         """Set indicator type."""
         assert indicator_type in [
             "",

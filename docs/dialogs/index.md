@@ -11,6 +11,7 @@ For concrete usage patterns, browse the runnable examples in
 - `dialog_color_list.py`
 - `dialog_confirm_close.py`
 - `dialog_confirm_with_text.py`
+- `dialog_theme_editor.py`
 - `dialog_text_replace.py`
 - `qt_console.py`
 - `qt_logger.py`
@@ -22,3 +23,7 @@ them is a good next contribution target.
 
 - [Sentry Dialogs](./sentry.md): telemetry opt-in, crash reporting setup, and
   feedback environment variables
+Available dialog docs:
+
+- [`DialogThemeEditor`](./qt_theme_editor.md): live theme editor for colors,
+  font sizes, and console styles

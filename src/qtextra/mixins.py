@@ -294,7 +294,7 @@ class IndicatorMixin:
         EVENTS.evt_notification_critical.emit(title, content)
         func(content)
 
-    def _indicate_success(self, source: ty.Optional[str] = None) -> None:
+    def _indicate_success(self, source: str | None = None) -> None:
         if source and isinstance(source, str):
             self.evt_indicate_about.emit("success", source)
         else:
@@ -303,7 +303,7 @@ class IndicatorMixin:
     def _indicate_success_any(self, *_args: ty.Any, **_kwargs: ty.Any) -> None:
         self._indicate_success()
 
-    def _indicate_failure(self, source: ty.Optional[str] = None) -> None:
+    def _indicate_failure(self, source: str | None = None) -> None:
         if source:
             self.evt_indicate_about.emit("warning", source)
         else:

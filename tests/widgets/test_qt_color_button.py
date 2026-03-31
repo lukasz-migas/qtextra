@@ -22,6 +22,11 @@ class TestQtColorSwatch:
         widget = set_qt_swatch(color)
         np.testing.assert_array_equal(widget.color, np.asarray((1.0, 0.0, 0.0, 1.0)))
 
+    def test_swatch_style_includes_border(self, set_qt_swatch):
+        widget = set_qt_swatch("#ffffff")
+
+        assert "border:" in widget.styleSheet()
+
 
 @pytest.fixture
 def set_qt_button(qtbot):

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import typing as ty
 
 from koyo.timer import MeasureTimer
 from loguru import logger
@@ -74,7 +73,7 @@ class TaskInfoDialog(QtDialog):
 
     evt_update = Signal()
 
-    def __init__(self, parent: ty.Optional[QWidget], task: Task) -> None:
+    def __init__(self, parent: QWidget | None, task: Task) -> None:
         self.task = task
         super().__init__(parent)
         self.setMinimumWidth(600)
@@ -134,8 +133,8 @@ class TaskInfoDialog(QtDialog):
                 try:
                     for command in task.command_iter():
                         cmds.append(" ".join(command))
-                except Exception as e:
-                    logger.exception(f"Failed to retrieve commands: {e}")
+                except Exception:
+                    logger.exception("Failed to retrieve commands")
                 start = format_timestamp(task.start_time)  # type: ignore
                 end = format_timestamp(task.end_time)  # type: ignore
                 dur = format_interval(task.duration)
@@ -162,7 +161,7 @@ class TaskInfoDialog(QtDialog):
     def _on_set_task_choice(self, res: TaskMetadata) -> None:
         """Set task choice."""
         try:
-            task, cmd_idx, state, start, end, dur, cmd, stdout, cmds, ret_time = res
+            task, _cmd_idx, state, start, end, dur, cmd, stdout, cmds, ret_time = res
             with MeasureTimer() as update_time:
                 self.task_id.setText(task.task_id)
                 self.task_title.setText(task.task_name)

@@ -81,7 +81,7 @@ def make_form_layout(
     *widgets: tuple,
     stretch_after: bool = False,
     margin: int | tuple[int, int, int, int] | None = None,
-    parent: ty.Optional[Qw.QWidget] = None,
+    parent: Qw.QWidget | None = None,
     spacing: int | None = None,
     label_alignment: Qt.AlignmentFlag | None = None,
 ) -> Qw.QFormLayout:
@@ -1831,7 +1831,7 @@ def make_qta_btn(
     average: bool = False,
     medium: bool = False,
     large: bool = False,
-    size: ty.Optional[tuple[int, int]] = None,
+    size: tuple[int, int] | None = None,
     func: Callback | None = None,
     object_name: str = "",
     retain_size: bool = False,
@@ -1897,7 +1897,7 @@ def make_lock_btn(
     normal: bool = False,
     medium: bool = False,
     large: bool = False,
-    size: ty.Optional[tuple[int, int]] = None,
+    size: tuple[int, int] | None = None,
     func: Callback | None = None,
     tooltip: str | None = None,
     standout: bool = False,
@@ -2003,7 +2003,7 @@ def make_swatch(
     parent: Qw.QWidget | None,
     default: ty.Union[str, np.ndarray],
     tooltip: str = "",
-    value: ty.Optional[ty.Union[str, np.ndarray]] = None,
+    value: ty.Union[str, np.ndarray] | None = None,
     size: tuple[int, int] | None = None,
     func: Callback | None = None,
     **kwargs: ty.Any,
@@ -2104,7 +2104,7 @@ def make_checkbox(
     text: str = "",
     tooltip: str | None = None,
     default: bool = False,
-    value: ty.Optional[bool] = None,
+    value: bool | None = None,
     expand: bool = True,
     func: Callback | None = None,
     clicked: ty.Callable | None = None,
@@ -2172,7 +2172,7 @@ def make_slider(
 
 
 def make_slider_with_text(
-    parent: ty.Optional[Qw.QWidget],
+    parent: Qw.QWidget | None,
     min_value: int = 0,
     max_value: int = 100,
     step_size: int = 1,
@@ -2197,7 +2197,7 @@ def make_slider_with_text(
 
 
 def make_double_slider_with_text(
-    parent: ty.Optional[Qw.QWidget],
+    parent: Qw.QWidget | None,
     min_value: float = 0,
     max_value: float = 100,
     step_size: float = 1,
@@ -2270,7 +2270,7 @@ def make_int_spin_box(
     suffix: str | None = None,
     expand: bool = True,
     func: Callback | None = None,
-    keyboard_tracking: ty.Optional[bool] = None,
+    keyboard_tracking: bool | None = None,
     properties: dict[str, ty.Any] | None = None,
     **kwargs: ty.Any,
 ) -> Qw.QSpinBox:
@@ -2886,7 +2886,7 @@ def get_directories(parent: Qw.QWidget | None, title: str = "Select directories.
 def get_directory(
     parent: Qw.QWidget | None,
     title: str = "Select directory...",
-    base_dir: ty.Optional[PathLike] = "",
+    base_dir: PathLike | None = "",
     native: bool = True,
 ) -> str | None:
     """Get filename."""
@@ -2904,7 +2904,7 @@ def get_directory(
 def get_filename(
     parent: Qw.QWidget | None,
     title: str = "Save file...",
-    base_dir: ty.Optional[PathLike] = "",
+    base_dir: PathLike | None = "",
     file_filter: str = "*",
     base_filename: str | None = None,
     multiple: bool = False,
@@ -2934,7 +2934,7 @@ def get_filename(
 def get_save_filename(
     parent: QObject | None,
     title: str = "Save file...",
-    base_dir: ty.Optional[PathLike] = "",
+    base_dir: PathLike | None = "",
     file_filter: str = "*",
     base_filename: str | None = None,
 ) -> str:
@@ -2985,7 +2985,7 @@ def get_color(
     dlg.setCurrentColor(color)
     # for i, _color in enumerate(settings.visuals.color_scheme):
     #     dlg.setCustomColor(i, QColor(_color))
-    new_color: ty.Optional[ty.Union[str, np.ndarray]] = None
+    new_color: ty.Union[str, np.ndarray] | None = None
     if dlg.exec():
         new_color = dlg.currentColor()
         if as_hex:
@@ -2996,7 +2996,7 @@ def get_color(
 
 
 def _get_confirm_dlg(
-    parent: ty.Optional[QObject],
+    parent: QObject | None,
     message: str,
     title: str = "Are you sure?",
     alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
@@ -3026,7 +3026,7 @@ def _get_confirm_dlg(
 
 
 def confirm(
-    parent: ty.Optional[QObject],
+    parent: QObject | None,
     message: str,
     title: str = "Are you sure?",
     alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignHCenter,
@@ -3039,7 +3039,7 @@ def confirm(
 
 
 def confirm_dont_ask_again(
-    parent: ty.Optional[QObject],
+    parent: QObject | None,
     message: str,
     title: str = "Are you sure?",
     config: ty.Any = None,
@@ -3063,7 +3063,7 @@ def confirm_dont_ask_again(
 
 
 def choose(
-    parent: ty.Optional[QObject],
+    parent: QObject | None,
     options: dict[ty.Any, str] | list[str],
     text: str = "Please choose from available options.",
     orientation: Orientation = "vertical",
@@ -3101,7 +3101,7 @@ def choose_from_list(
     return []
 
 
-def warn_pretty(parent: ty.Optional[Qw.QWidget], message: str, title: str = "Warning") -> bool:
+def warn_pretty(parent: Qw.QWidget | None, message: str, title: str = "Warning") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
 
@@ -3559,7 +3559,7 @@ def parse_link_to_link_tag(link: str, desc_text: str | None = None) -> str:
     return f"""<a href="{link}" style="color: {THEMES.get_theme_color(key="text")}">{desc_text}</a>"""
 
 
-def parse_path_to_link_tag(path: str, desc_text: ty.Optional[PathLike] = None) -> str:
+def parse_path_to_link_tag(path: str, desc_text: PathLike | None = None) -> str:
     """Parse text link to change the color, so it appears more reasonably in dark theme."""
     import pathlib
 
@@ -3617,7 +3617,7 @@ def parse_title_message_to_html(title: str, message: str = ""):
     return f"<strong>{title}</strong><p>{message}</p>"
 
 
-def get_icon_from_img(path: PathLike) -> ty.Optional[QIcon]:
+def get_icon_from_img(path: PathLike) -> QIcon | None:
     """Get icon
     any type.
 
