@@ -6,7 +6,7 @@ import warnings
 
 import pytest
 from koyo.system import IS_MAC
-from qtpy import API_NAME
+from qtpy import API
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QAction, QIntValidator
 from qtpy.QtWidgets import QCheckBox, QLabel, QWidget
@@ -784,7 +784,7 @@ class TestMakeSwatchGrid:
         assert sorted(received_indices) == list(range(12))
 
 
-@pytest.mark.skipif(API_NAME == "pyside6" and IS_MAC, reason="Skipped on PySide6 on macOS")
+@pytest.mark.skipif(API == "pyside6" and IS_MAC, reason="Skipped on PySide6 on macOS")
 def test_add_flash_animation(qtbot):
     widget = QWidget()
     qtbot.addWidget(widget)
