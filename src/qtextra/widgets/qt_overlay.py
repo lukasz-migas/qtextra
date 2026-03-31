@@ -22,7 +22,7 @@ class QtOverlay(QWidget):
         self.__alignment = alignment
         self.__widget = None
 
-    def set_widget(self, widget: QWidget):
+    def set_widget(self, widget: QWidget) -> None:
         """Set the widget over which this overlay should be displayed (anchored)."""
         if self.__widget is not None:
             self.__widget.removeEventFilter(self)
