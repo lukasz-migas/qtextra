@@ -49,7 +49,7 @@ class QtTextReplace(QtDialog):
         self.search_for_text = self.search_edit.text()
         self.replace_with_text = self.replace_edit.text()
         for row, current in enumerate(texts):
-            changed, new_text = self.process_text(current)
+            _changed, new_text = self.process_text(current)
             self.table.set_value(self.TABLE_CONFIG.new, row, new_text)
             # self.table.set_value(self.TABLE_CONFIG.changed, row, "True" if changed else "False")
 
@@ -87,7 +87,7 @@ class QtTextReplace(QtDialog):
             self.search_replace_layout.get_widget(index).text for index in range(self.search_replace_layout.count() - 1)
         ]
         index = hash_ids.index(hash_id)
-        search_for, replace_with = hash_id.split(SEPARATOR)
+        search_for, _replace_with = hash_id.split(SEPARATOR)
         del self.search_and_replace_map[search_for]
         self.search_replace_layout.removeWidgetOrLayout(index)
         self.on_preview()

@@ -1,8 +1,9 @@
 """Event loop."""
 
+from __future__ import annotations
+
 import os
 import sys
-from typing import Optional
 from warnings import warn
 
 from qtpy.QtCore import Qt
@@ -41,12 +42,12 @@ _defaults = {
 
 def get_app(
     *,
-    app_name: Optional[str] = None,
-    app_version: Optional[str] = None,
-    icon: Optional[str] = None,
-    org_name: Optional[str] = None,
-    org_domain: Optional[str] = None,
-    app_id: Optional[str] = None,
+    app_name: str | None = None,
+    app_version: str | None = None,
+    icon: str | None = None,
+    org_name: str | None = None,
+    org_domain: str | None = None,
+    app_id: str | None = None,
 ) -> QApplication:
     """Get or create the Qt QApplication.
 

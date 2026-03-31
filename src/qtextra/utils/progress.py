@@ -1,5 +1,7 @@
 """tqdm-based progress manager."""
 
+from __future__ import annotations
+
 import typing as ty
 
 from tqdm import tqdm
@@ -62,9 +64,9 @@ class Progress(tqdm):
 
     def __init__(
         self,
-        iterable: ty.Optional[ty.Iterable] = None,
-        desc: ty.Optional[str] = None,
-        total: ty.Optional[int] = None,
+        iterable: ty.Iterable | None = None,
+        desc: str | None = None,
+        total: int | None = None,
         bar_format: str = "|{bar}| {n_fmt}/{total_fmt} [ETA: {remaining}/{elapsed} {rate_fmt}]",
         *args: ty.Any,
         **kwargs: ty.Any,
@@ -81,7 +83,7 @@ class Progress(tqdm):
         """Return description."""
         return self.desc
 
-    def display(self, msg: ty.Optional[str] = None, pos: ty.Optional[int] = None) -> None:
+    def display(self, msg: str | None = None, pos: int | None = None) -> None:
         """Update the display and emit eta event."""
         # just plain tqdm if we don't have gui
         if not self.gui and not self.is_init:
@@ -92,7 +94,7 @@ class Progress(tqdm):
             etas = str(self).split("|")[-1]
         self.events.eta(value=etas)
 
-    def update(self, n: ty.Optional[float] = None) -> None:
+    def update(self, n: float | None = None) -> None:
         """Update progress value by n and emit value event."""
         super().update(n)
         self.events.value(value=self.n)

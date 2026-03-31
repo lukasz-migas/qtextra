@@ -1,3 +1,4 @@
+# ruff: noqa: D102,D417
 from qtpy.QtCore import QAbstractAnimation, QEasingCurve, QPoint, QPropertyAnimation, pyqtSignal
 from qtpy.QtWidgets import QGraphicsOpacityEffect, QStackedWidget, QWidget
 
@@ -132,7 +133,7 @@ class PopUpAniStackedWidget(QStackedWidget):
             the interpolation mode of animation
         """
         if index < 0 or index >= self.count():
-            raise Exception(f"The index `{index}` is illegal")
+            raise ValueError(f"The index `{index}` is illegal")
 
         if index == self.currentIndex():
             return

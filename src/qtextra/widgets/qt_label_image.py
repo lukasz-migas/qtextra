@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Image label."""
 
 from __future__ import annotations

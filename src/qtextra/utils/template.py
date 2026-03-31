@@ -1,5 +1,7 @@
 # syntax_style for the console must be one of the supported styles from
 # pygments - see here for examples https://help.farbox.com/pygments.html
+from __future__ import annotations
+
 import re
 import typing as ty
 from ast import literal_eval
@@ -14,7 +16,7 @@ try:
 
     major, minor, *rest = QT_VERSION.split(".")
     use_gradients = (int(major) >= 5) and (int(minor) >= 12)
-except Exception:
+except (ImportError, ValueError):
     use_gradients = False
 
 

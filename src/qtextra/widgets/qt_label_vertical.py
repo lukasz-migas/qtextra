@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Vertical label."""
 
 from qtpy import QtCore, QtGui

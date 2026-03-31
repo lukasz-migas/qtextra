@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """
 Defines the DataFrameViewer class to display DataFrames as a table. The DataFrameViewer is made up of three separate
 QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView widgets for the column and index
@@ -287,7 +288,7 @@ class DataTableModel(Qc.QAbstractTableModel):
 
     def headerData(self, section, orientation, role=None):
         # Headers for DataTableView are hidden. Header data is shown in HeaderView
-        pass
+        return None
 
     def columnCount(self, parent=None):
         """Return the number of columns in the DataFrame."""
@@ -346,7 +347,7 @@ class DataTableModel(Qc.QAbstractTableModel):
             col = index.column()
             try:
                 self.df.iat[row, col] = value
-            except Exception as e:
+            except (TypeError, ValueError) as e:
                 print(e)
                 return False
             self.dataChanged.emit(index, index)
@@ -498,12 +499,12 @@ class HeaderModel(Qc.QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DisplayRole or role == Qt.ItemDataRole.ToolTipRole:
             if self.orientation == Qt.Orientation.Horizontal:
-                if type(self.df.columns) == pd.MultiIndex:
+                if isinstance(self.df.columns, pd.MultiIndex):
                     return str(self.df.columns.values[col][row])
                 return str(self.df.columns.values[col])
 
             if self.orientation == Qt.Orientation.Vertical:
-                if type(self.df.index) == pd.MultiIndex:
+                if isinstance(self.df.index, pd.MultiIndex):
                     return str(self.df.index.values[row][col])
                 return str(self.df.index.values[row])
             return None
@@ -522,11 +523,11 @@ class HeaderModel(Qc.QAbstractTableModel):
             return bold_font
         if role in [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole]:
             if self.orientation == Qt.Orientation.Horizontal and orientation == Qt.Orientation.Vertical:
-                if type(self.df.columns) == pd.MultiIndex:
+                if isinstance(self.df.columns, pd.MultiIndex):
                     return str(self.df.columns.names[section])
                 return str(self.df.columns.name)
             if self.orientation == Qt.Orientation.Vertical and orientation == Qt.Orientation.Horizontal:
-                if type(self.df.index) == pd.MultiIndex:
+                if isinstance(self.df.index, pd.MultiIndex):
                     return str(self.df.index.names[section])
                 return str(self.df.index.name)
             return None  # These cells should be hidden anyways
@@ -700,11 +701,11 @@ class HeaderView(Qw.QTableView):
         # Find spans for horizontal HeaderView
         if self.orientation == Qt.Orientation.Horizontal:
             # Find how many levels the MultiIndex has
-            N = len(df.columns[0]) if type(df.columns) == pd.MultiIndex else 1
+            N = len(df.columns[0]) if isinstance(df.columns, pd.MultiIndex) else 1
 
             for level in range(N):  # Iterates over the levels
                 # Find how many segments the MultiIndex has
-                if type(df.columns) == pd.MultiIndex:
+                if isinstance(df.columns, pd.MultiIndex):
                     arr = [df.columns[i][level] for i in range(len(df.columns))]
                 else:
                     arr = df.columns
@@ -733,11 +734,11 @@ class HeaderView(Qw.QTableView):
         # Find spans for vertical HeaderView
         else:
             # Find how many levels the MultiIndex has
-            N = len(df.index[0]) if type(df.index) == pd.MultiIndex else 1
+            N = len(df.index[0]) if isinstance(df.index, pd.MultiIndex) else 1
 
             for level in range(N):  # Iterates over the levels
                 # Find how many segments the MultiIndex has
-                if type(df.index) == pd.MultiIndex:
+                if isinstance(df.index, pd.MultiIndex):
                     arr = [df.index[i][level] for i in range(len(df.index))]
                 else:
                     arr = df.index
@@ -786,7 +787,7 @@ class HeaderView(Qw.QTableView):
             return None
         return None
 
-    def eventFilter(self, object: Qc.QObject, event: Qc.QEvent):
+    def eventFilter(self, watched: Qc.QObject, event: Qc.QEvent):
         """Event filter."""
         # If mouse is on an edge, start the drag resize process
         if event.type() == Qc.QEvent.Type.MouseButtonPress:

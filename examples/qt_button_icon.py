@@ -56,7 +56,7 @@ for klass in [
 ]:
     # crate an instance of the class, auto_connect will ensure that the icon changes upon clicking
     btn = klass(widget, auto_connect=True)
-    btn.clicked.connect(lambda: print(f"{btn.__class__.__name__} clicked"))
+    btn.clicked.connect(lambda *, btn=btn: print(f"{btn.__class__.__name__} clicked"))
     btn.setToolTip(btn.__class__.__name__)
     btn.set_large()
     row_layout.addWidget(btn)
@@ -68,7 +68,7 @@ layout.addLayout(row_layout)
 for klass in [QtStateButton, QtPriorityButton]:
     # crate an instance of the class, auto_connect will ensure that the icon changes upon clicking
     btn = klass(widget, auto_connect=True)
-    btn.evt_changed.connect(lambda state: print(f"{btn.__class__.__name__} clicked {state}"))
+    btn.evt_changed.connect(lambda state, *, btn=btn: print(f"{btn.__class__.__name__} clicked {state}"))
     btn.setToolTip(btn.__class__.__name__)
     btn.set_large()
     row_layout.addWidget(btn)

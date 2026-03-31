@@ -13,6 +13,8 @@ except ImportError:
 
 
 class QDevPopup(QtFramelessTool):
+    """Developer-tools popup."""
+
     HIDE_WHEN_CLOSE = True
 
     def __init__(self, parent: QWidget, modules: list[str], log_func: ty.Callable = lambda *args: None) -> None:

@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -22,6 +23,8 @@ from qtextra.widgets.qt_line_edit import QDoubleLineEdit
 
 if TYPE_CHECKING:
     import numpy.typing as npt
+
+DEFAULT_HISTOGRAM_COLOR = QColor(100, 100, 100)
 
 
 def quick_min_max(
@@ -87,10 +90,11 @@ class QHistogramView(QBaseGraphicsView):
         arr: npt.NDArray,
         clim: tuple[float, float],
         is_rgb: bool = False,
-        color: QColor = QColor(100, 100, 100),
+        color: QColor | None = None,
         minmax: tuple[float, float] | None = None,
     ):
         """Set the histogram for an array."""
+        color = color or DEFAULT_HISTOGRAM_COLOR
         # coerce the number of histogram items
         n_hist = 3 if is_rgb else 1
         for _ in range(n_hist, len(self._hist_items)):

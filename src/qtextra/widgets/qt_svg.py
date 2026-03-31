@@ -1,7 +1,9 @@
 """A Class for generating QIcons from SVGs with arbitrary colors at runtime."""
 
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Optional, Union
+from typing import Union
 
 from qtpy.QtCore import QByteArray, QPoint, QRect, QRectF, Qt
 from qtpy.QtGui import QIcon, QIconEngine, QImage, QPainter, QPixmap
@@ -42,7 +44,7 @@ class QtColoredSVGIcon(QIcon):
     def __init__(
         self,
         path_or_xml: str,
-        color: Optional[str] = None,
+        color: str | None = None,
         opacity: float = 1.0,
     ) -> None:
         from qtextra.icons import get_colorized_svg
@@ -54,11 +56,11 @@ class QtColoredSVGIcon(QIcon):
     @lru_cache
     def colored(
         self,
-        color: Optional[str] = None,
+        color: str | None = None,
         opacity: float = 1.0,
-        theme: Optional[str] = None,
+        theme: str | None = None,
         theme_key: str = "icon",
-    ) -> "QtColoredSVGIcon":
+    ) -> QtColoredSVGIcon:
         """Return a new colorized QIcon instance.
 
         Parameters
@@ -90,7 +92,7 @@ class QtColoredSVGIcon(QIcon):
     @lru_cache
     def from_resources(
         icon_name: str,
-    ) -> "QtColoredSVGIcon":
+    ) -> QtColoredSVGIcon:
         """Get an icon from qtextra SVG resources.
 
         Parameters

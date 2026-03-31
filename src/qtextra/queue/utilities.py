@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import typing as ty
 from contextlib import suppress
@@ -128,7 +130,7 @@ def format_timestamp(timestamp: float) -> str:
     return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty.Sequence[ty.Callable]:
+def iterable_callbacks(func: ty.Union[ty.Callable, Callback] | None) -> ty.Sequence[ty.Callable]:
     """Callbacks should always be a sequence."""
     if func is None:
         return []
@@ -137,13 +139,13 @@ def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty
     return [func]
 
 
-def _safe_call(func: ty.Optional[ty.Sequence[ty.Callable]], task: ty.Optional["Task"] = None, which: str = "") -> None:
+def _safe_call(func: ty.Sequence[ty.Callable] | None, task: Task | None = None, which: str = "") -> None:
     if func is not None:
         try:
             for _func in func:
                 with suppress(Exception):
                     _func() if task is None else _func(task)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             with suppress(Exception):
                 print(f"Exception raised in call (source={which}): {err}; func={func}; task={task}")
 
@@ -171,7 +173,7 @@ def escape_ansi(text: str) -> str:
     """
     try:
         return ansi_escape.sub("", text)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return text
 
 

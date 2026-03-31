@@ -1,3 +1,4 @@
+# ruff: noqa: D102,D103
 """Progress bar."""
 
 from qtpy.QtCore import Property, QPoint, QRect, QSize, Qt, QVariantAnimation, Signal

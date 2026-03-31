@@ -4,9 +4,10 @@ This module is heavily inspired by napari's implementation which minimised size 
 visually appealing.
 """
 
+from __future__ import annotations
+
 from functools import reduce
 from operator import ior
-from typing import List, Optional
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
@@ -40,7 +41,7 @@ class QtDockedWidget(QDockWidget):
         *,
         name: str = "",
         area: str = "bottom",
-        allowed_areas: Optional[List[str]] = None,
+        allowed_areas: list[str] | None = None,
     ):
         self._parent = parent
         super().__init__(name)
