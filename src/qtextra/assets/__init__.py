@@ -38,7 +38,7 @@ LOADING_GIFS = {
 
 MISSING = "MISSING"
 
-QTA_MAPPING: ty.Dict[str, IconType] = {
+QTA_MAPPING: dict[str, IconType] = {
     MISSING: "ri.error-warning-line",
     "clear": "mdi6.delete-empty",
     "json": "mdi6.code-json",
@@ -320,7 +320,7 @@ def update_icon_mapping(mapping: dict[str, IconType], silent: bool = False, key:
         QTA_MAPPING[k] = v_new
 
 
-def update_styles(mapping: ty.Dict[str, str], append: bool = True) -> None:
+def update_styles(mapping: dict[str, str], append: bool = True) -> None:
     """Update icon mapping."""
     global STYLES
 
@@ -331,7 +331,7 @@ def update_styles(mapping: ty.Dict[str, str], append: bool = True) -> None:
         STYLES = mapping
 
 
-def update_icons(mapping: ty.Dict[str, str], append: bool = True) -> None:
+def update_icons(mapping: dict[str, str], append: bool = True) -> None:
     """Update icon mapping."""
     global ICONS
 

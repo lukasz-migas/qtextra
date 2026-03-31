@@ -1,10 +1,11 @@
+# ruff: noqa: D102
 """Popout."""
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Union
+from typing import ClassVar, Union
 
+from koyo.typing import StrEnum
 from qtpy.QtCore import (
     QEasingCurve,
     QMargins,
@@ -24,15 +25,15 @@ from qtextra.utils.wrap import TextWrap
 from qtextra.widgets.qt_label_image import QImageLabel
 
 
-class PopoutAnimationType(Enum):
+class PopoutAnimationType(StrEnum):
     """Popout animation type."""
 
-    SLIDE_UP = 0
-    SLIDE_DOWN = 1
-    SLIDE_LEFT = 2
-    SLIDE_RIGHT = 3
-    FADE_IN = 4
-    NONE = 5
+    SLIDE_UP = "slide_up"
+    SLIDE_DOWN = "slide_down"
+    SLIDE_LEFT = "slide_left"
+    SLIDE_RIGHT = "slide_right"
+    FADE_IN = "fade_in"
+    NONE = "none"
 
 
 class PopoutViewBase(QWidget):
@@ -352,7 +353,7 @@ class QtPopout(QWidget):
 class PopoutAnimationManager(QObject):
     """Popout animation manager."""
 
-    managers = {}
+    managers: ClassVar[dict[PopoutAnimationType, type[PopoutAnimationManager]]] = {}
 
     def __init__(self, popout: QtPopout):
         super().__init__()

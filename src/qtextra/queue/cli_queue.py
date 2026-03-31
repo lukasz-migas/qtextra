@@ -60,13 +60,13 @@ class CLIQueueHandler(QObject):
         self.queue_closed: bool = False
 
         # dictionary holding currently running thread tasks
-        self.active_tasks: ty.Dict[str, QProcessWrapper] = {}
+        self.active_tasks: dict[str, QProcessWrapper] = {}
         # pending tasks are added to this queue
-        self.pending_queue: ty.List[str] = []
+        self.pending_queue: list[str] = []
         # running tasks are added to this queue
-        self.running_queue: ty.List[str] = []
+        self.running_queue: list[str] = []
         # finished tasks are added to this queue
-        self.finished_queue: ty.List[str] = []
+        self.finished_queue: list[str] = []
         self._evt_cancel.connect(self._kill)  # type: ignore[unused-ignore]
 
         self.actions: list[dict] = []
@@ -87,7 +87,7 @@ class CLIQueueHandler(QObject):
         self.run_queued()
 
     @property
-    def n_tasks(self) -> ty.Tuple[int, int]:
+    def n_tasks(self) -> tuple[int, int]:
         """Return the number of tasks."""
         return len(self.running_queue), len(self.pending_queue)
 

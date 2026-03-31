@@ -20,7 +20,7 @@ class QtPickOptionBase(QDialog):
     option: str | None = None
     orientation: str | Orientation = "horizontal"
 
-    def __init__(self, parent: QWidget, text: str, options: ty.Dict[str, ty.Any]):
+    def __init__(self, parent: QWidget, text: str, options: dict[str, ty.Any]):
         super().__init__(parent)
         self.setWindowTitle("Select option")
 

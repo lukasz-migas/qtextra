@@ -99,8 +99,8 @@ class QtPanelWidget(QWidget):
         self._spacer = self._buttons.addWidget(spacer)
 
         self._group = QButtonGroup(self)
-        self._button_dict: ty.Dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
-        self._hidden_dict: ty.Dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
+        self._button_dict: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
+        self._hidden_dict: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
 
         # Widget setup
         self._buttons.setOrientation(Qt.Orientation.Vertical)
@@ -402,7 +402,7 @@ if __name__ == "__main__":  # pragma: no cover fmt: off
 
         def _add_widget() -> None:
             class Test(QtTab):
-                _description: ty.ClassVar[dict] = {
+                _description: ty.ClassVar[dict[str, str]] = {
                     "title": choice(
                         ["dimensionality reduction", "machine learning", "spatial", "spectral", "highlights"],
                     ),

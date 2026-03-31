@@ -1,22 +1,27 @@
 """Text wrapping."""
 
-from enum import Enum, auto
+from __future__ import annotations
+
+import typing as ty
 from functools import lru_cache
 from re import sub
-from typing import List, Optional, Tuple
 from unicodedata import east_asian_width
 
+from koyo.typing import StrEnum
 
-class CharType(Enum):
-    SPACE = auto()
-    ASIAN = auto()
-    LATIN = auto()
+
+class CharType(StrEnum):
+    """Character categories used by the wrapper."""
+
+    SPACE = "space"
+    ASIAN = "asian"
+    LATIN = "latin"
 
 
 class TextWrap:
     """Text wrap."""
 
-    EAST_ASIAN_WIDTH_TABLE = {
+    EAST_ASIAN_WIDTH_TABLE: ty.ClassVar[dict[str, int]] = {
         "F": 2,
         "H": 1,
         "W": 2,
@@ -56,7 +61,7 @@ class TextWrap:
 
     @classmethod
     @lru_cache(maxsize=32)
-    def split_long_token(cls, token: str, width: int) -> List[str]:
+    def split_long_token(cls, token: str, width: int) -> list[str]:
         """Split long token into smaller chunks."""
         return [token[i : i + width] for i in range(0, len(token), width)]
 
@@ -64,7 +69,7 @@ class TextWrap:
     def tokenizer(cls, text: str):
         """Tokenize line."""
         buffer = ""
-        last_char_type: Optional[CharType] = None
+        last_char_type: CharType | None = None
 
         for char in text:
             char_type = cls.get_char_type(char)
@@ -79,7 +84,7 @@ class TextWrap:
         yield buffer
 
     @classmethod
-    def wrap(cls, text: str, width: int, once: bool = True) -> Tuple[str, bool]:
+    def wrap(cls, text: str, width: int, once: bool = True) -> tuple[str, bool]:
         """Wrap according to string length.
 
         Parameters
@@ -123,7 +128,7 @@ class TextWrap:
         return "\n".join(wrapped_lines), is_wrapped
 
     @classmethod
-    def _wrap_line(cls, text: str, width: int, once: bool = True) -> Tuple[str, bool]:
+    def _wrap_line(cls, text: str, width: int, once: bool = True) -> tuple[str, bool]:
         line_buffer = ""
         wrapped_lines = []
         current_width = 0
@@ -131,7 +136,7 @@ class TextWrap:
         for token in cls.tokenizer(text):
             token_width = cls.get_text_width(token)
 
-            if token == " " and current_width == 0:
+            if token == " " and current_width == 0:  # noqa: S105
                 continue
 
             if current_width + token_width <= width:

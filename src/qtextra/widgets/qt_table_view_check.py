@@ -6,9 +6,9 @@ import math
 import operator
 import typing as ty
 from contextlib import contextmanager, suppress
-from enum import Enum
 
 import numpy as np
+from koyo.typing import StrEnum
 from loguru import logger
 from natsort.natsort import index_natsorted, order_by_index
 from qtpy.QtCore import (  # type: ignore[attr-defined]
@@ -281,7 +281,7 @@ class StarRatingDelegate(QStyledItemDelegate):
 
 
 class BadgeDelegate(QStyledItemDelegate):
-    COLORS: ty.ClassVar[dict] = {
+    COLORS: ty.ClassVar[dict[str, QColor]] = {
         "ok": QColor("#2e7d32"),
         "warning": QColor("#ed6c02"),
         "error": QColor("#d32f2f"),
@@ -494,7 +494,7 @@ class DoubleSpinBoxDelegate(QStyledItemDelegate):
         model.setData(index, editor.value(), Qt.ItemDataRole.EditRole)
 
 
-class MultiFilterMode(str, Enum):
+class MultiFilterMode(StrEnum):
     """Multi filter mode."""
 
     OR = "OR"
@@ -1548,7 +1548,7 @@ class QtCheckableTableView(QTableView):
     def update_values(
         self,
         row: int,
-        column_value: ty.Dict[int, ty.Union[str, int, float, bool]],
+        column_value: dict[int, str | int | float | bool],
         match_to_sort: bool = True,
     ) -> None:
         """Update multiple columns for a particular row."""
