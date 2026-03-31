@@ -528,7 +528,10 @@ class QtMultiDictTagEditor(QWidget):
         return normalized if self.case_sensitive else normalized.casefold()
 
     def _on_search_changed(self, text: str) -> None:
-        self._apply_filter(text)
+        if text.strip():
+            self._apply_filter(text)
+        else:
+            self._apply_sort()
         self.evt_search_changed.emit(text)
 
     def _apply_filter(self, text: str | None = None) -> None:

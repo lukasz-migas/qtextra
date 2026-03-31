@@ -260,6 +260,28 @@ def test_qt_multi_dict_tag_editor_sorts_by_key(qtbot):
     assert widget.key_table.item(0, 0).text() == "beta"
 
 
+def test_qt_multi_dict_tag_editor_clear_search_preserves_sorted_order(qtbot):
+    widget = QtMultiDictTagEditor()
+    qtbot.addWidget(widget)
+    widget.set_items(
+        {
+            "sample_a": {"beta": 2, "alpha": 1, "gamma": 3},
+            "sample_b": {"beta": 4, "alpha": 3, "gamma": 5},
+        },
+    )
+
+    widget.search_edit.setText("be")
+    widget._on_key_sort_requested(0, Qt.SortOrder.DescendingOrder)
+    widget.search_edit.clear()
+
+    assert [widget.key_table.item(row, 0).text() for row in range(widget.key_table.rowCount())] == [
+        "gamma",
+        "beta",
+        "alpha",
+    ]
+    assert all(not widget.key_table.isRowHidden(row) for row in range(widget.key_table.rowCount()))
+
+
 def test_qt_multi_dict_tag_editor_remove_selected_key(qtbot):
     widget = QtMultiDictTagEditor()
     qtbot.addWidget(widget)
