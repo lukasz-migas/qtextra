@@ -7,9 +7,10 @@ import re
 
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QPalette, QTextCharFormat, QTextCursor
-from qtpy.QtWidgets import QLabel, QPlainTextEdit, QSizePolicy, QTextEdit, QWidget
+from qtpy.QtWidgets import QPlainTextEdit, QSizePolicy, QTextEdit, QWidget
 
 import qtextra.helpers as hp
+from qtextra.config import QtStyler
 from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 TextEditor = QPlainTextEdit | QTextEdit
@@ -51,18 +52,10 @@ class QtSearchPanel(QWidget):
             self.search_edit.ActionPosition.LeadingPosition,
         )
 
-        self.match_label = QLabel("0 matches", self)
-        self.match_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.match_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.match_label.setStyleSheet(
-            "QLabel {"
-            "padding: 2px 8px;"
-            "border-radius: 5px;"
-            "background-color: palette(highlight);"
-            "color: palette(highlighted-text);"
-            "font-weight: 600;"
-            "}",
+        self.match_label = hp.make_label(
+            self, "0 matches", alignment=Qt.AlignmentFlag.AlignCenter, object_name="match_label"
         )
+        self.match_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.previous_button = hp.make_qta_btn(
             self,
@@ -306,9 +299,9 @@ class QtSearchPanel(QWidget):
             return
 
         palette = self._target_editor.palette()
-        all_color = palette.color(QPalette.ColorRole.Highlight)
+        all_color = QtStyler.primary()
         all_color.setAlpha(90)
-        current_color = palette.color(QPalette.ColorRole.Highlight)
+        current_color = QtStyler.highlight()
         current_color.setAlpha(180)
 
         all_format = QTextCharFormat()
@@ -417,3 +410,30 @@ class QtSearchPanel(QWidget):
     findPrevious = find_previous
     replaceOne = replace_one
     replaceAll = replace_all
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.utils.dev import qframe
+
+    app, frame, ha = qframe(horz=False)
+
+    editor = QPlainTextEdit()
+    editor.setPlainText(
+        "QtSearchPanel is useful for common desktop workflows.\n"
+        "Search, navigate, and replace text from a shared reusable panel.\n"
+        "This example wires the panel to a text area in a minimal way.",
+    )
+
+    status = hp.make_label(frame, "Type into the search box to search the editor.")
+    search_panel = QtSearchPanel()
+    search_panel.set_target_editor(editor)
+    search_panel.evt_search_changed.connect(lambda text: status.setText(f"Searching for: {text or '<empty>'}"))
+
+    ha.addWidget(search_panel)
+    ha.addWidget(editor)
+    ha.addWidget(status)
+
+    frame.show()
+    sys.exit(app.exec_())

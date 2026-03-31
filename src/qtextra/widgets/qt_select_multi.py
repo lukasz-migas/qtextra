@@ -376,8 +376,6 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qframe
 
     app, frame, ha = qframe(False)
-    frame.setLayout(ha)
-
     wdg = QtMultiSelect(frame)
     wdg.set_options(["option1", "option2", "option3"], ["option1", "option3"])
     ha.addWidget(wdg)

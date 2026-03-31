@@ -89,7 +89,7 @@ class _DotIndicator(QWidget):
         super().__init__(parent)
         self._count = count
         self._current = 0
-        self.setStyleSheet("background: transparent;")
+        self.setObjectName("transparent")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedHeight(self._DOT_BIG * 2 + 4)
         self.setMinimumWidth(count * self._SPACING + self._DOT_BIG * 2)
@@ -165,7 +165,7 @@ class _PageCard(QWidget):
 
     def __init__(self, page: WhatsNewPage, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setStyleSheet("background: transparent;")
+        self.setObjectName("transparent")
         self._build(page)
 
     def _build(self, page: WhatsNewPage) -> None:
@@ -202,8 +202,7 @@ class _PageCard(QWidget):
             img_lbl.setPixmap(pix)
             root.addWidget(img_lbl, 0, Qt.AlignmentFlag.AlignCenter)
         elif page.icon_char:
-            icon_lbl = hp.make_label(self, page.icon_char, alignment=Qt.AlignmentFlag.AlignCenter)
-            icon_lbl.setStyleSheet("font-size: 96px; background: transparent;")
+            icon_lbl = hp.make_label(self, page.icon_char, alignment=Qt.AlignmentFlag.AlignCenter, object_name="96px_t")
             icon_lbl.setFixedSize(self._IMG_W, self._IMG_H)
             root.addWidget(icon_lbl, 0, Qt.AlignmentFlag.AlignCenter)
 
@@ -245,7 +244,7 @@ class WhatsNewDialog(QtDialog):
         bg_layout = hp.make_v_layout(margin=0, spacing=0, parent=self._bg)
 
         self._stack = QStackedWidget()
-        self._stack.setStyleSheet("background: transparent;")
+        self._stack.setObjectName("transparent")
         for page in self._pages:
             self._stack.addWidget(_PageCard(page))
         bg_layout.addWidget(self._stack, 1)

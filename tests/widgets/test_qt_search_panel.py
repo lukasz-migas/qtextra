@@ -5,7 +5,7 @@ from __future__ import annotations
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QPlainTextEdit
 
-from qtextra.widgets.qt_search_panel import QtSearchPanel
+from qtextra.widgets.qt_text_search import QtSearchPanel
 
 
 def test_qt_search_panel_emits_search_and_navigation(qtbot):

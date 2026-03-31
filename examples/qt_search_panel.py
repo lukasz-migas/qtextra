@@ -3,7 +3,7 @@
 from qtpy.QtWidgets import QApplication, QLabel, QPlainTextEdit, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
-from qtextra.widgets.qt_search_panel import QtSearchPanel
+from qtextra.widgets.qt_text_search import QtSearchPanel
 
 app = QApplication([])
 

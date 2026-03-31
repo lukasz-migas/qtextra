@@ -1,4 +1,5 @@
 QWidget#transparent {
+    background: transparent;
     background-color: transparent;
 }
 

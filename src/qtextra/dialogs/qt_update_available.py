@@ -73,28 +73,20 @@ class UpdateAvailableDialog(QtDialog):
         # Version comparison grid
         grid = hp.make_grid_layout(column_to_stretch={0: 1, 2: 1}, spacing=8)
 
-        current_caption = hp.make_label(self, "Current version", bold=True)
-        current_caption.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        current_caption = hp.make_label(self, "Current version", bold=True, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.current_ver_lbl = hp.make_label(
-            self,
-            self.info.current_version,
-            alignment=Qt.AlignmentFlag.AlignHCenter,
+            self, self.info.current_version, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="72px_300w"
         )
-        self.current_ver_lbl.setStyleSheet("font-size: 72px; font-weight: 300;")
 
-        arrow_lbl = hp.make_label(self, "⟶", alignment=Qt.AlignmentFlag.AlignCenter)
-        arrow_lbl.setStyleSheet("font-size: 96px;")
+        arrow_lbl = hp.make_label(self, "⟶", alignment=Qt.AlignmentFlag.AlignCenter, object_name="96px")
 
         new_caption = hp.make_label(self, "Now available", bold=True)
         new_caption.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
         self.new_ver_lbl = hp.make_label(
-            self,
-            self.info.available_version,
-            alignment=Qt.AlignmentFlag.AlignHCenter,
+            self, self.info.available_version, alignment=Qt.AlignmentFlag.AlignHCenter, object_name="72px_300w"
         )
-        self.new_ver_lbl.setStyleSheet("font-size: 72px; font-weight: 300;")
 
         grid.addWidget(current_caption, 0, 0, Qt.AlignmentFlag.AlignHCenter)
         grid.addWidget(arrow_lbl, 0, 1, 2, 1, Qt.AlignmentFlag.AlignCenter)
