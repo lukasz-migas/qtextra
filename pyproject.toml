@@ -133,6 +133,9 @@ src = ["src", "tests"]
 
 # https://beta.ruff.rs/docs/rules/
 [tool.ruff.lint]
+extend-safe-fixes = [
+    "UP045", # pyupgrade - Convert type annotations to use PEP 585 generics
+]
 extend-select = [
     "F",    # Pyflakes
     "E",    # pycodestyle errors
@@ -201,6 +204,7 @@ extend-ignore = [
     "S607",
     "TRY003", # tryceratops - avoid specifying long messages outside the exception class
     "COM812",  # flake8-commas - missing trailing comma in a list or tuple
+    "G004", # flake8-logging-format - use of f-string in logging functions
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -131,9 +131,9 @@ class QtColorSwatch(QFrame):
 
     def __init__(
         self,
-        parent: ty.Optional[QWidget] = None,
-        tooltip: ty.Optional[str] = None,
-        initial_color: ty.Optional[ColorType] = None,
+        parent: QWidget | None = None,
+        tooltip: str | None = None,
+        initial_color: ColorType | None = None,
         add_frame: bool = True,
     ):
         super().__init__(parent)
@@ -168,8 +168,14 @@ class QtColorSwatch(QFrame):
     @Slot(np.ndarray)
     def _update_swatch_style(self, _color: ColorType) -> None:
         """Update appearance."""
-        rgba = f"rgba({','.join(str(int(x * 255)) for x in self._color)})"
-        self.setStyleSheet("#colorSwatch {background-color: " + rgba + ";}")
+        rgb = [int(x * 255) for x in self._color[:3]]
+        alpha = int(self._color[3] * 255) if len(self._color) > 3 else 255
+        rgba = f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})"
+        brightness = (0.299 * rgb[0]) + (0.587 * rgb[1]) + (0.114 * rgb[2])
+        border = "rgba(20, 20, 20, 160)" if brightness > 186 else "rgba(255, 255, 255, 180)"
+        self.setStyleSheet(
+            f"#colorSwatch {{background-color: {rgba};border: 1px solid {border};border-radius: 3px;}}",
+        )
 
     def mouseReleaseEvent(self, event: QEvent):
         """Show QColorPopup picker when the user clicks on the swatch."""
@@ -258,17 +264,21 @@ class ColorCircleButton(QAbstractButton):
 
     @property
     def color(self) -> QColor:
+        """Return the current color."""
         return QColor(self._color)
 
     def set_color(self, color: QColor | str) -> None:
+        """Set the current color."""
         self._color = QColor(color)
         self.update()
 
     @property
     def selected(self) -> bool:
+        """Return whether the button is selected."""
         return self._selected
 
     def set_selected(self, value: bool) -> None:
+        """Set the selected state."""
         self._selected = value
         self.update()
 
@@ -277,12 +287,14 @@ class ColorCircleButton(QAbstractButton):
     # ------------------------------------------------------------------
 
     def sizeHint(self) -> QSize:
+        """Return the preferred size for the color button."""
         # Extra 4 px padding so the ring/shadow isn't clipped
         pad = 6
         s = self._diameter + pad * 2
         return QSize(s, s)
 
     def paintEvent(self, _event):
+        """Paint the circular swatch."""
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -310,6 +322,7 @@ class ColorCircleButton(QAbstractButton):
         p.end()
 
     def mousePressEvent(self, event):
+        """Open the color dialog on left click."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._open_color_dialog()
         super().mousePressEvent(event)
@@ -328,11 +341,13 @@ class ColorCircleButton(QAbstractButton):
 
     # hover tracking
     def enterEvent(self, event):
+        """Track hover entry for repainting."""
         self._hovered = True
         self.update()
         super().enterEvent(event)
 
     def leaveEvent(self, event):
+        """Track hover exit for repainting."""
         self._hovered = False
         self.update()
         super().leaveEvent(event)

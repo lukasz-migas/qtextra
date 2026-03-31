@@ -11,9 +11,12 @@ For concrete usage patterns, browse the runnable examples in
 - `dialog_color_list.py`
 - `dialog_confirm_close.py`
 - `dialog_confirm_with_text.py`
+- `dialog_theme_editor.py`
 - `dialog_text_replace.py`
 - `qt_console.py`
 - `qt_logger.py`
 
-The dialog pages are still sparse compared with the widget pages. Expanding
-them is a good next contribution target.
+Available dialog docs:
+
+- [`DialogThemeEditor`](./qt_theme_editor.md): live theme editor for colors,
+  font sizes, and console styles

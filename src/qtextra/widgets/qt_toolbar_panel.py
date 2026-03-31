@@ -32,7 +32,7 @@ class QtAboutWidget(QWidget):
 
         self.title_label = hp.make_label(self, title, bold=True, wrap=True)
         self.description_label = hp.make_label(self, description, enable_url=True, wrap=True)
-        self.docs_label = hp.make_label(self, docs_link if docs_link else "", enable_url=True, wrap=True)
+        self.docs_label = hp.make_label(self, docs_link or "", enable_url=True, wrap=True)
         if docs_link is None:
             self.docs_label.setVisible(False)
 
