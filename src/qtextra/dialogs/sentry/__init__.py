@@ -65,7 +65,7 @@ def ask_opt_in(settings: Settings, force: bool = False, parent: QWidget | None =
         return settings
 
     dlg = TelemetryOptInDialog(parent=parent, with_locals=getattr(settings, with_locals_attr))
-    send: ty.Optional[bool] = None
+    send: bool | None = None
     if bool(dlg.exec()):
         send = True  # pragma: no cover
     elif dlg._no:

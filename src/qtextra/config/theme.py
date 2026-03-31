@@ -1,5 +1,7 @@
 """Themes configuration file."""
 
+from __future__ import annotations
+
 import re
 import typing as ty
 import warnings
@@ -73,17 +75,17 @@ def time_to_qt_time(value: str) -> QTime:
     time = QTime()
     try:
         _, _ = value.split(":")
-    except Exception:
+    except ValueError:
         return time
     return time.fromString(value, "HH:mm")
 
 
-def parse_time(value: str) -> ty.Tuple[int, ...]:
+def parse_time(value: str) -> tuple[int, ...]:
     """Parse time."""
     try:
         hh, mm = value.split(":")
         return int(hh), int(mm)
-    except Exception:
+    except ValueError:
         return -1, -1
 
 
@@ -143,7 +145,7 @@ class Theme(EventedModel):
     font_size: str = "14pt"
     header_size: str = "18pt"
 
-    def __getattr__(self, item: str) -> ty.Union[str, Color]:
+    def __getattr__(self, item: str) -> str | Color:
         return getattr(self, item)
 
     @field_validator(
@@ -182,7 +184,7 @@ class Theme(EventedModel):
         return value
 
     @field_validator("font_size", "header_size", mode="before")
-    def _ensure_font_size(value: ty.Union[int, str]) -> str:
+    def _ensure_font_size(value: int | str) -> str:
         if isinstance(value, int):
             value = str(value)
         value = value.replace("px", "").replace("pt", "")
@@ -253,7 +255,7 @@ class Themes(ConfigBase):
         self._sync_with_time: bool = True
         self._light_start_time: str = "08:00"
         self._light_end_time: str = "20:00"
-        self.themes: ty.Dict[str, Theme] = {}
+        self.themes: dict[str, Theme] = {}
         self.add_theme(
             "dark",
             Theme(**DARK_THEME),
@@ -404,9 +406,9 @@ class Themes(ConfigBase):
 
     def get_theme(
         self,
-        theme_name: ty.Optional[str] = None,
+        theme_name: str | None = None,
         as_dict: bool = False,
-    ) -> ty.Union[Theme, ty.Dict[str, str]]:
+    ) -> Theme | dict[str, str]:
         """Get a theme based on its name.
 
         Parameters
@@ -438,8 +440,9 @@ class Themes(ConfigBase):
         """Check if theme is dark."""
         return self.active.type == "dark"
 
-    def add_theme(self, name: str, theme_data: ty.Union[Theme, ty.Dict[str, str]], register: bool = False):
+    def add_theme(self, name: str, theme_data: Theme | dict[str, str], register: bool = False):
         """Add theme."""
+        is_new_theme = name not in self.themes
         if name not in self.themes:
             self.add_resource(name)
         if isinstance(theme_data, dict):
@@ -450,6 +453,8 @@ class Themes(ConfigBase):
         self.themes[name].events.connect(self._emit_theme_changed, max_args=0)
         if register:
             self.register_themes([name])
+        if is_new_theme:
+            self.evt_theme_added.emit()
 
     def add_resource(self, name: str) -> None:
         """Add resources to QDir."""
@@ -458,7 +463,7 @@ class Themes(ConfigBase):
         QDir.addSearchPath(f"theme_{name}", str(self.get_theme_path(name)))
         logger.debug(f"Added '{name}' theme to resources path")
 
-    def register_themes(self, names: ty.Optional[ty.List[str]] = None) -> None:
+    def register_themes(self, names: list[str] | None = None) -> None:
         """Register themes."""
         from qtextra.icons import build_theme_svgs
 
@@ -468,18 +473,18 @@ class Themes(ConfigBase):
         for name in names:
             build_theme_svgs(name)
 
-    def available_themes(self) -> ty.Tuple[str, ...]:
+    def available_themes(self) -> tuple[str, ...]:
         """Get list of available themes."""
         return tuple(self.themes)
 
-    def get_theme_color(self, key: str = "text", theme_name: ty.Optional[str] = None) -> str:
+    def get_theme_color(self, key: str = "text", theme_name: str | None = None) -> str:
         """Get text color appropriate for the theme."""
         if theme_name is None:
             theme_name = self.theme
         palette = self.themes[theme_name]
         return getattr(palette, key).as_hex()
 
-    def get_theme_stylesheet(self, theme_name: ty.Optional[str] = None) -> str:
+    def get_theme_stylesheet(self, theme_name: str | None = None) -> str:
         """Get stylesheet."""
         from qtextra.assets import get_stylesheet
         from qtextra.utils.template import template
@@ -492,7 +497,7 @@ class Themes(ConfigBase):
 
     get_stylesheet = get_theme_stylesheet
 
-    def set_theme_stylesheet(self, widget: QWidget, theme_name: ty.Optional[str] = None) -> None:
+    def set_theme_stylesheet(self, widget: QWidget, theme_name: str | None = None) -> None:
         """Set stylesheet on widget."""
         widget.setStyleSheet(self.get_theme_stylesheet(theme_name))
 
@@ -509,7 +514,7 @@ class Themes(ConfigBase):
 
         return USER_THEME_DIR / theme_name
 
-    def _get_config_parameters(self, config: ty.Dict) -> ty.Dict:
+    def _get_config_parameters(self, config: dict) -> dict:
         """Get configuration parameters."""
         config["themes"] = {}
         for name, theme in self.themes.items():
@@ -532,7 +537,7 @@ class Themes(ConfigBase):
         """Emit theme changed event."""
         self.evt_theme_changed.emit()
 
-    def _set_config_parameters(self, config: ty.Dict) -> None:
+    def _set_config_parameters(self, config: dict) -> None:
         """Set extra configuration parameters."""
         for config_group_title in ("themes",):
             _config_group = config.get(config_group_title, {})
@@ -553,8 +558,8 @@ class Themes(ConfigBase):
                     logger.warning(
                         f"Skipping {theme_name} theme because it did not pass validation.\nFailed with error=`{err}`",
                     )
-                except Exception:
-                    logger.warning("Could not load theme data.")
+                except (AttributeError, TypeError, ValueError) as err:
+                    logger.warning(f"Could not load theme data for '{theme_name}': {err}")
 
     def lighten(self, color: str, percentage: float = 10, as_hex: bool = False) -> str:
         """Lighted color."""
@@ -575,7 +580,7 @@ class Themes(ConfigBase):
         return color
 
 
-def get_previous_configs(base_dir: ty.Optional[str] = None, filename: str = "themes-config.json") -> ty.Dict[str, str]:
+def get_previous_configs(base_dir: str | None = None, filename: str = "themes-config.json") -> dict[str, str]:
     """Return dictionary of version : path of previous configuration files."""
     return _get_previous_configs(base_dir, filename)
 
@@ -601,7 +606,7 @@ def get_raw_svg(path: str) -> str:
 
 
 @lru_cache
-def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: ty.Optional[str] = None, opacity=1) -> str:
+def get_colorized_svg(path_or_xml: str | Path, color: str | None = None, opacity=1) -> str:
     """Return a colorized version of the SVG XML at ``path``.
 
     Raises
@@ -622,11 +627,11 @@ def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: ty.Optional[str] 
 
 
 def generate_colorized_svgs(
-    svg_paths: ty.Iterable[ty.Union[str, Path]],
-    colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
+    svg_paths: ty.Iterable[str | Path],
+    colors: ty.Iterable[str | tuple[str, str]],
     opacities: ty.Iterable[float] = (1.0,),
-    theme_override: ty.Optional[ty.Dict[str, str]] = None,
-) -> ty.Iterator[ty.Tuple[str, str]]:
+    theme_override: dict[str, str] | None = None,
+) -> ty.Iterator[tuple[str, str]]:
     """Helper function to generate colorized SVGs.
 
     This is a generator that yields tuples of ``(alias, icon_xml)`` for every
@@ -683,12 +688,13 @@ def generate_colorized_svgs(
 
 
 def write_colorized_svgs(
-    dest: ty.Union[str, Path],
-    svg_paths: ty.Iterable[ty.Union[str, Path]],
-    colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
+    dest: str | Path,
+    svg_paths: ty.Iterable[str | Path],
+    colors: ty.Iterable[str | tuple[str, str]],
     opacities: ty.Iterable[float] = (1.0,),
-    theme_override: ty.Optional[ty.Dict[str, str]] = None,
+    theme_override: dict[str, str] | None = None,
 ):
+    """Write colorized SVG variants to a destination directory."""
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
     svgs = generate_colorized_svgs(

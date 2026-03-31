@@ -12,6 +12,7 @@ class QIntOrNoneValidator(QtGui.QIntValidator):
     """Validator that accepts '' as None, and otherwise behaves as QIntValidator."""
 
     def validate(self, a0: str | None, a1: int) -> tuple[QtGui.QValidator.State, str, int]:
+        """Validate a string using the configured child validator."""
         if a0 == "":
             return QtGui.QValidator.State.Acceptable, "", a1
         return super().validate(a0, a1)
@@ -21,15 +22,19 @@ class QDoubleOrNoneValidator(QtGui.QDoubleValidator):
     """Validator that accepts '' as None, and otherwise behaves as QDoubleValidator."""
 
     def validate(self, a0: str | None, a1: int) -> tuple[QtGui.QValidator.State, str, int]:
+        """Validate a string using the configured child validator."""
         if a0 == "":
             return QtGui.QValidator.State.Acceptable, "", a1
         return super().validate(a0, a1)
 
 
 class QCommaSeparatedValidator(QtGui.QValidator):
+    """Base validator for comma-separated values using a child validator."""
+
     _ChildValidator: QtGui.QValidator
 
     def validate(self, a0: str | None, a1: int) -> tuple[QtGui.QValidator.State, str, int]:
+        """Validate a comma-separated string using the configured child validator."""
         if a0 == "" or a0 is None:
             return QtGui.QValidator.State.Acceptable, "", a1
         if a0.strip().endswith(","):
@@ -47,39 +52,51 @@ class QCommaSeparatedValidator(QtGui.QValidator):
 
 
 class QCommaSeparatedIntValidator(QCommaSeparatedValidator):
+    """Validator for comma-separated integer values."""
+
     _ChildValidator = QtGui.QIntValidator()
 
 
 class QCommaSeparatedDoubleValidator(QCommaSeparatedValidator):
+    """Validator for comma-separated floating-point values."""
+
     _ChildValidator = QtGui.QDoubleValidator()
 
 
 class QValuedLineEdit(QtW.QLineEdit):
+    """Base line edit that emits validated values and supports stepping."""
+
     _validator_class: type[QIntOrNoneValidator | QDoubleOrNoneValidator]
     valueChanged = QtCore.Signal(str)
 
     def __init__(self, *args, **kwargs):
+        """Initialize the line edit with its validator and value-change wiring."""
         super().__init__(*args, **kwargs)
         self.setValidator(self._validator_class(self))
         self.textChanged.connect(self._on_text_changed)
 
     def _on_text_changed(self, text: str):
+        """Emit the normalized value when the current text is acceptable."""
         validate_result = self.validator().validate(text, 0)
         if validate_result[0] == QtGui.QValidator.State.Acceptable:
             self.valueChanged.emit(validate_result[1])
 
     def sizeHint(self) -> QtCore.QSize:
+        """Return a compact size hint suitable for numeric editing."""
         hint = super().sizeHint()
         hint.setWidth(100)  # numerical values do not need to be too wide
         return hint
 
     def stepUp(self, large: bool = False):
+        """Step up."""
         raise NotImplementedError
 
     def stepDown(self, large: bool = False):
+        """Step down."""
         raise NotImplementedError
 
     def wheelEvent(self, a0: QtGui.QWheelEvent | None) -> None:
+        """Handle mouse-wheel stepping."""
         if a0 is not None:
             if a0.angleDelta().y() > 0:
                 self.stepUp()
@@ -90,6 +107,7 @@ class QValuedLineEdit(QtW.QLineEdit):
         return super().wheelEvent(a0)
 
     def keyPressEvent(self, a0: QtGui.QKeyEvent | None) -> None:
+        """Handle keyboard-based stepping shortcuts."""
         if a0.modifiers() == Qt.KeyboardModifier.NoModifier:
             if a0.key() == Qt.Key.Key_Up:
                 self.stepUp()
@@ -107,25 +125,33 @@ class QValuedLineEdit(QtW.QLineEdit):
         return super().keyPressEvent(a0)
 
     def minimum(self):
+        """Return the validator minimum."""
         return self.validator().bottom()
 
     def setMinimum(self, min_):
+        """Set the validator minimum."""
         self.validator().setBottom(min_)
 
     def maximum(self):
+        """Return the validator maximum."""
         return self.validator().top()
 
     def setMaximum(self, max_):
+        """Set the validator maximum."""
         self.validator().setTop(max_)
 
     def validator(self) -> QIntOrNoneValidator | QDoubleOrNoneValidator:
+        """Return the typed validator instance."""
         return super().validator()
 
 
 class QIntLineEdit(QValuedLineEdit):
+    """Integer line edit."""
+
     _validator_class = QIntOrNoneValidator
 
     def stepUp(self, large: bool = False):
+        """Step up."""
         text = self.text()
         if text == "":
             return
@@ -134,6 +160,7 @@ class QIntLineEdit(QValuedLineEdit):
         self.setText(str(min(val + diff, self.validator().top())))
 
     def stepDown(self, large: bool = False):
+        """Step down."""
         text = self.text()
         if text == "":
             return
@@ -148,12 +175,15 @@ class QDoubleLineEdit(QValuedLineEdit):
     _validator_class = QDoubleOrNoneValidator
 
     def stepUp(self, large: bool = False):
+        """Step up."""
         return self._step_up_or_down(large, operator.add)
 
     def stepDown(self, large: bool = False):
+        """Step down."""
         return self._step_up_or_down(large, operator.sub)
 
     def _step_up_or_down(self, large: bool, op):
+        """Apply a step operation to the current decimal value."""
         text = self.text()
         if text == "":
             return
@@ -185,10 +215,11 @@ class QDoubleLineEdit(QValuedLineEdit):
             self.setText(str(val))
 
     def _calc_diff(self, dec: Decimal, large: bool):
+        """Calculate the step size from the current decimal precision."""
         exponent = dec.as_tuple().exponent
         if not isinstance(exponent, int):
             return None
-        ten = Decimal("10")
+        ten = Decimal(10)
         return ten ** (exponent + 2) if large else ten**exponent
 
 
@@ -196,6 +227,7 @@ class QCommaSeparatedIntLineEdit(QtW.QLineEdit):
     """QLineEdit for comma separated integer values."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize the line edit with the integer-list validator."""
         super().__init__(*args, **kwargs)
         self.setValidator(QCommaSeparatedIntValidator(self))
 
@@ -204,6 +236,7 @@ class QCommaSeparatedDoubleLineEdit(QtW.QLineEdit):
     """QLineEdit for comma separated double values."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize the line edit with the floating-point-list validator."""
         super().__init__(*args, **kwargs)
         self.setValidator(QCommaSeparatedDoubleValidator(self))
 

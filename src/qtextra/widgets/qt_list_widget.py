@@ -245,10 +245,7 @@ class QtListWidget(QListWidget, ListMixin):
             indices = range(self.count())
 
         iterator: ty.Iterable[int]
-        if reverse:
-            iterator = reversed(tuple(indices))
-        else:
-            iterator = indices
+        iterator = reversed(tuple(indices)) if reverse else tuple(indices)
         for index in iterator:
             item = self.item(index)
             if item is not None:
@@ -317,14 +314,14 @@ class QtListWidget(QListWidget, ListMixin):
             return None
         return self.get_item_widget_for_index(index)[1]
 
-    def get_item_for_item_model(self, item_model: _M) -> ty.Optional[QListWidgetItem]:
+    def get_item_for_item_model(self, item_model: _M) -> QListWidgetItem | None:
         """Get the item by its model."""
         for item, _item_model, _ in self.item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return item
         return None
 
-    def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
+    def get_widget_for_item_model(self, item_model: _M) -> _W | None:
         """Get the widget by its model."""
         for _, _item_model, widget in self.item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
@@ -518,7 +515,7 @@ class QtListScrollWidget(QScrollArea, ListMixin):
         self.evt_updated.emit(self.count())
         return widget
 
-    def get_widget_for_item_model(self, item_model: _M) -> ty.Optional[_W]:
+    def get_widget_for_item_model(self, item_model: _M) -> _W | None:
         """Get the widget by its model."""
         return self.widgets.get(item_model.unique_id)
 

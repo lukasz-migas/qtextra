@@ -224,7 +224,7 @@ class ProgressBarDelegate(QStyledItemDelegate):
 
         try:
             value = float(value)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return super().paint(painter, option, index)
 
         progress = QStyleOptionProgressBar()
@@ -255,7 +255,7 @@ class StarRatingDelegate(QStyledItemDelegate):
         value = index.data(Qt.ItemDataRole.DisplayRole)
         try:
             rating = int(value)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return super().paint(painter, option, index)
 
         painter.save()
@@ -281,7 +281,7 @@ class StarRatingDelegate(QStyledItemDelegate):
 
 
 class BadgeDelegate(QStyledItemDelegate):
-    COLORS = {
+    COLORS: ty.ClassVar[dict] = {
         "ok": QColor("#2e7d32"),
         "warning": QColor("#ed6c02"),
         "error": QColor("#d32f2f"),
@@ -366,7 +366,7 @@ class HeatmapDelegate(QStyledItemDelegate):
         value = index.data(Qt.ItemDataRole.DisplayRole)
         try:
             x = float(value)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return super().paint(painter, option, index)
 
         t = 0.0 if self.vmax <= self.vmin else (x - self.vmin) / (self.vmax - self.vmin)
@@ -391,7 +391,7 @@ class BarDelegate(QStyledItemDelegate):
         value = index.data(Qt.ItemDataRole.DisplayRole)
         try:
             x = float(value)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return super().paint(painter, option, index)
 
         t = 0.0 if self.vmax <= self.vmin else (x - self.vmin) / (self.vmax - self.vmin)
@@ -1202,7 +1202,7 @@ class QtCheckableTableView(QTableView):
             return model
         return model
 
-    def on_table_clicked(self, index: ty.Optional[QModelIndex] = None) -> None:
+    def on_table_clicked(self, index: QModelIndex | None = None) -> None:
         """Imitate row selection."""
         if index is None:
             index = QModelIndex()
@@ -1368,10 +1368,7 @@ class QtCheckableTableView(QTableView):
     ) -> None:
         """Set data."""
         self._header_columns = header
-        if checkable == "auto" and header:
-            checkable = header[0] == ""  # empty column usually indicates that that the first column is checkable
-        else:
-            checkable = checkable
+        checkable = header[0] == "" if checkable == "auto" and header else checkable
         self._validate_data(data, len(header))
         model = QtCheckableItemModel(
             self,
@@ -1407,7 +1404,7 @@ class QtCheckableTableView(QTableView):
         if n_items == 0:
             self.init()
 
-    def _validate_data(self, data: list, n_cols: ty.Optional[int] = None) -> None:
+    def _validate_data(self, data: list, n_cols: int | None = None) -> None:
         """Validate data."""
         if n_cols is None:
             n_cols = len(self._header_columns) if self._header_columns is not None else self.n_cols

@@ -13,6 +13,7 @@ consistently across a larger UI.
 - Reusable widgets for input, progress, status, and selection flows
 - Dialog helpers for confirmations, console output, changelogs, and more
 - Theme-aware icons and stylesheet assets
+- A live theme editor for tuning palettes, font sizes, and console styles
 - Examples and targeted widget docs for common integration patterns
 
 Components are tested on:

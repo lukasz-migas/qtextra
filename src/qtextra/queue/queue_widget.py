@@ -31,7 +31,7 @@ class QueueList(QScrollArea):
 
     _hidden = False
 
-    def __init__(self, parent: ty.Optional[QWidget] = None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -88,7 +88,7 @@ class QueueList(QScrollArea):
             if widget.task:
                 yield widget.task
 
-    def validate(self, selected: ty.Optional[ty.Sequence[str]] = None) -> None:
+    def validate(self, selected: ty.Sequence[str] | None = None) -> None:
         """Validate."""
         if selected is not None:
             self.selected = selected
@@ -99,7 +99,7 @@ class QueueList(QScrollArea):
             if widget.task:
                 widget.setVisible(widget.task.state in self.selected)
 
-    def purge_finished(self, max_tasks: ty.Optional[ty.Optional[int]] = None) -> None:
+    def purge_finished(self, max_tasks: ty.Union[None, int] = None) -> None:
         """Purge tasks that are no longer necessary."""
         if max_tasks is None:
             max_tasks = self.MAX_TASKS
@@ -182,7 +182,7 @@ class QueueList(QScrollArea):
             del widget
             logger.trace(f"Removed widget for '{task_id}'")
 
-    def _find_widget(self, task: str | Task) -> ty.Optional[TaskWidget]:
+    def _find_widget(self, task: str | Task) -> TaskWidget | None:
         """Find widget by its task ID."""
         task_id = task.task_id if isinstance(task, Task) else task
         if task_id in self.widgets:

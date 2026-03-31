@@ -83,6 +83,13 @@ def test_added_theme_emits_theme_changed(qtbot):
         custom_theme.font_size = 16
 
 
+def test_added_theme_emits_theme_added(qtbot):
+    themes = Themes()
+
+    with qtbot.waitSignal(themes.evt_theme_added, timeout=500):
+        themes.add_theme("custom", Theme(**{**LIGHT_THEME, "name": "custom"}))
+
+
 def test_loading_multiple_new_themes_binds_icon_updates_to_correct_theme(monkeypatch):
     themes = Themes()
     recorded = []

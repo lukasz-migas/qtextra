@@ -17,9 +17,9 @@ class Tile(BaseModel):
 
     title: str
     description: str
-    icon: ty.Optional[str] = ""
-    func: ty.Optional[ty.Callable] = None
-    icon_kws: ty.Optional[ty.Dict[str, ty.Any]] = None
+    icon: str | None = ""
+    func: ty.Callable | None = None
+    icon_kws: ty.Dict[str, ty.Any] | None = None
     warning: str = ""
 
     @field_validator("func", mode="before")
@@ -28,7 +28,7 @@ class Tile(BaseModel):
         if not value:
             return lambda: None
         if not callable(value):
-            raise ValueError("Widget class must have a run method.")
+            raise TypeError("Widget class must have a run method.")
         return value
 
 

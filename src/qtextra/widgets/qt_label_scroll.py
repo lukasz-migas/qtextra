@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import typing as ty
-
 from koyo.typing import PathLike
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QPixmap
@@ -17,9 +15,9 @@ class QtScrollableLabel(QScrollArea):
 
     def __init__(
         self,
-        parent: ty.Optional[QWidget] = None,
-        text: ty.Optional[str] = None,
-        image_path: ty.Optional[PathLike] = None,
+        parent: QWidget | None = None,
+        text: str | None = None,
+        image_path: PathLike | None = None,
         wrap: bool = False,
     ):
         super().__init__(parent)

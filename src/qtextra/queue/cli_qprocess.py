@@ -73,10 +73,10 @@ class QProcessWrapper(QObject):
         self,
         parent: QObject,
         task: Task,
-        func_start: ty.Optional[Callback] = None,
-        func_error: ty.Optional[Callback] = None,
-        func_end: ty.Optional[Callback] = None,
-        func_post: ty.Optional[Callback] = None,
+        func_start: Callback | None = None,
+        func_error: Callback | None = None,
+        func_end: Callback | None = None,
+        func_post: Callback | None = None,
     ):
         """Initialize."""
         super().__init__(parent=parent)
@@ -94,7 +94,7 @@ class QProcessWrapper(QObject):
 
         self.finished_tasks: ty.Set[str] = set()
         self.command_queue: SimpleQueue = Queue()
-        self.current_task_id: ty.Optional[str] = None
+        self.current_task_id: str | None = None
 
         # setup functions
         self.func_start = iterable_callbacks(func_start)
@@ -162,7 +162,7 @@ class QProcessWrapper(QObject):
         self.master_started = True
         self.evt_started.emit(self.task)  # type: ignore[unused-ignore]
 
-    def populate_command_queue(self) -> ty.Optional[str]:
+    def populate_command_queue(self) -> str | None:
         """Add commands to queue."""
         if not self._task_queue_populated:
             self._task_queue_populated = True

@@ -51,7 +51,7 @@ class CLIQueueHandler(QObject):
     # signal to indicate that a task had been removed
     evt_remove_task = Signal(str)
 
-    def __init__(self, parent: ty.Optional[QObject] = None, n_parallel: int = 1, auto_run: bool = True):
+    def __init__(self, parent: QObject | None = None, n_parallel: int = 1, auto_run: bool = True):
         super().__init__(parent=parent)
         self.auto_run = auto_run
         self.n_parallel = n_parallel
@@ -202,13 +202,13 @@ class CLIQueueHandler(QObject):
     def add_task(
         self,
         task: Task,
-        func_error: ty.Optional[Callback] = None,
-        func_start: ty.Optional[Callback] = None,
-        func_end: ty.Optional[Callback] = None,
-        func_post: ty.Optional[Callback] = None,
+        func_error: Callback | None = None,
+        func_start: Callback | None = None,
+        func_end: Callback | None = None,
+        func_post: Callback | None = None,
         add_delayed: bool = True,
         emit_queued: bool = True,
-    ) -> ty.Optional[str]:
+    ) -> str | None:
         """Adds a task to the queue handler.
 
         The `Call` handler works by executing consecutive actions.
@@ -252,7 +252,7 @@ class CLIQueueHandler(QObject):
             Flag to indicate whether the `evt_queued` event should be emitted.
         """
         if not isinstance(worker_obj, QProcessWrapper):
-            raise ValueError("You can only add 'QProcessWrapper' objects to the queue")
+            raise TypeError("You can only add 'QProcessWrapper' objects to the queue")
         logger.trace(f"Added task='{worker_obj.task_id}' to the queue (queue size {self.count()})")
 
         # cancel task
@@ -279,10 +279,10 @@ class CLIQueueHandler(QObject):
         self,
         task: Task,
         # task_kind: TaskKind = TaskKind.NONE,
-        func_error: ty.Optional[Callback] = None,
-        func_start: ty.Optional[Callback] = None,
-        func_end: ty.Optional[Callback] = None,
-        func_post: ty.Optional[Callback] = None,
+        func_error: Callback | None = None,
+        func_start: Callback | None = None,
+        func_end: Callback | None = None,
+        func_post: Callback | None = None,
     ) -> QProcessWrapper:
         """Make QProcess."""
         worker_obj = QProcessWrapper(self, task, func_start, func_error, func_end, func_post)

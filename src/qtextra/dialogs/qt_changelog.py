@@ -26,12 +26,12 @@ class ChangelogDialog(QtFramelessTool):
 
     def __init__(
         self,
-        parent: ty.Optional[QWidget],
+        parent: QWidget | None,
         text: str,
         language: str = "markdown",
-        download_url: ty.Optional[str] = None,
-        download_info: ty.Optional[str] = None,
-        path_to_file: ty.Optional[PathLike] = None,
+        download_url: str | None = None,
+        download_info: str | None = None,
+        path_to_file: PathLike | None = None,
     ) -> None:
         self.text = text
         self.language = language
@@ -137,13 +137,13 @@ def report_hook(
     progress_bar: QProgressBar,
     label: QLabel,
     pbar: tqdm,
-) -> ty.Callable[[int, int, ty.Optional[int]], None]:
+) -> ty.Callable[[int, int, int | None], None]:
     """Download progress."""
     last_b = [0]
 
     @ensure_main_thread()
     @qthrottled(timeout=500)
-    def update_to(b: int = 1, bsize: int = 1, tot_size: ty.Optional[int] = None) -> None:
+    def update_to(b: int = 1, bsize: int = 1, tot_size: int | None = None) -> None:
         """Update progress.
 
         b  : int, optional
@@ -178,7 +178,7 @@ def download_file(
     if not path_to_file.exists():
         # create report hook
         temp_file = path_to_file.parent / (path_to_file.name + ".temp")
-        _, _ = request.urlretrieve(url, temp_file, reporthook=reporthook)
+        _, _ = request.urlretrieve(url, temp_file, reporthook=reporthook)  # noqa: S310
         temp_file.rename(path_to_file)
     if path_to_file.suffix == ".zip":
         yield "Unzipping..."

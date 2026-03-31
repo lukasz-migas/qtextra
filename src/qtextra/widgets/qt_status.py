@@ -5,8 +5,6 @@ Taken and modified from spyder.widgets.status
 
 from __future__ import annotations
 
-import typing as ty
-
 from qtpy.QtCore import Qt, QTimer, Signal
 from qtpy.QtGui import QFont, QIcon, QMouseEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QSizePolicy, QStatusBar, QWidget
@@ -82,10 +80,12 @@ class QtStatusbarSpinner(QWidget):
 
     def start(self) -> None:
         """Start spinner."""
+        self.movie.start()
         self.spinner.show()
 
     def stop(self) -> None:
         """Stop spinner."""
+        self.movie.stop()
         self.spinner.hide()
 
 
@@ -100,7 +100,7 @@ class QtStatusbarIconWidget(QWidget):
         parent: QWidget | None,
         statusbar: QStatusBar,
         name: str = "",
-        index: ty.Optional[int] = None,
+        index: int | None = None,
         active: bool = False,
     ):
         """Status bar widget base."""
@@ -137,7 +137,7 @@ class QtStatusbarIconWidget(QWidget):
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Override Qt method to allow for click signal."""
-        super().mousePressEvent(event)
+        super().mouseReleaseEvent(event)
         self.evt_clicked.emit()
 
     def get_tooltip(self) -> str:
@@ -232,11 +232,12 @@ class QtStatusbarTimerBase(QtStatusbarWidget):
 
     def is_supported(self) -> bool:
         """Return True if feature is supported."""
+        is_valid = True
         try:
             self.import_test()
-            return True
         except ImportError:
-            return False
+            is_valid = False
+        return is_valid
 
     def update_status(self) -> None:
         """Update status label widget, if widget is visible."""
@@ -271,8 +272,7 @@ class QtStatusbarMemory(QtStatusbarTimerBase):
         """Return memory usage."""
         from qtextra.utils.utilities import memory_usage
 
-        text = "%d%%" % memory_usage()
-        return "Mem " + text.rjust(3)
+        return f"Mem {int(memory_usage()):>3d}%"
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
@@ -293,10 +293,9 @@ class QtStatusbarProcessMemory(QtStatusbarTimerBase):
         from qtextra.utils.utilities import process_memory_usage
 
         try:
-            text = "%d%%" % process_memory_usage()
-        except Exception:
-            text = "N/A"
-        return "Mem " + text.rjust(3)
+            return f"Mem {int(process_memory_usage()):>3d}%"
+        except Exception:  # noqa: BLE001
+            return f"Mem {'N/A':>4}"
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
@@ -308,13 +307,15 @@ class QtStatusbarCPU(QtStatusbarTimerBase):
 
     def import_test(self) -> None:
         """Raise ImportError if a feature is not supported."""
+        import psutil
+
+        del psutil
 
     def get_value(self) -> str:
         """Return CPU usage."""
         import psutil
 
-        text = "%d%%" % psutil.cpu_percent(interval=0)
-        return "CPU " + text.rjust(3)
+        return f"CPU {int(psutil.cpu_percent(interval=0)):>3d}%"
 
     def get_tooltip(self) -> str:
         """Return the widget tooltip text."""
@@ -326,14 +327,17 @@ class QtStatusbarProcessCPU(QtStatusbarTimerBase):
 
     def import_test(self) -> None:
         """Raise ImportError if feature is not supported."""
+        import psutil
+
+        del psutil
 
     def get_value(self) -> str:
         """Return CPU usage."""
         import psutil
 
         try:
-            text = "%d%%" % psutil.Process().cpu_percent(interval=0)
-        except Exception:
+            text = f"{int(psutil.Process().cpu_percent(interval=0)):>3d}%"
+        except Exception:  # noqa: BLE001
             text = "N/A"
         return "CPU " + text.rjust(3)
 

@@ -379,7 +379,7 @@ def get_icon(name: str | tuple[str, dict]) -> tuple[str, dict]:
     return name, kwargs
 
 
-def get_stylesheet(theme: ty.Optional[str] = None, extra: ty.Optional[ty.List[str]] = None) -> str:
+def get_stylesheet(theme: str | None = None, extra: ty.List[str] | None = None) -> str:
     """Combine all qss files into single, possibly pre-themed, style string.
 
     Parameters
