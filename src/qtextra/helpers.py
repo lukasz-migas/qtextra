@@ -66,6 +66,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_label_icon import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
     from qtextra.widgets.qt_label_scroll import QtScrollableLabel
     from qtextra.widgets.qt_layout_flow import QtFlowLayout
+    from qtextra.widgets.qt_notification_badge import BadgeMode, BadgeSize, BadgeState, QtNotificationBadge
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
     from qtextra.widgets.qt_select_multi import QtMultiSelect
@@ -2682,6 +2683,33 @@ def make_overlay_message(
     )
     _widget.set_widget(widget)
     return _widget
+
+
+def make_notification_badge(
+    parent: Qw.QWidget | None,
+    widget: Qw.QWidget | None = None,
+    state: BadgeState = "error",
+    mode: BadgeMode = "dot",
+    size: BadgeSize = "md",
+    count: int | None = None,
+    visible_when_zero: bool = False,
+    auto_clear_on_click: bool = False,
+    alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight,
+) -> QtNotificationBadge:
+    """Create a notification badge and optionally attach it to a widget."""
+    from qtextra.widgets.qt_notification_badge import QtNotificationBadge
+
+    return QtNotificationBadge(
+        parent=parent,
+        widget=widget,
+        state=state,
+        mode=mode,
+        size=size,
+        count=count,
+        visible_when_zero=visible_when_zero,
+        auto_clear_on_click=auto_clear_on_click,
+        alignment=alignment,
+    )
 
 
 def warn(parent: Qw.QWidget | None, message: str, title: str = "Warning") -> None:

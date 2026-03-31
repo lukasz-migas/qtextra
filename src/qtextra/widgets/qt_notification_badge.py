@@ -227,7 +227,9 @@ class QtNotificationBadge(QtOverlay):
 
     def _sync_visibility(self) -> None:
         has_widget = self.widget() is not None
-        should_show = has_widget and bool(self._state) and (self._mode == "dot" or self._count > 0 or self._visible_when_zero)
+        should_show = (
+            has_widget and bool(self._state) and (self._mode == "dot" or self._count > 0 or self._visible_when_zero)
+        )
         self.setVisible(should_show)
 
     def _on_theme_changed(self) -> None:
