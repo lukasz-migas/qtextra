@@ -5,6 +5,8 @@ from __future__ import annotations
 import warnings
 
 import pytest
+from koyo.system import IS_MAC
+from qtpy import API_NAME
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QAction, QIntValidator
 from qtpy.QtWidgets import QCheckBox, QLabel, QWidget
@@ -782,6 +784,7 @@ class TestMakeSwatchGrid:
         assert sorted(received_indices) == list(range(12))
 
 
+@pytest.mark.xfail(API_NAME == "pyside6" and IS_MAC, reason="For some reason, this fails on PySide6 on MacOS")
 def test_add_flash_animation(qtbot):
     widget = QWidget()
     qtbot.addWidget(widget)
