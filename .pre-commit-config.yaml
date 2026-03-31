@@ -31,12 +31,3 @@ repos:
         - id: ruff
           args: [--fix]
         - id: ruff-format
-
-  - repo: local
-    hooks:
-      - id: prevent-direct-push-to-main
-        name: prevent direct push to main
-        entry: ./scripts/prevent_direct_push_to_main.sh
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
