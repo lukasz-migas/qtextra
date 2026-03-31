@@ -243,17 +243,17 @@ def get_sample_event(**kwargs: ty.Any) -> dict:
     settings = get_sentry_settings(dsn=SAMPLE_DSN, transport=_transport, **kwargs)
 
     client = sentry_sdk.Client(**settings)
-    scope = sentry_sdk.Scope(client=client)
-    configure_scope_tags(scope)
-    try:
+    with sentry_sdk.new_scope() as scope:
+        scope.set_client(client)
+        configure_scope_tags(scope)
         try:
             some_variable = 1  # noqa
             another_variable = "my_string"  # noqa
             1 / 0  # noqa
         except ZeroDivisionError as exc:
             scope.capture_exception(exc)
-    finally:
-        client.close()
+        finally:
+            client.close()
     return event
 
 

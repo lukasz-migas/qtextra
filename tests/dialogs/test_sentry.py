@@ -28,6 +28,9 @@ def _install_fake_sentry(monkeypatch):
         def set_extra(self, key, value):
             self.extras[key] = value
 
+        def set_client(self, client):
+            self.client = client
+
         def capture_exception(self, exc):
             payload = {
                 "exception": {"values": [{"type": type(exc).__name__}]},
