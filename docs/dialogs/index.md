@@ -16,7 +16,13 @@ For concrete usage patterns, browse the runnable examples in
 - `qt_console.py`
 - `qt_logger.py`
 
-Available dialog docs:
+The dialog pages are still sparse compared with the widget pages. Expanding
+them is a good next contribution target.
 
-- [`DialogThemeEditor`](./qt_theme_editor.md): live theme editor for colors,
+## Documented Dialogs
+
+- [Sentry Dialogs](./sentry.md): telemetry opt-in, crash reporting setup, and
+  feedback environment variables
+
+- [DialogThemeEditor](./qt_theme_editor.md): live theme editor for colors,
   font sizes, and console styles

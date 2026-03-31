@@ -1,12 +1,16 @@
 """Feedback dialog."""
 
+from __future__ import annotations
+
 import getpass
 import os
-import typing as ty
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from loguru import logger
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QFormLayout, QWidget
+from qtpy.QtWidgets import QFormLayout, QLabel, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dialog import QtDialog
@@ -21,8 +25,8 @@ FEEDBACK_URL = f"https://sentry.io/api/0/projects/{ORGANIZATION_SLUG}/{PROJECT_S
 class FeedbackDialog(QtDialog):
     """Dialog to give the user an option to provide feedback."""
 
-    def __init__(self, parent: ty.Optional[QWidget] = None):
-        super().__init__(parent=parent, title="Feedback")
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent=parent, title="Share Feedback")
         self.setMinimumSize(600, 400)
 
     def accept(self):
@@ -50,16 +54,21 @@ class FeedbackDialog(QtDialog):
         """Dialog to provide feedback."""
         self.info = hp.make_label(
             self,
-            "<b>Send feedback</b><br><br>We always welcome user feedback, whether its good or bad. Please type in"
-            " your thoughts and send them onwards.<br>",
+            "<b>Send feedback</b><br><br>"
+            "Use this form for product feedback, missing features, and rough edges. "
+            "For crash reporting, use the telemetry prompt instead.",
             alignment=Qt.AlignmentFlag.AlignHCenter,
         )
         self.name = hp.make_line_edit(self, getpass.getuser(), placeholder="Your name")
+        self.name.setToolTip("Used as the display name on the feedback item in Sentry.")
 
         self.email = hp.make_line_edit(self, "", placeholder="Your email address")
+        self.email.setToolTip("Optional. Add this if you want the maintainer to contact you.")
 
-        self.title = hp.make_line_edit(self, "User feedback", placeholder="Feedback title")
+        self.title = hp.make_line_edit(self, "User feedback", placeholder="Short summary")
+        self.title.setToolTip("A short title that summarizes the feedback.")
         self.message = hp.make_text_edit(self, "", placeholder="Your feedback")
+        self.message.setToolTip("Include what happened, what you expected, and any useful repro steps.")
 
         self.submit_btn = hp.make_btn(self, "Submit", func=self.accept)
         self.cancel_btn = hp.make_btn(self, "Cancel", func=self.reject)
@@ -68,6 +77,14 @@ class FeedbackDialog(QtDialog):
 
         layout = hp.make_form_layout()
         layout.addRow(self.info)
+        if not is_feedback_configured():
+            notice = QLabel(
+                "<small>Feedback is not configured because the Sentry DSN, organization slug, "
+                "or project slug is missing.</small>",
+            )
+            notice.setWordWrap(True)
+            notice.setStyleSheet("color: #999;")
+            layout.addRow(notice)
         layout.addRow(hp.make_label(self, "Name (required)"), self.name)
         layout.addRow(hp.make_label(self, "Email address (optional)"), self.email)
         layout.addRow(hp.make_label(self, "Title"), self.title)
@@ -77,35 +94,68 @@ class FeedbackDialog(QtDialog):
         return layout
 
 
+def get_feedback_url() -> str:
+    """Return the Sentry user-feedback endpoint."""
+    return FEEDBACK_URL
+
+
+def is_feedback_configured() -> bool:
+    """Return whether user feedback can be submitted."""
+    return bool(SENTRY_DSN and ORGANIZATION_SLUG and PROJECT_SLUG)
+
+
+def _post_feedback(data: dict[str, str]) -> bool:
+    """Post feedback to Sentry."""
+    url = get_feedback_url()
+    request = Request(  # noqa: S310
+        url=url,
+        data=urlencode(data).encode("utf-8"),
+        headers={"Authorization": f"DSN {SENTRY_DSN}"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=5) as response:  # noqa: S310
+            status = getattr(response, "status", response.getcode())
+            logger.trace(f"Submitted extra feedback. Status code: {status}.")
+            return 200 <= status < 300
+    except HTTPError as exc:
+        logger.warning(f"Feedback submission failed with HTTP {exc.code}.")
+    except URLError as exc:
+        logger.warning(f"Feedback submission failed: {exc}.")
+    return False
+
+
 def submit_feedback(title: str, message: str, name: str = "", email: str = ""):
     """Submit feedback."""
-    import getpass
-
-    import requests
     import sentry_sdk
 
-    with sentry_sdk.push_scope() as scope:
-        scope.set_extra("name", name or getpass.getuser())
-        scope.set_extra("email", email or "unknown@unknown.com")
-        scope.set_extra("message", message)
-    event_id = sentry_sdk.capture_message(message=title, level="debug", scope=scope)
-    if event_id:
-        data = {
+    if not is_feedback_configured():
+        logger.warning("Feedback submission skipped because Sentry feedback is not configured.")
+        return None
+
+    username = name or getpass.getuser()
+    sender_email = email or "unknown@unknown.com"
+
+    with sentry_sdk.new_scope() as scope:
+        scope.set_extra("feedback.name", username)
+        scope.set_extra("feedback.email", sender_email)
+        scope.set_extra("feedback.message", message)
+        event_id = sentry_sdk.capture_message(message=title, level="info", scope=scope)
+
+    if not event_id:
+        logger.debug("Feedback submission failed because no event id was returned.")
+        return None
+
+    submitted = _post_feedback(
+        {
             "comments": message,
             "event_id": event_id,
-            "email": email or "unknown@unknown.com",
-            "name": name or "",
-        }
-
-        res = requests.post(
-            url=FEEDBACK_URL,
-            data=data,
-            headers={"Authorization": f"DSN {SENTRY_DSN}"},
-            timeout=5,
-        )
-        logger.trace(f"Submitted extra feedback. Status code: {res.status_code}.")
-    logger.debug(f"Submitted feedback. Return: {event_id}")
-    return event_id
+            "email": sender_email,
+            "name": username,
+        },
+    )
+    logger.debug(f"Submitted feedback. Return: {event_id if submitted else None}")
+    return event_id if submitted else None
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -114,8 +164,12 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.dialogs.sentry import install_error_monitor
     from qtextra.utils.dev import apply_style, qapplication
 
+    class _Settings:
+        telemetry_enabled = True
+        telemetry_with_locals = True
+
     app = qapplication(1)
-    install_error_monitor()
+    install_error_monitor(_Settings())
     dlg = FeedbackDialog(None)
     apply_style(dlg)
     dlg.show()
