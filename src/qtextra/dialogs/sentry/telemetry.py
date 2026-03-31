@@ -26,7 +26,7 @@ class TelemetryOptInDialog(QtDialog):
 
         self.send_locals.setChecked(with_locals)
         self._update_example()
-        self.resize(760, 700)
+        self.resize(760, 900)
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QVBoxLayout:
@@ -59,9 +59,21 @@ class TelemetryOptInDialog(QtDialog):
 
         summary = QLabel(
             """
-            <b>Included by default</b>: traceback, package version, Qt backend, platform metadata.<br>
-            <b>Optional</b>: local variables from stack frames.<br>
-            <b>Not shown in this preview</b>: any custom tags your application adds during startup.
+            <b>Included by default</b>:
+            <ul style="margin-top: 2px; margin-bottom: 6px; padding-left: 18px;">
+                <li>traceback</li>
+                <li>package version</li>
+                <li>Qt backend</li>
+                <li>platform metadata</li>
+            </ul>
+            <b>Optional</b>:
+            <ul style="margin-top: 2px; margin-bottom: 6px; padding-left: 18px;">
+                <li>local variables from stack frames</li>
+            </ul>
+            <b>Not shown in this preview</b>:
+            <ul style="margin-top: 2px; margin-bottom: 0; padding-left: 18px;">
+                <li>any custom tags your application adds during startup</li>
+            </ul>
             """,
         )
         summary.setWordWrap(True)
@@ -109,7 +121,8 @@ class TelemetryOptInDialog(QtDialog):
     def _set_no(self):
         self._no = True
 
-    def _update_example(self):
+    def _update_example(self) -> None:
+        """Update example event."""
         self._send_locals = self.send_locals.isChecked()
         event = get_sample_event(include_local_variables=self._send_locals)
 
