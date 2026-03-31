@@ -1,7 +1,5 @@
 """QtOverlay example."""
 
-# ruff: noqa: INP001
-
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication, QTextEdit, QVBoxLayout, QWidget
 

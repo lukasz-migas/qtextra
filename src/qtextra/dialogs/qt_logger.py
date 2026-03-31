@@ -187,7 +187,7 @@ class QtLoggerDialog(QtFramelessTool):
 
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent: ty.Optional[QWidget] = None, log_dir: PathLike | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, log_dir: PathLike | None = None) -> None:
         self.log_dir = log_dir
         super().__init__(parent)
         self.setMinimumWidth(600)

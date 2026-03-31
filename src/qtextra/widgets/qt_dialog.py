@@ -195,7 +195,7 @@ class DialogMixin:
             assert len(position) == 4, "`position` argument must have length 4"
             left, top, width, height = position
         else:
-            raise ValueError(
+            raise TypeError(
                 f"Wrong type of position {position}",
             )
 
@@ -257,7 +257,7 @@ class ScreenshotMixin:
         if dialog.exec_():
             pass
 
-    def screenshot(self, path: ty.Optional[str] = None):
+    def screenshot(self, path: str | None = None):
         """Take screenshot of the viewer."""
         from napari._qt.utils import QImg2array
 
@@ -456,7 +456,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
 
     def __init__(
         self,
-        parent: ty.Optional[QWidget],
+        parent: QWidget | None,
         title: str = "",
         position: QPoint | None = None,
         flags: ty.Any = Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Popup,

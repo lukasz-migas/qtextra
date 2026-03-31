@@ -205,10 +205,11 @@ extend-ignore = [
     "TRY003", # tryceratops - avoid specifying long messages outside the exception class
     "COM812",  # flake8-commas - missing trailing comma in a list or tuple
     "G004", # flake8-logging-format - use of f-string in logging functions
+    "PYI051", # flake8-pyi - missing type annotation for self in method"
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*.py" = ["D", "S"]
+"tests/*.py" = ["D", "S", "A"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 # Disallow all relative imports.
