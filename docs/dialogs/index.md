@@ -23,7 +23,6 @@ them is a good next contribution target.
 
 - [Sentry Dialogs](./sentry.md): telemetry opt-in, crash reporting setup, and
   feedback environment variables
-Available dialog docs:
 
-- [`DialogThemeEditor`](./qt_theme_editor.md): live theme editor for colors,
+- [DialogThemeEditor](./qt_theme_editor.md): live theme editor for colors,
   font sizes, and console styles
