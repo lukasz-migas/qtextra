@@ -79,6 +79,25 @@ QLabel#h3 {
   font-size: 18px;
   color: {{ secondary }};
 }
+QLabel#96px {
+    font-size: 96px;
+}
+QLabel#96px_t {
+    font-size: 96px;
+    background: transparent;
+}
+QLabel#96px_300w {
+    font-size: 96px;
+    font-weight: 300;
+}
+
+QLabel#72px {
+    font-size: 72px;
+}
+QLabel#72px_300w {
+    font-size: 72px;
+    font-weight: 300;
+}
 
 QLabel#extra_large_text {
     font-size: {{ increase(font_size, 8) }};
@@ -110,6 +129,14 @@ QLabel#watch_dir {
     font-size: {{ increase(font_size, 2) }};
     font-weight: bold;
     min-height: 80px;
+}
+
+QLabel#match_label {
+    padding: 2px 8px;
+    border-radius: 5px;
+    color: {{ text }};
+    background-color: {{ highlight }};
+    font-weight: 600;
 }
 
 
