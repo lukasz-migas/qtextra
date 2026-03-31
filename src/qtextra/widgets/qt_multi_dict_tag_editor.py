@@ -8,6 +8,7 @@ from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QDoubleValidator, QIntValidator
 from qtpy.QtWidgets import (
     QAbstractItemView,
+    QAbstractScrollArea,
     QComboBox,
     QHeaderView,
     QLineEdit,
@@ -19,6 +20,7 @@ from qtpy.QtWidgets import (
 )
 
 import qtextra.helpers as hp
+from qtextra.widgets.qt_combobox_check import QtCheckableComboBox
 from qtextra.widgets.qt_dict_tag_editor import DictTagValue
 
 TYPE_ROLE = Qt.ItemDataRole.UserRole + 1
@@ -52,6 +54,8 @@ class QtMultiDictTagEditor(QWidget):
         self.case_sensitive = case_sensitive
         self._default_value_placeholder = value_placeholder
         self._samples: list[str] = []
+        self._syncing_selection = False
+        self._syncing_scroll = False
 
         self.search_edit = QLineEdit(self)
         self.search_edit.setPlaceholderText(search_placeholder)
@@ -70,8 +74,8 @@ class QtMultiDictTagEditor(QWidget):
         self.type_combo.addItems(["str", "int", "float", "None"])
         self.type_combo.currentTextChanged.connect(self._on_type_changed)
 
-        self.target_combo = QComboBox(self)
-        self.target_combo.currentTextChanged.connect(self._on_target_changed)
+        self.target_combo = QtCheckableComboBox(self)
+        self.target_combo.evt_checked.connect(self._on_target_checked)
 
         self.add_key_button = QPushButton("Add Key", self)
         self.add_key_button.clicked.connect(self.add_current_key)
@@ -89,15 +93,22 @@ class QtMultiDictTagEditor(QWidget):
         self.value_edit.returnPressed.connect(self.apply_current_value)
         self._on_type_changed(self.type_combo.currentText())
 
-        self.table = QTableWidget(0, 2, self)
-        self.table.setAlternatingRowColors(True)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setMinimumSectionSize(88)
-        self.table.itemSelectionChanged.connect(self._populate_inputs_from_selection)
+        self.key_table = QTableWidget(0, 2, self)
+        self.key_table.setHorizontalHeaderLabels(["Key", "Type"])
+        self.key_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._configure_table(self.key_table)
+
+        self.table = QTableWidget(0, 0, self)
+        self.table.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._configure_table(self.table)
+
+        self.key_table.itemSelectionChanged.connect(self._on_key_selection_changed)
+        self.table.itemSelectionChanged.connect(self._on_sample_selection_changed)
         self.table.cellDoubleClicked.connect(self._on_cell_double_clicked)
+
+        self.key_table.verticalScrollBar().valueChanged.connect(self._sync_scroll_from_key_table)
+        self.table.verticalScrollBar().valueChanged.connect(self._sync_scroll_from_sample_table)
 
         search_row = hp.make_h_layout(self.search_edit, spacing=4, margin=0)
         controls_row = hp.make_h_layout(
@@ -115,7 +126,10 @@ class QtMultiDictTagEditor(QWidget):
         controls_row.setStretch(0, 2)
         controls_row.setStretch(1, 2)
 
-        hp.make_v_layout(search_row, controls_row, self.table, spacing=6, margin=0, parent=self)
+        tables_row = hp.make_h_layout(self.key_table, self.table, spacing=0, margin=0)
+        tables_row.setStretch(1, 1)
+
+        hp.make_v_layout(search_row, controls_row, tables_row, spacing=6, margin=0, parent=self)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.set_samples(samples or [])
@@ -129,11 +143,11 @@ class QtMultiDictTagEditor(QWidget):
         """Set the active sample names."""
         cleaned = [sample.strip() for sample in samples if sample.strip()]
         self._samples = cleaned
-        self.target_combo.blockSignals(True)
-        self.target_combo.clear()
-        self.target_combo.addItem(ALL_SAMPLES_LABEL)
-        self.target_combo.addItems(self._samples)
-        self.target_combo.blockSignals(False)
+        with hp.qt_signals_blocked(self.target_combo):
+            self.target_combo.clear()
+            self.target_combo.addItem(ALL_SAMPLES_LABEL)
+            self.target_combo.addItems(self._samples)
+        self.set_target_samples(list(self._samples))
         self._rebuild_table_headers()
         self._resize_columns()
 
@@ -141,7 +155,7 @@ class QtMultiDictTagEditor(QWidget):
         """Return the current sample dictionaries."""
         exported = {sample: {} for sample in self._samples}
         for row in range(self.table.rowCount()):
-            key_item = self.table.item(row, 0)
+            key_item = self.key_table.item(row, 0)
             if key_item is None:
                 continue
             key = key_item.text()
@@ -193,6 +207,7 @@ class QtMultiDictTagEditor(QWidget):
         value: DictTagValue = None,
         *,
         target_sample: str | None = None,
+        target_samples: list[str] | None = None,
         value_type: str | None = None,
     ) -> bool:
         """Add a key to one sample or all samples."""
@@ -203,12 +218,11 @@ class QtMultiDictTagEditor(QWidget):
             raise TypeError("Value must be str, int, float, or None.")
 
         row = self._ensure_row(display_key)
-        samples = self._target_samples(target_sample)
+        samples = self._target_samples(target_sample=target_sample, target_samples=target_samples)
         if not samples:
             return False
 
-        if value_type is None:
-            value_type = self._infer_type(value)
+        value_type = self._infer_type(value) if value_type is None else value_type
         self._set_row_type(row, value_type)
         for sample in samples:
             self._set_sample_value(row, sample, value, present=True)
@@ -225,6 +239,7 @@ class QtMultiDictTagEditor(QWidget):
         value: DictTagValue,
         *,
         target_sample: str | None = None,
+        target_samples: list[str] | None = None,
         value_type: str | None = None,
     ) -> bool:
         """Set a value for a key in one sample or all samples."""
@@ -235,13 +250,13 @@ class QtMultiDictTagEditor(QWidget):
         if row is None:
             return False
 
-        samples = self._target_samples(target_sample)
+        samples = self._target_samples(target_sample=target_sample, target_samples=target_samples)
         if not samples:
             return False
 
         value_type = self._infer_type(value) if value_type is None else value_type
         self._set_row_type(row, value_type)
-        display_key = self.table.item(row, 0).text() if self.table.item(row, 0) else key.strip()
+        display_key = self.key_table.item(row, 0).text() if self.key_table.item(row, 0) else key.strip()
         for sample in samples:
             self._set_sample_value(row, sample, value, present=True)
             self.evt_value_changed.emit(display_key, sample, value)
@@ -263,7 +278,7 @@ class QtMultiDictTagEditor(QWidget):
         added = self.add_key(
             key,
             value,
-            target_sample=self.current_target_sample(),
+            target_samples=self.current_target_samples(),
             value_type=self.type_combo.currentText(),
         )
         if added:
@@ -276,10 +291,10 @@ class QtMultiDictTagEditor(QWidget):
         """Apply the current value to the selected target for the current key."""
         key = self.key_edit.text().strip()
         if not key:
-            row = self.table.currentRow()
+            row = self._current_row()
             if row < 0:
                 return False
-            item = self.table.item(row, 0)
+            item = self.key_table.item(row, 0)
             if item is None:
                 return False
             key = item.text()
@@ -292,7 +307,7 @@ class QtMultiDictTagEditor(QWidget):
         return self.set_value(
             key,
             value,
-            target_sample=self.current_target_sample(),
+            target_samples=self.current_target_samples(),
             value_type=self.type_combo.currentText(),
         )
 
@@ -301,8 +316,9 @@ class QtMultiDictTagEditor(QWidget):
         row = self._find_row(key)
         if row is None:
             return False
-        key_item = self.table.item(row, 0)
+        key_item = self.key_table.item(row, 0)
         display_key = "" if key_item is None else key_item.text()
+        self.key_table.removeRow(row)
         self.table.removeRow(row)
         self.evt_key_removed.emit(display_key)
         self._emit_items_changed()
@@ -310,17 +326,19 @@ class QtMultiDictTagEditor(QWidget):
 
     def remove_selected_key(self) -> bool:
         """Remove the selected key row."""
-        row = self.table.currentRow()
+        row = self._current_row()
         if row < 0:
             return False
-        key_item = self.table.item(row, 0)
+        key_item = self.key_table.item(row, 0)
         if key_item is None:
             return False
         return self.remove_key(key_item.text())
 
     def clear_items(self, emit_signal: bool = True) -> None:
         """Remove all keys from all samples."""
+        self.key_table.setRowCount(0)
         self.table.setRowCount(0)
+        self.key_table.clearSelection()
         self.table.clearSelection()
         self._resize_columns()
         if emit_signal:
@@ -346,29 +364,70 @@ class QtMultiDictTagEditor(QWidget):
         return item.data(VALUE_ROLE)
 
     def current_target_sample(self) -> str | None:
-        """Return the current target sample, or ``None`` for all samples."""
-        current = self.target_combo.currentText()
-        if current == ALL_SAMPLES_LABEL:
+        """Return the current target sample when exactly one sample is selected."""
+        selected = self.current_target_samples()
+        if len(selected) != 1:
             return None
-        return current or None
+        return selected[0]
+
+    def current_target_samples(self) -> list[str]:
+        """Return the currently selected target samples."""
+        if not self._samples:
+            return []
+        all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
+        all_checked = all_index != -1 and self.target_combo.itemChecked(all_index)
+        selected = [sample for sample in self.target_combo.checked_texts() if sample in self._samples]
+        if all_checked or not selected or len(selected) == len(self._samples):
+            return list(self._samples)
+        return selected
+
+    def set_target_samples(self, samples: list[str]) -> None:
+        """Set the selected target samples."""
+        cleaned = [sample for sample in samples if sample in self._samples]
+        with hp.qt_signals_blocked(self.target_combo):
+            self.target_combo.set_checked_texts([])
+            if not cleaned or len(cleaned) == len(self._samples):
+                all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
+                if all_index != -1:
+                    self.target_combo.setItemChecked(all_index, True)
+            else:
+                all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
+                if all_index != -1:
+                    self.target_combo.setItemChecked(all_index, False)
+                self.target_combo.set_checked_texts(cleaned)
+        self._on_target_changed()
+
+    def _configure_table(self, table: QTableWidget) -> None:
+        table.setAlternatingRowColors(True)
+        table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.verticalHeader().setVisible(False)
+        table.horizontalHeader().setMinimumSectionSize(70)
+        table.setWordWrap(False)
+        table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def _rebuild_table_headers(self) -> None:
-        headers = ["Key", "Type", *self._samples]
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
+        self.key_table.setColumnCount(2)
+        self.key_table.setHorizontalHeaderLabels(["Key", "Type"])
+        self.table.setColumnCount(len(self._samples))
+        self.table.setHorizontalHeaderLabels(self._samples)
 
     def _sample_column(self, sample: str) -> int:
-        return 2 + self._samples.index(sample)
+        return self._samples.index(sample)
 
     def _ensure_row(self, key: str) -> int:
         row = self._find_row(key)
         if row is not None:
             return row
 
-        row = self.table.rowCount()
+        row = self.key_table.rowCount()
+        self.key_table.insertRow(row)
         self.table.insertRow(row)
-        self.table.setItem(row, 0, QTableWidgetItem(key.strip()))
-        self.table.setItem(row, 1, QTableWidgetItem("None"))
+        self.key_table.setItem(row, 0, QTableWidgetItem(key.strip()))
+        self.key_table.setItem(row, 1, QTableWidgetItem("None"))
         for sample in self._samples:
             self.table.setItem(row, self._sample_column(sample), QTableWidgetItem(""))
             self._set_sample_value(row, sample, None, present=False)
@@ -376,8 +435,8 @@ class QtMultiDictTagEditor(QWidget):
 
     def _find_row(self, key: str) -> int | None:
         normalized = self._key_id(key)
-        for row in range(self.table.rowCount()):
-            item = self.table.item(row, 0)
+        for row in range(self.key_table.rowCount()):
+            item = self.key_table.item(row, 0)
             if item is not None and self._key_id(item.text()) == normalized:
                 return row
         return None
@@ -396,15 +455,15 @@ class QtMultiDictTagEditor(QWidget):
             if sample in values:
                 self._set_sample_value(row, sample, values[sample], present=True)
                 if emit_signal:
-                    key_item = self.table.item(row, 0)
+                    key_item = self.key_table.item(row, 0)
                     if key_item is not None:
                         self.evt_value_changed.emit(key_item.text(), sample, values[sample])
 
     def _set_row_type(self, row: int, value_type: str) -> None:
-        type_item = self.table.item(row, 1)
+        type_item = self.key_table.item(row, 1)
         if type_item is None:
             type_item = QTableWidgetItem(value_type)
-            self.table.setItem(row, 1, type_item)
+            self.key_table.setItem(row, 1, type_item)
         type_item.setText(value_type)
         type_item.setData(TYPE_ROLE, value_type)
 
@@ -419,11 +478,21 @@ class QtMultiDictTagEditor(QWidget):
         item.setData(TYPE_ROLE, self._infer_type(value))
         item.setText("" if not present else self._format_value(value))
 
-    def _target_samples(self, target_sample: str | None) -> list[str]:
+    def _target_samples(
+        self,
+        *,
+        target_sample: str | None = None,
+        target_samples: list[str] | None = None,
+    ) -> list[str]:
+        if target_samples is not None:
+            selected = [sample for sample in target_samples if sample in self._samples]
+            if not selected or len(selected) == len(self._samples):
+                return list(self._samples)
+            return selected
         if target_sample is None:
             return list(self._samples)
-        if target_sample not in self._samples:
-            return []
+        if target_sample == ALL_SAMPLES_LABEL or target_sample not in self._samples:
+            return list(self._samples)
         return [target_sample]
 
     def _key_id(self, text: str) -> str:
@@ -439,29 +508,34 @@ class QtMultiDictTagEditor(QWidget):
         normalized = query.strip().casefold()
         for row in range(self.table.rowCount()):
             values = []
+            for column in range(self.key_table.columnCount()):
+                item = self.key_table.item(row, column)
+                if item is not None:
+                    values.append(item.text())
             for column in range(self.table.columnCount()):
                 item = self.table.item(row, column)
                 if item is not None:
                     values.append(item.text())
-            haystack = " ".join(values).casefold()
-            self.table.setRowHidden(row, bool(normalized and normalized not in haystack))
+            hidden = bool(normalized and normalized not in " ".join(values).casefold())
+            self.key_table.setRowHidden(row, hidden)
+            self.table.setRowHidden(row, hidden)
 
     def _populate_inputs_from_selection(self) -> None:
-        row = self.table.currentRow()
+        row = self._current_row()
         if row < 0:
             return
 
-        key_item = self.table.item(row, 0)
-        type_item = self.table.item(row, 1)
+        key_item = self.key_table.item(row, 0)
+        type_item = self.key_table.item(row, 1)
         if key_item is None or type_item is None:
             return
 
         self.key_edit.setText(key_item.text())
         self.type_combo.setCurrentText(type_item.text())
 
-        sample = self.current_target_sample()
-        if sample is not None:
-            item = self.table.item(row, self._sample_column(sample))
+        samples = self.current_target_samples()
+        if len(samples) == 1:
+            item = self.table.item(row, self._sample_column(samples[0]))
             if item is None or not item.data(PRESENT_ROLE):
                 self.value_edit.clear()
             else:
@@ -469,20 +543,43 @@ class QtMultiDictTagEditor(QWidget):
                 self.value_edit.setText("" if value is None else str(value))
             return
 
-        representative = self._representative_row_value(row)
+        representative = self._representative_row_value(row, samples)
         self.value_edit.setText("" if representative is None else str(representative))
 
-    def _on_cell_double_clicked(self, row: int, column: int) -> None:
-        if column < 2 or column >= self.table.columnCount():
+    def _on_key_selection_changed(self) -> None:
+        self._select_row(self.key_table.currentRow(), source="key")
+
+    def _on_sample_selection_changed(self) -> None:
+        self._select_row(self.table.currentRow(), source="sample")
+
+    def _select_row(self, row: int, *, source: str) -> None:
+        if row < 0 or self._syncing_selection:
             return
+        self._syncing_selection = True
+        if source != "key":
+            self.key_table.selectRow(row)
+        if source != "sample":
+            self.table.selectRow(row)
+        self._syncing_selection = False
+        self._populate_inputs_from_selection()
 
-        sample = self._samples[column - 2]
-        self.target_combo.setCurrentText(sample)
-        self.table.selectRow(row)
+    def _current_row(self) -> int:
+        row = self.key_table.currentRow()
+        if row >= 0:
+            return row
+        return self.table.currentRow()
 
-    def _representative_row_value(self, row: int) -> DictTagValue | None:
+    def _on_cell_double_clicked(self, row: int, column: int) -> None:
+        if column < 0 or column >= self.table.columnCount():
+            return
+        self.set_target_samples([self._samples[column]])
+        self._select_row(row, source="sample")
+
+    def _representative_row_value(self, row: int, samples: list[str] | None = None) -> DictTagValue | None:
+        if samples is None:
+            samples = list(self._samples)
         values: list[DictTagValue] = []
-        for sample in self._samples:
+        for sample in samples:
             item = self.table.item(row, self._sample_column(sample))
             if item is None or not item.data(PRESENT_ROLE):
                 continue
@@ -494,9 +591,39 @@ class QtMultiDictTagEditor(QWidget):
             return first
         return None
 
-    def _on_target_changed(self, text: str) -> None:
+    def _on_target_checked(self, index: int, checked: bool) -> None:
+        if index == self.target_combo.findText(ALL_SAMPLES_LABEL) and checked:
+            with hp.qt_signals_blocked(self.target_combo):
+                for row in range(1, self.target_combo.count()):
+                    self.target_combo.setItemChecked(row, False)
+        elif index > 0 and checked:
+            all_index = self.target_combo.findText(ALL_SAMPLES_LABEL)
+            if all_index != -1:
+                with hp.qt_signals_blocked(self.target_combo):
+                    self.target_combo.setItemChecked(all_index, False)
+        self._on_target_changed()
+
+    def _on_target_changed(self) -> None:
         self._populate_inputs_from_selection()
-        self.evt_target_changed.emit(text)
+        selected = self.current_target_samples()
+        if len(selected) == len(self._samples):
+            self.evt_target_changed.emit(ALL_SAMPLES_LABEL)
+        else:
+            self.evt_target_changed.emit(", ".join(selected))
+
+    def _sync_scroll_from_key_table(self, value: int) -> None:
+        if self._syncing_scroll:
+            return
+        self._syncing_scroll = True
+        self.table.verticalScrollBar().setValue(value)
+        self._syncing_scroll = False
+
+    def _sync_scroll_from_sample_table(self, value: int) -> None:
+        if self._syncing_scroll:
+            return
+        self._syncing_scroll = True
+        self.key_table.verticalScrollBar().setValue(value)
+        self._syncing_scroll = False
 
     def _coerce_value(self, text: str, value_type: str) -> DictTagValue:
         if value_type == "str":
@@ -563,13 +690,31 @@ class QtMultiDictTagEditor(QWidget):
         self.evt_items_changed.emit(self.export_dicts())
 
     def _resize_columns(self) -> None:
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-        self.table.resizeColumnToContents(1)
-        self.table.setColumnWidth(1, max(88, self.table.columnWidth(1) + 12))
-        for column in range(2, self.table.columnCount()):
-            header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
+        self.key_table.resizeRowsToContents()
+        self.table.resizeRowsToContents()
+        for row in range(self.key_table.rowCount()):
+            height = max(self.key_table.rowHeight(row), self.table.rowHeight(row))
+            self.key_table.setRowHeight(row, height)
+            self.table.setRowHeight(row, height)
+
+        key_header = self.key_table.horizontalHeader()
+        key_header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        key_header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        self.key_table.resizeColumnToContents(0)
+        self.key_table.resizeColumnToContents(1)
+        self.key_table.setColumnWidth(0, max(120, self.key_table.columnWidth(0) + 16))
+        self.key_table.setColumnWidth(1, max(88, self.key_table.columnWidth(1) + 12))
+        self.key_table.setFixedWidth(
+            self.key_table.verticalHeader().width()
+            + self.key_table.columnWidth(0)
+            + self.key_table.columnWidth(1)
+            + self.key_table.frameWidth() * 2
+            + 2,
+        )
+
+        sample_header = self.table.horizontalHeader()
+        for column in range(self.table.columnCount()):
+            sample_header.setSectionResizeMode(column, QHeaderView.ResizeMode.Fixed)
             self.table.resizeColumnToContents(column)
             self.table.setColumnWidth(column, max(110, self.table.columnWidth(column) + 12))
 
@@ -579,6 +724,8 @@ class QtMultiDictTagEditor(QWidget):
     exportDicts = export_dicts
     setSamples = set_samples
     getSampleNames = sample_names
+    setTargetSamples = set_target_samples
+    getTargetSamples = current_target_samples
     addKey = add_key
     addCurrentKey = add_current_key
     setValue = set_value

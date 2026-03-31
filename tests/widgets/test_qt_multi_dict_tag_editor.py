@@ -28,7 +28,9 @@ def test_qt_multi_dict_tag_editor_exports_nested_dicts(qtbot):
         "sample_b": {"alpha": 2, "gamma": None},
     }
     assert changed[-1] == widget.export_dicts()
-    assert widget.table.columnCount() == 4
+    assert widget.key_table.columnCount() == 2
+    assert widget.table.columnCount() == 2
+    assert widget.target_combo.itemText(0) == "All samples"
 
 
 def test_qt_multi_dict_tag_editor_adds_key_to_all_samples(qtbot):
@@ -83,18 +85,53 @@ def test_qt_multi_dict_tag_editor_current_controls_target_selected_sample(qtbot)
     widget.key_edit.setText("count")
     widget.value_edit.setText("3")
     widget.type_combo.setCurrentText("int")
-    widget.target_combo.setCurrentText("sample_b")
+    widget.set_target_samples(["sample_b"])
     assert widget.add_current_key() is True
 
     widget.key_edit.setText("count")
     widget.value_edit.setText("4")
     widget.type_combo.setCurrentText("int")
-    widget.target_combo.setCurrentText("sample_b")
+    widget.set_target_samples(["sample_b"])
     assert widget.apply_current_value() is True
 
     assert widget.export_dicts() == {
         "sample_a": {},
         "sample_b": {"count": 4},
+    }
+
+
+def test_qt_multi_dict_tag_editor_current_controls_multiple_selected_samples(qtbot):
+    widget = QtMultiDictTagEditor(samples=["sample_a", "sample_b", "sample_c"])
+    qtbot.addWidget(widget)
+
+    widget.key_edit.setText("group")
+    widget.value_edit.setText("treated")
+    widget.type_combo.setCurrentText("str")
+    widget.set_target_samples(["sample_a", "sample_b"])
+    assert widget.add_current_key() is True
+
+    assert widget.export_dicts() == {
+        "sample_a": {"group": "treated"},
+        "sample_b": {"group": "treated"},
+        "sample_c": {},
+    }
+
+
+def test_qt_multi_dict_tag_editor_all_samples_option_targets_everything(qtbot):
+    widget = QtMultiDictTagEditor(samples=["sample_a", "sample_b"])
+    qtbot.addWidget(widget)
+
+    widget.set_target_samples([])
+    assert widget.current_target_samples() == ["sample_a", "sample_b"]
+
+    widget.key_edit.setText("status")
+    widget.value_edit.setText("done")
+    widget.type_combo.setCurrentText("str")
+    assert widget.add_current_key() is True
+
+    assert widget.export_dicts() == {
+        "sample_a": {"status": "done"},
+        "sample_b": {"status": "done"},
     }
 
 
@@ -125,14 +162,14 @@ def test_qt_multi_dict_tag_editor_selection_populates_inputs_for_target(qtbot):
         },
     )
 
-    widget.target_combo.setCurrentText("sample_b")
+    widget.set_target_samples(["sample_b"])
     widget.table.selectRow(0)
 
     assert widget.key_edit.text() == "alpha"
     assert widget.type_combo.currentText() == "int"
     assert widget.value_edit.text() == "2"
 
-    widget.target_combo.setCurrentText("All samples")
+    widget.set_target_samples(["sample_a", "sample_b"])
     assert widget.value_edit.text() == ""
 
 
@@ -146,12 +183,26 @@ def test_qt_multi_dict_tag_editor_double_click_targets_clicked_sample(qtbot):
         },
     )
 
-    widget._on_cell_double_clicked(0, 3)
+    widget._on_cell_double_clicked(0, 1)
 
-    assert widget.target_combo.currentText() == "sample_b"
+    assert widget.current_target_samples() == ["sample_b"]
     assert widget.key_edit.text() == "alpha"
     assert widget.value_edit.text() == "2"
     assert widget.type_combo.currentText() == "int"
+
+
+def test_qt_multi_dict_tag_editor_key_and_type_columns_resize_to_contents(qtbot):
+    widget = QtMultiDictTagEditor()
+    qtbot.addWidget(widget)
+    widget.set_items(
+        {
+            "sample_a": {"very_long_key_name": "alpha"},
+            "sample_b": {"very_long_key_name": "beta"},
+        },
+    )
+
+    assert widget.key_table.columnWidth(0) >= 120
+    assert widget.key_table.columnWidth(1) >= 88
 
 
 def test_qt_multi_dict_tag_editor_type_selection_updates_validator(qtbot):

@@ -31,12 +31,28 @@ editor.set_items(
             "group": "treated",
             "replicate": 3,
         },
+        "sample_d": {
+            "group": "treated",
+            "replicate": 3,
+        },
+        "sample_e": {
+            "group": "treated",
+            "replicate": 3,
+        },
+        "sample_f": {
+            "group": "treated",
+            "replicate": 3,
+        },
+        "sample_h": {
+            "group": "treated",
+            "replicate": 3,
+        },
     },
 )
 layout.addWidget(editor)
 
 layout.addWidget(QLabel("Target one sample or all samples"))
-editor.target_combo.setCurrentText("sample_b")
+editor.set_target_samples(["sample_b", "sample_c"])
 editor.table.selectRow(0)
 layout.addStretch()
 
