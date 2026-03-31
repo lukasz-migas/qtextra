@@ -30,7 +30,7 @@ class TelemetryOptInDialog(QtDialog):
 
     # noinspection PyAttributeOutsideInit
     def make_panel(self) -> QVBoxLayout:
-        """Dialog to provide feedback."""
+        """Create the telemetry/error-reporting opt-in dialog panel and return its layout."""
         btn_box = QDialogButtonBox()
         btn_box.addButton("Enable error reporting", QDialogButtonBox.ButtonRole.AcceptRole)
         no = btn_box.addButton("Not now", QDialogButtonBox.ButtonRole.RejectRole)
