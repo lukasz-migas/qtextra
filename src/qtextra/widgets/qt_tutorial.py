@@ -1,8 +1,10 @@
 """Tutorial widget."""
 
-import typing as ty
-from enum import Enum
+from __future__ import annotations
 
+import typing as ty
+
+from koyo.typing import StrEnum
 from pydantic import BaseModel, ConfigDict, field_validator
 from qtpy.QtCore import QEasingCurve, QPoint, Qt, QVariantAnimation
 from qtpy.QtGui import QKeyEvent
@@ -11,7 +13,7 @@ from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBo
 import qtextra.helpers as hp
 
 
-class Position(str, Enum):
+class Position(StrEnum):
     """Position."""
 
     CENTER = "center"
@@ -58,13 +60,13 @@ class TutorialStep(BaseModel):
     widget: QWidget
     position: Position = Position.RIGHT
     position_offset: tuple[int, int] = (0, 0)
-    func: ty.Optional[tuple[ty.Callable, ...]] = None
+    func: tuple[ty.Callable, ...] | None = None
 
     @field_validator("widget", mode="before")
     def validate_widget(widget: QWidget) -> QWidget:
         """Validate widget."""
         if not isinstance(widget, QWidget):
-            raise ValueError(f"Invalid widget '{widget}'.")
+            raise TypeError(f"Invalid widget '{widget}'.")
         return widget
 
 
@@ -78,10 +80,10 @@ class QtTutorial(QDialog):
     ALLOW_CHEVRON = True
 
     _current = -1
-    steps: ty.List[TutorialStep]
-    chevrons: ty.Dict[str, ty.Optional[QWidget]]
+    steps: list[TutorialStep]
+    chevrons: dict[str, QWidget | None]
 
-    def __init__(self, parent: ty.Optional[QWidget] = None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent=parent)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -291,7 +293,7 @@ class QtTutorial(QDialog):
         elif position in ["top", "top_left", "top_right"]:
             x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
             y = rect_of_widget.bottom() + y_pad - y_pos_offset
-        elif position in ["center"]:
+        elif position == "center":
             x = rect_of_widget.center().x() - popup_size.width() / 2
             y = rect_of_widget.center().y() - popup_size.height() / 2
         else:

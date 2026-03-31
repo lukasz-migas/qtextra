@@ -35,7 +35,7 @@ def define_env(env: MacrosPlugin):
             src = src.replace("widget.exec_()", "widget.processEvents()")
             src = src.replace("app.exec_()", "app.processEvents()")
 
-            exec(src)
+            exec(src)  # noqa: S102
             _grab(dest, width)
             print("Grabbed widget image:", dest)
         return f"![{page.title}](../{dest.parent.name}/{dest.name}){{ loading=lazy; width={width} }}\n\n"

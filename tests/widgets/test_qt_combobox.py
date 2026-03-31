@@ -1,5 +1,7 @@
 """Tests for combobox widgets."""
 
+from typing import ClassVar
+
 import pytest
 from qtpy.QtWidgets import QComboBox
 
@@ -108,7 +110,7 @@ class TestMultiItemRow:
 
 
 class TestMultiPanel:
-    ITEMS = ["Alpha", "Beta", "Gamma"]
+    ITEMS: ClassVar[list[str]] = ["Alpha", "Beta", "Gamma"]
 
     @pytest.fixture
     def panel(self, qtbot):
@@ -148,7 +150,7 @@ class TestMultiPanel:
 
 
 class TestMultiSelectComboBox:
-    ITEMS = ["One", "Two", "Three"]
+    ITEMS: ClassVar[list[str]] = ["One", "Two", "Three"]
 
     @pytest.fixture
     def combo(self, qtbot):
@@ -186,7 +188,7 @@ class TestMultiSelectComboBox:
 
 
 class TestQtSearchComboBox:
-    ITEMS = ["Cat", "Dog", "Bird"]
+    ITEMS: ClassVar[list[str]] = ["Cat", "Dog", "Bird"]
 
     @pytest.fixture
     def combo(self, qtbot):
@@ -229,7 +231,7 @@ class TestQtSearchComboBox:
 class TestSearchPanel:
     from qtextra.widgets.qt_combobox_search import _SearchPanel
 
-    ITEMS = ["Alpha", "Beta", "Gamma", "Delta"]
+    ITEMS: ClassVar[list[str]] = ["Alpha", "Beta", "Gamma", "Delta"]
 
     @pytest.fixture
     def panel(self, qtbot):

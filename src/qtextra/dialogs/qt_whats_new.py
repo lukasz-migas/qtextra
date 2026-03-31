@@ -253,8 +253,8 @@ class WhatsNewDialog(QtDialog):
         self._dots = _DotIndicator(len(self._pages))
         self._dots.evt_clicked.connect(self._go_to)
         self._skip_btn = hp.make_btn(self, "Skip", func=self.reject, object_name="cancel_btn")
-        self._prev_btn = hp.make_btn(self, "‹ Previous", func=self._prev, bold=True)
-        self._next_btn = hp.make_btn(self, "Next ›", func=self._next)
+        self._prev_btn = hp.make_btn(self, "< Previous", func=self._prev, bold=True)
+        self._next_btn = hp.make_btn(self, "Next >", func=self._next)
 
         # Equal-stretch left/right sections keep dots perfectly centred
         left_l = hp.make_h_layout(self._skip_btn, margin=0, stretch_after=True)
@@ -286,7 +286,7 @@ class WhatsNewDialog(QtDialog):
         self._prev_btn.setEnabled(idx > 0)
 
         is_last = idx == len(self._pages) - 1
-        self._next_btn.setText("Done" if is_last else "Next ›")
+        self._next_btn.setText("Done" if is_last else "Next >")
         hp.set_object_name(self._next_btn, object_name="success_btn" if is_last else "")
 
         with contextlib.suppress(RuntimeError):

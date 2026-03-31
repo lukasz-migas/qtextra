@@ -274,7 +274,13 @@ class QtQtaNotificationLabel(QtQtaLabel):
     """Label with a small dot to indicate notifications."""
 
     STATES = ("", "success", "info", "warning", "error", "critical")
-    COLORS = {"info": "#017AFF", "critical": "#54100D", "error": "#FF0000", "warning": "#FF7F00", "success": "#00FF00"}
+    COLORS: ty.ClassVar[dict[str, str]] = {
+        "info": "#017AFF",
+        "critical": "#54100D",
+        "error": "#FF0000",
+        "warning": "#FF7F00",
+        "success": "#00FF00",
+    }
     _state = ""
 
     @property

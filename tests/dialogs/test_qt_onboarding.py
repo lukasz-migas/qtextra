@@ -37,7 +37,7 @@ def test_onboarding_dialog_navigation(qtbot, pages) -> None:
     assert dialog.current_index() == 0
     assert dialog.back_button.isEnabled() is False
     assert dialog.next_button.isVisible() is True
-    assert dialog.next_button.text() == "Next ›"
+    assert dialog.next_button.text() == "Next >"
 
     dialog.next_page()
     assert dialog.current_index() == 1

@@ -28,7 +28,7 @@ def _ipython_has_eventloop() -> bool:
     if not ipy_module:
         return False
 
-    shell: InteractiveShell = ipy_module.get_ipython()  # type: ignore
+    shell = ipy_module.get_ipython()
     if not shell:
         return False
 
@@ -113,5 +113,5 @@ def qt_might_be_rich_text(text) -> bool:
 
     try:
         return _Qt.mightBeRichText(text)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return bool(RICH_TEXT_PATTERN.search(text))

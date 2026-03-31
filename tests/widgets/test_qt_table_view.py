@@ -177,7 +177,7 @@ class TestModel:
     def test_get_row_id_for_values(self, qtbot, populated_table):
         # After ascending sort: Alice=row0, Bob=row1, Carol=row2
         col_data = populated_table.get_col_data(0)
-        alice_row = col_data.index("Alice")
+        col_data.index("Alice")
         carol_row = col_data.index("Carol")
         bob_row = col_data.index("Bob")
 

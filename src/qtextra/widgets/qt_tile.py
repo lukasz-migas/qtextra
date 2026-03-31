@@ -19,7 +19,7 @@ class Tile(BaseModel):
     description: str
     icon: str | None = ""
     func: ty.Callable | None = None
-    icon_kws: ty.Dict[str, ty.Any] | None = None
+    icon_kws: dict[str, ty.Any] | None = None
     warning: str = ""
 
     @field_validator("func", mode="before")

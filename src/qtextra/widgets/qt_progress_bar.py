@@ -1,5 +1,9 @@
 """Loading bar."""
 
+from __future__ import annotations
+
+from typing import ClassVar
+
 from qtpy.QtCore import QEasingCurve, QPropertyAnimation, QRectF, Qt
 from qtpy.QtGui import QColor, QPainter
 from qtpy.QtWidgets import QProgressBar
@@ -16,7 +20,7 @@ class QtLineProgressBar(QProgressBar):
     # Enum attributes
     TOP = 0
     BOTTOM = 1
-    Instances = {}
+    Instances: ClassVar[dict[QtLineProgressBar, QtLineProgressBar]] = {}
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(*args, parent=parent, **kwargs)

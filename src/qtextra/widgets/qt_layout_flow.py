@@ -1,3 +1,4 @@
+# ruff: noqa: D101,D102
 """Qt flow layout."""
 
 from __future__ import annotations

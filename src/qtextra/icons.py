@@ -1,5 +1,7 @@
 """Base icon functions."""
 
+from __future__ import annotations
+
 import re
 import typing as ty
 from functools import lru_cache
@@ -32,7 +34,7 @@ def get_raw_svg(path: str) -> str:
 
 
 @lru_cache
-def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: ty.Optional[str] = None, opacity=1) -> str:
+def get_colorized_svg(path_or_xml: str | Path, color: str | None = None, opacity=1) -> str:
     """Return a colorized version of the SVG XML at ``path``.
 
     Raises
@@ -53,11 +55,11 @@ def get_colorized_svg(path_or_xml: ty.Union[str, Path], color: ty.Optional[str] 
 
 
 def generate_colorized_svgs(
-    svg_paths: ty.Iterable[ty.Union[str, Path]],
-    colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
+    svg_paths: ty.Iterable[str | Path],
+    colors: ty.Iterable[str | tuple[str, str]],
     opacities: ty.Iterable[float] = (1.0,),
-    theme_override: ty.Optional[ty.Dict[str, str]] = None,
-) -> ty.Iterator[ty.Tuple[str, str]]:
+    theme_override: dict[str, str] | None = None,
+) -> ty.Iterator[tuple[str, str]]:
     """Helper function to generate colorized SVGs.
 
     This is a generator that yields tuples of ``(alias, icon_xml)`` for every
@@ -116,11 +118,11 @@ def generate_colorized_svgs(
 
 
 def write_colorized_svgs(
-    dest: ty.Union[str, Path],
-    svg_paths: ty.Iterable[ty.Union[str, Path]],
-    colors: ty.Iterable[ty.Union[str, ty.Tuple[str, str]]],
+    dest: str | Path,
+    svg_paths: ty.Iterable[str | Path],
+    colors: ty.Iterable[str | tuple[str, str]],
     opacities: ty.Iterable[float] = (1.0,),
-    theme_override: ty.Optional[ty.Dict[str, str]] = None,
+    theme_override: dict[str, str] | None = None,
 ) -> None:
     """Write colorized SVGs to a directory."""
     dest = Path(dest)

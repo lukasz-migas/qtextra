@@ -252,8 +252,8 @@ class OnboardingDialog(QtDialog):
         self.dont_show_again_checkbox.toggled.connect(self._on_dont_show_again_toggled)
 
         self.dots = _DotIndicator(len(self.pages), self)
-        self.back_button = hp.make_btn(self, "‹ Previous", func=self.previous_page, bold=True)
-        self.next_button = hp.make_btn(self, "Next ›", func=self.next_page, object_name="success_btn")
+        self.back_button = hp.make_btn(self, "< Previous", func=self.previous_page, bold=True)
+        self.next_button = hp.make_btn(self, "Next >", func=self.next_page, object_name="success_btn")
 
         left_layout = hp.make_h_layout(self.skip_button, margin=0, stretch_after=True)
         right_layout = hp.make_h_layout(self.back_button, self.next_button, margin=0, spacing=8, stretch_before=True)
@@ -312,7 +312,7 @@ class OnboardingDialog(QtDialog):
         self.back_button.setEnabled(idx > 0)
         self.dots.set_current_index(idx)
         is_last = idx == last
-        self.next_button.setText("Done" if is_last else "Next ›")
+        self.next_button.setText("Done" if is_last else "Next >")
 
     def _on_skip(self) -> None:
         """Skip the onboarding flow."""
@@ -385,7 +385,7 @@ if __name__ == "__main__":
                 or skip them entirely.
             </p>
             <p>
-                You can also persist the <i>Don’t show again</i> setting using
+                You can also persist the <i>Don't show again</i> setting using
                 QSettings.
             </p>
             """,

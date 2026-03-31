@@ -1,6 +1,8 @@
 """Slightly modified QToolButton with nicer interface."""
 
-from typing import Callable, List, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Callable
 
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QCursor, QIcon
@@ -12,7 +14,7 @@ class QtToolButton(QToolButton):
 
     _icon, _pixmap = None, None
 
-    def __init__(self, parent, text="", icon: Union[QIcon, None] = None):
+    def __init__(self, parent, text: str = "", icon: QIcon | None = None):
         super().__init__(parent)
         self.setText(text)
         self.setPopupMode(self.ToolButtonPopupMode.MenuButtonPopup)
@@ -23,10 +25,10 @@ class QtToolButton(QToolButton):
         if icon:
             self.set_icon(icon)
 
-    def set_menu(self, menu: QMenu, action: Optional[Callable] = None, auto_pop: bool = True) -> None:
+    def set_menu(self, menu: QMenu, action: Callable | None = None, auto_pop: bool = True) -> None:
         """Set tool button menu."""
         if not isinstance(menu, QMenu):
-            raise ValueError("'menu' argument must be a QMenu instance")
+            raise TypeError("'menu' argument must be a QMenu instance")
 
         self.setMenu(menu)
         if action:
@@ -36,7 +38,7 @@ class QtToolButton(QToolButton):
         if auto_pop:
             self.pressed.connect(self.autopop)
 
-    def set_icon(self, icon: Union[QIcon, None]) -> None:
+    def set_icon(self, icon: QIcon | None) -> None:
         """Set the icon for the status bar widget."""
         if icon is not None and isinstance(icon, QIcon):
             self._icon = icon
@@ -44,7 +46,7 @@ class QtToolButton(QToolButton):
             self.setIcon(icon)
             self.setMinimumWidth(37)  # based on an icon of size (16, 16)
 
-    def set_size(self, size: Union[List, Tuple]) -> None:
+    def set_size(self, size: list | tuple) -> None:
         """Set size of the button."""
         if isinstance(size, (list, tuple)):
             self.setMinimumSize(QSize(*size))

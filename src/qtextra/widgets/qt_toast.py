@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Toast."""
 
 from __future__ import annotations

@@ -140,7 +140,7 @@ class QtSystemSummaryWidget(QWidget):
 
         try:
             mem = psutil.Process().memory_info().rss
-        except Exception:
+        except psutil.Error:
             mem = 0
 
         pct = round(100 * mem / total, 2) if total else 0

@@ -1,5 +1,7 @@
 """Base config."""
 
+from __future__ import annotations
+
 import glob
 import os
 import typing as ty
@@ -18,7 +20,7 @@ class ConfigBase(QObject):
 
     CONFIG_DIR = USER_CONFIG_DIR
     DEFAULT_CONFIG_NAME: str = "config.json"
-    DEFAULT_CONFIG_GROUPS: ty.Tuple[str, ...] = ()
+    DEFAULT_CONFIG_GROUPS: tuple[str, ...] = ()
 
     _is_saved: bool = False
 
@@ -38,7 +40,7 @@ class ConfigBase(QObject):
     def saved(self, value: bool):
         self._is_saved = value
 
-    def save_config(self, path: ty.Optional[str] = None):
+    def save_config(self, path: str | None = None):
         """Export configuration file to JSON file."""
         if path is None:
             path = self.output_path
@@ -51,11 +53,11 @@ class ConfigBase(QObject):
         logger.debug(f"Saved themes to `{path}`")
 
     @staticmethod
-    def _get_config_parameters(config: ty.Dict) -> ty.Dict:
+    def _get_config_parameters(config: dict[ty.Any, ty.Any]) -> dict[ty.Any, ty.Any]:
         """Get configuration parameters."""
         return config
 
-    def load_config(self, path: ty.Optional[str] = None, check_type: bool = True):
+    def load_config(self, path: str | None = None, check_type: bool = True):
         """Load configuration from JSON file."""
         from json.decoder import JSONDecodeError
 
@@ -109,7 +111,7 @@ class ConfigBase(QObject):
 
         self.evt_config_loaded.emit()
 
-    def _set_config_parameters(self, config: ty.Dict):
+    def _set_config_parameters(self, config: dict[ty.Any, ty.Any]):
         """Set configuration parameters."""
 
     def _check_type(self, name, current_value, new_value):
@@ -128,9 +130,10 @@ class ConfigBase(QObject):
             validator = getattr(self, f"{name}_validator")
             try:
                 new_value = validator(new_value)
-                return True, new_value
-            except Exception:
+            except (TypeError, ValueError):
                 pass
+            else:
+                return True, new_value
         if current_type in [int, float] and new_type in [int, float]:
             return True, None
         if current_type in [list, tuple] and new_type in [list, tuple]:
@@ -141,9 +144,9 @@ class ConfigBase(QObject):
 
 
 def _get_previous_configs(
-    base_dir: ty.Optional[str] = None,
+    base_dir: str | None = None,
     filename: str = "qtextra-config.json",
-) -> ty.Dict[str, str]:
+) -> dict[str, str]:
     """Return dictionary of version : path of previous configuration files."""
     if base_dir is None:
         base_dir = USER_CONFIG_DIR

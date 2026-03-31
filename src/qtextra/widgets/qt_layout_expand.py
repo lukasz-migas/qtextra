@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Expanding layout."""
 
 from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt

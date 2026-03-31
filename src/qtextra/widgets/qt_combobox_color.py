@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Combobox with color swatches."""
 
 from __future__ import annotations

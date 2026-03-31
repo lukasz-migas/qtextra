@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Selection list."""
 
 from __future__ import annotations
@@ -189,10 +190,10 @@ class QtSelectionList(QWidget):
             items, checked = order_by_index(items, index), order_by_index(checked, index)  # type: ignore[assignment]
 
         self.list_widget.clear()
-        for text, checked in zip(items, checked):
+        for text, is_checked in zip(items, checked):
             item = QListWidgetItem(text)
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Unchecked if not checked else Qt.CheckState.Checked)
+            item.setCheckState(Qt.CheckState.Unchecked if not is_checked else Qt.CheckState.Checked)
             self.list_widget.addItem(item)
         self.on_selection_changed()
 

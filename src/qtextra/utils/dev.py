@@ -21,6 +21,7 @@ if is_installed("qtextraplot"):
 
 
 def exec_(app: QApplication) -> None:
+    """Run the Qt application with interrupt support."""
     from napari._qt.utils import _maybe_allow_interrupt
 
     with _maybe_allow_interrupt(app):
@@ -149,10 +150,7 @@ def qframe(
     frame = QtWidgets.QWidget()
     layout = None
     if with_layout:
-        if horz:
-            layout = QtWidgets.QHBoxLayout()
-        else:
-            layout = QtWidgets.QVBoxLayout()  # type: ignore[assignment]
+        layout = QtWidgets.QHBoxLayout() if horz else QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
             w = qdev(modules=modules)
             # w.setMaximumHeight(300)

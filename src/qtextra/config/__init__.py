@@ -8,4 +8,4 @@ def get_settings():
     """Get settings."""
 
 
-__all__ = ["EVENTS", "THEMES", "Themes", "get_settings", "is_dark"]
+__all__ = ["EVENTS", "THEMES", "QtStyler", "Themes", "get_settings", "is_dark"]

@@ -1,11 +1,12 @@
+# ruff: noqa: D102,D417
 """Info widgets."""
 
 from __future__ import annotations
 
 import weakref
-from enum import Enum
-from typing import Union
+from typing import ClassVar, Union
 
+from koyo.typing import StrEnum
 from qtpy.QtCore import (
     QEasingCurve,
     QEvent,
@@ -27,19 +28,19 @@ from qtextra.utils.wrap import TextWrap
 from qtextra.widgets.qt_label_icon import QtSeverityLabel
 
 
-class ToastPosition(Enum):
+class ToastPosition(StrEnum):
     """info toast position."""
 
-    TOP = 0
-    BOTTOM = 1
-    TOP_LEFT = 2
-    TOP_RIGHT = 3
-    BOTTOM_LEFT = 4
-    BOTTOM_RIGHT = 5
-    NONE = 6
+    TOP = "top"
+    BOTTOM = "bottom"
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+    NONE = "none"
 
 
-TOAST_POSITION_DICT = {
+TOAST_POSITION_DICT: dict[str, ToastPosition] = {
     "top": ToastPosition.TOP,
     "bottom": ToastPosition.BOTTOM,
     "top_left": ToastPosition.TOP_LEFT,
@@ -352,7 +353,7 @@ class QtInfoToastManager(QObject):
     """info toast manager."""
 
     _instance = None
-    managers = {}
+    managers: ClassVar[dict[ToastPosition, type[QtInfoToastManager]]] = {}
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
