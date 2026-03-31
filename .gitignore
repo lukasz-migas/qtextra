@@ -109,3 +109,5 @@ _version.py
 .idea/
 
 docs/_auto_images/
+scratch/
+.claude/worktrees/
