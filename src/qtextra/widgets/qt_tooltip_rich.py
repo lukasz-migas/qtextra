@@ -478,6 +478,8 @@ class QtRichToolTip(QWidget):
     def _fade_out(self) -> None:
         """Start the fade-out animation, unless the mouse is hovering."""
         if self._hovered or self._pointer_interacting:
+            if self.windowOpacity() == 0:
+                self.setWindowOpacity(1.0)
             return
         self._opacity_anim.stop()
         self._opacity_anim.setDuration(120)
