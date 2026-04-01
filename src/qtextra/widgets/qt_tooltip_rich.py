@@ -7,6 +7,7 @@ the documentation popups found in JetBrains IDEs (e.g. PyCharm).
 
 from __future__ import annotations
 
+import contextlib
 import re
 import typing as ty
 from pathlib import Path
@@ -25,7 +26,7 @@ from qtpy.QtWidgets import (
 )
 
 import qtextra.helpers as hp
-from qtextra.config import is_dark
+from qtextra.config import THEMES, is_dark
 
 #: Grace period (ms) before closing on mouse-leave or focus loss.
 _DISMISS_DELAY_MS: int = 400
@@ -145,7 +146,10 @@ class _ContentLabel(QLabel):
         self.setWordWrap(True)
         self.setOpenExternalLinks(True)
         self.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextBrowserInteraction | Qt.TextInteractionFlag.LinksAccessibleByMouse
+            Qt.TextInteractionFlag.TextBrowserInteraction
+            | Qt.TextInteractionFlag.LinksAccessibleByMouse
+            | Qt.TextInteractionFlag.TextSelectableByMouse
+            | Qt.TextInteractionFlag.TextSelectableByKeyboard
         )
         self.setText(html)
 
@@ -330,6 +334,8 @@ class QtRichToolTip(QWidget):
         self._duration = duration
         self._content = content_widget
         self._hovered: bool = False
+        self._sticky_after_hover: bool = False
+        self._pointer_interacting: bool = False
 
         # window flags
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -371,6 +377,38 @@ class QtRichToolTip(QWidget):
         app = QApplication.instance()
         if app is not None:
             app.installEventFilter(self)
+
+        self._install_interaction_filters()
+        self._apply_theme()
+
+    def _apply_theme(self) -> None:
+        """Apply the current theme stylesheet to this top-level popup."""
+        THEMES.set_theme_stylesheet(self)
+
+    def _cancel_dismiss(self) -> None:
+        """Stop any pending auto-dismiss or leave-dismiss."""
+        self._dismiss_timer.stop()
+        self._leave_timer.stop()
+
+    def _schedule_leave_dismiss(self) -> None:
+        """Dismiss after the pointer leaves and the user stops interacting."""
+        if self._hovered or self._pointer_interacting:
+            return
+        self._leave_timer.start()
+
+    def _cursor_inside_tooltip(self) -> bool:
+        """Return whether the global cursor is currently inside the tooltip."""
+        return self.frameGeometry().contains(QCursor.pos())
+
+    def _install_interaction_filters(self) -> None:
+        """Track pointer activity on the tooltip and all child widgets."""
+        self.installEventFilter(self)
+        for widget in self.findChildren(QWidget):
+            widget.installEventFilter(self)
+
+    def _is_tooltip_widget(self, obj: object) -> bool:
+        """Return whether *obj* is this tooltip or one of its descendants."""
+        return isinstance(obj, QWidget) and (obj is self or self.isAncestorOf(obj))
 
     def _apply_shadow(self) -> None:
         """Apply a drop-shadow effect to the bubble frame."""
@@ -437,19 +475,21 @@ class QtRichToolTip(QWidget):
         self._opacity_anim.setEndValue(1.0)
         self._opacity_anim.start()
 
-        if self._duration >= 0:
+        if self._duration >= 0 and not self._sticky_after_hover:
             self._dismiss_timer.start(self._duration)
 
         super().showEvent(event)
 
     def _fade_out(self) -> None:
         """Start the fade-out animation, unless the mouse is hovering."""
-        if self._hovered:
+        if self._hovered or self._pointer_interacting:
             return
         self._opacity_anim.stop()
         self._opacity_anim.setDuration(120)
         self._opacity_anim.setStartValue(self.windowOpacity())
         self._opacity_anim.setEndValue(0.0)
+        with contextlib.suppress(RuntimeError, TypeError):
+            self._opacity_anim.finished.disconnect(self.close)
         self._opacity_anim.finished.connect(self.close)
         self._opacity_anim.start()
 
@@ -496,15 +536,19 @@ class QtRichToolTip(QWidget):
     def enterEvent(self, event) -> None:
         """Enter event."""
         self._hovered = True
-        self._leave_timer.stop()
-        self._dismiss_timer.stop()
+        self._sticky_after_hover = True
+        self._cancel_dismiss()
         super().enterEvent(event)
 
     def leaveEvent(self, event) -> None:
         """Leave event."""
         self._hovered = False
-        self._leave_timer.start()
+        if self._cursor_inside_tooltip():
+            self._hovered = True
+            return super().leaveEvent(event)
+        self._schedule_leave_dismiss()
         super().leaveEvent(event)
+        return None
 
     def eventFilter(self, obj, event: QEvent) -> bool:
         """Event filter."""
@@ -520,10 +564,28 @@ class QtRichToolTip(QWidget):
             )
         ):
             self._position_near_target()
+        if self._is_tooltip_widget(obj) and event.type() in (QEvent.Type.Enter, QEvent.Type.HoverEnter):
+            self._hovered = True
+            self._sticky_after_hover = True
+            self._cancel_dismiss()
+        elif self._is_tooltip_widget(obj) and event.type() in (QEvent.Type.Leave, QEvent.Type.HoverLeave):
+            self._hovered = self._cursor_inside_tooltip()
+            if not self._hovered:
+                self._schedule_leave_dismiss()
+        if event.type() == QEvent.Type.MouseButtonPress and self._cursor_inside_tooltip():
+            self._pointer_interacting = True
+            self._sticky_after_hover = True
+            self._cancel_dismiss()
+        elif event.type() == QEvent.Type.MouseButtonRelease:
+            was_interacting = self._pointer_interacting
+            self._pointer_interacting = False
+            if was_interacting and not self._cursor_inside_tooltip():
+                self._schedule_leave_dismiss()
         # dismiss when the application loses focus
         if event.type() == QEvent.Type.ApplicationDeactivate:
-            self._leave_timer.start()
-        elif event.type() == QEvent.Type.ApplicationActivate and self._hovered:
+            if not (self._hovered or self._pointer_interacting or self._sticky_after_hover):
+                self._schedule_leave_dismiss()
+        elif event.type() == QEvent.Type.ApplicationActivate and (self._hovered or self._pointer_interacting):
             self._leave_timer.stop()
         return super().eventFilter(obj, event)
 
