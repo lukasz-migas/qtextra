@@ -842,13 +842,14 @@ class QtToolbarPushButton(QtImagePushButton):
 
 
 class QtLabelledToolbarPushButton(QWidget):
-    """Push button with a label."""
+    """A push button with a label."""
 
     LABEL_SPACING = 0
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, elide: bool = True, **kwargs: ty.Any):
         self._label_hidden = False
         self._label_text = ""
+        self._elide = elide
         super().__init__(*args, **kwargs)
 
         self.image_btn = QtToolbarPushButton()
@@ -875,6 +876,7 @@ class QtLabelledToolbarPushButton(QWidget):
         self.stop_pulse = self.image_btn.stop_pulse
         self.start_pulse = self.image_btn.start_pulse
         self.setCheckable = self.image_btn.setCheckable
+        self.click = self.image_btn.click
 
     @property
     def label_hidden(self) -> bool:
@@ -890,6 +892,17 @@ class QtLabelledToolbarPushButton(QWidget):
     def set_label(self, text: str) -> None:
         """Set label."""
         self._label_text = text
+        self._update_label_geometry()
+        self.updateGeometry()
+
+    @property
+    def elide(self) -> bool:
+        """Get elide state."""
+        return self._elide
+
+    @elide.setter
+    def elide(self, value: bool) -> None:
+        self._elide = value
         self._update_label_geometry()
         self.updateGeometry()
 
@@ -928,9 +941,18 @@ class QtLabelledToolbarPushButton(QWidget):
             self.label.setFixedSize(0, 0)
             return
 
-        width = self.image_btn.sizeHint().width()
         metrics = self.label.fontMetrics()
-        self.label.setText(metrics.elidedText(text, Qt.TextElideMode.ElideRight, width))
+        lines = text.splitlines() or [text]
+        icon_width = self.image_btn.sizeHint().width()
+
+        if self._elide:
+            width = icon_width
+            display_text = "\n".join(metrics.elidedText(line, Qt.TextElideMode.ElideRight, width) for line in lines)
+        else:
+            width = max(icon_width, max(metrics.horizontalAdvance(line) for line in lines) + 2)
+            display_text = "\n".join(lines)
+
+        self.label.setText(display_text)
         self.label.setFixedWidth(width)
         self.label.ensurePolished()
         self.label.setFixedHeight(self.label.sizeHint().height())

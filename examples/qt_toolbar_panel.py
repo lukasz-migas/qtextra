@@ -29,13 +29,35 @@ THEMES.apply(window)
 toolbar = QtPanelToolbar(window, label_hidden=False)
 window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
 
-home_panel = make_panel("Home", "A compact labelled toolbar button can still drive a regular stacked panel.")
-search_panel = make_panel("Search", "Toggle labels on and off to compare the compact and expanded toolbar layouts.")
-settings_panel = make_panel("Settings", "Longer titles wrap within the toolbar column instead of widening the toolbar.")
 
-toolbar.add_widget("home", title="Home", widget=home_panel, tooltip="Show the home panel.")
-toolbar.add_widget("zoom", title="Search", widget=search_panel, tooltip="Show the search panel.")
-toolbar.add_widget("gear", title="Settings", widget=settings_panel, tooltip="Show the settings panel.")
+toolbar.add_widget(
+    "home",
+    title="Home",
+    widget=make_panel("Home", "A compact labelled toolbar button can still drive a regular stacked panel."),
+    tooltip="Show the home panel.",
+)
+toolbar.add_widget(
+    "zoom",
+    title="Search",
+    widget=make_panel("Search", "Toggle labels on and off to compare the compact and expanded toolbar layouts."),
+    tooltip="Show the search panel.",
+)
+toolbar.add_widget(
+    "gear",
+    title="Settings",
+    widget=make_panel("Settings", "Longer titles wrap within the toolbar column instead of widening the toolbar."),
+    tooltip="Show the settings panel.",
+)
+toolbar.add_widget(
+    "help",
+    title="Help\nDocumentation",
+    widget=make_panel(
+        "Help",
+        "Multiple lines of text in the title will wrap within the toolbar column instead of widening the toolbar.",
+    ),
+    tooltip="Show the help panel.",
+    elide=False,
+)
 
 controls = QWidget()
 controls_layout = QVBoxLayout(controls)

@@ -1971,6 +1971,7 @@ def make_toolbar_btn(
     xxlarge: bool = False,
     icon_kwargs: dict | None = None,
     title: str = "",
+    elide: bool = True,
 ) -> QtToolbarPushButton | QtLabelledToolbarPushButton:
     """Make button."""
     from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, QtToolbarPushButton
@@ -1978,7 +1979,7 @@ def make_toolbar_btn(
     if icon_kwargs is None:
         icon_kwargs = {}
 
-    widget = QtLabelledToolbarPushButton(parent=parent) if title else QtToolbarPushButton(parent=parent)
+    widget = QtLabelledToolbarPushButton(parent=parent, elide=elide) if title else QtToolbarPushButton(parent=parent)
     widget.set_qta(name, **icon_kwargs)
     widget.setText(text)
     if title:

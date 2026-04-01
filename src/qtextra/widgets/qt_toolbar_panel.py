@@ -132,6 +132,7 @@ class QtPanelWidget(QWidget):
         for button in self._button_dict:
             if hasattr(button, "label_hidden"):
                 button.label_hidden = value
+        self._sync_button_widths()
 
     @property
     def stack_widget(self) -> QStackedWidget:
@@ -163,6 +164,7 @@ class QtPanelWidget(QWidget):
         widget: QWidget | None = None,
         location: str = "top",
         title: str | None = None,
+        elide: bool = True,
         func: ty.Callable | None = None,
     ) -> QtToolbarPushButton | QtLabelledToolbarPushButton:
         """Add a widget to the stack.
@@ -181,6 +183,8 @@ class QtPanelWidget(QWidget):
             `bottom` will be simple click-buttons without widgets associated with them.
         title : str, optional
             Title to be given to the button.
+        elide : bool, optional
+            Whether labelled toolbar buttons should elide their text to stay compact.
         func : Optional[Callable]
             function that will be connected to the button click event
         """
@@ -194,6 +198,7 @@ class QtPanelWidget(QWidget):
             checkable=widget is not None,
             large=True,
             title=title,
+            elide=elide,
         )
         if hasattr(button, "label_hidden"):
             button.label_hidden = self._label_hidden
@@ -206,6 +211,7 @@ class QtPanelWidget(QWidget):
             self._group.addButton(button.image_btn)
         else:
             self._group.addButton(button)
+        self._sync_button_widths()
         if widget:
             self.connect_widget(name, widget, tooltip)
         elif func:
@@ -250,6 +256,15 @@ class QtPanelWidget(QWidget):
 
     def _add_after(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
         return self._buttons.addWidget(button)  # type: ignore[return-value]
+
+    def _sync_button_widths(self) -> None:
+        """Keep toolbar widgets centered when any labelled button expands."""
+        if not self._button_dict:
+            return
+
+        target_width = max(button.sizeHint().width() for button in self._button_dict)
+        for button in self._button_dict:
+            button.setFixedWidth(target_width)
 
     def add_separator_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Add separator before button."""
