@@ -25,6 +25,15 @@ BATCH_SIZE = 50
 INITIAL_SIZE = 100
 
 
+def _make_index_getter(index: int) -> ty.Callable[[], int]:
+    """Return a zero-argument callable that always yields ``index``."""
+
+    def _get_index() -> int:
+        return index
+
+    return _get_index
+
+
 class QtRotatedHeaderView(QHeaderView):
     """Horizontal header where the view is rotated by 90 degrees."""
 
@@ -232,8 +241,8 @@ class QtArrayTableView(QTableView):
         super().keyReleaseEvent(event)
         row = self.currentIndex().row()
         col = self.currentIndex().column()
-        event.row = lambda: row  # make row retrieval a function so its compatible with other methods
-        event.column = lambda: col  # make row retrieval a function so its compatible with other methods
+        event.row = _make_index_getter(row)  # make row retrieval a function so its compatible with other methods
+        event.column = _make_index_getter(col)  # make row retrieval a function so its compatible with other methods
         self.evt_key_release.emit(event)
 
     def set_data(

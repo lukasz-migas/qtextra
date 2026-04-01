@@ -3,9 +3,12 @@
 from typing import ClassVar
 
 import pytest
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox
 
 from qtextra.widgets._qt_combobox import _BaseButton, _ItemRow
+from qtextra.widgets.qt_combobox_color import QtColorSwatchComboBox
 from qtextra.widgets.qt_combobox_multi import QtMultiSelectComboBox, _MultiItemRow, _MultiPanel
 from qtextra.widgets.qt_combobox_search import (
     QtSearchableComboBox,
@@ -181,6 +184,13 @@ class TestMultiSelectComboBox:
         combo.set_selected(["Three"])
         assert combo.selected() == ["Three"]
 
+    def test_hidden_signal_closes_button(self, combo):
+        combo._btn.set_open(True)
+
+        combo._panel.evt_hidden.emit()
+
+        assert combo._btn._open is False
+
 
 # ---------------------------------------------------------------------------
 # QtSearchComboBox
@@ -221,6 +231,13 @@ class TestQtSearchComboBox:
         w = QtSearchComboBox()
         qtbot.addWidget(w)
         assert w.current_text() == ""
+
+    def test_hidden_signal_closes_button(self, combo):
+        combo._btn.set_open(True)
+
+        combo._panel.evt_hidden.emit()
+
+        assert combo._btn._open is False
 
 
 # ---------------------------------------------------------------------------
@@ -277,6 +294,15 @@ class TestSearchPanel:
         panel._pick("Gamma")
         assert panel._selected == "Gamma"
         assert received == ["Gamma"]
+
+    def test_row_click_handler_picks_bound_text(self, panel, qtbot):
+        received = []
+        panel.itemSelected.connect(received.append)
+
+        qtbot.mouseClick(panel._rows[1], Qt.MouseButton.LeftButton)
+
+        assert panel._selected == "Beta"
+        assert received == ["Beta"]
 
 
 # ---------------------------------------------------------------------------
@@ -343,3 +369,41 @@ class TestAddSearchToCombobox:
     def test_no_insert_policy(self, plain_combo):
         add_search_to_combobox(plain_combo)
         assert plain_combo.insertPolicy() == QComboBox.InsertPolicy.NoInsert
+
+    def test_text_activated_handler_emits_current_text(self, plain_combo):
+        add_search_to_combobox(plain_combo)
+        plain_combo.addItems(["Alpha", "Beta"])
+        plain_combo.setCurrentText("Beta")
+        seen = []
+        plain_combo.textActivated.connect(seen.append)
+
+        plain_combo._text_activated()
+
+        assert seen == ["Beta"]
+
+
+class TestQtColorSwatchComboBox:
+    @pytest.fixture
+    def combo(self, qtbot):
+        w = QtColorSwatchComboBox()
+        w.add_swatches([("#ff0000", "Red"), ("#00ff00", "Green")])
+        qtbot.addWidget(w)
+        return w
+
+    def test_cell_click_selects_bound_color(self, combo, qtbot):
+        received = []
+        combo.evt_color_changed.connect(received.append)
+        combo._btn.set_open(True)
+
+        qtbot.mouseClick(combo._panel._cells[1], Qt.MouseButton.LeftButton)
+
+        assert combo.current_color() == QColor("#00ff00")
+        assert received == [QColor("#00ff00")]
+        assert combo._btn._open is False
+
+    def test_hidden_signal_closes_button(self, combo):
+        combo._btn.set_open(True)
+
+        combo._panel.evt_hidden.emit()
+
+        assert combo._btn._open is False

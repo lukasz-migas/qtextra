@@ -66,7 +66,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
-        self.indexHeader.horizontalScrollBar().valueChanged.connect(lambda: None)
+        self.indexHeader.horizontalScrollBar().valueChanged.connect(self._ignore_header_scroll)
 
         # Toggle level names
         if not (any(df.columns.names) or df.columns.name):
@@ -103,10 +103,10 @@ class QtDataFrameWidget(Qw.QWidget):
         )
         # React to scroll range changes so we can hide bars when unnecessary
         self.dataView.horizontalScrollBar().rangeChanged.connect(
-            lambda _min, _max: self.dataView.horizontalScrollBar().setVisible(_max > 0),
+            self._update_horizontal_scrollbar_visibility,
         )
         self.dataView.verticalScrollBar().rangeChanged.connect(
-            lambda _min, _max: self.dataView.verticalScrollBar().setVisible(_max > 0),
+            self._update_vertical_scrollbar_visibility,
         )
 
         for item in [self.dataView, self.columnHeader, self.indexHeader]:
@@ -148,6 +148,17 @@ class QtDataFrameWidget(Qw.QWidget):
         vbar = self.dataView.verticalScrollBar()
         hbar.setVisible(hbar.maximum() > 0)
         vbar.setVisible(vbar.maximum() > 0)
+
+    def _ignore_header_scroll(self, *_args: int) -> None:
+        """Ignore header scrollbar change events used to suppress dragging desync."""
+
+    def _update_horizontal_scrollbar_visibility(self, _minimum: int, maximum: int) -> None:
+        """Show the horizontal scrollbar only when needed."""
+        self.dataView.horizontalScrollBar().setVisible(maximum > 0)
+
+    def _update_vertical_scrollbar_visibility(self, _minimum: int, maximum: int) -> None:
+        """Show the vertical scrollbar only when needed."""
+        self.dataView.verticalScrollBar().setVisible(maximum > 0)
 
     def _resize_all_rows(self):
         """Auto-resize every row to its content height."""
@@ -931,7 +942,11 @@ if __name__ == "__main__":  # pragma: no cover
     widget = QtDataFrameWidget(None, df)
     va.addWidget(widget, stretch=True)
     btn = Qw.QPushButton("Press me to change data")
-    btn.clicked.connect(lambda: widget.set_data(_get_new_data()))
+
+    def _refresh_demo_data() -> None:
+        widget.set_data(_get_new_data())
+
+    btn.clicked.connect(_refresh_demo_data)
     va.addWidget(btn)
 
     frame.show()

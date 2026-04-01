@@ -26,6 +26,11 @@ COLORS = {
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
+def _log_process_finished(exit_code: int, _exit_status) -> None:
+    """Log process completion at trace level."""
+    logger.trace(f"Command finished with {exit_code}")
+
+
 def set_process(process: QProcess, command: str, args: list[str]) -> None:
     """Set process."""
     process.setProgram(command)
@@ -50,7 +55,7 @@ def run_command(command: list[str]) -> None:
 
     process = QProcess(get_main_window())
     process.finished.connect(process.deleteLater)
-    process.finished.connect(lambda exit_code, exit_status: logger.trace(f"Command finished with {exit_code}"))
+    process.finished.connect(_log_process_finished)
     process.setProgram(program)
     # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments
     # incorrect. It's safer to simply join the arguments  together and set them as one long string. The

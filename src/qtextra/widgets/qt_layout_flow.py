@@ -45,12 +45,16 @@ class QtAnimatedFlowLayout(QLayout):
         self.tight = tight
         self._debounce_timer = QTimer(self)
         self._debounce_timer.setSingleShot(True)
-        self._debounce_timer.timeout.connect(lambda: self._doLayout(self.geometry(), True))
+        self._debounce_timer.timeout.connect(self._refresh_layout)
         self._parent = None
         self._has_event_filter = False
 
     def addItem(self, item):
         self._items.append(item)
+
+    def _refresh_layout(self) -> None:
+        """Recalculate the layout after the debounce timer expires."""
+        self._doLayout(self.geometry(), True)
 
     def insertItem(self, index, item):
         self._items.insert(index, item)

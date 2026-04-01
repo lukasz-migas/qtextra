@@ -67,7 +67,7 @@ class _MultiPanel(_ScrollablePanel):
             self._selected.add(text)
         else:
             self._selected.discard(text)
-        self.evt_selection_changed.emit(sorted(self._selected, key=lambda x: [r._label for r in self._rows].index(x)))
+        self.evt_selection_changed.emit(sorted(self._selected, key=self._selected_order))
 
     def set_selected(self, items: list[str]):
         """Replace all available items."""
@@ -79,6 +79,10 @@ class _MultiPanel(_ScrollablePanel):
         """Get selected rows."""
         order = [r._label for r in self._rows]
         return [x for x in order if x in self._selected]
+
+    def _selected_order(self, label: str) -> int:
+        """Return the display order for a selected label."""
+        return [row._label for row in self._rows].index(label)
 
 
 class _MultiBtn(_BaseButton):
@@ -156,7 +160,7 @@ class QtMultiSelectComboBox(QWidget):
         self._selected: list[str] = []
         self._panel = _MultiPanel(items or [], parent=self)
         self._panel.evt_selection_changed.connect(self._on_change)
-        self._panel.evt_hidden.connect(lambda: self._btn.set_open(False))
+        self._panel.evt_hidden.connect(self._close_panel)
         self._build()
 
     def _build(self):
@@ -169,7 +173,7 @@ class QtMultiSelectComboBox(QWidget):
     def _toggle(self):
         if self._panel.isVisible():
             self._panel.hide()
-            self._btn.set_open(False)
+            self._close_panel()
         else:
             self._panel.show_below(self._btn)
             self._btn.set_open(True)
@@ -178,6 +182,10 @@ class QtMultiSelectComboBox(QWidget):
         self._selected = items
         self._btn.set_selected(items)
         self.evt_selection_changed.emit(items)
+
+    def _close_panel(self) -> None:
+        """Reset the button state when the popup closes."""
+        self._btn.set_open(False)
 
     def selected(self) -> list[str]:
         """Return the selected items."""
@@ -229,7 +237,11 @@ if __name__ == "__main__":  # pragma: no cover
         ],
         placeholder="Choose fruit…",
     )
-    combo.evt_selection_changed.connect(lambda s: print(f"Multi: {s}"))
+
+    def _print_selection(selection: list[str]) -> None:
+        print(f"Multi: {selection}")
+
+    combo.evt_selection_changed.connect(_print_selection)
     ha.addWidget(combo)
     frame.show()
     sys.exit(app.exec_())
