@@ -1,4 +1,3 @@
-# ruff: noqa: D103
 """QtActiveProgressBarButton."""
 
 from qtpy.QtWidgets import QApplication, QVBoxLayout, QWidget
