@@ -600,10 +600,10 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
         """Set filter by value."""
 
         def update_filter() -> None:
-            if value is None and column in self.filters_by_state:
-                del self.filters_by_state[column]
-            else:
-                self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
+            if value is None:
+                self.filters_by_state.pop(column, None)
+                return
+            self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
 
         self._update_row_filter(update_filter)
         self.evt_filtered.emit()
@@ -759,6 +759,39 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.icon_columns = icon_columns or []
         self.checkable_columns = checkable_columns or []
         self.text_alignment = text_alignment or Qt.AlignmentFlag.AlignCenter
+        self._sort_index_by_initial: dict[int, int] = {}
+        self._rebuild_sort_lookup()
+
+    def _rebuild_sort_lookup(self) -> None:
+        """Build a lookup from initial row index to current sorted position."""
+        self._sort_index_by_initial = {
+            initial_row: sorted_row for sorted_row, initial_row in enumerate(self.original_index)
+        }
+
+    def _iter_target_rows(self) -> list[int]:
+        """Return source-model row indices affected by bulk row actions."""
+        if self.table_proxy:
+            return self.table_proxy.find_visible_rows()[0]
+        return list(range(self.rowCount()))
+
+    def _set_all_rows_checked(self, state: bool) -> None:
+        """Set the first checkable column for all targeted rows with a single model notification."""
+        rows = self._iter_target_rows()
+        if not rows:
+            self.evt_checked.emit(-1, state)
+            return
+
+        changed_rows = []
+        for row in rows:
+            if self._table[row][0] != state:
+                self._table[row][0] = state
+                changed_rows.append(row)
+
+        if changed_rows:
+            top_left = self.createIndex(min(changed_rows), 0)
+            bottom_right = self.createIndex(max(changed_rows), 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
+        self.evt_checked.emit(-1, state)
 
     def flags(self, index):
         """Return flags."""
@@ -786,7 +819,9 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def columnCount(self, parent: QModelIndex | None = None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
-        return len(self._table[0]) if self._table else 0
+        if self._table:
+            return len(self._table[0])
+        return len(self.header)
 
     def removeRow(self, row: int, parent: QModelIndex | None = None) -> bool:
         """Remove row."""
@@ -796,6 +831,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self._table.pop(row)
         self.original_index.pop(row)
         self.endRemoveRows()
+        self._rebuild_sort_lookup()
         return True
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
@@ -868,6 +904,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         if order == Qt.SortOrder.DescendingOrder:
             self._table.reverse()
             self.original_index.reverse()
+        self._rebuild_sort_lookup()
 
         # indicate that change to data has been made
         self.layoutChanged.emit()
@@ -878,9 +915,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.ItemDataRole.CheckStateRole:
-            old_value = index.data()
-            # value = not old_value
-            # change = True
+            old_value = self._table[row][column]
             value = bool(value)
             change = old_value != value
         else:
@@ -925,7 +960,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def update_column(self, col, values, match_to_sort: bool = True) -> None:
         """Update column."""
-        if col > self.columnCount():
+        if col >= self.columnCount():
             raise ValueError("Cannot update column as its outside of the boundaries")
 
         if len(values) > self.rowCount():
@@ -943,33 +978,17 @@ class QtCheckableItemModel(QAbstractTableModel):
         if self.state is None:
             self.state = self.n_checked == self.rowCount()
         self.state = not self.state
-        for row, __ in enumerate(self._table):
-            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
-                continue
-            self._table[row][0] = self.state
-            index = self.createIndex(row, 0)
-            self.dataChanged.emit(index, index)
-        self.evt_checked.emit(-1, self.state)
+        self._set_all_rows_checked(self.state)
 
     def check_all_rows(self) -> None:
         """Check all rows in the table."""
-        for row, __ in enumerate(self._table):
-            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
-                continue
-            self._table[row][0] = True
-            index = self.createIndex(row, 0)
-            self.dataChanged.emit(index, index)
-        self.evt_checked.emit(-1, True)
+        self.state = True
+        self._set_all_rows_checked(True)
 
     def uncheck_all_rows(self) -> None:
         """Uncheck all rows."""
-        for row, __ in enumerate(self._table):
-            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
-                continue
-            self._table[row][0] = False
-            index = self.createIndex(row, 0)
-            self.dataChanged.emit(index, index)
-        self.evt_checked.emit(-1, False)
+        self.state = False
+        self._set_all_rows_checked(False)
 
     def get_all_checked(self) -> list[int]:
         """Get all checked items."""
@@ -1008,7 +1027,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def get_sort_index(self, row: int) -> int:
         """Get the index inside the sorted array as matched from the not-sorted array."""
-        return self.original_index.index(row)
+        return self._sort_index_by_initial[row]
 
     def get_sort_indices(self, index: list) -> list:
         """Get list of all sort indices."""
@@ -1037,6 +1056,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Add data."""
         self._table.extend(data)
         self.original_index = list(range(len(self._table)))
+        self._rebuild_sort_lookup()
         # indicate that change to data has been made
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
@@ -1046,6 +1066,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Reset data."""
         self._table.clear()
         self.original_index.clear()
+        self._rebuild_sort_lookup()
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
 

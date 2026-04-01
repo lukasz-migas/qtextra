@@ -135,6 +135,11 @@ class TestModel:
         assert model.rowCount() == 0
         assert model.columnCount() == 0
 
+    def test_empty_model_uses_header_count(self):
+        model = QtCheckableItemModel(None, data=[], header=["A", "B", "C"])
+        assert model.rowCount() == 0
+        assert model.columnCount() == 3
+
     def test_add_data(self, qtbot):
         w = QtCheckableTableView(None)
         qtbot.addWidget(w)
@@ -211,6 +216,29 @@ class TestModel:
         w.uncheck_all_rows()
         assert w.get_all_unchecked() == [0, 1]
 
+    def test_check_all_emits_single_data_changed_signal(self, qtbot):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("", "check").add("Name", "name")
+        w.setup_model_from_config(cfg)
+        w.add_data([[False, "Alice"], [False, "Bob"], [False, "Carol"]])
+
+        calls = []
+        w.model().dataChanged.connect(lambda *args: calls.append(args))
+
+        w.check_all_rows()
+
+        assert w.get_all_checked() == [0, 1, 2]
+        assert len(calls) == 1
+
+    def test_set_data_checkstate_no_change_returns_false(self):
+        from qtpy.QtCore import Qt
+
+        model = QtCheckableItemModel(None, data=[[True, "Alice"]], header=["", "Name"], checkable_columns=[0])
+        index = model.index(0, 0)
+
+        assert model.setData(index, True, Qt.ItemDataRole.CheckStateRole) is False
+
 
 # ── QtCheckableTableView ──────────────────────────────────────────────────────
 
@@ -285,6 +313,20 @@ class TestTableView:
     def test_update_column(self, populated_table):
         populated_table.update_column(1, [10, 20, 30])
         assert populated_table.get_col_data(1) == [10, 20, 30]
+
+    def test_get_sort_index_after_sort(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("Value", "value")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Bob", 1], ["Alice", 2], ["Carol", 3]])
+        w.model().sort(0, Qt.SortOrder.AscendingOrder)
+
+        assert w.model().get_sort_index(0) == 1
+        assert w.model().get_sort_index(1) == 0
+        assert w.model().get_sort_index(2) == 2
 
     def test_find_index_of(self, populated_table):
         bob_idx = populated_table.find_index_of(0, "Bob")
@@ -378,6 +420,20 @@ class TestFilterProxy:
         proxy.setFilterByColumn("", 0)
         assert proxy.rowCount() == 2
 
+    def test_filter_state_none_does_not_add_unchecked_filter(self, qtbot):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("", "check", dtype="bool").add("Name", "name")
+        w.setup_model_from_config(cfg)
+        w.add_data([[True, "Alice"], [False, "Bob"]])
+
+        proxy = MultiColumnSingleValueProxyModel()
+        proxy.setSourceModel(w.model())
+        proxy.setFilterByState(None, 0)
+
+        assert proxy.rowCount() == 2
+        assert 0 not in proxy.filters_by_state
+
     def test_filter_no_spurious_readd_on_empty(self, qtbot):
         """Regression: clearing a filter must not re-add an empty string entry."""
         w = QtCheckableTableView(None)
@@ -392,3 +448,13 @@ class TestFilterProxy:
         proxy.setFilterByColumn("", 0)
         # After clearing, dict must not contain the column key
         assert 0 not in proxy.filters_by_text
+
+    def test_update_column_raises_when_index_equals_column_count(self, qtbot):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("Value", "value")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Alice", 1], ["Bob", 2]])
+
+        with pytest.raises(ValueError, match="outside of the boundaries"):
+            w.model().update_column(2, [10, 20])
