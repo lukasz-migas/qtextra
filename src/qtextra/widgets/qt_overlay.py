@@ -30,6 +30,7 @@ class QtOverlay(QWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self._alignment = alignment
         self._widget: QWidget | None = None
+        self._tracked_ancestors: list[QWidget] = []
         if widget is not None:
             self.set_widget(widget)
 
@@ -44,6 +45,7 @@ class QtOverlay(QWidget):
             self._widget.removeEventFilter(self)
             with suppress(TypeError, RuntimeError):
                 self._widget.destroyed.disconnect(self._on_destroyed)
+            self._clear_tracked_ancestors()
 
         self._widget = widget
 
@@ -53,6 +55,7 @@ class QtOverlay(QWidget):
 
         self._widget.installEventFilter(self)
         self._widget.destroyed.connect(self._on_destroyed)
+        self._track_ancestors()
         self._sync_to_anchor()
         self._relayout()
 
@@ -77,15 +80,20 @@ class QtOverlay(QWidget):
 
     def eventFilter(self, recv, event):  # type: ignore[override]
         """Track anchor movement and visibility."""
-        if recv is self._widget:
+        if recv is self._widget or recv in self._tracked_ancestors:
             event_type = event.type()
             if event_type in (QEvent.Type.Resize, QEvent.Type.Move):
                 self._relayout()
-            elif event_type == QEvent.Type.Show:
+            elif event_type in (QEvent.Type.Show, QEvent.Type.ShowToParent):
                 self._sync_to_anchor()
                 self._relayout()
-            elif event_type == QEvent.Type.Hide:
+            elif event_type in (QEvent.Type.Hide, QEvent.Type.HideToParent):
                 self.hide()
+            elif event_type == QEvent.Type.ParentChange and recv is self._widget:
+                self._clear_tracked_ancestors()
+                self._track_ancestors()
+                self._sync_to_anchor()
+                self._relayout()
         return super().eventFilter(recv, event)
 
     def event(self, event):  # type: ignore[override]
@@ -113,7 +121,27 @@ class QtOverlay(QWidget):
         if widget is None:
             self.hide()
             return
-        self.setVisible(widget.isVisible())
+        window = self.window()
+        self.setVisible(
+            widget.isVisibleTo(window) if window is not None and window is not widget else widget.isVisible()
+        )
+
+    def _clear_tracked_ancestors(self) -> None:
+        for ancestor in self._tracked_ancestors:
+            with suppress(RuntimeError):
+                ancestor.removeEventFilter(self)
+        self._tracked_ancestors.clear()
+
+    def _track_ancestors(self) -> None:
+        widget = self._widget
+        if widget is None:
+            return
+
+        ancestor = widget.parentWidget()
+        while ancestor is not None:
+            ancestor.installEventFilter(self)
+            self._tracked_ancestors.append(ancestor)
+            ancestor = ancestor.parentWidget()
 
     def _anchor_bounds(self) -> QRect:
         widget = self._widget
@@ -197,6 +225,7 @@ class QtOverlay(QWidget):
     @Slot()
     def _on_destroyed(self) -> None:
         self._widget = None
+        self._clear_tracked_ancestors()
         with suppress(RuntimeError):
             self.hide()
 
