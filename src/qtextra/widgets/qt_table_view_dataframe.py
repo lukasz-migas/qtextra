@@ -97,13 +97,17 @@ class QtDataFrameWidget(Qw.QWidget):
 
         # Set up DataFrame TableView and Model
         self.dataView = DataTableView(df, parent=self)
+        self.dataView.setObjectName("dataView")
         if not editable:
             self.dataView.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)
 
         # Create headers
         self.columnHeader = HeaderView(self, df, Qt.Orientation.Horizontal)
+        self.columnHeader.setObjectName("columnHeader")
         self.indexHeader = HeaderView(self, df, Qt.Orientation.Vertical)
+        self.indexHeader.setObjectName("indexHeader")
         self.cornerView = CornerView(self, df)
+        self.cornerView.setObjectName("cornerView")
 
         # Link scrollbars
         # Scrolling in the data table also scrolls the headers
@@ -595,6 +599,7 @@ class CornerView(Qw.QTableView):
     def set_data(self, df) -> None:
         """Update corner model."""
         self.setModel(CornerModel(df, self))
+        self._apply_spans()
         self.sync_to_headers()
 
     def sync_to_headers(self) -> None:
@@ -608,6 +613,14 @@ class CornerView(Qw.QTableView):
             self.setRowHeight(row, column_header.rowHeight(row))
 
         self.setFixedSize(index_header.header_extent(), column_header.header_extent())
+
+    def _apply_spans(self) -> None:
+        """Merge the empty top-left region into a single visual block."""
+        self.clearSpans()
+        rows = self.model().rowCount()
+        cols = self.model().columnCount()
+        if rows > 1 and cols > 1:
+            self.setSpan(0, 0, rows - 1, cols - 1)
 
 
 class HeaderView(Qw.QTableView):
