@@ -67,7 +67,7 @@ window.show()
 app.exec_()
 ```
 
-A larger showcase example is available at [`examples/qt_readme_showcase.py`](examples/qt_readme_showcase.py).
+A larger showcase example is available at [`examples/qt_readme_showcase.py`](examples/showcase.py).
 
 ## Documentation
 

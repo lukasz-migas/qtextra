@@ -4,7 +4,7 @@ Multi-page release notes dialogs for onboarding users to new features.
 
 ## Screenshot
 
-{{ show_example('dialog_whats_new.py', 760) }}
+![screenshot](../assets/dialog_whats_new.jpg){ loading=lazy; width=760 }
 
 ## Example
 

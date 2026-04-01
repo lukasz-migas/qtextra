@@ -42,8 +42,8 @@ appdirs.user_state_dir = lambda appname="", *args: _appdirs_path("state", appnam
 appdirs.user_log_dir = lambda appname="", *args: _appdirs_path("log", appname, *args)
 
 
-DEFAULT_SOURCE = ROOT / "examples" / "qt_readme_showcase.py"
-DEFAULT_DEST = ROOT / "docs" / "assets" / "readme_showcase.png"
+DEFAULT_SOURCE = ROOT / "examples" / "showcase.py"
+DEFAULT_DEST = ROOT / "docs" / "assets" / "readme_showcase.jpg"
 
 
 def parse_args() -> argparse.Namespace:
@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
         "--output",
         type=Path,
         default=DEFAULT_DEST,
-        help=f"PNG output path. Default: {DEFAULT_DEST.relative_to(ROOT)}",
+        help=f"JPG output path. Default: {DEFAULT_DEST.relative_to(ROOT)}",
     )
     parser.add_argument(
         "--width",
@@ -72,6 +72,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=2,
         help="Number of columns in the composite grid.",
+    )
+    parser.add_argument(
+        "--suffix",
+        default=".jpg",
+        help="Image suffix for captured screenshots. Default: .jpg",
     )
     return parser.parse_args()
 
@@ -154,6 +159,7 @@ def main() -> int:
     args = parse_args()
     source = args.source if args.source.is_absolute() else ROOT / args.source
     output = args.output if args.output.is_absolute() else ROOT / args.output
+    output = output.with_suffix(args.suffix)
 
     module = _load_showcase_module(source)
     if not hasattr(module, "build_showcase"):

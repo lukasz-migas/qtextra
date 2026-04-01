@@ -79,7 +79,6 @@ def _make_overview_tab() -> QWidget:
 
 def _make_inputs_tab(window: QWidget) -> QWidget:
     tab = QWidget()
-    tab._showcase_badges = []
     layout = QVBoxLayout(tab)
     layout.setSpacing(12)
 
@@ -117,19 +116,15 @@ def _make_inputs_tab(window: QWidget) -> QWidget:
     button_grid.addWidget(QLabel("QtNotificationBadge"), 2, 0)
     badge_row = QWidget()
     badge_row_layout = hp.make_h_layout(parent=badge_row, margin=0, spacing=16)
-    sync_button = QPushButton("Sync queue")
+    sync_button = QPushButton("Sync queue", parent=badge_row)
     sync_button.setMinimumWidth(150)
     badge_row_layout.addWidget(sync_button)
-    tab._showcase_badges.append(
-        hp.make_notification_badge(parent=window, widget=sync_button, state="success", mode="count", size="md", count=4)
-    )
+    hp.make_notification_badge(parent=window, widget=sync_button, state="success", mode="count", size="md", count=4)
 
-    bell = QtQtaLabel(large=True)
+    bell = QtQtaLabel(large=True, parent=badge_row)
     bell.set_qta("notified", color=THEMES.get_hex_color("icon"))
     badge_row_layout.addWidget(bell)
-    tab._showcase_badges.append(
-        hp.make_notification_badge(parent=window, widget=bell, state="warning", mode="dot", size="sm")
-    )
+    hp.make_notification_badge(parent=window, widget=bell, state="warning", mode="dot", size="sm")
     badge_row_layout.addStretch(1)
     button_grid.addWidget(badge_row, 2, 1)
 
@@ -274,7 +269,7 @@ def build_showcase() -> QWidget:
     """Build the tabbed showcase window."""
     widget = QWidget()
     widget.setWindowTitle("qtextra showcase")
-    widget.setMinimumSize(1180, 900)
+    widget.setMinimumSize(700, 700)
     widget._showcase_dialogs = []
     THEMES.apply(widget)
 

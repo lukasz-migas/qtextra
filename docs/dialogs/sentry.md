@@ -8,7 +8,7 @@
 
 ## Screenshot
 
-{{ show_example('dialog_sentry.py', 760) }}
+![screenshot](../assets/dialog_sentry.jpg){ loading=lazy; width=760 }
 
 ## Example
 
