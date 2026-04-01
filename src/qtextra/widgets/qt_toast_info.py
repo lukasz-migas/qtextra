@@ -640,7 +640,7 @@ if __name__ == "__main__":  # pragma: no cover
                 content="Here is a message. A couple of lines long.\nAnother line starts here.",
                 parent=frame,
                 position=choice(list(ToastPosition)),
-                duration=100000,
+                duration=3000,
                 orientation=Qt.Orientation.Vertical,
             )
 
