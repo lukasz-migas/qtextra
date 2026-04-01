@@ -352,19 +352,10 @@ class QtInfoToast(QFrame):
 class QtInfoToastManager(QObject):
     """info toast manager."""
 
-    _instance = None
+    _instances: ClassVar[dict[type[QtInfoToastManager], QtInfoToastManager]] = {}
     managers: ClassVar[dict[ToastPosition, type[QtInfoToastManager]]] = {}
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls, *args, **kwargs)
-            cls._instance.__initialized = False
-
-        return cls._instance
-
     def __init__(self):
-        if self.__initialized:
-            return
         super().__init__()
 
         self.spacing = 16
@@ -373,7 +364,6 @@ class QtInfoToastManager(QObject):
         self._animation_groups = weakref.WeakKeyDictionary()
         self._slide_animations = []
         self._drop_animations = []
-        self.__initialized = True
 
     def add(self, toast: QtInfoToast):
         """Add info toast."""
@@ -504,7 +494,11 @@ class QtInfoToastManager(QObject):
         if position not in cls.managers:
             raise ValueError(f"`{position}` is an invalid animation type.")
 
-        return cls.managers[position]()
+        manager_cls = cls.managers[position]
+        if manager_cls not in cls._instances:
+            cls._instances[manager_cls] = manager_cls()
+
+        return cls._instances[manager_cls]
 
 
 @QtInfoToastManager.register(ToastPosition.TOP)
