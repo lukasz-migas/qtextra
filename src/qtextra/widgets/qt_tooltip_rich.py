@@ -318,6 +318,7 @@ class QtRichToolTip(QWidget):
         self._target = target
         self._duration = duration
         self._content = content_widget
+        self._parent_window = parent.window() if parent and parent.window() else None
         self._hovered: bool = False
         self._sticky_after_hover: bool = False
         self._pointer_interacting: bool = False
@@ -354,8 +355,8 @@ class QtRichToolTip(QWidget):
         self._leave_timer.timeout.connect(self._fade_out)
 
         # event filters
-        if parent and parent.window():
-            parent.window().installEventFilter(self)
+        if self._parent_window is not None:
+            self._parent_window.installEventFilter(self)
         app = QApplication.instance()
         if app is not None:
             app.installEventFilter(self)
@@ -400,6 +401,20 @@ class QtRichToolTip(QWidget):
         self.installEventFilter(self)
         for widget in self.findChildren(QWidget):
             widget.installEventFilter(self)
+
+    def _remove_interaction_filters(self) -> None:
+        """Remove pointer tracking filters from the tooltip and its children."""
+        self.removeEventFilter(self)
+        for widget in self.findChildren(QWidget):
+            widget.removeEventFilter(self)
+
+    def _detach_global_event_filters(self) -> None:
+        """Unregister this tooltip from global event sources."""
+        if self._parent_window is not None:
+            self._parent_window.removeEventFilter(self)
+        app = QApplication.instance()
+        if app is not None:
+            app.removeEventFilter(self)
 
     def _is_tooltip_widget(self, obj: object) -> bool:
         """Return whether *obj* is this tooltip or one of its descendants."""
@@ -493,6 +508,10 @@ class QtRichToolTip(QWidget):
     def closeEvent(self, event) -> None:  # noqa: D102
         if QtRichToolTip._active_instance is self:
             QtRichToolTip._active_instance = None
+        self._cancel_dismiss()
+        self._opacity_anim.stop()
+        self._remove_interaction_filters()
+        self._detach_global_event_filters()
         self._content.cleanup()
         self.evt_closed.emit()
         self.deleteLater()
