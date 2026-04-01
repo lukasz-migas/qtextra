@@ -19,9 +19,7 @@ from qtpy.QtWidgets import (
     QApplication,
     QFrame,
     QGraphicsDropShadowEffect,
-    QHBoxLayout,
     QLabel,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -191,18 +189,14 @@ class _RichToolTipContent(QFrame):
         actions: list[RichToolTipAction],
         shortcut: str,
     ) -> None:
-        root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
+        root = hp.make_v_layout(spacing=0, margin=0, parent=self)
 
         if image is not None:
             self._media = _MediaWidget(image, self)
             if not self._media.isHidden():
                 root.addWidget(self._media)
 
-        body = QVBoxLayout()
-        body.setContentsMargins(12, 10, 12, 10)
-        body.setSpacing(6)
+        body = hp.make_v_layout(spacing=6, margin=(12, 10, 12, 10))
 
         if title or icon:
             self._build_header(body, title, icon, shortcut)
@@ -223,42 +217,35 @@ class _RichToolTipContent(QFrame):
 
     def _build_header(
         self,
-        parent_layout: QVBoxLayout,
+        parent_layout,
         title: str,
         icon: str | None,
         shortcut: str,
     ) -> None:
         """Build the header row: icon + title + shortcut badge."""
-        header = QHBoxLayout()
-        header.setSpacing(6)
+        header = hp.make_h_layout(spacing=6)
 
         if icon:
-            icon_lbl = hp.make_qta_label(self, icon)
-            icon_lbl.setMinimumSize(16, 16)
-            icon_lbl.setMaximumSize(16, 16)
+            icon_lbl = hp.make_qta_label(self, icon, small=True)
             icon_lbl.setScaledContents(True)
             header.addWidget(icon_lbl, 0, Qt.AlignmentFlag.AlignVCenter)
 
         if title:
-            title_lbl = QLabel(title, self)
-            title_lbl.setObjectName("richToolTipTitle")
+            title_lbl = hp.make_label(self, title, object_name="richToolTipTitle", bold=True, wrap=True)
             font = title_lbl.font()
-            font.setBold(True)
             font.setPointSize(font.pointSize() + 1)
             title_lbl.setFont(font)
-            title_lbl.setWordWrap(True)
             header.addWidget(title_lbl, 1)
 
         if shortcut:
-            sc_lbl = QLabel(shortcut, self)
-            sc_lbl.setObjectName("richToolTipShortcut")
+            sc_lbl = hp.make_label(self, shortcut, object_name="richToolTipShortcut")
             header.addWidget(sc_lbl, 0, Qt.AlignmentFlag.AlignVCenter)
 
         parent_layout.addLayout(header)
 
     def _build_actions(
         self,
-        parent_layout: QVBoxLayout,
+        parent_layout,
         actions: list[RichToolTipAction],
     ) -> None:
         """Build the separator and action-button footer."""
@@ -267,9 +254,7 @@ class _RichToolTipContent(QFrame):
         sep.setObjectName("richToolTipSep")
         parent_layout.addWidget(sep)
 
-        btn_bar = QHBoxLayout()
-        btn_bar.setContentsMargins(10, 6, 10, 8)
-        btn_bar.setSpacing(6)
+        btn_bar = hp.make_h_layout(spacing=6, margin=(10, 6, 10, 8))
         for action in actions:
             btn = hp.make_btn(
                 self,
@@ -346,14 +331,11 @@ class QtRichToolTip(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # layout
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 8, 10, 12)
+        layout = hp.make_v_layout(margin=(10, 8, 10, 12), parent=self)
 
         self._bubble = QFrame(self)
         self._bubble.setObjectName("richToolTipBubble")
-        bubble_layout = QVBoxLayout(self._bubble)
-        bubble_layout.setContentsMargins(0, 0, 0, 0)
-        bubble_layout.setSpacing(0)
+        bubble_layout = hp.make_v_layout(spacing=0, margin=0, parent=self._bubble)
         bubble_layout.addWidget(self._content)
         layout.addWidget(self._bubble)
 
@@ -390,6 +372,19 @@ class QtRichToolTip(QWidget):
         self._dismiss_timer.stop()
         self._leave_timer.stop()
 
+    def _set_hovered(self, hovered: bool) -> None:
+        """Update hover state and keep the tooltip alive after first entry."""
+        self._hovered = hovered
+        if hovered:
+            self._sticky_after_hover = True
+            self._cancel_dismiss()
+
+    def _refresh_hover_state(self) -> bool:
+        """Recompute hover state from the current cursor position."""
+        hovered = self._cursor_inside_tooltip()
+        self._hovered = hovered
+        return hovered
+
     def _schedule_leave_dismiss(self) -> None:
         """Dismiss after the pointer leaves and the user stops interacting."""
         if self._hovered or self._pointer_interacting:
@@ -410,6 +405,24 @@ class QtRichToolTip(QWidget):
         """Return whether *obj* is this tooltip or one of its descendants."""
         return isinstance(obj, QWidget) and (obj is self or self.isAncestorOf(obj))
 
+    def _on_pointer_enter(self) -> None:
+        """Keep the tooltip open while the pointer is inside it."""
+        self._set_hovered(True)
+
+    def _on_pointer_leave(self) -> None:
+        """Dismiss only after the pointer has actually left the tooltip."""
+        if not self._refresh_hover_state():
+            self._schedule_leave_dismiss()
+
+    def _set_pointer_interacting(self, interacting: bool) -> None:
+        """Track pointer-driven interactions such as selecting or right-clicking."""
+        self._pointer_interacting = interacting
+        if interacting:
+            self._sticky_after_hover = True
+            self._cancel_dismiss()
+        elif not self._refresh_hover_state():
+            self._schedule_leave_dismiss()
+
     def _apply_shadow(self) -> None:
         """Apply a drop-shadow effect to the bubble frame."""
         shadow = QGraphicsDropShadowEffect(self._bubble)
@@ -424,24 +437,6 @@ class QtRichToolTip(QWidget):
         if is_dark():
             return "background:#383b40; color:#a9b7c6; padding:2px 5px; border-radius:3px;"
         return "background:#e8eaed; color:#2e2e2e; padding:2px 5px; border-radius:3px;"
-
-    # def _bubble_stylesheet(self) -> str:
-    #     """Return the QSS stylesheet for the bubble and its children."""
-    #     dark = is_dark()
-    #     bg = "#2b2d30" if dark else "#f7f8fa"
-    #     border = "#3c3f41" if dark else "#c9ccd1"
-    #     text = "#bbbbbb" if dark else "#1e1e1e"
-    #     link = "#589df6" if dark else "#2470b3"
-    #     sep = "#3c3f41" if dark else "#d1d1d1"
-    #     return (
-    #         f"QFrame#richToolTipBubble {{"
-    #         f"  background: {bg}; border: 1px solid {border}; border-radius: 8px;"
-    #         f"}}"
-    #         f"QLabel#richToolTipTitle {{ color: {text}; }}"
-    #         f"QLabel#richToolTipBody {{ color: {text}; }}"
-    #         f"QLabel#richToolTipBody a {{ color: {link}; text-decoration: none; }}"
-    #         f"QFrame#richToolTipSep {{ color: {sep}; }}"
-    #     )
 
     def _inject_code_style(self) -> None:
         """Rewrite ``<code>`` tags in body labels to include theme-aware inline styles."""
@@ -535,57 +530,42 @@ class QtRichToolTip(QWidget):
 
     def enterEvent(self, event) -> None:
         """Enter event."""
-        self._hovered = True
-        self._sticky_after_hover = True
-        self._cancel_dismiss()
+        self._on_pointer_enter()
         super().enterEvent(event)
 
     def leaveEvent(self, event) -> None:
         """Leave event."""
-        self._hovered = False
-        if self._cursor_inside_tooltip():
-            self._hovered = True
-            return super().leaveEvent(event)
-        self._schedule_leave_dismiss()
+        self._on_pointer_leave()
         super().leaveEvent(event)
-        return None
 
     def eventFilter(self, obj, event: QEvent) -> bool:
         """Event filter."""
+        event_type = event.type()
+
         # track parent-window geometry changes
         if (
             self.parent()
             and obj is self.parent().window()
-            and event.type()
-            in (
-                QEvent.Type.Resize,
-                QEvent.Type.Move,
-                QEvent.Type.WindowStateChange,
-            )
+            and event_type in (QEvent.Type.Resize, QEvent.Type.Move, QEvent.Type.WindowStateChange)
         ):
             self._position_near_target()
-        if self._is_tooltip_widget(obj) and event.type() in (QEvent.Type.Enter, QEvent.Type.HoverEnter):
-            self._hovered = True
-            self._sticky_after_hover = True
-            self._cancel_dismiss()
-        elif self._is_tooltip_widget(obj) and event.type() in (QEvent.Type.Leave, QEvent.Type.HoverLeave):
-            self._hovered = self._cursor_inside_tooltip()
-            if not self._hovered:
-                self._schedule_leave_dismiss()
-        if event.type() == QEvent.Type.MouseButtonPress and self._cursor_inside_tooltip():
-            self._pointer_interacting = True
-            self._sticky_after_hover = True
-            self._cancel_dismiss()
-        elif event.type() == QEvent.Type.MouseButtonRelease:
-            was_interacting = self._pointer_interacting
-            self._pointer_interacting = False
-            if was_interacting and not self._cursor_inside_tooltip():
-                self._schedule_leave_dismiss()
+
+        if self._is_tooltip_widget(obj):
+            if event_type in (QEvent.Type.Enter, QEvent.Type.HoverEnter):
+                self._on_pointer_enter()
+            elif event_type in (QEvent.Type.Leave, QEvent.Type.HoverLeave):
+                self._on_pointer_leave()
+
+        if event_type == QEvent.Type.MouseButtonPress and self._cursor_inside_tooltip():
+            self._set_pointer_interacting(True)
+        elif event_type == QEvent.Type.MouseButtonRelease and self._pointer_interacting:
+            self._set_pointer_interacting(False)
+
         # dismiss when the application loses focus
-        if event.type() == QEvent.Type.ApplicationDeactivate:
+        if event_type == QEvent.Type.ApplicationDeactivate:
             if not (self._hovered or self._pointer_interacting or self._sticky_after_hover):
                 self._schedule_leave_dismiss()
-        elif event.type() == QEvent.Type.ApplicationActivate and (self._hovered or self._pointer_interacting):
+        elif event_type == QEvent.Type.ApplicationActivate and (self._hovered or self._pointer_interacting):
             self._leave_timer.stop()
         return super().eventFilter(obj, event)
 
