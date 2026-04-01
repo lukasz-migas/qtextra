@@ -103,6 +103,7 @@ class QtDataFrameWidget(Qw.QWidget):
         # Create headers
         self.columnHeader = HeaderView(self, df, Qt.Orientation.Horizontal)
         self.indexHeader = HeaderView(self, df, Qt.Orientation.Vertical)
+        self.cornerView = CornerView(self, df)
 
         # Link scrollbars
         # Scrolling in the data table also scrolls the headers
@@ -118,12 +119,6 @@ class QtDataFrameWidget(Qw.QWidget):
         # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
         self.indexHeader.horizontalScrollBar().valueChanged.connect(self._ignore_scroll_value_change)
 
-        # Toggle level names
-        if not (any(df.columns.names) or df.columns.name):
-            self.columnHeader.verticalHeader().setFixedWidth(0)
-        if not (any(df.index.names) or df.index.name):
-            self.indexHeader.horizontalHeader().setFixedHeight(0)
-
         # Set up layout
         self.gridLayout = Qw.QGridLayout(self)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -131,34 +126,28 @@ class QtDataFrameWidget(Qw.QWidget):
 
         # Add items to the layout
         # widget, row, column, rowspan, colspan
-        self.gridLayout.addWidget(self.columnHeader, 0, 1, 1, 2)
-        self.gridLayout.addWidget(self.indexHeader, 1, 0, 2, 2)
-        self.gridLayout.addWidget(self.dataView, 2, 2, 1, 1)
-        self.gridLayout.addWidget(self.dataView.horizontalScrollBar(), 3, 2, 1, 1)
-        self.gridLayout.addWidget(self.dataView.verticalScrollBar(), 2, 3, 1, 1)
+        self.gridLayout.addWidget(self.cornerView, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.columnHeader, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.indexHeader, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.dataView, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.dataView.horizontalScrollBar(), 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.dataView.verticalScrollBar(), 1, 2, 1, 1)
 
         # These expand when the window is enlarged instead of having the grid squares spread out
-        self.gridLayout.setColumnStretch(2, 1)
-        self.gridLayout.setRowStretch(2, 1)
-
-        # These placeholders will ensure the size of the blank spaces beside our headers
-        self.bottomLeftSpacer = TrackingSpacer(ref_x=self.columnHeader.verticalHeader())
-        self.topRightSpacer = TrackingSpacer(ref_y=self.indexHeader.horizontalHeader())
-        self.gridLayout.addWidget(self.bottomLeftSpacer, 3, 1, 1, 1)
-        self.gridLayout.addWidget(self.topRightSpacer, 1, 2, 1, 1)
-        self.cornerSpacer = TrackingSpacer()
-        self.gridLayout.addWidget(self.cornerSpacer, 0, 0, 1, 1)
+        self.gridLayout.setColumnStretch(1, 1)
+        self.gridLayout.setRowStretch(1, 1)
         # React to scroll range changes so we can hide bars when unnecessary
         self.dataView.horizontalScrollBar().rangeChanged.connect(self._sync_horizontal_scrollbar_visibility)
         self.dataView.verticalScrollBar().rangeChanged.connect(self._sync_vertical_scrollbar_visibility)
 
-        for item in [self.dataView, self.columnHeader, self.indexHeader]:
+        for item in [self.dataView, self.columnHeader, self.indexHeader, self.cornerView]:
             item.setContentsMargins(0, 0, 0, 0)
             item.setItemDelegate(NoFocusDelegate())
         # Ensure widgets expand within the layout
         self.dataView.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
         self.columnHeader.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Fixed)
         self.indexHeader.setSizePolicy(Qw.QSizePolicy.Policy.Fixed, Qw.QSizePolicy.Policy.Expanding)
+        self.cornerView.setSizePolicy(Qw.QSizePolicy.Policy.Fixed, Qw.QSizePolicy.Policy.Fixed)
 
     def showEvent(self, event: Qg.QShowEvent):
         """Initialize column and row sizes on the first time the widget is shown."""
@@ -177,7 +166,7 @@ class QtDataFrameWidget(Qw.QWidget):
             self.dataView.set_data(df)
             self.columnHeader.set_data(df)
             self.indexHeader.set_data(df)
-            self._update_header_level_names_visibility(df)
+            self.cornerView.set_data(df)
             self._init_sizes()
             self._update_scrollbar_visibility()
             self.updateGeometry()
@@ -209,26 +198,9 @@ class QtDataFrameWidget(Qw.QWidget):
         for row_index in range(_sample_count(row_count, AUTO_SIZE_ROW_LIMIT)):
             self.auto_size_row(row_index)
 
-    def _update_header_level_names_visibility(self, df):
-        """Show or hide the level-name header rows/columns based on availability."""
-        col_v_header = self.columnHeader.verticalHeader()
-        idx_h_header = self.indexHeader.horizontalHeader()
-        col_v_header.setFixedWidth(
-            0 if not (any(df.columns.names) or df.columns.name) else col_v_header.sizeHint().width(),
-        )
-        idx_h_header.setFixedHeight(
-            0 if not (any(df.index.names) or df.index.name) else idx_h_header.sizeHint().height(),
-        )
-        self.bottomLeftSpacer.setFixedSize(col_v_header.width(), 0)
-        self.topRightSpacer.setFixedSize(0, idx_h_header.height())
-
-    def _sync_corner_spacer(self):
+    def _sync_corner_view(self):
         """Keep the top-left corner aligned with the row and column headers."""
-        width = self.indexHeader.header_extent()
-        height = self.columnHeader.header_extent()
-        self.cornerSpacer.setFixedSize(width, height)
-        self.bottomLeftSpacer.setFixedSize(self.columnHeader.verticalHeader().width(), 0)
-        self.topRightSpacer.setFixedSize(0, self.indexHeader.horizontalHeader().height())
+        self.cornerView.sync_to_headers()
 
     def _init_sizes(self):
         """Shared sizing logic for initial load and data resets."""
@@ -251,7 +223,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
         self.columnHeader._apply_extent()
         self.indexHeader._apply_extent()
-        self._sync_corner_spacer()
+        self._sync_corner_view()
 
     def auto_size_column(self, column_index):
         """Set the size of column at column_index to fit its contents."""
@@ -552,6 +524,92 @@ class HeaderModel(Qc.QAbstractTableModel):
         return None
 
 
+class CornerModel(Qc.QAbstractTableModel):
+    """Model for the corner view that displays index and column level names."""
+
+    def __init__(self, df, parent=None):
+        super().__init__(parent)
+        self.df = _normalize_tabular_data(df)
+
+    @property
+    def column_level_names(self) -> list[str]:
+        names = list(self.df.columns.names) if isinstance(self.df.columns, pd.MultiIndex) else [self.df.columns.name]
+        return [str(name) if name is not None else "" for name in names]
+
+    @property
+    def index_level_names(self) -> list[str]:
+        names = list(self.df.index.names) if isinstance(self.df.index, pd.MultiIndex) else [self.df.index.name]
+        return [str(name) if name is not None else "" for name in names]
+
+    def rowCount(self, parent=None):
+        """Number of rows."""
+        return len(self.column_level_names)
+
+    def columnCount(self, parent=None):
+        """Number of columns."""
+        return len(self.index_level_names)
+
+    def data(self, index, role=None):
+        """Display level names in the corner grid."""
+        if not index.isValid():
+            return None
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole):
+            row = index.row()
+            col = index.column()
+            row_names = self.column_level_names
+            col_names = self.index_level_names
+            if col == len(col_names) - 1:
+                return row_names[row]
+            if row == len(row_names) - 1:
+                return col_names[col]
+            return ""
+        if role == Qt.ItemDataRole.FontRole:
+            bold_font = Qg.QFont()
+            bold_font.setBold(True)
+            return bold_font
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
+        return None
+
+
+class CornerView(Qw.QTableView):
+    """Corner view that renders index and column level names without gutter headers."""
+
+    def __init__(self, parent: QtDataFrameWidget, df):
+        super().__init__(parent)
+        self.parent = parent
+        self.setWordWrap(False)
+        self.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
+        self.horizontalHeader().hide()
+        self.verticalHeader().hide()
+        self.horizontalHeader().setDefaultSectionSize(DEFAULT_COLUMN_WIDTH)
+        self.verticalHeader().setDefaultSectionSize(DEFAULT_ROW_HEIGHT)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.set_data(df)
+
+    def set_data(self, df) -> None:
+        """Update corner model."""
+        self.setModel(CornerModel(df, self))
+        self.sync_to_headers()
+
+    def sync_to_headers(self) -> None:
+        """Align corner geometry and sections with the index and column headers."""
+        index_header = self.parent.indexHeader
+        column_header = self.parent.columnHeader
+
+        for col in range(self.model().columnCount()):
+            self.setColumnWidth(col, index_header.columnWidth(col))
+        for row in range(self.model().rowCount()):
+            self.setRowHeight(row, column_header.rowHeight(row))
+
+        self.setFixedSize(index_header.header_extent(), column_header.header_extent())
+
+
 class HeaderView(Qw.QTableView):
     """Displays the DataFrame index or columns depending on orientation."""
 
@@ -591,6 +649,8 @@ class HeaderView(Qw.QTableView):
             )  # Scrollbar is replaced in DataFrameViewer
             self.horizontalHeader().hide()
             self.horizontalHeader().setFixedHeight(0)
+            self.verticalHeader().hide()
+            self.verticalHeader().setFixedWidth(0)
             self.verticalHeader().setDisabled(True)
             self.verticalHeader().setHighlightSections(False)  # Selection lags a lot without this
 
@@ -598,6 +658,8 @@ class HeaderView(Qw.QTableView):
             self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.verticalHeader().hide()
             self.verticalHeader().setFixedWidth(0)
+            self.horizontalHeader().hide()
+            self.horizontalHeader().setFixedHeight(0)
             self.horizontalHeader().setDisabled(True)
 
             self.horizontalHeader().setHighlightSections(False)  # Selection lags a lot without this

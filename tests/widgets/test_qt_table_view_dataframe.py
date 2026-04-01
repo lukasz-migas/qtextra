@@ -11,14 +11,6 @@ from qtpy.QtCore import Qt
 from qtextra.widgets.qt_table_view_dataframe import QtDataFrameWidget
 
 
-def _expected_data_x(widget: QtDataFrameWidget) -> int:
-    return widget.indexHeader.width() + widget.columnHeader.verticalHeader().width()
-
-
-def _expected_data_y(widget: QtDataFrameWidget) -> int:
-    return widget.columnHeader.height() + widget.indexHeader.horizontalHeader().height()
-
-
 def test_qt_dataframe_widget_renders_pandas_dataframe_and_keeps_headers_aligned(qtbot):
     df = pd.DataFrame(
         {
@@ -41,10 +33,10 @@ def test_qt_dataframe_widget_renders_pandas_dataframe_and_keeps_headers_aligned(
     assert model.data(model.index(1, 0)) == ""
     assert model.data(model.index(1, 0), role=Qt.ItemDataRole.ToolTipRole) == "NaN"
 
-    assert widget.dataView.geometry().x() == _expected_data_x(widget)
-    assert widget.dataView.geometry().y() == _expected_data_y(widget)
-    assert widget.cornerSpacer.width() == widget.indexHeader.width()
-    assert widget.cornerSpacer.height() == widget.columnHeader.height()
+    assert widget.dataView.geometry().x() == widget.indexHeader.width()
+    assert widget.dataView.geometry().y() == widget.columnHeader.height()
+    assert widget.cornerView.width() == widget.indexHeader.width()
+    assert widget.cornerView.height() == widget.columnHeader.height()
 
 
 def test_qt_dataframe_widget_handles_pandas_multiindex(qtbot):
@@ -113,10 +105,10 @@ def test_qt_dataframe_widget_realigns_when_switching_single_to_multi_index(qtbot
     widget.set_data(pd.DataFrame([[1, 2], [3, 4]], index=index, columns=columns))
     qtbot.wait(10)
 
-    assert widget.dataView.geometry().x() == _expected_data_x(widget)
-    assert widget.dataView.geometry().y() == _expected_data_y(widget)
-    assert widget.cornerSpacer.width() == widget.indexHeader.width()
-    assert widget.cornerSpacer.height() == widget.columnHeader.height()
+    assert widget.dataView.geometry().x() == widget.indexHeader.width()
+    assert widget.dataView.geometry().y() == widget.columnHeader.height()
+    assert widget.cornerView.width() == widget.indexHeader.width()
+    assert widget.cornerView.height() == widget.columnHeader.height()
     assert widget.columnHeader.model().rowCount() == 2
     assert widget.indexHeader.model().columnCount() == 2
 
@@ -133,9 +125,9 @@ def test_qt_dataframe_widget_realigns_when_switching_multi_to_single_index(qtbot
     widget.set_data(pd.DataFrame({"alpha": [1, 2], "beta": ["x", "y"]}))
     qtbot.wait(10)
 
-    assert widget.dataView.geometry().x() == _expected_data_x(widget)
-    assert widget.dataView.geometry().y() == _expected_data_y(widget)
-    assert widget.cornerSpacer.width() == widget.indexHeader.width()
-    assert widget.cornerSpacer.height() == widget.columnHeader.height()
+    assert widget.dataView.geometry().x() == widget.indexHeader.width()
+    assert widget.dataView.geometry().y() == widget.columnHeader.height()
+    assert widget.cornerView.width() == widget.indexHeader.width()
+    assert widget.cornerView.height() == widget.columnHeader.height()
     assert widget.columnHeader.model().rowCount() == 1
     assert widget.indexHeader.model().columnCount() == 1
