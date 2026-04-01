@@ -130,8 +130,8 @@ class QtPanelWidget(QWidget):
     def label_hidden(self, value: bool) -> None:
         self._label_hidden = value
         for button in self._button_dict:
-            if hasattr(button, "hidden_label"):
-                button.hidden_label = value
+            if hasattr(button, "label_hidden"):
+                button.label_hidden = value
 
     @property
     def stack_widget(self) -> QStackedWidget:
@@ -195,8 +195,8 @@ class QtPanelWidget(QWidget):
             large=True,
             title=title,
         )
-        if hasattr(button, "hidden_label"):
-            button.hidden_label = self._label_hidden
+        if hasattr(button, "label_hidden"):
+            button.label_hidden = self._label_hidden
         button.setObjectName(name)
         button.setToolTip(tooltip)
 
@@ -363,7 +363,7 @@ class QtPanelToolbar(QToolBar):
 
     @label_hidden.setter
     def label_hidden(self, value: bool) -> None:
-        self._widget._label_hidden = value
+        self._widget.label_hidden = value
 
     def set_disabled(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton, disable: bool) -> None:
         """Set the widget as disabled."""
