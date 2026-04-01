@@ -8,6 +8,7 @@ QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView 
 from __future__ import annotations
 
 import contextlib
+import typing as ty
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,58 @@ import qtpy.QtGui as Qg
 import qtpy.QtWidgets as Qw
 from loguru import logger
 from qtpy.QtCore import Qt
+
+from qtextra.widgets._qt_table_models import BaseTabularTableModel, is_float_like
+
+try:
+    import polars as pl
+except ImportError:  # pragma: no cover - optional dependency
+    pl = None
+
+AUTO_SIZE_SAMPLE = 100
+AUTO_SIZE_COLUMN_LIMIT = 200
+AUTO_SIZE_ROW_LIMIT = 200
+DEFAULT_COLUMN_WIDTH = 120
+DEFAULT_ROW_HEIGHT = 30
+MAX_COLUMN_WIDTH = 500
+MAX_ROW_HEIGHT = 100
+HEADER_PADDING = 20
+ROW_PADDING = 5
+MAX_VERTICAL_SPAN_ROWS = 5000
+
+
+def _sample_count(total: int, limit: int) -> int:
+    """Return bounded sample size."""
+    return min(total, limit)
+
+
+def _text_width(metrics: Qg.QFontMetrics, text: str) -> int:
+    """Measure text width."""
+    return metrics.horizontalAdvance(text)
+
+
+def _normalize_tabular_data(
+    data: pd.DataFrame | pd.Series | ty.Any | None,
+    *,
+    inplace: bool = True,
+) -> pd.DataFrame:
+    """Normalize supported tabular inputs to a pandas DataFrame."""
+    if data is None:
+        return pd.DataFrame()
+    if isinstance(data, pd.Series):
+        data = data.to_frame()
+    if isinstance(data, pd.DataFrame):
+        return data if inplace else data.copy()
+    if pl is not None:
+        if isinstance(data, pl.Series):
+            return pd.DataFrame({data.name or "column_0": data.to_list()})
+        if isinstance(data, pl.DataFrame):
+            try:
+                return data.to_pandas()
+            except ModuleNotFoundError:
+                return pd.DataFrame(data.to_dicts(), columns=data.columns)
+    msg = f"Unsupported tabular data type: {type(data)!r}"
+    raise TypeError(msg)
 
 
 class QtDataFrameWidget(Qw.QWidget):
@@ -30,16 +83,13 @@ class QtDataFrameWidget(Qw.QWidget):
     def __init__(
         self,
         parent: Qw.QWidget | None,
-        df: pd.DataFrame | None,
+        df: ty.Any | None,
         inplace: bool = True,
         editable: bool = False,
         stretch: bool = False,
     ):
         super().__init__(parent)
-        if df is None:
-            df = pd.DataFrame()
-        if not inplace:
-            df = df.copy()
+        df = _normalize_tabular_data(df, inplace=inplace)
 
         # Indicates whether the widget has been shown yet. Set to True in
         self._loaded = False
@@ -47,12 +97,17 @@ class QtDataFrameWidget(Qw.QWidget):
 
         # Set up DataFrame TableView and Model
         self.dataView = DataTableView(df, parent=self)
+        self.dataView.setObjectName("dataView")
         if not editable:
             self.dataView.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)
 
         # Create headers
         self.columnHeader = HeaderView(self, df, Qt.Orientation.Horizontal)
+        self.columnHeader.setObjectName("columnHeader")
         self.indexHeader = HeaderView(self, df, Qt.Orientation.Vertical)
+        self.indexHeader.setObjectName("indexHeader")
+        self.cornerView = CornerView(self, df)
+        self.cornerView.setObjectName("cornerView")
 
         # Link scrollbars
         # Scrolling in the data table also scrolls the headers
@@ -66,13 +121,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
-        self.indexHeader.horizontalScrollBar().valueChanged.connect(self._ignore_header_scroll)
-
-        # Toggle level names
-        if not (any(df.columns.names) or df.columns.name):
-            self.columnHeader.verticalHeader().setFixedWidth(0)
-        if not (any(df.index.names) or df.index.name):
-            self.indexHeader.horizontalHeader().setFixedHeight(0)
+        self.indexHeader.horizontalScrollBar().valueChanged.connect(self._ignore_scroll_value_change)
 
         # Set up layout
         self.gridLayout = Qw.QGridLayout(self)
@@ -81,41 +130,28 @@ class QtDataFrameWidget(Qw.QWidget):
 
         # Add items to the layout
         # widget, row, column, rowspan, colspan
-        self.gridLayout.addWidget(self.columnHeader, 0, 1, 1, 2)
-        self.gridLayout.addWidget(self.indexHeader, 1, 0, 2, 2)
-        self.gridLayout.addWidget(self.dataView, 2, 2, 1, 1)
-        self.gridLayout.addWidget(self.dataView.horizontalScrollBar(), 3, 2, 1, 1)
-        self.gridLayout.addWidget(self.dataView.verticalScrollBar(), 2, 3, 1, 1)
+        self.gridLayout.addWidget(self.cornerView, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.columnHeader, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.indexHeader, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.dataView, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.dataView.horizontalScrollBar(), 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.dataView.verticalScrollBar(), 1, 2, 1, 1)
 
         # These expand when the window is enlarged instead of having the grid squares spread out
-        self.gridLayout.setColumnStretch(2, 1)
-        self.gridLayout.setRowStretch(2, 1)
-
-        # These placeholders will ensure the size of the blank spaces beside our headers
-        self.gridLayout.addWidget(TrackingSpacer(ref_x=self.columnHeader.verticalHeader()), 3, 1, 1, 1)
-        self.gridLayout.addWidget(TrackingSpacer(ref_y=self.indexHeader.horizontalHeader()), 1, 2, 1, 1)
-        self.gridLayout.addItem(
-            Qw.QSpacerItem(0, 0, Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding),
-            0,
-            0,
-            1,
-            1,
-        )
+        self.gridLayout.setColumnStretch(1, 1)
+        self.gridLayout.setRowStretch(1, 1)
         # React to scroll range changes so we can hide bars when unnecessary
-        self.dataView.horizontalScrollBar().rangeChanged.connect(
-            self._update_horizontal_scrollbar_visibility,
-        )
-        self.dataView.verticalScrollBar().rangeChanged.connect(
-            self._update_vertical_scrollbar_visibility,
-        )
+        self.dataView.horizontalScrollBar().rangeChanged.connect(self._sync_horizontal_scrollbar_visibility)
+        self.dataView.verticalScrollBar().rangeChanged.connect(self._sync_vertical_scrollbar_visibility)
 
-        for item in [self.dataView, self.columnHeader, self.indexHeader]:
+        for item in [self.dataView, self.columnHeader, self.indexHeader, self.cornerView]:
             item.setContentsMargins(0, 0, 0, 0)
             item.setItemDelegate(NoFocusDelegate())
         # Ensure widgets expand within the layout
         self.dataView.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Expanding)
         self.columnHeader.setSizePolicy(Qw.QSizePolicy.Policy.Expanding, Qw.QSizePolicy.Policy.Fixed)
         self.indexHeader.setSizePolicy(Qw.QSizePolicy.Policy.Fixed, Qw.QSizePolicy.Policy.Expanding)
+        self.cornerView.setSizePolicy(Qw.QSizePolicy.Policy.Fixed, Qw.QSizePolicy.Policy.Fixed)
 
     def showEvent(self, event: Qg.QShowEvent):
         """Initialize column and row sizes on the first time the widget is shown."""
@@ -127,20 +163,20 @@ class QtDataFrameWidget(Qw.QWidget):
 
     def set_data(self, df):
         """Set data header."""
-        if df is None:
-            df = pd.DataFrame()
+        df = _normalize_tabular_data(df)
         self._loaded = False
-        self.dataView.set_data(df)
-        self.columnHeader.set_data(df)
-        self.indexHeader.set_data(df)
-        self.columnHeader.setSpans()
-        self.indexHeader.setSpans()
-        self._update_header_level_names_visibility(df)
-        self._init_sizes()
-        self._resize_all_rows()
-        self._update_scrollbar_visibility()
-        self.updateGeometry()
-        self.gridLayout.activate()
+        self.setUpdatesEnabled(False)
+        try:
+            self.dataView.set_data(df)
+            self.columnHeader.set_data(df)
+            self.indexHeader.set_data(df)
+            self.cornerView.set_data(df)
+            self._init_sizes()
+            self._update_scrollbar_visibility()
+            self.updateGeometry()
+            self.gridLayout.activate()
+        finally:
+            self.setUpdatesEnabled(True)
 
     def _update_scrollbar_visibility(self):
         """Hide scrollbars when not needed."""
@@ -149,111 +185,104 @@ class QtDataFrameWidget(Qw.QWidget):
         hbar.setVisible(hbar.maximum() > 0)
         vbar.setVisible(vbar.maximum() > 0)
 
-    def _ignore_header_scroll(self, *_args: int) -> None:
-        """Ignore header scrollbar change events used to suppress dragging desync."""
+    def _ignore_scroll_value_change(self, _value: int) -> None:
+        """Consume header scrollbar changes triggered by hidden scrollbars."""
 
-    def _update_horizontal_scrollbar_visibility(self, _minimum: int, maximum: int) -> None:
-        """Show the horizontal scrollbar only when needed."""
-        self.dataView.horizontalScrollBar().setVisible(maximum > 0)
+    def _sync_horizontal_scrollbar_visibility(self, _min: int, max_value: int) -> None:
+        """Update horizontal scrollbar visibility."""
+        self.dataView.horizontalScrollBar().setVisible(max_value > 0)
 
-    def _update_vertical_scrollbar_visibility(self, _minimum: int, maximum: int) -> None:
-        """Show the vertical scrollbar only when needed."""
-        self.dataView.verticalScrollBar().setVisible(maximum > 0)
+    def _sync_vertical_scrollbar_visibility(self, _min: int, max_value: int) -> None:
+        """Update vertical scrollbar visibility."""
+        self.dataView.verticalScrollBar().setVisible(max_value > 0)
 
     def _resize_all_rows(self):
         """Auto-resize every row to its content height."""
         row_count = self.indexHeader.model().rowCount()
-        for row_index in range(row_count):
+        for row_index in range(_sample_count(row_count, AUTO_SIZE_ROW_LIMIT)):
             self.auto_size_row(row_index)
 
-    def _update_header_level_names_visibility(self, df):
-        """Show or hide the level-name header rows/columns based on availability."""
-        col_v_header = self.columnHeader.verticalHeader()
-        idx_h_header = self.indexHeader.horizontalHeader()
-        col_v_header.setFixedWidth(
-            0 if not (any(df.columns.names) or df.columns.name) else col_v_header.sizeHint().width(),
-        )
-        idx_h_header.setFixedHeight(
-            0 if not (any(df.index.names) or df.index.name) else idx_h_header.sizeHint().height(),
-        )
+    def _sync_corner_view(self):
+        """Keep the top-left corner aligned with the row and column headers."""
+        self.cornerView.sync_to_headers()
 
     def _init_sizes(self):
         """Shared sizing logic for initial load and data resets."""
-        # Set column widths
-        for column_index in range(self.columnHeader.model().columnCount()):
+        column_count = self.columnHeader.model().columnCount()
+        row_count = self.indexHeader.model().rowCount()
+
+        self.columnHeader.horizontalHeader().setDefaultSectionSize(DEFAULT_COLUMN_WIDTH)
+        self.dataView.horizontalHeader().setDefaultSectionSize(DEFAULT_COLUMN_WIDTH)
+
+        for column_index in range(_sample_count(column_count, AUTO_SIZE_COLUMN_LIMIT)):
             self.auto_size_column(column_index)
-        # Set row heights (uniform, based on first N rows)
-        N = 100
-        default_row_height = 30
-        for row_index in range(self.indexHeader.model().rowCount())[:N]:
+
+        default_row_height = DEFAULT_ROW_HEIGHT
+        for row_index in range(_sample_count(row_count, AUTO_SIZE_ROW_LIMIT)):
             self.auto_size_row(row_index)
             height = self.indexHeader.rowHeight(row_index)
             default_row_height = max(default_row_height, height)
-        default_row_height = min(default_row_height, 100)
+        default_row_height = min(default_row_height, MAX_ROW_HEIGHT)
         self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
         self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
-        self.dataView.resize(self.dataView.sizeHint())
-        self.columnHeader.resize(self.columnHeader.sizeHint())
-        self.indexHeader.resize(self.indexHeader.sizeHint())
+        self.columnHeader._apply_extent()
+        self.indexHeader._apply_extent()
+        self._sync_corner_view()
 
     def auto_size_column(self, column_index):
         """Set the size of column at column_index to fit its contents."""
-        padding = 20
-
-        self.columnHeader.resizeColumnToContents(column_index)
-        width = self.columnHeader.columnWidth(column_index)
+        metrics = self.dataView.fontMetrics()
+        header_metrics = self.columnHeader.fontMetrics()
+        width = DEFAULT_COLUMN_WIDTH
 
         # Iterate over the column's rows and check the width of each to determine the max width for the column
         # Only check the first N rows for performance. If there is larger content in cells below it will be cut off
-        N = 100
-        for i in range(self.dataView.model().rowCount())[:N]:
-            mi = self.dataView.model().index(i, column_index)
-            text = self.dataView.model().data(mi)
-            w = self.dataView.fontMetrics().boundingRect(text).width()
+        header_model = self.columnHeader.model()
+        for level in range(header_model.rowCount()):
+            header_index = header_model.index(level, column_index)
+            header_text = header_model.data(header_index, Qt.ItemDataRole.DisplayRole) or ""
+            width = max(width, _text_width(header_metrics, header_text))
 
+        for i in range(_sample_count(self.dataView.model().rowCount(), AUTO_SIZE_SAMPLE)):
+            mi = self.dataView.model().index(i, column_index)
+            text = self.dataView.model().data(mi) or ""
+            w = _text_width(metrics, text)
             width = max(width, w)
 
-        width += padding
-
-        # add maximum allowable column width so column is never too big.
-        max_allowable_width = 500
-        width = min(width, max_allowable_width)
+        width = min(width + HEADER_PADDING, MAX_COLUMN_WIDTH)
 
         self.columnHeader.setColumnWidth(column_index, width)
         self.dataView.setColumnWidth(column_index, width)
 
-        self.dataView.updateGeometry()
-        self.columnHeader.updateGeometry()
-
     def auto_size_row(self, row_index):
         """Set the size of row at row_index to fix its contents."""
-        padding = 5
-
-        self.indexHeader.resizeRowToContents(row_index)
-        height = self.indexHeader.rowHeight(row_index)
+        metrics = self.dataView.fontMetrics()
+        height = DEFAULT_ROW_HEIGHT
 
         # Iterate over the row's columns and check the width of each to determine the max height for the row
         # Only check the first N columns for performance.
-        N = 100
-        for i in range(min(N, self.dataView.model().columnCount())):
+        index_model = self.indexHeader.model()
+        for level in range(index_model.columnCount()):
+            header_index = index_model.index(row_index, level)
+            header_text = index_model.data(header_index, Qt.ItemDataRole.DisplayRole) or ""
+            height = max(height, metrics.boundingRect(header_text).height())
+
+        for i in range(_sample_count(self.dataView.model().columnCount(), AUTO_SIZE_SAMPLE)):
             mi = self.dataView.model().index(row_index, i)
             cell_width = self.columnHeader.columnWidth(i)
-            text = self.dataView.model().data(mi)
+            text = self.dataView.model().data(mi) or ""
             # Gets row height at a constrained width (the column width).
             # This constrained width, with the flag of Qt.TextWordWrap
             # gets the height the cell would have to be to fit the text.
             constrained_rect = Qc.QRect(0, 0, cell_width, 0)
-            h = self.dataView.fontMetrics().boundingRect(constrained_rect, Qt.TextFlag.TextWordWrap, text).height()
+            h = metrics.boundingRect(constrained_rect, Qt.TextFlag.TextWordWrap, text).height()
 
             height = max(height, h)
 
-        height += padding
+        height = min(height + ROW_PADDING, MAX_ROW_HEIGHT)
 
         self.indexHeader.setRowHeight(row_index, height)
         self.dataView.setRowHeight(row_index, height)
-
-        self.dataView.updateGeometry()
-        self.indexHeader.updateGeometry()
 
     def keyPressEvent(self, event):
         """Handle key presses."""
@@ -290,81 +319,48 @@ class NoFocusDelegate(Qw.QStyledItemDelegate):
         super().paint(painter, style, index)
 
 
-class DataTableModel(Qc.QAbstractTableModel):
+class DataTableModel(BaseTabularTableModel):
     """Model for DataTableView to connect for DataFrame data."""
 
     def __init__(self, df, parent=None):
-        super().__init__(parent)
+        super().__init__(parent, editable=True)
+        df = _normalize_tabular_data(df)
         self.df = df
+        self._values = df.to_numpy(copy=False)
+        self.set_shape(len(df), df.columns.shape[0])
 
     def headerData(self, section, orientation, role=None):
         # Headers for DataTableView are hidden. Header data is shown in HeaderView
         return None
 
-    def columnCount(self, parent=None):
-        """Return the number of columns in the DataFrame."""
-        if isinstance(self.df, pd.Series):
-            return 1
-        return self.df.columns.shape[0]
+    def _value_at(self, row: int, column: int):
+        """Return raw cell value."""
+        return self._values[row, column]
 
-    def rowCount(self, parent=None):
-        """Return the number of rows in the DataFrame."""
-        return len(self.df)
+    def _display_value(self, value):
+        """Return display value."""
+        if pd.isnull(value):
+            return ""
+        if is_float_like(value):
+            return f"{value:.4f}"
+        return str(value)
 
-    # Returns the data from the DataFrame
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        """Return the data to display in the table."""
-        if (
-            role == Qt.ItemDataRole.DisplayRole
-            or role == Qt.ItemDataRole.EditRole
-            or role == Qt.ItemDataRole.ToolTipRole
-        ):
-            row = index.row()
-            col = index.column()
-            cell = self.df.iloc[row, col]
+    def _set_value_at(self, row: int, column: int, value) -> None:
+        """Set the data at the given index."""
+        self.df.iat[row, column] = value
+        self._values = self.df.to_numpy(copy=False)
 
-            # NaN case
-            if pd.isnull(cell):
-                return ""
-
-            # Float formatting
-            if isinstance(cell, (float, np.floating)) and role != Qt.ItemDataRole.ToolTipRole:
-                return f"{cell:.4f}"
-
-            return str(cell)
-
-        if role == Qt.ItemDataRole.ToolTipRole:
-            row = index.row()
-            col = index.column()
-            cell = self.df.iloc[row, col]
-
-            # NaN case
-            if pd.isnull(cell):
-                return "NaN"
-
-            return str(cell)
-        return None
-
-    def flags(self, index):
-        """Set the item flags at the given index."""
-        # Set the table to be editable
-        return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
-
-    # Set data in the DataFrame. Required if table is editable
     def setData(self, index, value, role=None):
         """Set the data at the given index."""
-        if role == Qt.ItemDataRole.EditRole:
-            row = index.row()
-            col = index.column()
-            try:
-                self.df.iat[row, col] = value
-            except (TypeError, ValueError) as e:
-                print(e)
-                return False
-            self.dataChanged.emit(index, index)
-
-            return True
-        return None
+        if not (self._editable and role == Qt.ItemDataRole.EditRole):
+            return None
+        try:
+            self._set_value_at(index.row(), index.column(), value)
+        except (TypeError, ValueError) as e:
+            print(e)
+            return False
+        self.dataChanged.emit(index, index)
+        return True
 
 
 class DataTableView(Qw.QTableView):
@@ -381,18 +377,17 @@ class DataTableView(Qw.QTableView):
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
 
-        # Link selection to headers
-        self.selectionModel().selectionChanged.connect(self.on_selection_changed)
-
         # Settings
-        # self.setWordWrap(True)
-        # self.resizeRowsToContents()
         self.setAlternatingRowColors(True)
+        self.setWordWrap(False)
         self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.horizontalHeader().setDefaultSectionSize(DEFAULT_COLUMN_WIDTH)
+        self.verticalHeader().setDefaultSectionSize(DEFAULT_ROW_HEIGHT)
 
     def set_data(self, df):
         """Set data model."""
+        df = _normalize_tabular_data(df)
         with contextlib.suppress(Exception):
             self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
         model = DataTableModel(df)
@@ -465,19 +460,7 @@ class DataTableView(Qw.QTableView):
 
     def sizeHint(self):
         """Get size hint."""
-        # Set width and height based on number of columns in model
-        # Width
-        width = 2 * self.frameWidth()  # Account for border & padding
-        # width += self.verticalScrollBar().width()  # Dark theme has scrollbars always shown
-        for i in range(self.model().columnCount()):
-            width += self.columnWidth(i)
-
-        # Height
-        height = 2 * self.frameWidth()  # Account for border & padding
-        # height += self.horizontalScrollBar().height()  # Dark theme has scrollbars always shown
-        for i in range(self.model().rowCount()):
-            height += self.rowHeight(i)
-        return Qc.QSize(width, height)
+        return super().sizeHint()
 
 
 class HeaderModel(Qc.QAbstractTableModel):
@@ -485,7 +468,7 @@ class HeaderModel(Qc.QAbstractTableModel):
 
     def __init__(self, df, orientation, parent=None):
         super().__init__(parent)
-        self.df = df
+        self.df = _normalize_tabular_data(df)
         self.orientation = orientation
 
     def columnCount(self, parent=None):
@@ -545,6 +528,101 @@ class HeaderModel(Qc.QAbstractTableModel):
         return None
 
 
+class CornerModel(Qc.QAbstractTableModel):
+    """Model for the corner view that displays index and column level names."""
+
+    def __init__(self, df, parent=None):
+        super().__init__(parent)
+        self.df = _normalize_tabular_data(df)
+
+    @property
+    def column_level_names(self) -> list[str]:
+        names = list(self.df.columns.names) if isinstance(self.df.columns, pd.MultiIndex) else [self.df.columns.name]
+        return [str(name) if name is not None else "" for name in names]
+
+    @property
+    def index_level_names(self) -> list[str]:
+        names = list(self.df.index.names) if isinstance(self.df.index, pd.MultiIndex) else [self.df.index.name]
+        return [str(name) if name is not None else "" for name in names]
+
+    def rowCount(self, parent=None):
+        """Number of rows."""
+        return len(self.column_level_names)
+
+    def columnCount(self, parent=None):
+        """Number of columns."""
+        return len(self.index_level_names)
+
+    def data(self, index, role=None):
+        """Display level names in the corner grid."""
+        if not index.isValid():
+            return None
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.ToolTipRole):
+            row = index.row()
+            col = index.column()
+            row_names = self.column_level_names
+            col_names = self.index_level_names
+            if col == len(col_names) - 1:
+                return row_names[row]
+            if row == len(row_names) - 1:
+                return col_names[col]
+            return ""
+        if role == Qt.ItemDataRole.FontRole:
+            bold_font = Qg.QFont()
+            bold_font.setBold(True)
+            return bold_font
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
+        return None
+
+
+class CornerView(Qw.QTableView):
+    """Corner view that renders index and column level names without gutter headers."""
+
+    def __init__(self, parent: QtDataFrameWidget, df):
+        super().__init__(parent)
+        self.parent = parent
+        self.setWordWrap(False)
+        self.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
+        self.horizontalHeader().hide()
+        self.verticalHeader().hide()
+        self.horizontalHeader().setDefaultSectionSize(DEFAULT_COLUMN_WIDTH)
+        self.verticalHeader().setDefaultSectionSize(DEFAULT_ROW_HEIGHT)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.set_data(df)
+
+    def set_data(self, df) -> None:
+        """Update corner model."""
+        self.setModel(CornerModel(df, self))
+        self._apply_spans()
+        self.sync_to_headers()
+
+    def sync_to_headers(self) -> None:
+        """Align corner geometry and sections with the index and column headers."""
+        index_header = self.parent.indexHeader
+        column_header = self.parent.columnHeader
+
+        for col in range(self.model().columnCount()):
+            self.setColumnWidth(col, index_header.columnWidth(col))
+        for row in range(self.model().rowCount()):
+            self.setRowHeight(row, column_header.rowHeight(row))
+
+        self.setFixedSize(index_header.header_extent(), column_header.header_extent())
+
+    def _apply_spans(self) -> None:
+        """Merge the empty top-left region into a single visual block."""
+        self.clearSpans()
+        rows = self.model().rowCount()
+        cols = self.model().columnCount()
+        if rows > 1 and cols > 1:
+            self.setSpan(0, 0, rows - 1, cols - 1)
+
+
 class HeaderView(Qw.QTableView):
     """Displays the DataFrame index or columns depending on orientation."""
 
@@ -577,39 +655,40 @@ class HeaderView(Qw.QTableView):
         self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
 
-        # Link selection to DataTable
-        self.selectionModel().selectionChanged.connect(self.on_selection_changed)
-        self.setSpans()
-        self.initSize()
-
         # Orientation specific settings
         if orientation == Qt.Orientation.Horizontal:
             self.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
             )  # Scrollbar is replaced in DataFrameViewer
             self.horizontalHeader().hide()
+            self.horizontalHeader().setFixedHeight(0)
+            self.verticalHeader().hide()
+            self.verticalHeader().setFixedWidth(0)
             self.verticalHeader().setDisabled(True)
             self.verticalHeader().setHighlightSections(False)  # Selection lags a lot without this
 
         else:
             self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.verticalHeader().hide()
+            self.verticalHeader().setFixedWidth(0)
+            self.horizontalHeader().hide()
+            self.horizontalHeader().setFixedHeight(0)
             self.horizontalHeader().setDisabled(True)
 
             self.horizontalHeader().setHighlightSections(False)  # Selection lags a lot without this
 
-        # Set initial size
-        self.resize(self.sizeHint())
-
     def set_data(self, df):
         """Update dataframe."""
+        df = _normalize_tabular_data(df)
         self.df = df
         with contextlib.suppress(Exception):
             self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
         self.setModel(HeaderModel(df, self.orientation))
         self.selectionModel().selectionChanged.connect(self.on_selection_changed)
+        self.clearSpans()
         self.setSpans()
         self.initSize()
+        self._apply_extent()
         self.updateGeometry()
 
     # Header
@@ -685,24 +764,42 @@ class HeaderView(Qw.QTableView):
     # Fits columns to contents but with a minimum width and added padding
     def initSize(self):
         """Initialize size."""
-        padding = 20
+        metrics = self.fontMetrics()
 
         if self.orientation == Qt.Orientation.Horizontal:
-            min_size = 100
-
-            self.resizeColumnsToContents()
-
+            self.verticalHeader().setDefaultSectionSize(DEFAULT_ROW_HEIGHT)
             for col in range(self.model().columnCount()):
-                width = self.columnWidth(col)
-                new_width = max(width + padding, min_size)
-
-                self.setColumnWidth(col, new_width)
-                self.table.setColumnWidth(col, new_width)
+                width = max(DEFAULT_COLUMN_WIDTH, self.table.columnWidth(col))
+                self.setColumnWidth(col, width)
         else:
-            self.resizeColumnsToContents()
             for col in range(self.model().columnCount()):
-                width = self.columnWidth(col)
-                self.setColumnWidth(col, width + padding)
+                width = DEFAULT_COLUMN_WIDTH
+                for row in range(_sample_count(self.model().rowCount(), AUTO_SIZE_SAMPLE)):
+                    index = self.model().index(row, col)
+                    text = self.model().data(index, Qt.ItemDataRole.DisplayRole) or ""
+                    width = max(width, _text_width(metrics, text))
+                self.setColumnWidth(col, min(width + HEADER_PADDING, MAX_COLUMN_WIDTH))
+
+    def header_extent(self) -> int:
+        """Return the visible extent needed by this header."""
+        if self.orientation == Qt.Orientation.Horizontal:
+            extent = 2 * self.frameWidth()
+            for row in range(self.model().rowCount()):
+                extent += self.rowHeight(row)
+            return extent
+
+        extent = 2 * self.frameWidth()
+        for column in range(self.model().columnCount()):
+            extent += self.columnWidth(column)
+        return extent
+
+    def _apply_extent(self) -> None:
+        """Constrain the header widget to its content extent."""
+        extent = self.header_extent()
+        if self.orientation == Qt.Orientation.Horizontal:
+            self.setFixedHeight(extent)
+        else:
+            self.setFixedWidth(extent)
 
     # This sets spans to group together adjacent cells with the same values
     def setSpans(self):
@@ -711,6 +808,8 @@ class HeaderView(Qw.QTableView):
 
         # Find spans for horizontal HeaderView
         if self.orientation == Qt.Orientation.Horizontal:
+            if df.columns.empty:
+                return
             # Find how many levels the MultiIndex has
             N = len(df.columns[0]) if isinstance(df.columns, pd.MultiIndex) else 1
 
@@ -744,6 +843,10 @@ class HeaderView(Qw.QTableView):
 
         # Find spans for vertical HeaderView
         else:
+            if df.index.empty:
+                return
+            if len(df.index) > MAX_VERTICAL_SPAN_ROWS:
+                return
             # Find how many levels the MultiIndex has
             N = len(df.index[0]) if isinstance(df.index, pd.MultiIndex) else 1
 
@@ -873,31 +976,14 @@ class HeaderView(Qw.QTableView):
     # Return the size of the header needed to match the corresponding DataTableView
     def sizeHint(self):
         """Size hint."""
-        # Horizontal HeaderView
-        if self.orientation == Qt.Orientation.Horizontal:
-            # Width of DataTableView
-            width = self.table.sizeHint().width() + self.verticalHeader().width()
-            # Height
-            height = 2 * self.frameWidth()  # Account for border & padding
-            for i in range(self.model().rowCount()):
-                height += self.rowHeight(i)
-
-        # Vertical HeaderView
-        else:
-            # Height of DataTableView
-            height = self.table.sizeHint().height() + self.horizontalHeader().height()
-            # Width
-            width = 2 * self.frameWidth()  # Account for border & padding
-            for i in range(self.model().columnCount()):
-                width += self.columnWidth(i)
-        return Qc.QSize(width, height)
+        return super().sizeHint()
 
     # This is needed because otherwise when the horizontal header is a single row it will add whitespace to be bigger
     def minimumSizeHint(self):
         """Minimum size hint."""
         if self.orientation == Qt.Orientation.Horizontal:
-            return Qc.QSize(0, self.sizeHint().height())
-        return Qc.QSize(self.sizeHint().width(), 0)
+            return Qc.QSize(0, super().minimumSizeHint().height())
+        return Qc.QSize(super().minimumSizeHint().width(), 0)
 
 
 # This is a fixed size widget with a size that tracks some other widget
@@ -908,6 +994,7 @@ class TrackingSpacer(Qw.QFrame):
         super().__init__()
         self.ref_x = ref_x
         self.ref_y = ref_y
+        self.setSizePolicy(Qw.QSizePolicy.Policy.Fixed, Qw.QSizePolicy.Policy.Fixed)
 
     def minimumSizeHint(self):
         """Minimize size hint."""
@@ -920,14 +1007,19 @@ class TrackingSpacer(Qw.QFrame):
 
         return Qc.QSize(width, height)
 
+    def sizeHint(self):
+        """Keep the spacer aligned with the tracked widgets."""
+        return self.minimumSizeHint()
+
 
 # Examples
 if __name__ == "__main__":  # pragma: no cover
 
-    def _get_new_data():
-        shape = np.random.default_rng().integers(10, 100, 2)
+    def _get_new_data() -> pd.DataFrame:
+        shape = np.random.default_rng().integers(100, 10000, 2)
         df = pd.DataFrame(np.random.default_rng().integers(-255, 255, shape) / 255)
         df.columns = ["Column " + str(i) for i in range(df.shape[1])]
+        frame.setWindowTitle(f"Shape {shape}")
         return df
 
     import sys
@@ -935,12 +1027,13 @@ if __name__ == "__main__":  # pragma: no cover
     from qtextra.utils.dev import qframe
 
     app, frame, va = qframe(False)
-    frame.setMinimumSize(400, 400)
+    frame.setMinimumSize(600, 600)
 
     df = _get_new_data()
 
     widget = QtDataFrameWidget(None, df)
     va.addWidget(widget, stretch=True)
+
     btn = Qw.QPushButton("Press me to change data")
 
     def _refresh_demo_data() -> None:
