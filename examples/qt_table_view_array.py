@@ -8,10 +8,13 @@ from qtpy.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidg
 from qtextra.config import THEMES
 from qtextra.widgets.qt_table_view_array import QtArrayTableView
 
+N_ROWS = 500
+N_COLS = 500
+
 
 def _make_data() -> np.ndarray:
-    rng = np.random.default_rng()
-    return rng.normal(size=(250, 12))
+    rng = np.random.default_rng(42)
+    return rng.normal(size=(N_ROWS, N_COLS))
 
 
 app = QApplication([])
@@ -21,7 +24,9 @@ THEMES.apply(widget)
 
 layout = QVBoxLayout(widget)
 
-status = QLabel("QtArrayTableView with float formatting, sorting, lazy row loading, and a colormap.")
+status = QLabel(
+    f"QtArrayTableView showing a {N_ROWS}x{N_COLS} float array with sorting, lazy row loading, and a colormap.",
+)
 table = QtArrayTableView(sortable=True)
 table.set_data(
     _make_data(),
