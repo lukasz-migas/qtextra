@@ -142,8 +142,10 @@ class QtDataFrameWidget(Qw.QWidget):
         self.gridLayout.setRowStretch(2, 1)
 
         # These placeholders will ensure the size of the blank spaces beside our headers
-        self.gridLayout.addWidget(TrackingSpacer(ref_x=self.columnHeader.verticalHeader()), 3, 1, 1, 1)
-        self.gridLayout.addWidget(TrackingSpacer(ref_y=self.indexHeader.horizontalHeader()), 1, 2, 1, 1)
+        self.bottomLeftSpacer = TrackingSpacer(ref_x=self.columnHeader.verticalHeader())
+        self.topRightSpacer = TrackingSpacer(ref_y=self.indexHeader.horizontalHeader())
+        self.gridLayout.addWidget(self.bottomLeftSpacer, 3, 1, 1, 1)
+        self.gridLayout.addWidget(self.topRightSpacer, 1, 2, 1, 1)
         self.cornerSpacer = TrackingSpacer()
         self.gridLayout.addWidget(self.cornerSpacer, 0, 0, 1, 1)
         # React to scroll range changes so we can hide bars when unnecessary
@@ -217,12 +219,16 @@ class QtDataFrameWidget(Qw.QWidget):
         idx_h_header.setFixedHeight(
             0 if not (any(df.index.names) or df.index.name) else idx_h_header.sizeHint().height(),
         )
+        self.bottomLeftSpacer.setFixedSize(col_v_header.width(), 0)
+        self.topRightSpacer.setFixedSize(0, idx_h_header.height())
 
     def _sync_corner_spacer(self):
         """Keep the top-left corner aligned with the row and column headers."""
         width = self.indexHeader.header_extent()
         height = self.columnHeader.header_extent()
         self.cornerSpacer.setFixedSize(width, height)
+        self.bottomLeftSpacer.setFixedSize(self.columnHeader.verticalHeader().width(), 0)
+        self.topRightSpacer.setFixedSize(0, self.indexHeader.horizontalHeader().height())
 
     def _init_sizes(self):
         """Shared sizing logic for initial load and data resets."""
@@ -243,6 +249,8 @@ class QtDataFrameWidget(Qw.QWidget):
         default_row_height = min(default_row_height, MAX_ROW_HEIGHT)
         self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
         self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
+        self.columnHeader._apply_extent()
+        self.indexHeader._apply_extent()
         self._sync_corner_spacer()
 
     def auto_size_column(self, column_index):

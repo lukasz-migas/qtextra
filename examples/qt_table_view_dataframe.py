@@ -48,7 +48,7 @@ THEMES.apply(widget)
 layout = QVBoxLayout(widget)
 
 status = QLabel("QtDataFrameWidget displaying a pandas MultiIndex DataFrame.")
-table = QtDataFrameWidget(None, _make_pandas_multiindex())
+table = QtDataFrameWidget(None, _make_pandas_multiindex() if pl is None else _make_polars_frame())
 
 load_pandas_button = QPushButton("Load pandas MultiIndex")
 load_pandas_button.clicked.connect(lambda: table.set_data(_make_pandas_multiindex()))
