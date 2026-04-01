@@ -346,6 +346,22 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=520,
     ),
     WidgetDoc(
+        slug="qt_toolbar_panel",
+        title="QtPanelToolbar",
+        section="Actions And Buttons",
+        summary="A vertical toolbar that toggles stacked panels, with optional labelled buttons.",
+        example="qt_toolbar_panel.py",
+        classes=(
+            "qtextra.widgets.qt_toolbar_panel.QtPanelToolbar",
+            "qtextra.widgets.qt_toolbar_panel.QtPanelWidget",
+        ),
+        notes=(
+            "Use `title=` to create labelled toolbar buttons and `elide=False` when the full label should widen the toolbar.",
+            "Set `label_hidden` at runtime to switch between icon-only and labelled layouts.",
+        ),
+        screenshot_width=620,
+    ),
+    WidgetDoc(
         slug="qt_toolbar_mini",
         title="QtMiniToolbar",
         section="Actions And Buttons",

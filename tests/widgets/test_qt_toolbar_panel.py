@@ -1,3 +1,6 @@
+import pytest
+from qtpy.QtWidgets import QWidget
+
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton
 from qtextra.widgets.qt_toolbar_panel import QtPanelToolbar
 
@@ -74,3 +77,44 @@ def test_qt_panel_toolbar_centers_buttons_when_non_elided_label_expands_width(qt
     wide_button = toolbar.add_widget("gear", title="Very long label", elide=False)
 
     assert plain_button.width() == wide_button.width()
+
+
+def test_qt_panel_toolbar_rejects_duplicate_button_names(qtbot):
+    toolbar = QtPanelToolbar()
+    qtbot.addWidget(toolbar)
+
+    toolbar.add_widget("home")
+
+    with pytest.raises(ValueError, match="already exists"):
+        toolbar.add_widget("home")
+
+
+def test_qt_panel_toolbar_disabling_active_button_switches_to_another_panel(qtbot):
+    toolbar = QtPanelToolbar(label_hidden=False)
+    qtbot.addWidget(toolbar)
+
+    home_panel = QWidget()
+    settings_panel = QWidget()
+
+    home_button = toolbar.add_widget("home", widget=home_panel)
+    settings_button = toolbar.add_widget("gear", widget=settings_panel)
+    settings_button.click()
+
+    toolbar.disable_widget(settings_button)
+
+    assert toolbar.stack_widget.currentWidget() is home_panel
+    assert settings_button.isChecked() is False
+    assert home_button.isChecked() is True
+
+
+def test_qt_panel_toolbar_hiding_wide_button_reduces_shared_width(qtbot):
+    toolbar = QtPanelToolbar(label_hidden=False)
+    qtbot.addWidget(toolbar)
+
+    plain_button = toolbar.add_widget("home")
+    wide_button = toolbar.add_widget("gear", title="Very long label", elide=False)
+    expanded_width = plain_button.width()
+
+    toolbar.disable_widget(wide_button)
+
+    assert plain_button.width() < expanded_width

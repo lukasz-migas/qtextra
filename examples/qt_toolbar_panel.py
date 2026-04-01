@@ -45,7 +45,7 @@ toolbar.add_widget(
 toolbar.add_widget(
     "gear",
     title="Settings",
-    widget=make_panel("Settings", "Longer titles wrap within the toolbar column instead of widening the toolbar."),
+    widget=make_panel("Settings", "Single-line labels stay compact by default because the toolbar elides them."),
     tooltip="Show the settings panel.",
 )
 toolbar.add_widget(
@@ -53,7 +53,7 @@ toolbar.add_widget(
     title="Help\nDocumentation",
     widget=make_panel(
         "Help",
-        "Multiple lines of text in the title will wrap within the toolbar column instead of widening the toolbar.",
+        "This button disables elision, so the toolbar widens and all buttons remain horizontally centered.",
     ),
     tooltip="Show the help panel.",
     elide=False,
@@ -66,7 +66,9 @@ toggle_btn = QPushButton("Toggle Toolbar Labels")
 toggle_btn.clicked.connect(lambda: setattr(toolbar, "label_hidden", not toolbar.label_hidden))
 controls_layout.addWidget(toggle_btn)
 
-info = QLabel("Use the button above to show or hide labels on the left toolbar.")
+info = QLabel(
+    "Use the button above to show or hide labels on the left toolbar. The Help button demonstrates `elide=False`."
+)
 info.setWordWrap(True)
 controls_layout.addWidget(info)
 controls_layout.addWidget(toolbar.stack_widget)

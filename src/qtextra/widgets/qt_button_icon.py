@@ -876,6 +876,7 @@ class QtLabelledToolbarPushButton(QWidget):
         self.stop_pulse = self.image_btn.stop_pulse
         self.start_pulse = self.image_btn.start_pulse
         self.setCheckable = self.image_btn.setCheckable
+        self.isChecked = self.image_btn.isChecked
         self.click = self.image_btn.click
 
     @property
