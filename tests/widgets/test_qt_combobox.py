@@ -3,6 +3,7 @@
 from typing import ClassVar
 
 import pytest
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox
 
@@ -294,11 +295,11 @@ class TestSearchPanel:
         assert panel._selected == "Gamma"
         assert received == ["Gamma"]
 
-    def test_row_click_handler_picks_bound_text(self, panel):
+    def test_row_click_handler_picks_bound_text(self, panel, qtbot):
         received = []
         panel.itemSelected.connect(received.append)
 
-        panel._rows[1].clicked.emit(False)
+        qtbot.mouseClick(panel._rows[1], Qt.MouseButton.LeftButton)
 
         assert panel._selected == "Beta"
         assert received == ["Beta"]
@@ -389,12 +390,12 @@ class TestQtColorSwatchComboBox:
         qtbot.addWidget(w)
         return w
 
-    def test_cell_click_selects_bound_color(self, combo):
+    def test_cell_click_selects_bound_color(self, combo, qtbot):
         received = []
         combo.evt_color_changed.connect(received.append)
         combo._btn.set_open(True)
 
-        combo._panel._cells[1].clicked.emit(False)
+        qtbot.mouseClick(combo._panel._cells[1], Qt.MouseButton.LeftButton)
 
         assert combo.current_color() == QColor("#00ff00")
         assert received == [QColor("#00ff00")]
