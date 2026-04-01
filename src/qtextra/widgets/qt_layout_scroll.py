@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import Qt
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtGui import QResizeEvent, QShowEvent
 from qtpy.QtWidgets import QHBoxLayout, QLayout, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -77,20 +78,26 @@ class QtScrollableLayoutWidget(QScrollArea):
     def minimum_height_for_widgets(self) -> int:
         """Return minimum height for all widgets."""
         height = 0
-        for i in range(self.count() - 1):
+        for i in range(self.count()):
             widget = self.get_widget(i)
             if widget:
-                height = max(height, widget.minimumHeight())
+                height = max(
+                    height, widget.sizeHint().height(), widget.minimumSizeHint().height(), widget.minimumHeight()
+                )
         return height
 
     def minimum_width_for_widgets(self) -> int:
         """Return minimum height for all widgets."""
         height = 0
-        for i in range(self.count() - 1):
+        for i in range(self.count()):
             widget = self.get_widget(i)
             if widget:
-                height = max(height, widget.minimumWidth())
+                height = max(height, widget.sizeHint().width(), widget.minimumSizeHint().width(), widget.minimumWidth())
         return height
+
+    def _content_size_hint(self) -> QSize:
+        """Return the inner widget size hint including layout margins."""
+        return self._widget.sizeHint().expandedTo(self._widget.minimumSizeHint()).expandedTo(self._widget.minimumSize())
 
     def set_min_height(self, min_height: int) -> None:
         """Set minimum height."""
@@ -99,6 +106,16 @@ class QtScrollableLayoutWidget(QScrollArea):
 
     def _update_scroll(self) -> None:
         """Update scroll."""
+
+    def showEvent(self, event: QShowEvent) -> None:  # type: ignore[override]
+        """Refresh scroll geometry when the widget is shown."""
+        super().showEvent(event)
+        self._update_scroll()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore[override]
+        """Refresh scroll geometry when the widget is resized."""
+        super().resizeEvent(event)
+        self._update_scroll()
 
 
 class QtScrollableHLayoutWidget(QtScrollableLayoutWidget):
@@ -123,10 +140,18 @@ class QtScrollableHLayoutWidget(QtScrollableLayoutWidget):
     def _update_scroll(self) -> None:
         """Update scroll."""
         height = self.MIN_HEIGHT
-        if self.count() > 1:
-            height = max(height, self.minimum_height_for_widgets())
-        if self.maximumHeight() != height:
-            self.setMaximumHeight(height + 8)
+        if self.count() > 0:
+            height = max(height, self.minimum_height_for_widgets(), self._content_size_hint().height())
+
+        available_width = max(0, self.viewport().width())
+        needs_h_scroll = self._content_size_hint().width() > available_width > 0
+        scroll_height = self.horizontalScrollBar().sizeHint().height() if needs_h_scroll else 0
+
+        target_height = height + (self.frameWidth() * 2) + scroll_height
+        if self.minimumHeight() != target_height:
+            self.setMinimumHeight(target_height)
+        if self.maximumHeight() != target_height:
+            self.setMaximumHeight(target_height)
 
 
 class QtScrollableVLayoutWidget(QtScrollableLayoutWidget):

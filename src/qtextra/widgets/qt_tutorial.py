@@ -328,6 +328,7 @@ class QtTutorial(QDialog):
         if self._current == -1:
             self.on_next()
         super().show()
+        self.raise_()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Key press event handler."""

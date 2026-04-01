@@ -162,9 +162,21 @@ class QtTagButton(QFrame):
 
     def sizeHint(self) -> QSize:
         """Get size hint."""
-        sh = self.selected.sizeHint() + self.label.sizeHint()
-        sh += self.action_btn.sizeHint() if self.action_btn.isVisible() else QSize(0, 0)
-        return sh
+        selected_hint = self.selected.sizeHint()
+        label_hint = self.label.sizeHint()
+        action_hint = self.action_btn.sizeHint() if self.action_btn.isVisible() else QSize(0, 0)
+
+        width = selected_hint.width() + label_hint.width() + action_hint.width()
+        height = max(selected_hint.height(), label_hint.height(), action_hint.height(), self.maximumHeight())
+
+        margins = self.contentsMargins()
+        width += margins.left() + margins.right()
+        height += margins.top() + margins.bottom()
+        return QSize(width, height)
+
+    def minimumSizeHint(self) -> QSize:
+        """Return minimum size hint."""
+        return self.sizeHint()
 
     def _on_action(self) -> None:
         """On delete."""

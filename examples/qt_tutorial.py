@@ -24,6 +24,9 @@ def create_popout():
         ],
     )
     pop.show()
+    pop.raise_()
+    pop.activateWindow()
+    pop.set_step(2)
 
 
 app = QApplication([])
