@@ -514,7 +514,6 @@ class QtRichToolTip(QWidget):
         self._detach_global_event_filters()
         self._content.cleanup()
         self.evt_closed.emit()
-        self.deleteLater()
         super().closeEvent(event)
 
     def _position_near_target(self) -> None:
