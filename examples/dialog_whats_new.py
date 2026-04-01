@@ -1,9 +1,7 @@
-import sys
-
 from qtpy.QtWidgets import QApplication
 
+from qtextra.config import THEMES
 from qtextra.dialogs.qt_whats_new import WhatsNewDialog, WhatsNewPage
-from qtextra.utils.dev import apply_style
 
 DEMO_PAGES = [
     WhatsNewPage(
@@ -59,9 +57,9 @@ DEMO_PAGES = [
     ),
 ]
 
-app = QApplication(sys.argv)
+app = QApplication([])
 dlg = WhatsNewDialog(DEMO_PAGES, version="3.0")
-apply_style(dlg)
-result = dlg.exec()
-print("Accepted:" if result else "Skipped")
-sys.exit(0)
+THEMES.apply(dlg)
+dlg.show()
+
+app.exec_()

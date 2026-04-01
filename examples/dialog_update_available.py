@@ -1,9 +1,9 @@
-import sys
+from qtpy.QtWidgets import QApplication
 
+from qtextra.config import THEMES
 from qtextra.dialogs.qt_update_available import UpdateAvailableDialog, UpdateInfo
-from qtextra.utils.dev import apply_style, qapplication
 
-app = qapplication()
+app = QApplication([])
 dlg = UpdateAvailableDialog(
     UpdateInfo(
         app_name="My Application",
@@ -13,7 +13,7 @@ dlg = UpdateAvailableDialog(
         message="A new version of My Application is available!",
     ),
 )
-apply_style(dlg)
+THEMES.apply(dlg)
 
 
 def on_update() -> None:
@@ -32,6 +32,6 @@ dlg.evt_update_requested.connect(on_update)
 dlg.evt_remind_later_requested.connect(on_later)
 dlg.evt_whats_new_requested.connect(on_whats_new)
 
-dlg.exec()
-print("Result action:", dlg.result_action)
-sys.exit(0)
+dlg.show()
+
+app.exec_()
