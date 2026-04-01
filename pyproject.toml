@@ -313,4 +313,5 @@ ignore = [
     "MANIFEST.in",
     "uv.lock",
     ".claude/*",
+    "scripts/**/*",
 ]
