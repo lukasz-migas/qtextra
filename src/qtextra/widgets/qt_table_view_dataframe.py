@@ -1035,7 +1035,11 @@ if __name__ == "__main__":  # pragma: no cover
     va.addWidget(widget, stretch=True)
 
     btn = Qw.QPushButton("Press me to change data")
-    btn.clicked.connect(lambda: widget.set_data(_get_new_data()))
+
+    def _refresh_demo_data() -> None:
+        widget.set_data(_get_new_data())
+
+    btn.clicked.connect(_refresh_demo_data)
     va.addWidget(btn)
 
     frame.show()

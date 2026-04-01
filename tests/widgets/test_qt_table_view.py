@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from qtpy.QtCore import QEvent, Qt
+from qtpy.QtGui import QKeyEvent
 
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_table_view_check import (
@@ -370,6 +372,26 @@ class TestTableView:
         assert len(data) == 3
         names = {row[0] for row in data}
         assert names == {"Alice", "Bob", "Carol"}
+
+    def test_double_click_signal_emits_row(self, populated_table):
+        seen = []
+        populated_table.evt_double_clicked.connect(seen.append)
+
+        populated_table.doubleClicked.emit(populated_table.model().index(1, 1))
+
+        assert seen == [1]
+
+    def test_key_press_emits_event_with_row_callable(self, populated_table):
+        seen = []
+        populated_table.evt_keypress.connect(seen.append)
+        populated_table.setCurrentIndex(populated_table.model().index(2, 1))
+
+        event = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier)
+        populated_table.keyPressEvent(event)
+
+        assert len(seen) == 1
+        assert callable(seen[0].row)
+        assert seen[0].row() == 2
 
 
 # ── Filter proxy models ────────────────────────────────────────────────────────

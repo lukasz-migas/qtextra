@@ -224,24 +224,76 @@ def _make_widget(
     func: OptionalCallback = None,
 ) -> Qw.QWidget:
     """Instantiate a widget for a schema field."""
+
+    def make_line_edit() -> Qw.QWidget:
+        return qp.make_line_edit(parent, func=func, func_clear=func, **schema)
+
+    def make_line_edit_changed() -> Qw.QWidget:
+        return qp.make_line_edit(parent, func_changed=func, func_clear=func, **schema)
+
+    def make_disabled_line_edit() -> Qw.QWidget:
+        return qp.make_line_edit(parent, func=func, disabled=True, **schema)
+
+    def make_disabled_line_edit_changed() -> Qw.QWidget:
+        return qp.make_line_edit(parent, func_changed=func, disabled=True, **schema)
+
+    def make_disabled_label() -> Qw.QWidget:
+        return qp.make_label(parent, disabled=True, **schema)
+
+    def make_checkbox() -> Qw.QWidget:
+        return qp.make_checkbox(parent, "", func=func, **schema)
+
+    def make_checkbox_with_text() -> Qw.QWidget:
+        return qp.make_checkbox(parent, schema.get("title", ""), func=func, **schema)
+
+    def make_int_spin_box() -> Qw.QWidget:
+        return qp.make_int_spin_box(parent, func=func, **schema)
+
+    def make_double_spin_box() -> Qw.QWidget:
+        return qp.make_double_spin_box(parent, func=func, **schema)
+
+    def make_combo_box() -> Qw.QWidget:
+        return qp.make_combobox(parent, func=func, **schema)
+
+    def make_searchable_combo_box() -> Qw.QWidget:
+        return qp.make_searchable_combobox(parent, func_index=func, **schema)
+
+    def make_multi_combo_box() -> Qw.QWidget:
+        return qp.make_checkable_combobox(parent, func=func, **schema)
+
+    def make_multi_select() -> Qw.QWidget:
+        return _make_multi_select(parent, schema, func=func, n_max=0)
+
+    def make_single_select() -> Qw.QWidget:
+        return _make_multi_select(parent, schema, func=func, n_max=1)
+
+    def make_single_toggle() -> Qw.QWidget:
+        return _make_toggle_group(parent, schema, func=func)
+
+    def make_single_toggle_multiline() -> Qw.QWidget:
+        return _make_toggle_group(parent, schema, func=func, multiline=True)
+
+    def make_multi_toggle() -> Qw.QWidget:
+        return _make_toggle_group(parent, schema, func=func, exclusive=False)
+
     factories: dict[str, ty.Callable[[], Qw.QWidget]] = {
-        "line_edit": lambda: qp.make_line_edit(parent, func=func, func_clear=func, **schema),
-        "line_edit_changed": lambda: qp.make_line_edit(parent, func_changed=func, func_clear=func, **schema),
-        "disabled_line_edit": lambda: qp.make_line_edit(parent, func=func, disabled=True, **schema),
-        "disabled_line_edit_changed": lambda: qp.make_line_edit(parent, func_changed=func, disabled=True, **schema),
-        "disabled_label": lambda: qp.make_label(parent, disabled=True, **schema),
-        "checkbox": lambda: qp.make_checkbox(parent, "", func=func, **schema),
-        "checkbox_with_text": lambda: qp.make_checkbox(parent, schema.get("title", ""), func=func, **schema),
-        "int_spin_box": lambda: qp.make_int_spin_box(parent, func=func, **schema),
-        "double_spin_box": lambda: qp.make_double_spin_box(parent, func=func, **schema),
-        "combo_box": lambda: qp.make_combobox(parent, func=func, **schema),
-        "searchable_combo_box": lambda: qp.make_searchable_combobox(parent, func_index=func, **schema),
-        "multi_combo_box": lambda: qp.make_checkable_combobox(parent, func=func, **schema),
-        "multi_select": lambda: _make_multi_select(parent, schema, func=func, n_max=0),
-        "single_select": lambda: _make_multi_select(parent, schema, func=func, n_max=1),
-        "single_toggle": lambda: _make_toggle_group(parent, schema, func=func),
-        "single_toggle_multiline": lambda: _make_toggle_group(parent, schema, func=func, multiline=True),
-        "multi_toggle": lambda: _make_toggle_group(parent, schema, func=func, exclusive=False),
+        "line_edit": make_line_edit,
+        "line_edit_changed": make_line_edit_changed,
+        "disabled_line_edit": make_disabled_line_edit,
+        "disabled_line_edit_changed": make_disabled_line_edit_changed,
+        "disabled_label": make_disabled_label,
+        "checkbox": make_checkbox,
+        "checkbox_with_text": make_checkbox_with_text,
+        "int_spin_box": make_int_spin_box,
+        "double_spin_box": make_double_spin_box,
+        "combo_box": make_combo_box,
+        "searchable_combo_box": make_searchable_combo_box,
+        "multi_combo_box": make_multi_combo_box,
+        "multi_select": make_multi_select,
+        "single_select": make_single_select,
+        "single_toggle": make_single_toggle,
+        "single_toggle_multiline": make_single_toggle_multiline,
+        "multi_toggle": make_multi_toggle,
     }
     try:
         return factories[widget_cls]()

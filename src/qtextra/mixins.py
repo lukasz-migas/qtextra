@@ -328,7 +328,7 @@ class DragAndDropMixin:
             position="top_left",
         )
         hp.update_property(self.centralWidget(), "drag", True)
-        hp.call_later(self, lambda: hp.update_property(self.centralWidget(), "drag", False), 2000)
+        hp.call_later(self, self._clear_drag_property, 2000)
         if event.mimeData().hasUrls():
             event.accept()
         else:
@@ -346,3 +346,7 @@ class DragAndDropMixin:
     def _handle_drop(self, event: QDropEvent) -> None:
         """Handle drop event."""
         raise NotImplementedError("Must implement method")
+
+    def _clear_drag_property(self) -> None:
+        """Reset the drag styling on the central widget."""
+        hp.update_property(self.centralWidget(), "drag", False)

@@ -20,6 +20,15 @@ if is_installed("qtextraplot"):
     DEFAULT_MODULES += ("qtextraplot",)
 
 
+def _make_style_reapply_handler(widget: QWidget) -> ty.Callable[[], None]:
+    """Create a stylesheet refresh callback for ``widget``."""
+
+    def _reapply_style() -> None:
+        _apply_style_on_widget(widget)
+
+    return _reapply_style
+
+
 def exec_(app: QApplication) -> None:
     """Run the Qt application with interrupt support."""
     from napari._qt.utils import _maybe_allow_interrupt
@@ -187,7 +196,7 @@ def apply_style(widget: QWidget, show_widget_borders: bool = False, theme_name: 
         stylesheet = widget.styleSheet()
         stylesheet += "\n" + tmp_stylesheet
         widget.setStyleSheet(stylesheet)
-    THEMES.evt_qss_changed.connect(lambda: _apply_style_on_widget(widget))
+    THEMES.evt_qss_changed.connect(_make_style_reapply_handler(widget))
 
 
 def qmain(horz: bool = True, set_style: bool = True):
