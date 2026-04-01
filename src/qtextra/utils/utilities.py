@@ -54,7 +54,7 @@ def memory_usage() -> float:
     # newer psutil versions
     try:
         percent = psutil.virtual_memory().percent
-    except Exception:
+    except AttributeError:
         percent = psutil.phymem_usage().percent
     return percent
 
@@ -100,7 +100,7 @@ def get_system_info(as_html=False) -> str:
         text += f"<b>Qt</b>: {QtCore.__version__}<br>"
         text += f"<b>{API_NAME}</b>: {API_VERSION}<br>"
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         text += f"<b>Qt</b>: Import failed ({e})<br>"
 
     modules = (
@@ -116,7 +116,7 @@ def get_system_info(as_html=False) -> str:
         try:
             loaded[module] = __import__(module)
             text += f"<b>{name}</b>: {loaded[module].__version__}<br>"
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             text += f"<b>{name}</b>: Import failed ({e})<br>"
 
     text += "<br><b>OpenGL:</b><br>"
@@ -142,7 +142,7 @@ def get_system_info(as_html=False) -> str:
                 f"  - screen {i}: resolution {screen.geometry().width()}x{screen.geometry().height()},"
                 f" scale {screen.devicePixelRatio()}<br>"
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         text += f"  - failed to load screen information {e}"
 
     if not as_html:
@@ -161,7 +161,7 @@ def connect(
     try:
         connectable_func = connectable.connect if state else connectable.disconnect
         connectable_func(func)
-    except Exception as exc:
+    except (AttributeError, RuntimeError, TypeError) as exc:
         if not silent:
             text = (
                 f"Failed to {'' if state else 'dis'}connect function; error='{exc}'; func={func};"

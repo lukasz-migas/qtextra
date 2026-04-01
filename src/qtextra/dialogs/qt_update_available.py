@@ -1,3 +1,4 @@
+# ruff: noqa: D103
 """Update-available dialog."""
 
 from __future__ import annotations

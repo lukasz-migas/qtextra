@@ -37,7 +37,7 @@ class QtHandler(QObject):
 class QtLogger(QWidget):
     """Logger window."""
 
-    THEME_COLORS: ty.ClassVar[dict] = {
+    THEME_COLORS: ty.ClassVar[dict[str, dict[str, str]]] = {
         "light": {
             "BACKGROUND": "white",
             "TEXT": "black",
@@ -59,8 +59,8 @@ class QtLogger(QWidget):
             "CRITICAL": "darkred",
         },
     }
-    THEMES: ty.ClassVar[list] = list(THEME_COLORS.keys())
-    LOG_LEVELS: ty.ClassVar[dict] = {
+    THEMES: ty.ClassVar[list[str]] = list(THEME_COLORS.keys())
+    LOG_LEVELS: ty.ClassVar[dict[str, str]] = {
         "[TRACE ": "TRACE",
         "[DEBUG ": "DEBUG",
         "[INFO ": "INFO",
@@ -69,7 +69,7 @@ class QtLogger(QWidget):
         "[CRITICAL ": "CRITICAL",
     }
     THEME: str
-    COLORS: ty.Dict[str, str]
+    COLORS: dict[str, str]
     TEXT_COLOR: str
 
     def __init__(self, parent: QWidget | None = None, log_dir: PathLike | None = None):

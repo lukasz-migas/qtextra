@@ -749,14 +749,14 @@ class TestMakeSwatchGrid:
         qtbot.addWidget(parent)
         colors = ["#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000"]
         indices_received = []
-        layout, swatches = hp.make_swatch_grid(parent, colors, func=lambda i, c: indices_received.append(i))
+        _layout, swatches = hp.make_swatch_grid(parent, colors, func=lambda i, c: indices_received.append(i))
         assert len(swatches) == 5
 
     def test_flow_layout_swatch_count(self, qtbot):
         parent = QWidget()
         qtbot.addWidget(parent)
         colors = ["#ff0000", "#00ff00", "#0000ff"]
-        layout, swatches = hp.make_swatch_grid(parent, colors, func=lambda i, c: None, use_flow_layout=True)
+        _layout, swatches = hp.make_swatch_grid(parent, colors, func=lambda i, c: None, use_flow_layout=True)
         assert len(swatches) == 3
 
     def test_grid_indices_are_global_not_per_chunk(self, qtbot):
@@ -770,7 +770,7 @@ class TestMakeSwatchGrid:
         def record(i, color):
             received_indices.append(i)
 
-        layout, swatches = hp.make_swatch_grid(parent, colors, func=record)
+        _layout, swatches = hp.make_swatch_grid(parent, colors, func=record)
         # All 12 swatches must be present
         assert len(swatches) == 12
 

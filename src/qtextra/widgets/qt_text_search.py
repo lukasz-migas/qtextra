@@ -429,7 +429,11 @@ if __name__ == "__main__":  # pragma: no cover
     status = hp.make_label(frame, "Type into the search box to search the editor.")
     search_panel = QtSearchPanel()
     search_panel.set_target_editor(editor)
-    search_panel.evt_search_changed.connect(lambda text: status.setText(f"Searching for: {text or '<empty>'}"))
+
+    def _update_status(text: str) -> None:
+        status.setText(f"Searching for: {text or '<empty>'}")
+
+    search_panel.evt_search_changed.connect(_update_status)
 
     ha.addWidget(search_panel)
     ha.addWidget(editor)

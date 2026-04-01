@@ -164,9 +164,7 @@ class QtDictTagViewer(QWidget):
             )
         reverse = self._sort_order == Qt.SortOrder.DescendingOrder
         rows.sort(
-            key=lambda row_data: (
-                row_data["key"].casefold() if self._sort_column == 0 else row_data["value_text"].casefold()
-            ),
+            key=self._row_sort_key,
             reverse=reverse,
         )
         self.table.setRowCount(0)
@@ -179,6 +177,12 @@ class QtDictTagViewer(QWidget):
             self.table.setItem(row, 1, value_item)
         self._apply_filter()
         self._resize_columns()
+
+    def _row_sort_key(self, row_data: dict[str, DictTagValue | str | None]) -> str:
+        """Return the active sort key for a rendered row."""
+        field_name = "key" if self._sort_column == 0 else "value_text"
+        value = row_data[field_name]
+        return "" if value is None else str(value).casefold()
 
     def _resize_columns(self) -> None:
         self.table.resizeColumnToContents(0)

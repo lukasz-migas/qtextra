@@ -12,6 +12,8 @@ remove and bump tornado requirement for py38
 borrowed from ipykernel:  https://github.com/ipython/ipykernel/pull/456
 """
 
+from __future__ import annotations
+
 import re
 import sys
 import typing as ty
@@ -27,6 +29,10 @@ from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 
 from qtextra.widgets.qt_dialog import QtFramelessTool
+
+
+def _noop_push(_variables: ty.Any) -> None:
+    """Fallback push callable when an embedded console is unavailable."""
 
 
 def str_to_rgb(arg):
@@ -67,7 +73,7 @@ class QtConsole(RichJupyterWidget):
         Shell for the kernel if it exists, None otherwise.
     """
 
-    def __init__(self, variables: ty.Optional[ty.Dict[str, ty.Any]] = None):
+    def __init__(self, variables: dict[str, ty.Any] | None = None):
         super().__init__()
         # Connect theme update
         if variables is None:
@@ -94,7 +100,7 @@ class QtConsole(RichJupyterWidget):
             self.kernel_client = kernel_client
             self.shell = kernel_manager.kernel.shell
             self.push = self.shell.push
-        elif type(shell) == InProcessInteractiveShell:
+        elif isinstance(shell, InProcessInteractiveShell):
             # If there is an existing running InProcessInteractiveShell
             # it is likely because multiple viewers have been launched from
             # the same process. In that case create a new kernel.
@@ -113,7 +119,7 @@ class QtConsole(RichJupyterWidget):
             self.kernel_client = None
             self.kernel_manager = None
             self.shell = None
-            self.push = lambda var: None
+            self.push = _noop_push
 
         else:
             raise ValueError(f"ipython shell not recognized; got {type(shell)}")
@@ -167,7 +173,7 @@ class QtConsoleDialog(QtFramelessTool):
 
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent: ty.Optional[QWidget]) -> None:
+    def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
@@ -188,6 +194,6 @@ class QtConsoleDialog(QtFramelessTool):
         layout.setContentsMargins(6, 6, 6, 6)
         return layout
 
-    def push_variables(self, variables: ty.Dict[str, ty.Any]) -> None:
+    def push_variables(self, variables: dict[str, ty.Any]) -> None:
         """Push variables to console."""
         self._console.push(variables)

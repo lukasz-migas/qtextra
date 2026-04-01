@@ -30,7 +30,7 @@ class QtaMixin:
         try:
             icon = qtawesome.icon(*args, **kwargs)
             self.setIcon(icon)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             logger.warning(f"Failed to set icon: args={args};  kws={kwargs}\n{exc}")
             icon, _ = get_icon(MISSING)  # type: ignore[misc]
             icon = qtawesome.icon(icon, color=THEMES.get_hex_color("warning"))

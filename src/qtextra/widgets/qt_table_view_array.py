@@ -10,11 +10,12 @@ import pandas as pd
 from koyo.timer import MeasureTimer
 from koyo.utilities import find_nearest_index_single
 from loguru import logger
-from qtpy.QtCore import QAbstractTableModel, QModelIndex, QRect, Qt, Signal  # type: ignore[attr-defined]
+from qtpy.QtCore import QModelIndex, QRect, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtGui import QBrush, QColor, QKeyEvent
-from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTableView, QWidget
+from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QPushButton, QTableView, QWidget
 
 from qtextra.utils.color import get_text_color
+from qtextra.widgets._qt_table_models import BaseTabularTableModel
 
 if ty.TYPE_CHECKING:
     from matplotlib.colors import Normalize
@@ -23,6 +24,15 @@ TEXT_COLOR: str = "#000000"
 N_COLORS = 256
 BATCH_SIZE = 50
 INITIAL_SIZE = 100
+
+
+def _make_index_getter(index: int) -> ty.Callable[[], int]:
+    """Return a zero-argument callable that always yields ``index``."""
+
+    def _get_index() -> int:
+        return index
+
+    return _get_index
 
 
 class QtRotatedHeaderView(QHeaderView):
@@ -56,7 +66,7 @@ class QtRotatedHeaderView(QHeaderView):
         return size
 
 
-class QtArrayTableModel(QAbstractTableModel):
+class QtArrayTableModel(BaseTabularTableModel):
     """Model for the table."""
 
     df: pd.DataFrame
@@ -78,13 +88,13 @@ class QtArrayTableModel(QAbstractTableModel):
         if isinstance(data, np.ndarray):
             data = pd.DataFrame(data)
         assert data.ndim == 2, "The table can only display arrays with two-dimensions."
-        self.df = data.iloc[:BATCH_SIZE, :]
         self.base_df = data
         self.colors = None
         self.color_list = None
         self.n_total = len(self.base_df)
-        self.n_loaded = len(self.df)
-        self.reset()
+        self.n_loaded = min(self.n_total, BATCH_SIZE)
+        self.set_shape(self.n_loaded, self.base_df.shape[1])
+        self.reset_model()
 
     def set_formatting(self, fmt: str) -> None:
         """Text formatter."""
@@ -92,12 +102,11 @@ class QtArrayTableModel(QAbstractTableModel):
 
     def set_colormap(self, colormap: str, min_val: float | None = None, max_val: float | None = None) -> None:
         """Set colormap."""
-        import matplotlib.cm
         import matplotlib.colors
 
         with MeasureTimer() as timer:
             if colormap:
-                colormap = matplotlib.cm.get_cmap(colormap, lut=N_COLORS)
+                colormap = matplotlib.colormaps.get_cmap(colormap).resampled(N_COLORS)
                 if min_val is None:
                     min_val = self.base_df.min().min()
                 if max_val is None:
@@ -119,42 +128,43 @@ class QtArrayTableModel(QAbstractTableModel):
                 self.colors, self.color_list = None, None
         logger.trace(f"Set colormap in {timer()}.")
 
-    def reset(self) -> None:
-        """Reset model."""
-        self.beginResetModel()
-        self.endResetModel()
-
     def reset_data(self) -> None:
         """Reset data."""
         with MeasureTimer() as timer:
-            self.df = self.df.iloc[0:0]
             self.base_df = self.base_df.iloc[0:0]
-            self.reset()
+            self.n_total = 0
+            self.n_loaded = 0
+            self.set_shape(0, 0)
+            self.reset_model()
         logger.trace(f"Reset data in {timer()}.")
+
+    def _value_at(self, row: int, column: int) -> ty.Any:
+        """Return raw value at index."""
+        return self.base_df.iat[row, column]
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
         """Parse data."""
         if not index.isValid():
             return None
+        value = self._value_at(index.row(), index.column())
         # background color
         if role == Qt.ItemDataRole.BackgroundRole:
             if self.colors and self.normalizer:
-                value = self.normalizer(self.df.iloc[index.row(), index.column()])
-                index = find_nearest_index_single(self.color_list, value)
-                color = self.colors.get(index, self.max_color)
+                normalized = self.normalizer(value)
+                color_index = find_nearest_index_single(self.color_list, normalized)
+                color = self.colors.get(color_index, self.max_color)
                 return QBrush(color)
             return QBrush()
         # text color
         if role == Qt.ItemDataRole.ForegroundRole:
             if self.colors and self.normalizer:
-                value = self.normalizer(self.df.iloc[index.row(), index.column()])
-                index = find_nearest_index_single(self.color_list, value)
-                color = self.colors.get(index, self.max_color)
+                normalized = self.normalizer(value)
+                color_index = find_nearest_index_single(self.color_list, normalized)
+                color = self.colors.get(color_index, self.max_color)
                 return QBrush(get_text_color(color))
             return QBrush(QColor(TEXT_COLOR))
         # display value
         if role == Qt.ItemDataRole.DisplayRole:
-            value = self.df.iloc[index.row(), index.column()]
             return self.fmt.format(value)
         # check alignment role
         if role == Qt.ItemDataRole.TextAlignmentRole:
@@ -169,22 +179,22 @@ class QtArrayTableModel(QAbstractTableModel):
     ) -> str | None:
         """Get header data."""
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return str(self.df.columns[index])
+            return str(self.base_df.columns[index])
         if orientation == Qt.Orientation.Vertical and role == Qt.ItemDataRole.DisplayRole:
-            return str(self.df.index[index])
+            return str(self.base_df.index[index])
         return None
 
     def rowCount(self, parent: QWidget | None = None, **kwargs: ty.Any) -> int:
         """Return number of rows."""
-        return self.df.shape[0] if self.df is not None else 0
+        return self.n_loaded
 
     def columnCount(self, parent: QWidget | None = None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
-        return self.df.shape[1] if self.df is not None else 0
+        return self._column_count
 
     def canFetchMore(self, parent: QWidget | None = None) -> bool:
         """Check whether you can fetch more data."""
-        return self.n_total >= self.n_loaded
+        return self.n_loaded < self.n_total
 
     def fetchMore(self, index: QModelIndex) -> None:
         """Fetch more data."""
@@ -196,7 +206,7 @@ class QtArrayTableModel(QAbstractTableModel):
 
             self.beginInsertRows(QModelIndex(), self.n_loaded, self.n_loaded + items_to_fetch - 1)
             self.n_loaded += items_to_fetch
-            self.df = self.base_df.iloc[: self.n_loaded, :]
+            self.set_shape(self.n_loaded, self.base_df.shape[1])
             self.endInsertRows()
         logger.trace(f"Fetched {items_to_fetch} items in {timer()}.")
 
@@ -204,7 +214,10 @@ class QtArrayTableModel(QAbstractTableModel):
         """Sort data."""
         self.beginResetModel()
         with contextlib.suppress(TypeError):
-            self.df = self.df.sort_values(self.df.columns[column], ascending=order == Qt.SortOrder.AscendingOrder)
+            self.base_df = self.base_df.sort_values(
+                self.base_df.columns[column],
+                ascending=order == Qt.SortOrder.AscendingOrder,
+            )
         self.endResetModel()
 
 
@@ -232,8 +245,8 @@ class QtArrayTableView(QTableView):
         super().keyReleaseEvent(event)
         row = self.currentIndex().row()
         col = self.currentIndex().column()
-        event.row = lambda: row  # make row retrieval a function so its compatible with other methods
-        event.column = lambda: col  # make row retrieval a function so its compatible with other methods
+        event.row = _make_index_getter(row)  # make row retrieval a function so its compatible with other methods
+        event.column = _make_index_getter(col)  # make row retrieval a function so its compatible with other methods
         self.evt_key_release.emit(event)
 
     def set_data(
@@ -261,21 +274,25 @@ class QtArrayTableView(QTableView):
         model = self.model()
         if model:
             model.set_formatting(fmt)
-            model.reset()
+            model.reset_model()
 
     def set_colormap(self, colormap: str, min_val: float | None = None, max_val: float | None = None) -> None:
         """Set colormap."""
         model: QtArrayTableModel = self.model()
         if model:
             model.set_colormap(colormap, min_val, max_val)
-            model.reset()
+            model.reset_model()
 
     def init(self) -> None:
         """Initialize table to ensure correct visuals."""
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setDragEnabled(True)
+        self.setWordWrap(False)
+        self.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         header = self.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header.setDefaultSectionSize(INITIAL_SIZE)
         # self.setHorizontalHeader(QtRotatedHeaderView(self))
 
     def reset_data(self) -> None:
@@ -286,23 +303,30 @@ class QtArrayTableView(QTableView):
 
 
 if __name__ == "__main__":  # pragma: no cover
+
+    def _get_new_data() -> np.ndarray:
+        shape = np.random.default_rng().integers(100, 10000, 2)
+        frame.setWindowTitle(f"Shape {shape}")
+        return np.random.default_rng().integers(-255, 255, shape)
+
     import sys
 
     from qtextra.utils.dev import qframe
 
     app, frame, va = qframe(False)
-    frame.setMinimumSize(400, 400)
+    frame.setMinimumSize(600, 600)
 
-    table = QtArrayTableView()
-    va.addWidget(table)
-    table.set_data(
-        np.asarray([[-1, 0, 1], [1, 0, -1]]),
-        # np.random.default_rng().integers(-255, 255, (5, 5)) / 255,
+    widget = QtArrayTableView()
+    va.addWidget(widget)
+    widget.set_data(
+        _get_new_data(),
         fmt="{:.2f}",
         colormap="coolwarm",
         min_val=-1,
         max_val=1,
     )
+    btn = QPushButton("Press me to change data")
+    btn.clicked.connect(lambda: widget.set_data(_get_new_data()))
 
     frame.show()
     sys.exit(app.exec_())

@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 import sys
 
 from qtpy.QtCore import Qt

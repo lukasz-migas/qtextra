@@ -18,11 +18,32 @@ QtDataFrameWidget > HeaderView {
     border: 0px solid {{ highlight }};
 }
 
-QtDataFrameWidget > TableView {
+QtDataFrameWidget > DataTableView {
     background-color: {{ background }};
     gridline-color: {{ highlight }};
-    selection-color: {{ lighten(highlight, 50) }};
-    selection-background-color: {{ background }};
+    selection-color: {{ text }};
+    selection-background-color: {{ lighten(highlight, 35) }};
+}
+
+QtDataFrameWidget > CornerView {
+    font-weight: bold;
+    background-color: {{ darken(background, 4) }};
+    alternate-background-color: {{ darken(background, 4) }};
+    gridline-color: {{ foreground }};
+    selection-background-color: {{ darken(background, 4) }};
+    selection-color: {{ text }};
+    border: 0px;
+}
+
+QtDataFrameWidget > CornerView::item {
+    padding: 4px 8px;
+}
+
+QtDataFrameWidget > HeaderView#columnHeader,
+QtDataFrameWidget > HeaderView#indexHeader,
+QtDataFrameWidget > CornerView#cornerView {
+    background-color: {{ darken(background, 4) }};
+    alternate-background-color: {{ darken(background, 4) }};
 }
 
 /* ----------------- QtCheckableTableView ----------------- */

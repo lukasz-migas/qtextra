@@ -269,7 +269,7 @@ class TaskWidget(QFrame):
         try:
             if self.dlg_info:
                 self.dlg_info.update_progress()
-        except (AttributeError, RuntimeError, Exception):
+        except (AttributeError, RuntimeError):
             self.dlg_info = None
 
     def on_open_menu(self) -> None:
@@ -344,9 +344,8 @@ class TaskWidget(QFrame):
 
     def _on_cancel_task(self, force: bool = False) -> None:
         """Triggered when user clicked to pause the task."""
-        if self.task:
-            if force or hp.confirm(self, "Are you sure you wish to cancel this task?", "Cancel task?"):
-                self.evt_cancel_task.emit(self.task)  # type: ignore[unused-ignore]
+        if self.task and (force or hp.confirm(self, "Are you sure you wish to cancel this task?", "Cancel task?")):
+            self.evt_cancel_task.emit(self.task)  # type: ignore[unused-ignore]
         self._update_state()
 
     def cancel(self) -> None:

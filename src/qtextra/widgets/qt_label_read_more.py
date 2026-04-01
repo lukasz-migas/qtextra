@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QMouseEvent
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget

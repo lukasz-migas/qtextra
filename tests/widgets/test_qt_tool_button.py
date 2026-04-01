@@ -63,7 +63,7 @@ def test_qt_tool_button_wrong(setup_widget, make_menu, get_icon_path, qtbot):
     with pytest.raises(ValueError) as __:
         widget.set_menu(menu, "not a callable")
 
-    with pytest.raises(ValueError) as __:
+    with pytest.raises(TypeError) as __:
         widget.set_menu("not a menu", print)
 
 

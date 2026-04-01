@@ -544,7 +544,11 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
 
     def disable_while_open(self, *widgets: QWidget) -> None:
         """Disable widgets while the window is open."""
-        self.evt_close.connect(lambda: hp.disable_widgets(*widgets, disabled=False))
+
+        def _enable_widgets() -> None:
+            hp.disable_widgets(*widgets, disabled=False)
+
+        self.evt_close.connect(_enable_widgets)
         hp.disable_widgets(*widgets, disabled=True)
 
     def closeEvent(self, event: QCloseEvent | None = None) -> None:

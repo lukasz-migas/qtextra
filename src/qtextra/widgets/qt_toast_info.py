@@ -1,11 +1,12 @@
+# ruff: noqa: D102,D417
 """Info widgets."""
 
 from __future__ import annotations
 
 import weakref
-from enum import Enum
-from typing import Union
+from typing import ClassVar, Union
 
+from koyo.typing import StrEnum
 from qtpy.QtCore import (
     QEasingCurve,
     QEvent,
@@ -27,19 +28,19 @@ from qtextra.utils.wrap import TextWrap
 from qtextra.widgets.qt_label_icon import QtSeverityLabel
 
 
-class ToastPosition(Enum):
+class ToastPosition(StrEnum):
     """info toast position."""
 
-    TOP = 0
-    BOTTOM = 1
-    TOP_LEFT = 2
-    TOP_RIGHT = 3
-    BOTTOM_LEFT = 4
-    BOTTOM_RIGHT = 5
-    NONE = 6
+    TOP = "top"
+    BOTTOM = "bottom"
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+    NONE = "none"
 
 
-TOAST_POSITION_DICT = {
+TOAST_POSITION_DICT: dict[str, ToastPosition] = {
     "top": ToastPosition.TOP,
     "bottom": ToastPosition.BOTTOM,
     "top_left": ToastPosition.TOP_LEFT,
@@ -351,19 +352,10 @@ class QtInfoToast(QFrame):
 class QtInfoToastManager(QObject):
     """info toast manager."""
 
-    _instance = None
-    managers = {}
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls, *args, **kwargs)
-            cls._instance.__initialized = False
-
-        return cls._instance
+    _instances: ClassVar[dict[type[QtInfoToastManager], QtInfoToastManager]] = {}
+    managers: ClassVar[dict[ToastPosition, type[QtInfoToastManager]]] = {}
 
     def __init__(self):
-        if self.__initialized:
-            return
         super().__init__()
 
         self.spacing = 16
@@ -372,7 +364,6 @@ class QtInfoToastManager(QObject):
         self._animation_groups = weakref.WeakKeyDictionary()
         self._slide_animations = []
         self._drop_animations = []
-        self.__initialized = True
 
     def add(self, toast: QtInfoToast):
         """Add info toast."""
@@ -404,7 +395,7 @@ class QtInfoToastManager(QObject):
         self._slide_animations.append(slide_animation)
 
         toast.setProperty("slide_animation", slide_animation)
-        toast.evt_closed.connect(lambda: self.remove(toast))
+        toast.evt_closed.connect(self._make_remove_handler(toast))
         slide_animation.start()
 
     def remove(self, toast: QtInfoToast):
@@ -432,6 +423,14 @@ class QtInfoToastManager(QObject):
         # adjust the position of the remaining info toasts
         self._update_drop_animation(p)
         self._animation_groups[p].start()
+
+    def _make_remove_handler(self, toast: QtInfoToast):
+        """Create a close handler that removes ``toast`` from the manager."""
+
+        def _remove_toast() -> None:
+            self.remove(toast)
+
+        return _remove_toast
 
     def _create_slide_animation(self, toast: QtInfoToast):
         slide_animation = QPropertyAnimation(toast, b"pos")
@@ -495,7 +494,11 @@ class QtInfoToastManager(QObject):
         if position not in cls.managers:
             raise ValueError(f"`{position}` is an invalid animation type.")
 
-        return cls.managers[position]()
+        manager_cls = cls.managers[position]
+        if manager_cls not in cls._instances:
+            cls._instances[manager_cls] = manager_cls()
+
+        return cls._instances[manager_cls]
 
 
 @QtInfoToastManager.register(ToastPosition.TOP)
@@ -637,7 +640,7 @@ if __name__ == "__main__":  # pragma: no cover
                 content="Here is a message. A couple of lines long.\nAnother line starts here.",
                 parent=frame,
                 position=choice(list(ToastPosition)),
-                duration=100000,
+                duration=3000,
                 orientation=Qt.Orientation.Vertical,
             )
 

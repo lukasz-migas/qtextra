@@ -1,10 +1,11 @@
+# ruff: noqa: D102
 """tool tip widget."""
 
 from __future__ import annotations
 
 import typing as ty
-from enum import Enum
 
+from koyo.typing import StrEnum
 from qtpy.QtCore import QEvent, QObject, QPoint, QPointF, QPropertyAnimation, Qt, QTimer
 from qtpy.QtGui import QColor, QIcon, QImage, QPainter, QPainterPath, QPixmap, QPolygonF
 from qtpy.QtWidgets import QGraphicsDropShadowEffect, QHBoxLayout, QWidget
@@ -14,31 +15,31 @@ from qtextra.config import THEMES
 from qtextra.widgets.qt_popout import PopoutView, PopoutViewBase
 
 
-class TipPosition(Enum):
+class TipPosition(StrEnum):
     """tool tip tail position."""
 
-    TOP = 0
-    BOTTOM = 1
-    LEFT = 2
-    RIGHT = 3
-    TOP_LEFT = 4
-    TOP_RIGHT = 5
-    BOTTOM_LEFT = 6
-    BOTTOM_RIGHT = 7
-    LEFT_TOP = 8
-    LEFT_BOTTOM = 9
-    RIGHT_TOP = 10
-    RIGHT_BOTTOM = 11
-    NONE = 12
+    TOP = "top"
+    BOTTOM = "bottom"
+    LEFT = "left"
+    RIGHT = "right"
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+    LEFT_TOP = "left_top"
+    LEFT_BOTTOM = "left_bottom"
+    RIGHT_TOP = "right_top"
+    RIGHT_BOTTOM = "right_bottom"
+    NONE = "none"
 
 
-class ImagePosition(Enum):
+class ImagePosition(StrEnum):
     """Image position."""
 
-    TOP = 0
-    BOTTOM = 1
-    LEFT = 2
-    RIGHT = 3
+    TOP = "top"
+    BOTTOM = "bottom"
+    LEFT = "left"
+    RIGHT = "right"
 
 
 class QtToolTipView(PopoutView):
@@ -217,9 +218,17 @@ class QtToolTip(QWidget):
         super().closeEvent(e)
 
     def eventFilter(self, obj, e: QEvent):
-        if self.parent() and obj is self.parent().window():
-            if e.type() in [QEvent.Type.Resize, QEvent.Type.WindowStateChange, QEvent.Type.Move]:
-                self.move(self.manager._get_position(self))
+        if (
+            self.parent()
+            and obj is self.parent().window()
+            and e.type()
+            in [
+                QEvent.Type.Resize,
+                QEvent.Type.WindowStateChange,
+                QEvent.Type.Move,
+            ]
+        ):
+            self.move(self.manager._get_position(self))
 
         return super().eventFilter(obj, e)
 

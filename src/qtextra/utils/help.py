@@ -13,6 +13,11 @@ COLORS = {
 }
 
 
+def _error_sort_key(error: str) -> tuple[bool, bool, bool]:
+    """Return the priority tuple used to order help messages."""
+    return ('class="hint"' in error, 'class="error"' in error, 'class="warning"' in error)
+
+
 def _make_message(
     kind: ty.Literal["error", "warning", "success", "normal", "hint"],
     message: str,
@@ -41,11 +46,7 @@ def _make_message(
 def sort_errors(errors: list[str]) -> list[str]:
     """Sort errors with the order: 'hints', 'errors', 'warnings'."""
     errors = errors or []
-    return sorted(
-        errors,
-        key=lambda x: ('class="hint"' in x, 'class="error"' in x, 'class="warning"' in x),
-        reverse=True,
-    )
+    return sorted(errors, key=_error_sort_key, reverse=True)
 
 
 def get_icon_state(errors: list[str]) -> tuple[str, str]:

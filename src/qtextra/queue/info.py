@@ -243,7 +243,7 @@ class TaskInfoDialog(QtDialog):
         self.filter_by_command = hp.make_line_edit(
             self,
             placeholder="Search for...",
-            func_changed=lambda text, col=TABLE_CONFIG.command: self.table_proxy.setFilterByColumn(text, col),
+            func_changed=self._on_filter_command_changed,
         )
         sel_model = self.command_table.selectionModel()
         sel_model.selectionChanged.connect(self.copy_selection_to_clipboard)
@@ -295,3 +295,7 @@ class TaskInfoDialog(QtDialog):
         layout2.addLayout(layout, stretch=True)
         main_layout.addLayout(layout2)
         return main_layout
+
+    def _on_filter_command_changed(self, text: str) -> None:
+        """Filter the command table by command text."""
+        self.table_proxy.setFilterByColumn(text, TABLE_CONFIG.command)

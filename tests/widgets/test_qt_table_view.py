@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from qtpy.QtCore import QEvent, Qt
+from qtpy.QtGui import QKeyEvent
 
 from qtextra.utils.table_config import TableConfig
 from qtextra.widgets.qt_table_view_check import (
@@ -135,6 +137,11 @@ class TestModel:
         assert model.rowCount() == 0
         assert model.columnCount() == 0
 
+    def test_empty_model_uses_header_count(self):
+        model = QtCheckableItemModel(None, data=[], header=["A", "B", "C"])
+        assert model.rowCount() == 0
+        assert model.columnCount() == 3
+
     def test_add_data(self, qtbot):
         w = QtCheckableTableView(None)
         qtbot.addWidget(w)
@@ -177,7 +184,7 @@ class TestModel:
     def test_get_row_id_for_values(self, qtbot, populated_table):
         # After ascending sort: Alice=row0, Bob=row1, Carol=row2
         col_data = populated_table.get_col_data(0)
-        alice_row = col_data.index("Alice")
+        col_data.index("Alice")
         carol_row = col_data.index("Carol")
         bob_row = col_data.index("Bob")
 
@@ -190,6 +197,22 @@ class TestModel:
 
         populated_table.model().sort(0, Qt.SortOrder.DescendingOrder)
         assert populated_table.get_col_data(0) == ["Carol", "Bob", "Alice"]
+
+    def test_sort_reflects_updated_numeric_values(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("Value", "value")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Alice", 30], ["Bob", 10], ["Carol", 20]])
+
+        w.model().sort(1, Qt.SortOrder.AscendingOrder)
+        assert w.get_col_data(0) == ["Bob", "Carol", "Alice"]
+
+        w.update_value(2, 1, 5, match_to_sort=False)
+        w.model().sort(1, Qt.SortOrder.AscendingOrder)
+        assert w.get_col_data(0) == ["Alice", "Bob", "Carol"]
 
     def test_n_checked_unchecked(self, qtbot):
         w = QtCheckableTableView(None)
@@ -211,6 +234,29 @@ class TestModel:
         w.uncheck_all_rows()
         assert w.get_all_unchecked() == [0, 1]
 
+    def test_check_all_emits_single_data_changed_signal(self, qtbot):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("", "check").add("Name", "name")
+        w.setup_model_from_config(cfg)
+        w.add_data([[False, "Alice"], [False, "Bob"], [False, "Carol"]])
+
+        calls = []
+        w.model().dataChanged.connect(lambda *args: calls.append(args))
+
+        w.check_all_rows()
+
+        assert w.get_all_checked() == [0, 1, 2]
+        assert len(calls) == 1
+
+    def test_set_data_checkstate_no_change_returns_false(self):
+        from qtpy.QtCore import Qt
+
+        model = QtCheckableItemModel(None, data=[[True, "Alice"]], header=["", "Name"], checkable_columns=[0])
+        index = model.index(0, 0)
+
+        assert model.setData(index, True, Qt.ItemDataRole.CheckStateRole) is False
+
 
 # ── QtCheckableTableView ──────────────────────────────────────────────────────
 
@@ -219,6 +265,32 @@ class TestTableView:
     def test_init_empty(self, table):
         assert table.n_rows == 0
         assert table.n_cols == 0
+
+    def test_constructor_config_applies_left_alignment(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        cfg = TableConfig(text_alignment="left").add("Name", "name").add("Value", "value")
+        w = QtCheckableTableView(None, config=cfg)
+        qtbot.addWidget(w)
+        w.add_data([["Alice", 1]])
+
+        index = w.model().index(0, 0)
+        assert w.model().data(index, Qt.ItemDataRole.TextAlignmentRole) == Qt.AlignmentFlag.AlignLeft
+
+    def test_setup_model_from_config_preserves_color_and_checkable_columns(self, qtbot):
+        cfg = (
+            TableConfig(text_alignment="left")
+            .add("", "check", dtype="bool")
+            .add("Name", "name")
+            .add("Active", "active", dtype="bool", checkable=True)
+            .add("Color", "color", is_color=True)
+        )
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        w.setup_model_from_config(cfg)
+
+        assert w.model().checkable_columns == [0, 2]
+        assert w.model().color_columns == [3]
 
     def test_setup_and_add_rows(self, table):
         cfg = TableConfig().add("Test", "test").add("Test2", "test2")
@@ -260,6 +332,20 @@ class TestTableView:
         populated_table.update_column(1, [10, 20, 30])
         assert populated_table.get_col_data(1) == [10, 20, 30]
 
+    def test_get_sort_index_after_sort(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("Value", "value")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Bob", 1], ["Alice", 2], ["Carol", 3]])
+        w.model().sort(0, Qt.SortOrder.AscendingOrder)
+
+        assert w.model().get_sort_index(0) == 1
+        assert w.model().get_sort_index(1) == 0
+        assert w.model().get_sort_index(2) == 2
+
     def test_find_index_of(self, populated_table):
         bob_idx = populated_table.find_index_of(0, "Bob")
         assert bob_idx >= 0
@@ -286,6 +372,26 @@ class TestTableView:
         assert len(data) == 3
         names = {row[0] for row in data}
         assert names == {"Alice", "Bob", "Carol"}
+
+    def test_double_click_signal_emits_row(self, populated_table):
+        seen = []
+        populated_table.evt_double_clicked.connect(seen.append)
+
+        populated_table.doubleClicked.emit(populated_table.model().index(1, 1))
+
+        assert seen == [1]
+
+    def test_key_press_emits_event_with_row_callable(self, populated_table):
+        seen = []
+        populated_table.evt_keypress.connect(seen.append)
+        populated_table.setCurrentIndex(populated_table.model().index(2, 1))
+
+        event = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_A, Qt.KeyboardModifier.NoModifier)
+        populated_table.keyPressEvent(event)
+
+        assert len(seen) == 1
+        assert callable(seen[0].row)
+        assert seen[0].row() == 2
 
 
 # ── Filter proxy models ────────────────────────────────────────────────────────
@@ -352,6 +458,20 @@ class TestFilterProxy:
         proxy.setFilterByColumn("", 0)
         assert proxy.rowCount() == 2
 
+    def test_filter_state_none_does_not_add_unchecked_filter(self, qtbot):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("", "check", dtype="bool").add("Name", "name")
+        w.setup_model_from_config(cfg)
+        w.add_data([[True, "Alice"], [False, "Bob"]])
+
+        proxy = MultiColumnSingleValueProxyModel()
+        proxy.setSourceModel(w.model())
+        proxy.setFilterByState(None, 0)
+
+        assert proxy.rowCount() == 2
+        assert 0 not in proxy.filters_by_state
+
     def test_filter_no_spurious_readd_on_empty(self, qtbot):
         """Regression: clearing a filter must not re-add an empty string entry."""
         w = QtCheckableTableView(None)
@@ -366,3 +486,13 @@ class TestFilterProxy:
         proxy.setFilterByColumn("", 0)
         # After clearing, dict must not contain the column key
         assert 0 not in proxy.filters_by_text
+
+    def test_update_column_raises_when_index_equals_column_count(self, qtbot):
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("Value", "value")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Alice", 1], ["Bob", 2]])
+
+        with pytest.raises(ValueError, match="outside of the boundaries"):
+            w.model().update_column(2, [10, 20])

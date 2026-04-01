@@ -1,6 +1,6 @@
 """Confirm action by typing requested text."""
 
-import typing as ty
+from __future__ import annotations
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog, QWidget
@@ -13,7 +13,7 @@ class QtConfirmWithTextDialog(QDialog):
 
     def __init__(
         self,
-        parent: ty.Optional[QWidget] = None,
+        parent: QWidget | None = None,
         title: str = "Please confirm...",
         message: str = "Please type <b>confirm</b> to continue.",
         request: str = "confirm",

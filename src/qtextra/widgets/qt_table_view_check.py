@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import math
-import operator
 import typing as ty
 from contextlib import contextmanager, suppress
-from enum import Enum
+from numbers import Number
 
 import numpy as np
+from koyo.typing import StrEnum
 from loguru import logger
 from natsort.natsort import index_natsorted, order_by_index
 from qtpy.QtCore import (  # type: ignore[attr-defined]
@@ -54,6 +54,15 @@ __all__ = (
     "SingleColumnMultiValueProxyModel",
     "TableConfig",
 )
+
+
+def _make_index_getter(index: int) -> ty.Callable[[], int]:
+    """Return a zero-argument callable that always yields ``index``."""
+
+    def _get_index() -> int:
+        return index
+
+    return _get_index
 
 
 class WrapTextDelegate(QStyledItemDelegate):
@@ -281,7 +290,7 @@ class StarRatingDelegate(QStyledItemDelegate):
 
 
 class BadgeDelegate(QStyledItemDelegate):
-    COLORS: ty.ClassVar[dict] = {
+    COLORS: ty.ClassVar[dict[str, QColor]] = {
         "ok": QColor("#2e7d32"),
         "warning": QColor("#ed6c02"),
         "error": QColor("#d32f2f"),
@@ -494,7 +503,7 @@ class DoubleSpinBoxDelegate(QStyledItemDelegate):
         model.setData(index, editor.value(), Qt.ItemDataRole.EditRole)
 
 
-class MultiFilterMode(str, Enum):
+class MultiFilterMode(StrEnum):
     """Multi filter mode."""
 
     OR = "OR"
@@ -600,10 +609,10 @@ class MultiColumnSingleValueProxyModel(FilterProxyModelBase):
         """Set filter by value."""
 
         def update_filter() -> None:
-            if value is None and column in self.filters_by_state:
-                del self.filters_by_state[column]
-            else:
-                self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
+            if value is None:
+                self.filters_by_state.pop(column, None)
+                return
+            self.filters_by_state[column] = Qt.CheckState.Checked if value else Qt.CheckState.Unchecked
 
         self._update_row_filter(update_filter)
         self.evt_filtered.emit()
@@ -759,6 +768,97 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.icon_columns = icon_columns or []
         self.checkable_columns = checkable_columns or []
         self.text_alignment = text_alignment or Qt.AlignmentFlag.AlignCenter
+        self._sort_index_by_initial: dict[int, int] = {}
+        self._sort_key_cache: dict[int, list[ty.Any]] = {}
+        self._sort_strategy_cache: dict[int, str] = {}
+        self._rebuild_sort_lookup()
+
+    def _rebuild_sort_lookup(self) -> None:
+        """Build a lookup from initial row index to current sorted position."""
+        self._sort_index_by_initial = {
+            initial_row: sorted_row for sorted_row, initial_row in enumerate(self.original_index)
+        }
+
+    def _clear_sort_cache(self, column: int | None = None) -> None:
+        """Clear cached sort metadata."""
+        if column is None:
+            self._sort_key_cache.clear()
+            self._sort_strategy_cache.clear()
+            return
+        self._sort_key_cache.pop(column, None)
+        self._sort_strategy_cache.pop(column, None)
+
+    def _reorder_sort_cache(self, new_index: list[int], descending: bool) -> None:
+        """Keep cached sort keys aligned with the current row order."""
+        for column, keys in list(self._sort_key_cache.items()):
+            reordered = order_by_index(keys, new_index)
+            if descending:
+                reordered.reverse()
+            self._sort_key_cache[column] = reordered
+
+    def _sort_strategy(self, column: int) -> str:
+        """Infer the cheapest safe sort strategy for a column."""
+        cached = self._sort_strategy_cache.get(column)
+        if cached is not None:
+            return cached
+
+        values = [row[column] for row in self._table]
+        non_null = [value for value in values if value is not None]
+        if not non_null:
+            strategy = "text"
+        elif all(isinstance(value, Number) and not isinstance(value, complex) for value in non_null):
+            strategy = "numeric"
+        elif all(isinstance(value, str) for value in non_null):
+            strategy = "natural" if any(any(ch.isdigit() for ch in value) for value in non_null) else "text"
+        else:
+            strategy = "natural"
+
+        self._sort_strategy_cache[column] = strategy
+        return strategy
+
+    def _normalized_sort_key(self, value: ty.Any, strategy: str) -> ty.Any:
+        """Build a comparable key for cached non-natural sorting."""
+        if strategy == "numeric":
+            return (value is None, 0.0 if value is None else float(value))
+        return (value is None, "" if value is None else str(value).casefold())
+
+    def _sort_keys(self, column: int) -> tuple[str, list[ty.Any] | None]:
+        """Return cached sort keys for the given column when applicable."""
+        strategy = self._sort_strategy(column)
+        if strategy == "natural":
+            return strategy, None
+
+        keys = self._sort_key_cache.get(column)
+        if keys is None:
+            keys = [self._normalized_sort_key(row[column], strategy) for row in self._table]
+            self._sort_key_cache[column] = keys
+        return strategy, keys
+
+    def _iter_target_rows(self) -> list[int]:
+        """Return source-model row indices affected by bulk row actions."""
+        if self.table_proxy:
+            return self.table_proxy.find_visible_rows()[0]
+        return list(range(self.rowCount()))
+
+    def _set_all_rows_checked(self, state: bool) -> None:
+        """Set the first checkable column for all targeted rows with a single model notification."""
+        rows = self._iter_target_rows()
+        if not rows:
+            self.evt_checked.emit(-1, state)
+            return
+
+        changed_rows = []
+        for row in rows:
+            if self._table[row][0] != state:
+                self._table[row][0] = state
+                changed_rows.append(row)
+
+        self._clear_sort_cache(0)
+        if changed_rows:
+            top_left = self.createIndex(min(changed_rows), 0)
+            bottom_right = self.createIndex(max(changed_rows), 0)
+            self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.CheckStateRole])
+        self.evt_checked.emit(-1, state)
 
     def flags(self, index):
         """Return flags."""
@@ -786,7 +886,9 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def columnCount(self, parent: QModelIndex | None = None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
-        return len(self._table[0]) if self._table else 0
+        if self._table:
+            return len(self._table[0])
+        return len(self.header)
 
     def removeRow(self, row: int, parent: QModelIndex | None = None) -> bool:
         """Remove row."""
@@ -796,6 +898,8 @@ class QtCheckableItemModel(QAbstractTableModel):
         self._table.pop(row)
         self.original_index.pop(row)
         self.endRemoveRows()
+        self._clear_sort_cache()
+        self._rebuild_sort_lookup()
         return True
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole | None = None) -> ty.Any:
@@ -854,20 +958,30 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Sort table."""
         if self.no_sort_columns and column in self.no_sort_columns:
             return
+        if self.rowCount() <= 1:
+            return
 
         # emit signal about upcoming change
         self.layoutAboutToBeChanged.emit()
 
-        # get sort index
-        new_index = index_natsorted(self._table, key=operator.itemgetter(column))
+        strategy, sort_keys = self._sort_keys(column)
+        if strategy == "natural":
+            column_values = [row[column] for row in self._table]
+            new_index = index_natsorted(column_values)
+        else:
+            assert sort_keys is not None
+            new_index = sorted(range(len(sort_keys)), key=sort_keys.__getitem__)
 
         # sort
         self._table = order_by_index(self._table, new_index)
         self.original_index = order_by_index(self.original_index, new_index)
+        descending = order == Qt.SortOrder.DescendingOrder
+        self._reorder_sort_cache(new_index, descending)
 
-        if order == Qt.SortOrder.DescendingOrder:
+        if descending:
             self._table.reverse()
             self.original_index.reverse()
+        self._rebuild_sort_lookup()
 
         # indicate that change to data has been made
         self.layoutChanged.emit()
@@ -878,9 +992,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         column = index.column()
 
         if role == Qt.ItemDataRole.CheckStateRole:
-            old_value = index.data()
-            # value = not old_value
-            # change = True
+            old_value = self._table[row][column]
             value = bool(value)
             change = old_value != value
         else:
@@ -889,6 +1001,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
         self._table[row][column] = value
         if change:
+            self._clear_sort_cache(column)
             self.dataChanged.emit(index, index)
             if column == 0:
                 self.evt_checked.emit(row, value)
@@ -925,7 +1038,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def update_column(self, col, values, match_to_sort: bool = True) -> None:
         """Update column."""
-        if col > self.columnCount():
+        if col >= self.columnCount():
             raise ValueError("Cannot update column as its outside of the boundaries")
 
         if len(values) > self.rowCount():
@@ -943,33 +1056,17 @@ class QtCheckableItemModel(QAbstractTableModel):
         if self.state is None:
             self.state = self.n_checked == self.rowCount()
         self.state = not self.state
-        for row, __ in enumerate(self._table):
-            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
-                continue
-            self._table[row][0] = self.state
-            index = self.createIndex(row, 0)
-            self.dataChanged.emit(index, index)
-        self.evt_checked.emit(-1, self.state)
+        self._set_all_rows_checked(self.state)
 
     def check_all_rows(self) -> None:
         """Check all rows in the table."""
-        for row, __ in enumerate(self._table):
-            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
-                continue
-            self._table[row][0] = True
-            index = self.createIndex(row, 0)
-            self.dataChanged.emit(index, index)
-        self.evt_checked.emit(-1, True)
+        self.state = True
+        self._set_all_rows_checked(True)
 
     def uncheck_all_rows(self) -> None:
         """Uncheck all rows."""
-        for row, __ in enumerate(self._table):
-            if self.table_proxy and not self.table_proxy.filterAcceptsRow(row, QModelIndex()):
-                continue
-            self._table[row][0] = False
-            index = self.createIndex(row, 0)
-            self.dataChanged.emit(index, index)
-        self.evt_checked.emit(-1, False)
+        self.state = False
+        self._set_all_rows_checked(False)
 
     def get_all_checked(self) -> list[int]:
         """Get all checked items."""
@@ -1008,7 +1105,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
     def get_sort_index(self, row: int) -> int:
         """Get the index inside the sorted array as matched from the not-sorted array."""
-        return self.original_index.index(row)
+        return self._sort_index_by_initial[row]
 
     def get_sort_indices(self, index: list) -> list:
         """Get list of all sort indices."""
@@ -1037,6 +1134,8 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Add data."""
         self._table.extend(data)
         self.original_index = list(range(len(self._table)))
+        self._clear_sort_cache()
+        self._rebuild_sort_lookup()
         # indicate that change to data has been made
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
@@ -1046,6 +1145,8 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Reset data."""
         self._table.clear()
         self.original_index.clear()
+        self._clear_sort_cache()
+        self._rebuild_sort_lookup()
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()
 
@@ -1098,7 +1199,7 @@ class QtCheckableTableView(QTableView):
         self._selection = selection
 
         # register events
-        self.doubleClicked.connect(lambda v: self.evt_double_clicked.emit(v.row()))
+        self.doubleClicked.connect(self._emit_double_clicked_row)
         self.clicked.connect(self.on_table_clicked)
         if self._sortable:
             self.header.sectionClicked.connect(self.sortByColumn)
@@ -1285,11 +1386,19 @@ class QtCheckableTableView(QTableView):
     def init_from_config(self) -> None:
         """Initialize based on config."""
         self.set_data(
-            [],
-            self._config.header,
-            self._config.no_sort_columns,
-            self._config.hidden_columns,
+            data=[],
+            header=self._config.header,
+            no_sort_columns=self._config.no_sort_columns,
+            hidden_columns=self._config.hidden_columns,
+            html_columns=self._config.html_columns,
             icon_columns=self._config.icon_columns,
+            color_columns=self._config.color_columns,
+            checkable_columns=self._config.checkable_columns,
+            text_alignment={
+                "left": Qt.AlignmentFlag.AlignLeft,
+                "center": Qt.AlignmentFlag.AlignCenter,
+                "right": Qt.AlignmentFlag.AlignRight,
+            }[self._config.text_alignment],
         )
 
     def set_model(self, model: QtCheckableItemModel) -> None:
@@ -1301,22 +1410,23 @@ class QtCheckableTableView(QTableView):
             model.no_sort_columns = self._config.no_sort_columns
             model.hidden_columns = self._config.hidden_columns
             model.checkable_columns = self._config.checkable_columns
-            # model.text_alignment = {
-            #     "left": Qt.AlignmentFlag.AlignLeft,
-            #     "center": Qt.AlignmentFlag.AlignCenter,
-            #     "right": Qt.AlignmentFlag.AlignRight,
-            # }[self._config.text_alignment]
+            model.text_alignment = {
+                "left": Qt.AlignmentFlag.AlignLeft,
+                "center": Qt.AlignmentFlag.AlignCenter,
+                "right": Qt.AlignmentFlag.AlignRight,
+            }[self._config.text_alignment]
         self.setModel(model)
 
     def setup_model_from_config(self, config: TableConfig):
         """Setup model from config."""
         self.setup_model(
-            config.header,
-            config.no_sort_columns,
-            config.hidden_columns,
-            config.html_columns,
-            config.icon_columns,
-            config.checkable_columns,
+            header=config.header,
+            no_sort_columns=config.no_sort_columns,
+            hidden_columns=config.hidden_columns,
+            html_columns=config.html_columns,
+            icon_columns=config.icon_columns,
+            color_columns=config.color_columns,
+            checkable_columns=config.checkable_columns,
             text_alignment={
                 "left": Qt.AlignmentFlag.AlignLeft,
                 "center": Qt.AlignmentFlag.AlignCenter,
@@ -1331,18 +1441,20 @@ class QtCheckableTableView(QTableView):
         hidden_columns: list[int] | None = None,
         html_columns: list[int] | None = None,
         icon_columns: list[int] | None = None,
+        color_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
         text_alignment: Qt.AlignmentFlag | None = None,
     ) -> None:
         """Setup model in the table."""
         self.set_data(
-            [],
-            header,
-            no_sort_columns,
-            hidden_columns,
-            html_columns,
-            icon_columns,
-            checkable_columns,
+            data=[],
+            header=header,
+            no_sort_columns=no_sort_columns,
+            hidden_columns=hidden_columns,
+            html_columns=html_columns,
+            icon_columns=icon_columns,
+            color_columns=color_columns,
+            checkable_columns=checkable_columns,
             text_alignment=text_alignment,
         )
 
@@ -1548,7 +1660,7 @@ class QtCheckableTableView(QTableView):
     def update_values(
         self,
         row: int,
-        column_value: ty.Dict[int, ty.Union[str, int, float, bool]],
+        column_value: dict[int, str | int | float | bool],
         match_to_sort: bool = True,
     ) -> None:
         """Update multiple columns for a particular row."""
@@ -1594,12 +1706,16 @@ class QtCheckableTableView(QTableView):
         order = self.horizontalHeader().sortIndicatorOrder()
         return QTableView.sortByColumn(self, index, order)
 
+    def _emit_double_clicked_row(self, index: QModelIndex) -> None:
+        """Forward the double-clicked row index via the legacy signal."""
+        self.evt_double_clicked.emit(index.row())
+
     def keyPressEvent(self, event):
         """Process key event press."""
         super().keyPressEvent(event)
         row = self.currentIndex().row()
         self.selectRow(row)
-        event.row = lambda: row  # make row retrieval a function so its compatible with other methods
+        event.row = _make_index_getter(row)  # make row retrieval a function so its compatible with other methods
         self.evt_keypress.emit(event)
 
     #         # take into account change of order

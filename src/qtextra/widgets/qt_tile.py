@@ -10,6 +10,15 @@ from qtpy.QtWidgets import QFrame, QVBoxLayout, QWidget
 import qtextra.helpers as hp
 
 
+def _noop_tile_action() -> None:
+    """Fallback tile action used when no callback is provided."""
+
+
+def _demo_tile_action() -> None:
+    """Demo tile action for local examples."""
+    print("Hello")
+
+
 class Tile(BaseModel):
     """Workflow model."""
 
@@ -19,14 +28,14 @@ class Tile(BaseModel):
     description: str
     icon: str | None = ""
     func: ty.Callable | None = None
-    icon_kws: ty.Dict[str, ty.Any] | None = None
+    icon_kws: dict[str, ty.Any] | None = None
     warning: str = ""
 
     @field_validator("func", mode="before")
     def _validate_widget(cls, value) -> ty.Callable:
         """Check correct model is provided."""
         if not value:
-            return lambda: None
+            return _noop_tile_action
         if not callable(value):
             raise TypeError("Widget class must have a run method.")
         return value
@@ -115,7 +124,7 @@ if __name__ == "__main__":  # pragma: no cover
         model = Tile(
             title="One-vs-One",
             description="Compare intensity of one ion to another.",
-            func=lambda: print("Hello"),
+            func=_demo_tile_action,
             icon="mdi.chart-scatter-plot",
         )
         widget = QtTileWidget(frame, model)
@@ -125,7 +134,7 @@ if __name__ == "__main__":  # pragma: no cover
         model = Tile(
             title="One-vs-One",
             description="Convert multi-scene CZI images or other formats to OME-TIFF.",
-            func=lambda: print("Hello"),
+            func=_demo_tile_action,
             icon="mdi.chart-scatter-plot",
             icon_kws={"color": "#ff0000"},
             warning="<i>Not available on Apple Silicon due to a bug I can't find...</i>",

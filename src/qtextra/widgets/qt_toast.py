@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Toast."""
 
 from __future__ import annotations
@@ -29,7 +30,7 @@ class QtToast(SubWindowBase):
 
         self.make_ui()
         if hasattr(parent, "evt_resized"):
-            parent.evt_resized.connect(lambda: self.move_to(self.POSITION))
+            parent.evt_resized.connect(self._on_parent_resized)
 
     # noinspection PyAttributeOutsideInit
     def make_ui(self) -> None:
@@ -67,6 +68,10 @@ class QtToast(SubWindowBase):
         layout.addWidget(self._message_label, stretch=True)
         layout.addStretch(1)
         layout.addWidget(self._timer_indicator)
+
+    def _on_parent_resized(self) -> None:
+        """Keep the toast anchored when the parent resizes."""
+        self.move_to(self.POSITION)
 
     def show_message(
         self,

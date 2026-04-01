@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import traceback
 import typing as ty
@@ -9,7 +11,7 @@ def format_exception(exc_info: ty.Union[ty.Tuple, ty.List, Exception]):
         exc_info = (type(exc_info), exc_info, exc_info.__traceback__)
 
     if not isinstance(exc_info, (list, tuple)):
-        raise ValueError("Cannot format exception")
+        raise TypeError("Cannot format exception")
 
     # if len(exc_info) == 1:
     #     exc_info = exc_info[0]

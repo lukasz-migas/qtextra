@@ -28,7 +28,7 @@ def _ipython_has_eventloop() -> bool:
     if not ipy_module:
         return False
 
-    shell: InteractiveShell = ipy_module.get_ipython()  # type: ignore
+    shell = ipy_module.get_ipython()
     if not shell:
         return False
 
@@ -84,7 +84,10 @@ def _maybe_allow_interrupt(qapp):
     sn = QSocketNotifier(rsock.fileno(), QSocketNotifier.Type.Read)
 
     # Clear the socket to re-arm the notifier.
-    sn.activated.connect(lambda *args: rsock.recv(1))
+    def _drain_signal_socket(*_args) -> None:
+        rsock.recv(1)
+
+    sn.activated.connect(_drain_signal_socket)
 
     def handle(*args):
         nonlocal handler_args
@@ -113,5 +116,5 @@ def qt_might_be_rich_text(text) -> bool:
 
     try:
         return _Qt.mightBeRichText(text)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return bool(RICH_TEXT_PATTERN.search(text))

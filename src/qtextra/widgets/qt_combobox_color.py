@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Combobox with color swatches."""
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ class QtColorSwatchComboBox(QWidget):
         self._placeholder = placeholder
         self._panel = _SwatchPanel(parent=self)
         self._panel.evt_color_selected.connect(self._on_select)
-        self._panel.evt_hidden.connect(lambda: self._btn.set_open(False))
+        self._panel.evt_hidden.connect(self._close_panel)
         self._build()
 
     def _build(self):
@@ -43,7 +44,7 @@ class QtColorSwatchComboBox(QWidget):
     def _toggle(self):
         if self._panel.isVisible():
             self._panel.hide()
-            self._btn.set_open(False)
+            self._close_panel()
         else:
             self._panel.show_below(self._btn, min_width=240)
             self._btn.set_open(True)
@@ -52,11 +53,15 @@ class QtColorSwatchComboBox(QWidget):
         self._color = color
         self._name = name
         self._btn.set_color(color, name)
-        self._btn.set_open(False)
+        self._close_panel()
         self.evt_color_changed.emit(color)
 
     def current_color(self) -> QColor | None:
         return self._color
+
+    def _close_panel(self) -> None:
+        """Reset the button state when the popup closes."""
+        self._btn.set_open(False)
 
 
 class _SwatchPanel(_PopupPanel):
@@ -83,7 +88,7 @@ class _SwatchPanel(_PopupPanel):
     def add_swatch(self, color: QColor, name: str):
         idx = len(self._cells)
         cell = _SwatchCell(color, name, size=self.CELL)
-        cell.clicked.connect(lambda _, c=color, n=name: self._pick(c, n))
+        cell.clicked.connect(self._make_cell_click_handler(color, name))
         self._grid.addWidget(cell, idx // self._cols, idx % self._cols)
         self._cells.append(cell)
         self.adjustSize()
@@ -111,6 +116,14 @@ class _SwatchPanel(_PopupPanel):
             c.set_selected(c._color == color)
         self.hide()
         self.evt_color_selected.emit(color, name)
+
+    def _make_cell_click_handler(self, color: QColor, name: str):
+        """Create a click handler for a swatch cell."""
+
+        def _handle_cell_click(_checked: bool = False) -> None:
+            self._pick(color, name)
+
+        return _handle_cell_click
 
 
 class _SwatchCell(QAbstractButton):
@@ -240,7 +253,11 @@ if __name__ == "__main__":  # pragma: no cover
             ("#FF5722", "Deep Org"),
         ],
     )
-    combo.evt_color_changed.connect(lambda c: print(f"Color: {c.name()}"))
+
+    def _print_color(color: QColor) -> None:
+        print(f"Color: {color.name()}")
+
+    combo.evt_color_changed.connect(_print_color)
     ha.addWidget(combo)
     frame.show()
     sys.exit(app.exec_())

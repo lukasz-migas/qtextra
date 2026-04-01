@@ -12,6 +12,11 @@ from qtextra.widgets.qt_button_tag import QtTagManager
 from qtextra.widgets.qt_dict_tag_editor import DictTagValue
 
 
+def _option_summary_sort_key(item: tuple[str, list[str]]) -> str:
+    """Sort summary options case-insensitively by option label."""
+    return item[0].casefold()
+
+
 class _SummaryCard(QFrame):
     """Small summary card for one key."""
 
@@ -142,7 +147,7 @@ class QtMultiDictSummaryWidget(QWidget):
         for key in sorted(key_summary, key=str.casefold):
             matches = {
                 option: sorted(sample_names, key=str.casefold)
-                for option, sample_names in sorted(key_summary[key].items(), key=lambda item: item[0].casefold())
+                for option, sample_names in sorted(key_summary[key].items(), key=_option_summary_sort_key)
             }
             ordered_key_summary[key] = {
                 "sample_count": sum(len(sample_names) for sample_names in matches.values()),

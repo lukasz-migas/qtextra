@@ -4,9 +4,10 @@ This module is heavily inspired by napari's implementation which minimised size 
 visually appealing.
 """
 
+from __future__ import annotations
+
 from functools import reduce
 from operator import ior
-from typing import List, Optional
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDockWidget, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
@@ -40,7 +41,7 @@ class QtDockedWidget(QDockWidget):
         *,
         name: str = "",
         area: str = "bottom",
-        allowed_areas: Optional[List[str]] = None,
+        allowed_areas: list[str] | None = None,
     ):
         self._parent = parent
         super().__init__(name)
@@ -147,12 +148,12 @@ class QtCustomTitleBar(QLabel):
         self.close_button.setToolTip("Hide this panel")
         self.close_button.setObjectName("QtTitleBarCloseButton")
         self.close_button.setCursor(Qt.ArrowCursor)
-        self.close_button.clicked.connect(lambda: self.parent().toggleViewAction().trigger())
+        self.close_button.clicked.connect(self._toggle_parent_visibility)
         self.float_button = QPushButton(self)
         self.float_button.setToolTip("Float this panel")
         self.float_button.setObjectName("QtTitleBarFloatButton")
         self.float_button.setCursor(Qt.ArrowCursor)
-        self.float_button.clicked.connect(lambda: self.parent().setFloating(not self.parent().isFloating()))
+        self.float_button.clicked.connect(self._toggle_parent_floating)
         self.title = QLabel(title, self)
         self.title.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum))
 
@@ -188,3 +189,15 @@ class QtCustomTitleBar(QLabel):
         else:
             szh.setHeight(20)
         return szh
+
+    def _toggle_parent_visibility(self) -> None:
+        """Toggle the parent dock widget visibility."""
+        parent = self.parent()
+        if parent is not None:
+            parent.toggleViewAction().trigger()
+
+    def _toggle_parent_floating(self) -> None:
+        """Toggle the parent dock widget floating state."""
+        parent = self.parent()
+        if parent is not None:
+            parent.setFloating(not parent.isFloating())

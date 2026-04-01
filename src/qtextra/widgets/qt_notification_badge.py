@@ -20,24 +20,24 @@ BadgeSize = ty.Literal["xs", "sm", "md", "lg", "xl"]
 class QtNotificationBadge(QtOverlay):
     """Small badge that can be overlaid on any widget."""
 
-    STATES: tuple[BadgeState, ...] = ("", "info", "success", "warning", "error")
-    MODES: tuple[BadgeMode, ...] = ("dot", "count")
-    SIZES: tuple[BadgeSize, ...] = ("xs", "sm", "md", "lg", "xl")
-    SIZE_MAP: dict[BadgeSize, int] = {
+    STATES: ty.ClassVar[tuple[BadgeState, ...]] = ("", "info", "success", "warning", "error")
+    MODES: ty.ClassVar[tuple[BadgeMode, ...]] = ("dot", "count")
+    SIZES: ty.ClassVar[tuple[BadgeSize, ...]] = ("xs", "sm", "md", "lg", "xl")
+    SIZE_MAP: ty.ClassVar[dict[BadgeSize, int]] = {
         "xs": 10,
         "sm": 12,
         "md": 16,
         "lg": 20,
         "xl": 24,
     }
-    STATE_COLOR_KEYS: dict[BadgeState, str] = {
+    STATE_COLOR_KEYS: ty.ClassVar[dict[BadgeState, str]] = {
         "info": "info",
         "success": "success",
         "warning": "warning",
         "error": "error",
     }
-    MAX_COUNT = 99
-    Y_OFFSET = 0
+    MAX_COUNT: ty.ClassVar[int] = 99
+    Y_OFFSET: ty.ClassVar[int] = 0
 
     def __init__(
         self,

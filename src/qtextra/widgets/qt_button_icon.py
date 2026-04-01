@@ -591,8 +591,12 @@ class QtPriorityButton(QtMultiStatePushButton):
     """Priority button."""
 
     DEFAULT_STATE = "normal"
-    STATE_TO_ICON: ty.ClassVar[dict] = {"low": "priority_low", "normal": "priority_normal", "high": "priority_high"}
-    STATE_TO_OPTION: ty.ClassVar[dict] = {"low": "Low", "normal": "Normal", "high": "High"}
+    STATE_TO_ICON: ty.ClassVar[dict[str, str]] = {
+        "low": "priority_low",
+        "normal": "priority_normal",
+        "high": "priority_high",
+    }
+    STATE_TO_OPTION: ty.ClassVar[dict[str, str]] = {"low": "Low", "normal": "Normal", "high": "High"}
 
     @property
     def priority(self) -> str:
@@ -608,14 +612,14 @@ class QtStateButton(QtMultiStatePushButton):
     """State button."""
 
     DEFAULT_STATE = "info"
-    STATE_TO_ICON: ty.ClassVar[dict] = {
+    STATE_TO_ICON: ty.ClassVar[dict[str, str]] = {
         "success": "success",
         "debug": "debug",
         "info": "info",
         "warning": "warning",
         "error": "error",
     }
-    STATE_TO_OPTION: ty.ClassVar[dict] = {
+    STATE_TO_OPTION: ty.ClassVar[dict[str, str]] = {
         "success": "Success",
         "debug": "Debug",
         "info": "Info",
@@ -628,12 +632,12 @@ class QtEmotionButton(QtMultiStatePushButton):
     """State button."""
 
     DEFAULT_STATE = "happy"
-    STATE_TO_ICON: ty.ClassVar[dict] = {
+    STATE_TO_ICON: ty.ClassVar[dict[str, str]] = {
         "happy": "happy",
         "neutral": "neutral",
         "sad": "sad",
     }
-    STATE_TO_OPTION: ty.ClassVar[dict] = {
+    STATE_TO_OPTION: ty.ClassVar[dict[str, str]] = {
         "happy": "Happy!",
         "neutral": "Neutral",
         "sad": "Sad",
@@ -647,11 +651,11 @@ class QtMultiThemeButton(QtMultiStatePushButton):
     ICON_OFF = "light_theme"
 
     DEFAULT_STATE = "light"
-    STATE_TO_ICON: ty.ClassVar[dict] = {
+    STATE_TO_ICON: ty.ClassVar[dict[str, str]] = {
         "light": "light_theme",
         "dark": "dark_theme",
     }
-    STATE_TO_OPTION: ty.ClassVar[dict] = {
+    STATE_TO_OPTION: ty.ClassVar[dict[str, str]] = {
         "light": "Light",
         "dark": "Dark",
     }
@@ -927,10 +931,14 @@ if __name__ == "__main__":  # pragma: no cover
         ha.addWidget(hp.make_v_line())
 
         lay = QVBoxLayout()
+
+        def _print_right_click() -> None:
+            print("Right click")
+
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
             btn = QtImagePushButton()
             if i % 2 == 0:
-                btn.connect_to_right_click(lambda: print("Right click"))
+                btn.connect_to_right_click(_print_right_click)
             if i % 3 == 0:
                 btn.set_count(i)
             btn.set_qta(qta_name, scale_factor=1)

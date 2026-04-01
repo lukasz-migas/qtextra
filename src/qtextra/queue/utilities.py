@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import typing as ty
 from contextlib import suppress
@@ -24,6 +26,11 @@ COLORS = {
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
+def _log_process_finished(exit_code: int, _exit_status) -> None:
+    """Log process completion at trace level."""
+    logger.trace(f"Command finished with {exit_code}")
+
+
 def set_process(process: QProcess, command: str, args: list[str]) -> None:
     """Set process."""
     process.setProgram(command)
@@ -48,7 +55,7 @@ def run_command(command: list[str]) -> None:
 
     process = QProcess(get_main_window())
     process.finished.connect(process.deleteLater)
-    process.finished.connect(lambda exit_code, exit_status: logger.trace(f"Command finished with {exit_code}"))
+    process.finished.connect(_log_process_finished)
     process.setProgram(program)
     # Under Windows, the `setArguments` arguments are wrapped in a string which renders the arguments
     # incorrect. It's safer to simply join the arguments  together and set them as one long string. The
@@ -128,7 +135,7 @@ def format_timestamp(timestamp: float) -> str:
     return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty.Sequence[ty.Callable]:
+def iterable_callbacks(func: ty.Union[ty.Callable, Callback] | None) -> ty.Sequence[ty.Callable]:
     """Callbacks should always be a sequence."""
     if func is None:
         return []
@@ -137,13 +144,13 @@ def iterable_callbacks(func: ty.Optional[ty.Union[ty.Callable, Callback]]) -> ty
     return [func]
 
 
-def _safe_call(func: ty.Optional[ty.Sequence[ty.Callable]], task: ty.Optional["Task"] = None, which: str = "") -> None:
+def _safe_call(func: ty.Sequence[ty.Callable] | None, task: Task | None = None, which: str = "") -> None:
     if func is not None:
         try:
             for _func in func:
                 with suppress(Exception):
                     _func() if task is None else _func(task)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             with suppress(Exception):
                 print(f"Exception raised in call (source={which}): {err}; func={func}; task={task}")
 
@@ -171,7 +178,7 @@ def escape_ansi(text: str) -> str:
     """
     try:
         return ansi_escape.sub("", text)
-    except Exception:
+    except Exception:  # noqa: BLE001
         return text
 
 

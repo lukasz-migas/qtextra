@@ -1,7 +1,8 @@
 """Typing utilities."""
 
 import typing as ty
-from enum import Enum
+
+from koyo.typing import StrEnum
 
 Callback = ty.Union[ty.Callable, ty.Sequence[ty.Callable]]
 OptionalCallback = ty.Optional[ty.Union[ty.Callable, ty.Sequence[ty.Callable]]]
@@ -10,7 +11,7 @@ IconType = ty.Union[str, tuple[str, dict[str, ty.Any]]]
 GifOption = ty.Literal["dots", "infinity", "oval", "circle", "square"]
 
 
-class TaskState(str, Enum):
+class TaskState(StrEnum):
     """State of the task."""
 
     QUEUED = "queued"
@@ -28,7 +29,7 @@ class TaskState(str, Enum):
     INVALID = "invalid"
 
 
-class TaskProgress(str, Enum):
+class TaskProgress(StrEnum):
     """Progress of a task."""
 
     PENDING = "wait"
@@ -37,22 +38,22 @@ class TaskProgress(str, Enum):
     ACTIVE = "active"
 
 
-class WorkerState(str, Enum):
+class WorkerState(StrEnum):
     """Worker state."""
 
     FINISHED = "finished"
     NOT_ENOUGH_SPACE = "not_enough_space"
 
 
-class ProcessState(str, Enum):
+class ProcessState(StrEnum):
     """Process state."""
 
-    PASS = "pass"
+    PASS = "pass"  # noqa: S105
     FAIL = "fail"
     CANCEL = "cancel"
 
 
-class TaskType(str, Enum):
+class TaskType(StrEnum):
     """Task types."""
 
     PROCESS = "process"
@@ -60,7 +61,7 @@ class TaskType(str, Enum):
     CLI = "console"
 
 
-class State(str, Enum):
+class State(StrEnum):
     """State."""
 
     COMPLETE = "check"

@@ -1,3 +1,4 @@
+# ruff: noqa: D102
 """Selection list."""
 
 from __future__ import annotations
@@ -148,17 +149,9 @@ class QtSelectionList(QWidget):
         self.list_widget.setWordWrap(True)
         self.list_widget.itemChanged.connect(self.on_selection_changed)
         if self.double_click_to_select:
-            self.list_widget.itemDoubleClicked.connect(
-                lambda item: item.setCheckState(
-                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
-                ),
-            )
+            self.list_widget.itemDoubleClicked.connect(self._toggle_item_check_state)
         if self.enable_single_click:
-            self.list_widget.itemClicked.connect(
-                lambda item: item.setCheckState(
-                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
-                ),
-            )
+            self.list_widget.itemClicked.connect(self._toggle_item_check_state)
         # self.list_widget.setAlternatingRowColors(True)
         self._layout.addRow(self.list_widget)
 
@@ -167,6 +160,11 @@ class QtSelectionList(QWidget):
         item = self.list_widget.item(index)
         if item:
             self.list_widget.setCurrentItem(item)
+
+    def _toggle_item_check_state(self, item: QListWidgetItem) -> None:
+        """Toggle the checked state for a list item."""
+        is_checked = item.checkState() == Qt.CheckState.Checked
+        item.setCheckState(Qt.CheckState.Unchecked if is_checked else Qt.CheckState.Checked)
 
     def on_selection_changed(self) -> None:
         """Update selection changed information."""
@@ -189,10 +187,10 @@ class QtSelectionList(QWidget):
             items, checked = order_by_index(items, index), order_by_index(checked, index)  # type: ignore[assignment]
 
         self.list_widget.clear()
-        for text, checked in zip(items, checked):
+        for text, is_checked in zip(items, checked):
             item = QListWidgetItem(text)
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Unchecked if not checked else Qt.CheckState.Checked)
+            item.setCheckState(Qt.CheckState.Unchecked if not is_checked else Qt.CheckState.Checked)
             self.list_widget.addItem(item)
         self.on_selection_changed()
 
