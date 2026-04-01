@@ -16,3 +16,48 @@ ToolTipBubble QLabel#contentLabel {
     padding: 0px 2px;
     margin: 0px;
 }
+
+QFrame#richToolTipBubble {
+    background: {{ darken(background, 3) }};
+    border: 1px solid {{ foreground }};
+    border-radius: 8px;
+}
+
+QLabel#richToolTipTitle {
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+    color: {{ text }};
+    background: transparent;
+    padding: 0px;
+    margin: 0px;
+}
+
+QLabel#richToolTipBody {
+    font-size: {{ font_size }};
+    color: {{ text }};
+    background: transparent;
+    padding: 0px;
+    margin: 0px;
+}
+
+QLabel#richToolTipBody a {
+    color: {{ highlight }};
+    text-decoration: none;
+}
+
+QLabel#richToolTipShortcut {
+    color: {{ lighten(text, 25) }};
+    background: {{ darken(background, 10) }};
+    border: 1px solid {{ foreground }};
+    border-radius: 3px;
+    padding: 1px 5px;
+    margin: 0px;
+}
+
+QFrame#richToolTipSeparator {
+    color: {{ foreground }};
+    background: {{ foreground }};
+    min-height: 1px;
+    max-height: 1px;
+    border: none;
+}

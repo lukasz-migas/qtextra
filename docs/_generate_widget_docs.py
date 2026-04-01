@@ -356,6 +356,22 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=560,
     ),
     WidgetDoc(
+        slug="qt_rich_tooltip",
+        title="QtRichToolTip",
+        section="Feedback And Teaching",
+        summary="A rich tooltip popup with HTML content, media, and footer actions.",
+        example="qt_rich_tooltip.py",
+        classes=(
+            "qtextra.widgets.qt_rich_tooltip.QtRichToolTip",
+            "qtextra.widgets.qt_rich_tooltip.RichToolTipAction",
+        ),
+        notes=(
+            "Use `duration=-1` for persistent tooltips that stay visible until dismissed.",
+            "The tooltip is shown without activating the window, so existing dialogs keep focus.",
+        ),
+        screenshot_width=620,
+    ),
+    WidgetDoc(
         slug="qt_tooltip",
         title="QtToolTip",
         section="Feedback And Teaching",

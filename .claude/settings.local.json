@@ -5,7 +5,12 @@
       "Bash(grep -n \"QToolBar\\\\|toolbar\\\\|ToolBar\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/assets/stylesheets/*.qss)",
       "Bash(python -m pytest tests/widgets/test_qt_table_view.py -v --tb=short)",
       "Bash(python -m pytest tests/widgets/test_qt_table_view.py::TestTableView::test_get_col_data tests/widgets/test_qt_table_view.py::TestModel::test_get_row_id tests/widgets/test_qt_table_view.py::TestTableView::test_set_value -v --tb=long)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(grep -n \"class QtaMixin\\\\|_qta_mixin\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/widgets/*.py)",
+      "Bash(python3 -c \":*)",
+      "Bash(pip3 -q show qtpy)",
+      "Bash(ruff check:*)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''scratch/rich_tooltip.py''\\).read\\(\\)\\); print\\(''Syntax OK''\\)\")"
     ]
   }
 }
