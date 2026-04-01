@@ -1285,11 +1285,19 @@ class QtCheckableTableView(QTableView):
     def init_from_config(self) -> None:
         """Initialize based on config."""
         self.set_data(
-            [],
-            self._config.header,
-            self._config.no_sort_columns,
-            self._config.hidden_columns,
+            data=[],
+            header=self._config.header,
+            no_sort_columns=self._config.no_sort_columns,
+            hidden_columns=self._config.hidden_columns,
+            html_columns=self._config.html_columns,
             icon_columns=self._config.icon_columns,
+            color_columns=self._config.color_columns,
+            checkable_columns=self._config.checkable_columns,
+            text_alignment={
+                "left": Qt.AlignmentFlag.AlignLeft,
+                "center": Qt.AlignmentFlag.AlignCenter,
+                "right": Qt.AlignmentFlag.AlignRight,
+            }[self._config.text_alignment],
         )
 
     def set_model(self, model: QtCheckableItemModel) -> None:
@@ -1301,22 +1309,23 @@ class QtCheckableTableView(QTableView):
             model.no_sort_columns = self._config.no_sort_columns
             model.hidden_columns = self._config.hidden_columns
             model.checkable_columns = self._config.checkable_columns
-            # model.text_alignment = {
-            #     "left": Qt.AlignmentFlag.AlignLeft,
-            #     "center": Qt.AlignmentFlag.AlignCenter,
-            #     "right": Qt.AlignmentFlag.AlignRight,
-            # }[self._config.text_alignment]
+            model.text_alignment = {
+                "left": Qt.AlignmentFlag.AlignLeft,
+                "center": Qt.AlignmentFlag.AlignCenter,
+                "right": Qt.AlignmentFlag.AlignRight,
+            }[self._config.text_alignment]
         self.setModel(model)
 
     def setup_model_from_config(self, config: TableConfig):
         """Setup model from config."""
         self.setup_model(
-            config.header,
-            config.no_sort_columns,
-            config.hidden_columns,
-            config.html_columns,
-            config.icon_columns,
-            config.checkable_columns,
+            header=config.header,
+            no_sort_columns=config.no_sort_columns,
+            hidden_columns=config.hidden_columns,
+            html_columns=config.html_columns,
+            icon_columns=config.icon_columns,
+            color_columns=config.color_columns,
+            checkable_columns=config.checkable_columns,
             text_alignment={
                 "left": Qt.AlignmentFlag.AlignLeft,
                 "center": Qt.AlignmentFlag.AlignCenter,
@@ -1331,18 +1340,20 @@ class QtCheckableTableView(QTableView):
         hidden_columns: list[int] | None = None,
         html_columns: list[int] | None = None,
         icon_columns: list[int] | None = None,
+        color_columns: list[int] | None = None,
         checkable_columns: list[int] | None = None,
         text_alignment: Qt.AlignmentFlag | None = None,
     ) -> None:
         """Setup model in the table."""
         self.set_data(
-            [],
-            header,
-            no_sort_columns,
-            hidden_columns,
-            html_columns,
-            icon_columns,
-            checkable_columns,
+            data=[],
+            header=header,
+            no_sort_columns=no_sort_columns,
+            hidden_columns=hidden_columns,
+            html_columns=html_columns,
+            icon_columns=icon_columns,
+            color_columns=color_columns,
+            checkable_columns=checkable_columns,
             text_alignment=text_alignment,
         )
 

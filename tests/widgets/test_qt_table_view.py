@@ -220,6 +220,32 @@ class TestTableView:
         assert table.n_rows == 0
         assert table.n_cols == 0
 
+    def test_constructor_config_applies_left_alignment(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        cfg = TableConfig(text_alignment="left").add("Name", "name").add("Value", "value")
+        w = QtCheckableTableView(None, config=cfg)
+        qtbot.addWidget(w)
+        w.add_data([["Alice", 1]])
+
+        index = w.model().index(0, 0)
+        assert w.model().data(index, Qt.ItemDataRole.TextAlignmentRole) == Qt.AlignmentFlag.AlignLeft
+
+    def test_setup_model_from_config_preserves_color_and_checkable_columns(self, qtbot):
+        cfg = (
+            TableConfig(text_alignment="left")
+            .add("", "check", dtype="bool")
+            .add("Name", "name")
+            .add("Active", "active", dtype="bool", checkable=True)
+            .add("Color", "color", is_color=True)
+        )
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        w.setup_model_from_config(cfg)
+
+        assert w.model().checkable_columns == [0, 2]
+        assert w.model().color_columns == [3]
+
     def test_setup_and_add_rows(self, table):
         cfg = TableConfig().add("Test", "test").add("Test2", "test2")
         table.setup_model_from_config(cfg)
