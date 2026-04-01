@@ -51,7 +51,7 @@ all = [
 ]
 df = [
     "pandas",
-    "polars",
+    "polars[pandas]",
 ]
 sentry = ["sentry-sdk>2"]
 console = [

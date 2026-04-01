@@ -93,12 +93,11 @@ class QtArrayTableModel(BaseTabularTableModel):
 
     def set_colormap(self, colormap: str, min_val: float | None = None, max_val: float | None = None) -> None:
         """Set colormap."""
-        import matplotlib.cm
         import matplotlib.colors
 
         with MeasureTimer() as timer:
             if colormap:
-                colormap = matplotlib.cm.get_cmap(colormap, lut=N_COLORS)
+                colormap = matplotlib.colormaps.get_cmap(colormap).resampled(N_COLORS)
                 if min_val is None:
                     min_val = self.base_df.min().min()
                 if max_val is None:
@@ -182,7 +181,7 @@ class QtArrayTableModel(BaseTabularTableModel):
 
     def columnCount(self, parent: QWidget | None = None, **kwargs: ty.Any) -> int:
         """Return number of columns."""
-        return self.base_df.shape[1] if self.base_df is not None else 0
+        return self._column_count
 
     def canFetchMore(self, parent: QWidget | None = None) -> bool:
         """Check whether you can fetch more data."""

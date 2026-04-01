@@ -61,9 +61,12 @@ def _normalize_tabular_data(
         return data if inplace else data.copy()
     if pl is not None:
         if isinstance(data, pl.Series):
-            return data.to_frame().to_pandas()
+            return pd.DataFrame({data.name or "column_0": data.to_list()})
         if isinstance(data, pl.DataFrame):
-            return data.to_pandas()
+            try:
+                return data.to_pandas()
+            except ModuleNotFoundError:
+                return pd.DataFrame(data.to_dicts(), columns=data.columns)
     msg = f"Unsupported tabular data type: {type(data)!r}"
     raise TypeError(msg)
 
