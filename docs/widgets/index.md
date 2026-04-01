@@ -13,6 +13,8 @@ Browse by capability below, then open the individual pages for screenshots, runn
 
 ## Data Editors
 
+- [QtArrayTableView](./qt_table_view_array.md): high-volume array tables with sorting, lazy row loading, and optional colormap rendering.
+- [QtDataFrameWidget](./qt_table_view_dataframe.md): a dataframe viewer with synchronized headers and support for pandas and polars inputs.
 - [QtDictTagEditor](./qt_dict_tag_editor.md): editable key-value tables for small dictionaries with search and typed values.
 - [QtDictTagViewer](./qt_dict_tag_viewer.md): a read-only searchable dictionary viewer for compact metadata tables.
 - [QtMultiDictTagEditor](./qt_multi_dict_tag_editor.md): edit multiple named dictionaries together with an aggregate summary view.
@@ -45,7 +47,11 @@ Browse by capability below, then open the individual pages for screenshots, runn
 
 ## Selection And Input
 
+- [Qt Search Comboboxes](./qt_combobox_search.md): search-first combobox variants for inline filtering and type-ahead selection.
+- [QtColorSwatchComboBox](./qt_combobox_color.md): a combobox that presents a grid of named color swatches.
 - [QtFilterEdit](./qt_filter_edit.md): filter-token entry widgets for building simple search and match expressions.
+- [QtMultiSelectComboBox](./qt_combobox_multi.md): a multi-select combobox that renders the current selection as inline chips.
 - [QtSearchPanel](./qt_search_panel.md): reusable search and replace panel for text editors and plain-text views.
+- [QtTagEditor](./qt_tag_editor.md): a lightweight tag entry widget for adding, removing, and deduplicating short labels.
 - [QtTagManager](./qt_button_tag.md): interactive tag chips with filtering and add/remove affordances.
 - [QtToggleGroup](./qt_toggle_group.md): compact grouped toggle buttons with exclusive and multi-select modes.

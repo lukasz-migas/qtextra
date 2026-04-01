@@ -70,10 +70,10 @@ def test_update_available_dialog_emits_actions(qtbot):
     qtbot.addWidget(dialog)
 
     seen: list[str] = []
-    dialog.update_requested.connect(lambda: seen.append("update"))
-    dialog.remind_later_requested.connect(lambda: seen.append("later"))
-    dialog.whats_new_requested.connect(lambda: seen.append("whats_new"))
-    dialog.dismissed.connect(lambda: seen.append("dismissed"))
+    dialog.evt_update_requested.connect(lambda: seen.append("update"))
+    dialog.evt_remind_later_requested.connect(lambda: seen.append("later"))
+    dialog.evt_whats_new_requested.connect(lambda: seen.append("whats_new"))
+    dialog.evt_dismissed.connect(lambda: seen.append("dismissed"))
 
     dialog._on_whats_new_clicked("whats_new")
     assert dialog.result_action == "whats_new"
@@ -89,7 +89,7 @@ def test_update_available_dialog_emits_actions(qtbot):
     )
     qtbot.addWidget(dialog)
     dismissed: list[str] = []
-    dialog.dismissed.connect(lambda: dismissed.append("dismissed"))
+    dialog.evt_dismissed.connect(lambda: dismissed.append("dismissed"))
     dialog.reject()
     assert dialog.result_action == "dismissed"
     assert dismissed == ["dismissed"]
@@ -102,7 +102,7 @@ def test_update_available_dialog_update_accepts(qtbot):
     qtbot.addWidget(dialog)
 
     seen: list[str] = []
-    dialog.update_requested.connect(lambda: seen.append("update"))
+    dialog.evt_update_requested.connect(lambda: seen.append("update"))
     dialog._on_update_clicked()
 
     assert seen == ["update"]

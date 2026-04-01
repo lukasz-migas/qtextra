@@ -24,5 +24,9 @@ them is a good next contribution target.
 - [Sentry Dialogs](./sentry.md): telemetry opt-in, crash reporting setup, and
   feedback environment variables
 
+- [WhatsNewDialog](./qt_whats_new.md): multi-page release notes and feature-introduction dialog
+
+- [UpdateAvailableDialog](./qt_update_available.md): update prompt with release-note and remind-later actions
+
 - [DialogThemeEditor](./qt_theme_editor.md): live theme editor for colors,
   font sizes, and console styles

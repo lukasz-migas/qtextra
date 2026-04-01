@@ -6,6 +6,16 @@
   should be enabled
 - `install_error_monitor`, which initializes `sentry-sdk` after the user opts in
 
+## Screenshot
+
+{{ show_example('dialog_sentry.py', 760) }}
+
+## Example
+
+Source: `examples/dialog_sentry.py`
+
+{{ include_example('dialog_sentry.py') }}
+
 Install the extra first:
 
 ```bash
@@ -69,6 +79,11 @@ environment variables:
 - `QTEXTRA_TELEMETRY_PROJECT`
 
 Without all three, the feedback dialog still opens but submission is disabled.
+
+The Sentry integration exposes two dialogs:
+
+- `TelemetryOptInDialog` for crash-reporting consent and payload preview
+- `FeedbackDialog` for manual product feedback submission
 
 ## Privacy Notes
 

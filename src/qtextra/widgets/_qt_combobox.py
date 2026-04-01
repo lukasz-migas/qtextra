@@ -247,8 +247,8 @@ class _MultiItemRow(QAbstractButton):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = QRectF(2, 2, self.width() - 4, _ITEM_H - 4)
         if self._checked:
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QtStyler.highlight_muted())
+            p.setPen(QPen(QtStyler.highlight(), 1))
+            p.setBrush(QtStyler.background_muted())
             p.drawRoundedRect(rect, _ITEM_RADIUS, _ITEM_RADIUS)
         if self._hovered:
             p.setPen(Qt.PenStyle.NoPen)

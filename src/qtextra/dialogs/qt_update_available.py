@@ -1,4 +1,3 @@
-# ruff: noqa: D103
 """Update-available dialog."""
 
 from __future__ import annotations
@@ -38,11 +37,10 @@ class UpdateInfo(BaseModel):
 class UpdateAvailableDialog(QtDialog):
     """Dialog informing the user that a newer version of the application is available."""
 
-    # ── Public signals ────────────────────────────────────────────────────────
-    update_requested = Signal()
-    remind_later_requested = Signal()
-    whats_new_requested = Signal()
-    dismissed = Signal()
+    evt_update_requested = Signal()
+    evt_remind_later_requested = Signal()
+    evt_whats_new_requested = Signal()
+    evt_dismissed = Signal()
 
     def __init__(self, info: UpdateInfo, parent: QWidget | None = None) -> None:
         self.info = info
@@ -51,16 +49,12 @@ class UpdateAvailableDialog(QtDialog):
         self.setMinimumSize(760, 460)
         self.resize(980, 560)
 
-    # ── UI construction ───────────────────────────────────────────────────────
-
     # noinspection PyAttributeOutsideInit
     def make_panel(self):
         """Build and return the dialog layout."""
-        # ── Header ────────────────────────────────────────────────────────────
         title_lbl = hp.make_label(self, "Update available", bold=True, font_size=24)
         header = hp.make_h_layout(title_lbl)
 
-        # ── Body ──────────────────────────────────────────────────────────────
         message = self.info.message or f"A new version of {self.info.app_name} is available!"
         msg_lbl = hp.make_label(self, message, wrap=True, font_size=14)
 
@@ -95,7 +89,6 @@ class UpdateAvailableDialog(QtDialog):
         grid.addWidget(self.current_ver_lbl, 1, 0, Qt.AlignmentFlag.AlignHCenter)
         grid.addWidget(self.new_ver_lbl, 1, 2, Qt.AlignmentFlag.AlignHCenter)
 
-        # ── Footer ────────────────────────────────────────────────────────────
         self.not_now_btn = hp.make_btn(
             self,
             "Not now",
@@ -115,7 +108,6 @@ class UpdateAvailableDialog(QtDialog):
         footer.addWidget(self.not_now_btn)
         footer.addWidget(self.update_btn)
 
-        # ── Assemble ──────────────────────────────────────────────────────────
         layout = hp.make_v_layout(spacing=16, margin=(20, 16, 20, 16))
         layout.addLayout(header)
         layout.addWidget(hp.make_h_line(self))
@@ -126,26 +118,24 @@ class UpdateAvailableDialog(QtDialog):
         layout.addLayout(footer)
         return layout
 
-    # ── Slots ─────────────────────────────────────────────────────────────────
-
     def _on_whats_new_clicked(self, _: str) -> None:
         self._result_action = "whats_new"
-        self.whats_new_requested.emit()
+        self.evt_whats_new_requested.emit()
 
     def _on_not_now_clicked(self) -> None:
         self._result_action = "later"
-        self.remind_later_requested.emit()
+        self.evt_remind_later_requested.emit()
         self.reject()
 
     def _on_update_clicked(self) -> None:
         self._result_action = "update"
-        self.update_requested.emit()
+        self.evt_update_requested.emit()
         self.accept()
 
     def reject(self) -> None:
         """Emit ``dismissed`` if no other action was taken before closing."""
         if self._result_action == "dismissed":
-            self.dismissed.emit()
+            self.evt_dismissed.emit()
         super().reject()
 
     # ── Convenience ───────────────────────────────────────────────────────────
@@ -154,40 +144,3 @@ class UpdateAvailableDialog(QtDialog):
     def result_action(self) -> str:
         """Return one of: ``update``, ``later``, ``whats_new``, ``dismissed``."""
         return self._result_action
-
-
-# ── Demo ──────────────────────────────────────────────────────────────────────
-
-if __name__ == "__main__":
-    import sys
-
-    from qtextra.utils.dev import apply_style, qapplication
-
-    app = qapplication()
-    dlg = UpdateAvailableDialog(
-        UpdateInfo(
-            app_name="My Application",
-            current_version="6.6.10",
-            available_version="6.6.11",
-            whats_new_url="internal://whats-new",
-            message="A new version of My Application is available!",
-        ),
-    )
-    apply_style(dlg)
-
-    def on_update() -> None:
-        print("User chose update")
-
-    def on_later() -> None:
-        print("User chose not now")
-
-    def on_whats_new() -> None:
-        print("Show What's New dialog/page here")
-
-    dlg.update_requested.connect(on_update)
-    dlg.remind_later_requested.connect(on_later)
-    dlg.whats_new_requested.connect(on_whats_new)
-
-    dlg.exec()
-    print("Result action:", dlg.result_action)
-    sys.exit(0)
