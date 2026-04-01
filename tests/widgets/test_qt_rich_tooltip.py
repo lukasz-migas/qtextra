@@ -72,3 +72,28 @@ def test_qt_rich_tooltip_show_tooltip_returns_visible_instance(qtbot):
     assert isinstance(tooltip, QtRichToolTip)
     assert tooltip.isVisible() is True
     tooltip.close()
+
+
+def test_qt_rich_tooltip_injects_code_styling_on_show(qtbot):
+    host = QWidget()
+    qtbot.addWidget(host)
+
+    tooltip = QtRichToolTip(content="Use <code>print()</code> here.", parent=host, duration=-1)
+    qtbot.addWidget(tooltip)
+    tooltip.show()
+    qtbot.waitUntil(tooltip.isVisible)
+
+    body = tooltip.findChild(QLabel, "richToolTipBody")
+    assert 'style="' in body.text()
+    assert "<code" in body.text()
+
+
+def test_qt_rich_tooltip_shortcut_badge_uses_original_inline_style(qtbot):
+    host = QWidget()
+    qtbot.addWidget(host)
+
+    tooltip = QtRichToolTip(title="Title", shortcut="Ctrl+K", parent=host)
+
+    shortcut = tooltip.findChild(QLabel, "richToolTipShortcut")
+    assert shortcut is not None
+    assert "border-radius: 3px" in shortcut.styleSheet()

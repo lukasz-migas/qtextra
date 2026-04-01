@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import typing as ty
 from pathlib import Path
 
@@ -91,6 +92,20 @@ class _MediaLabel(QLabel):
             self._movie.stop()
 
 
+class _ContentLabel(QLabel):
+    """QLabel configured for rich HTML rendering with clickable links."""
+
+    def __init__(self, html: str, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setTextFormat(Qt.TextFormat.RichText)
+        self.setWordWrap(True)
+        self.setOpenExternalLinks(True)
+        self.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextBrowserInteraction | Qt.TextInteractionFlag.LinksAccessibleByMouse
+        )
+        self.setText(html)
+
+
 class _RichToolTipContent(QFrame):
     """Inner rich tooltip content area."""
 
@@ -129,8 +144,9 @@ class _RichToolTipContent(QFrame):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        self._media = _MediaLabel(image, self)
-        if not self._media.isHidden():
+        if image is not None:
+            self._media = _MediaLabel(image, self)
+        if self._media is not None and not self._media.isHidden():
             root.addWidget(self._media)
 
         body = QVBoxLayout()
@@ -147,31 +163,32 @@ class _RichToolTipContent(QFrame):
                 icon_label.setObjectName("richToolTipIcon")
                 icon_label.setMinimumSize(16, 16)
                 icon_label.setMaximumSize(16, 16)
+                icon_label.setScaledContents(True)
                 header.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignVCenter)
 
             if title:
                 title_label = QLabel(title, self)
                 title_label.setObjectName("richToolTipTitle")
                 title_label.setWordWrap(True)
+                font = title_label.font()
+                font.setBold(True)
+                font.setPointSize(font.pointSize() + 1)
+                title_label.setFont(font)
                 header.addWidget(title_label, 1)
 
             if shortcut:
                 shortcut_label = QLabel(shortcut, self)
                 shortcut_label.setObjectName("richToolTipShortcut")
+                shortcut_label.setStyleSheet(
+                    "color: #888; font-size: 11px; padding: 1px 5px;border: 1px solid #555; border-radius: 3px;"
+                )
                 header.addWidget(shortcut_label, 0, Qt.AlignmentFlag.AlignVCenter)
 
             body.addLayout(header)
 
         if content:
-            self._content_label = QLabel(self)
+            self._content_label = _ContentLabel(content, self)
             self._content_label.setObjectName("richToolTipBody")
-            self._content_label.setTextFormat(Qt.TextFormat.RichText)
-            self._content_label.setWordWrap(True)
-            self._content_label.setOpenExternalLinks(True)
-            self._content_label.setTextInteractionFlags(
-                Qt.TextInteractionFlag.TextBrowserInteraction | Qt.TextInteractionFlag.LinksAccessibleByMouse
-            )
-            self._content_label.setText(content)
             self._content_label.linkActivated.connect(self.evt_link_clicked)
             body.addWidget(self._content_label)
 
@@ -299,12 +316,48 @@ class QtRichToolTip(QWidget):
         shadow.setColor(QColor(0, 0, 0, 100 if THEMES.is_dark else 50))
         self._bubble.setGraphicsEffect(shadow)
 
+    @staticmethod
+    def _code_style() -> str:
+        """Return theme-aware inline CSS for ``<code>`` blocks."""
+        if THEMES.is_dark:
+            return "background:#383b40; color:#a9b7c6; padding:2px 5px; border-radius:3px;"
+        return "background:#e8eaed; color:#2e2e2e; padding:2px 5px; border-radius:3px;"
+
+    def _bubble_stylesheet(self) -> str:
+        """Return the bubble stylesheet matching the original rich tooltip look."""
+        bg = "#2b2d30" if THEMES.is_dark else "#f7f8fa"
+        border = "#3c3f41" if THEMES.is_dark else "#c9ccd1"
+        text = "#bbbbbb" if THEMES.is_dark else "#1e1e1e"
+        link = "#589df6" if THEMES.is_dark else "#2470b3"
+        separator = "#3c3f41" if THEMES.is_dark else "#d1d1d1"
+        return (
+            f"QFrame#richToolTipBubble {{"
+            f"  background: {bg}; border: 1px solid {border}; border-radius: 8px;"
+            f"}}"
+            f"QLabel#richToolTipTitle {{ color: {text}; }}"
+            f"QLabel#richToolTipBody {{ color: {text}; }}"
+            f"QLabel#richToolTipBody a {{ color: {link}; text-decoration: none; }}"
+            f"QFrame#richToolTipSeparator {{ color: {separator}; background: {separator}; }}"
+        )
+
+    def _inject_code_style(self) -> None:
+        """Add theme-aware styling to body ``<code>`` tags."""
+        if self._content._content_label is None:
+            return
+        style = self._code_style()
+        html = self._content._content_label.text()
+        html = re.sub(r"<code(?!\s+style)([^>]*)>", rf'<code style="{style}"\1>', html)
+        html = re.sub(r'<code\s+style="([^"]*)"', rf'<code style="{style} \1"', html)
+        self._content._content_label.setText(html)
+
     def showEvent(self, event) -> None:  # type: ignore[override]
         """Show event."""
         if QtRichToolTip._active_instance is not None and QtRichToolTip._active_instance is not self:
             QtRichToolTip._active_instance.close()
         QtRichToolTip._active_instance = self
 
+        self._bubble.setStyleSheet(self._bubble_stylesheet())
+        self._inject_code_style()
         self._position_near_target()
         self.adjustSize()
         self._opacity_anim.stop()
