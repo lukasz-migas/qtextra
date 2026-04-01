@@ -47,7 +47,11 @@ dependencies = [
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 [project.optional-dependencies]
 all = [
-    "qtextra[console,sentry,pyqt6]"
+    "qtextra[console,sentry,df,pyqt6]"
+]
+df = [
+    "pandas",
+    "polars",
 ]
 sentry = ["sentry-sdk>2"]
 console = [
