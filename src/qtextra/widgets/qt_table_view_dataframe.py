@@ -116,7 +116,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
         # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
-        self.indexHeader.horizontalScrollBar().valueChanged.connect(lambda: None)
+        self.indexHeader.horizontalScrollBar().valueChanged.connect(self._ignore_scroll_value_change)
 
         # Toggle level names
         if not (any(df.columns.names) or df.columns.name):
@@ -147,12 +147,8 @@ class QtDataFrameWidget(Qw.QWidget):
         self.cornerSpacer = TrackingSpacer()
         self.gridLayout.addWidget(self.cornerSpacer, 0, 0, 1, 1)
         # React to scroll range changes so we can hide bars when unnecessary
-        self.dataView.horizontalScrollBar().rangeChanged.connect(
-            lambda _min, _max: self.dataView.horizontalScrollBar().setVisible(_max > 0),
-        )
-        self.dataView.verticalScrollBar().rangeChanged.connect(
-            lambda _min, _max: self.dataView.verticalScrollBar().setVisible(_max > 0),
-        )
+        self.dataView.horizontalScrollBar().rangeChanged.connect(self._sync_horizontal_scrollbar_visibility)
+        self.dataView.verticalScrollBar().rangeChanged.connect(self._sync_vertical_scrollbar_visibility)
 
         for item in [self.dataView, self.columnHeader, self.indexHeader]:
             item.setContentsMargins(0, 0, 0, 0)
@@ -193,6 +189,17 @@ class QtDataFrameWidget(Qw.QWidget):
         vbar = self.dataView.verticalScrollBar()
         hbar.setVisible(hbar.maximum() > 0)
         vbar.setVisible(vbar.maximum() > 0)
+
+    def _ignore_scroll_value_change(self, _value: int) -> None:
+        """Consume header scrollbar changes triggered by hidden scrollbars."""
+
+    def _sync_horizontal_scrollbar_visibility(self, _min: int, max_value: int) -> None:
+        """Update horizontal scrollbar visibility."""
+        self.dataView.horizontalScrollBar().setVisible(max_value > 0)
+
+    def _sync_vertical_scrollbar_visibility(self, _min: int, max_value: int) -> None:
+        """Update vertical scrollbar visibility."""
+        self.dataView.verticalScrollBar().setVisible(max_value > 0)
 
     def _resize_all_rows(self):
         """Auto-resize every row to its content height."""
