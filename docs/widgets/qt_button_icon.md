@@ -1,4 +1,4 @@
-# Qt Icon Buttons
+# QtIconButtons
 
 A family of icon buttons for toggles, state indicators, and common toolbar actions.
 

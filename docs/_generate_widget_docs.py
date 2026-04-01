@@ -15,6 +15,7 @@ class WidgetDoc:
     example: str
     classes: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
+    screenshot_path: str = ""
     screenshot_width: int = 520
 
 
@@ -40,7 +41,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
     ),
     WidgetDoc(
         slug="qt_button",
-        title="Qt Button Variants",
+        title="QtPushButton (variants)",
         section="Actions And Buttons",
         summary="Theme-aware push buttons with activity and rich-text display helpers.",
         example="qt_button.py",
@@ -56,7 +57,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
     ),
     WidgetDoc(
         slug="qt_button_icon",
-        title="Qt Icon Buttons",
+        title="QtIconButtons",
         section="Actions And Buttons",
         summary="A family of icon buttons for toggles, state indicators, and common toolbar actions.",
         example="qt_button_icon.py",
@@ -175,7 +176,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
     ),
     WidgetDoc(
         slug="qt_label_icon",
-        title="Qt Icon Labels",
+        title="QtQtaLabel (variants)",
         section="Labels And Display",
         summary="Theme-aware static and animated icon labels built on QtAwesome mappings.",
         example="qt_label_icon.py",
@@ -366,6 +367,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
             "qtextra.widgets.qt_tooltip.TipPosition",
         ),
         screenshot_width=620,
+        screenshot_path="../assets/qt_tooltip_rich.jpg",
     ),
     WidgetDoc(
         slug="qt_tutorial",
@@ -387,28 +389,34 @@ CATALOG: tuple[WidgetDoc, ...] = (
 def render_page(item: WidgetDoc) -> str:
     summary = f"# {item.title}\n\n{item.summary}\n"
 
-    if item.example:
-        example_block = dedent(
-            f"""
-            ## Screenshot
-
-            {{{{ show_example('{item.example}', {item.screenshot_width}) }}}}
-
-            ## Example
-
-            Source: `examples/{item.example}`
-
-            {{{{ include_example('{item.example}') }}}}
-            """,
-        ).strip()
+    if item.screenshot_path:
+        screenshot_block = _render_screenshot_path(item)
+    elif item.example:
+        screenshot_block = f"{{{{ show_example('{item.example}', {item.screenshot_width}) }}}}"
     else:
-        example_block = dedent(
-            """
-            ## Screenshot
+        screenshot_block = f"{{{{ show_widget({item.screenshot_width}) }}}}"
 
-            {{ show_widget(520) }}
-            """,
-        ).strip()
+    example_block = dedent(
+        f"""
+        ## Screenshot
+
+        {screenshot_block}
+        """,
+    ).strip()
+
+    if item.example:
+        example_block += (
+            dedent(
+                f"""
+
+                ## Example
+
+                Source: `examples/{item.example}`
+
+                {{{{ include_example('{item.example}') }}}}
+                """,
+            ).rstrip()
+        )
 
     notes_block = ""
     if item.notes:
@@ -421,6 +429,13 @@ def render_page(item: WidgetDoc) -> str:
         api_block = f"\n## API\n\n{api}\n"
 
     return f"{summary}\n{example_block}{notes_block}{api_block}"
+
+
+def _render_screenshot_path(item: WidgetDoc) -> str:
+    screenshot_path = item.screenshot_path.strip()
+    if screenshot_path.startswith("!["):
+        return screenshot_path
+    return f"![screenshot]({screenshot_path}){{ loading=lazy; width={item.screenshot_width} }}"
 
 
 def render_index(items: tuple[WidgetDoc, ...]) -> str:
