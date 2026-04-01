@@ -54,14 +54,14 @@ editor.set_items(
 )
 body = QVBoxLayout()
 body.addWidget(editor, stretch=1)
-body.addWidget(summary, stretch=1)
+body.addWidget(summary, stretch=3)
 layout.addLayout(body)
 
 layout.addWidget(QLabel("Target one sample or all samples"))
 editor.set_target_samples(["sample_b", "sample_c"])
 editor.table.selectRow(0)
 
-widget.resize(900, 480)
+widget.resize(900, 700)
 widget.show()
 
 app.exec_()

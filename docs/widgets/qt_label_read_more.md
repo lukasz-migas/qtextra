@@ -1,7 +1,7 @@
 # QReadMoreLessLabel
 
-`QReadMoreLessLabel` renders rich text that can either be shown as two static
-columns or collapsed into a short preview with a "Read more..." affordance.
+`QReadMoreLessLabel` renders rich text that can either stay as a compact preview
+or expand into a longer two-column explanation.
 
 The widget expects marker tokens inside the input string:
 
@@ -31,6 +31,8 @@ widget.show()
 app.exec_()
 ```
 
+{{ show_widget(520) }}
+
 ## Notes
 
 - Without `<moreless>`, the widget behaves like a static two-column rich-text
@@ -39,3 +41,7 @@ app.exec_()
   content.
 - If the right-hand expanded content is empty, the separator and right label are
   hidden automatically.
+
+## API
+
+{{ show_members('qtextra.widgets.qt_label_read_more.QReadMoreLessLabel') }}

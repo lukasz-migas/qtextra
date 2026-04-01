@@ -22,6 +22,7 @@ editor.setPlainText(
 status = QLabel("Type into the search box to search the editor.")
 search_panel = QtSearchPanel()
 search_panel.set_target_editor(editor)
+search_panel.setSearchText("search")
 search_panel.evt_search_changed.connect(lambda text: status.setText(f"Searching for: {text or '<empty>'}"))
 
 layout.addWidget(search_panel)

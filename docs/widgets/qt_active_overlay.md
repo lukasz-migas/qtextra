@@ -1,41 +1,23 @@
 # QtActiveOverlay
 
-A couple of widgets that show progress by displaying an animation using a GIF or dots.
+Animated busy indicators for lightweight in-place activity feedback.
 
-```python
-from qtpy.QtWidgets import QApplication, QVBoxLayout, QWidget
+## Screenshot
 
-from qtextra.config import THEMES
-from qtextra.widgets.qt_active_overlay import QtActiveOverlay, QtActiveWidget
+{{ show_example('qt_active_overlay.py', 460) }}
 
-app = QApplication([])
+## Example
 
-widget = QWidget()
-THEMES.apply(widget)
+Source: `examples/qt_active_overlay.py`
 
-layout = QVBoxLayout()
-widget.setLayout(layout)
+{{ include_example('qt_active_overlay.py') }}
+## Notes
 
-# QtActiveOverlay displays dots that are animated to show progress
-layout.addWidget(
-    QtActiveOverlay(
-        n_dots=7,
-        interval=100,  # in milliseconds
-        size=30,  # size of dots
-    )
-)
+- Use `QtActiveOverlay` for a compact inline animated indicator made of dots.
+- Use `QtActiveWidget` when you want a larger spinner or loading illustration with text.
 
-# QtActiveWidget is simple widget with GIF playing in an infinite loop
-layout.addWidget(
-    QtActiveWidget(
-        text="Action in progress...",
-        size=(128, 128),
-        which="infinity",  # also choose from dots, oval, circle, square
-    )
-)
+## API
 
-widget.show()
-app.exec_()
-```
+{{ show_members('qtextra.widgets.qt_active_overlay.QtActiveOverlay') }}
 
-{{ show_widget(450) }}
+{{ show_members('qtextra.widgets.qt_active_overlay.QtActiveWidget') }}

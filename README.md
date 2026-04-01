@@ -14,6 +14,8 @@ focuses on opinionated, application-level building blocks such as searchable
 comboboxes, step progress indicators, styled buttons, collapsible sections, and
 utility dialogs.
 
+![qtextra widget showcase](docs/assets/readme_showcase.png)
+
 Components are tested on:
 
 - macOS, Windows & Linux
@@ -64,6 +66,8 @@ THEMES.apply(window)
 window.show()
 app.exec_()
 ```
+
+A larger showcase example is available at [`examples/qt_readme_showcase.py`](examples/showcase.py).
 
 ## Documentation
 

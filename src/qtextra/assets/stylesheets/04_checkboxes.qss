@@ -21,15 +21,15 @@ QCheckBox::indicator:hover {
 }
 
 QCheckBox::indicator:unchecked {
-  image: url("theme_{{ id }}:/2d.svg");
+  image: url("theme_{{ id }}://2d.svg");
 }
 
 QCheckBox::indicator:checked {
-  image: url("theme_{{ id }}:/check.svg");
+  image: url("theme_{{ id }}://check.svg");
 }
 
 QCheckBox::indicator:indeterminate {
-  image: url("theme_{{ id }}:/minus.svg");
+  image: url("theme_{{ id }}://minus.svg");
   padding: 2px;
   width: 14px;
   height: 14px;
@@ -86,11 +86,11 @@ QGroupBox::indicator:unchecked {
 }
 
 QGroupBox::indicator:checked {
-  image: url("theme_{{ id }}:/check.svg");
+  image: url("theme_{{ id }}://check.svg");
 }
 
 QGroupBox::indicator:indeterminate {
-  image: url("theme_{{ id }}:/minus.svg");
+  image: url("theme_{{ id }}://minus.svg");
   padding: 2px;
   width: 14px;
   height: 14px;
@@ -113,15 +113,15 @@ QWidget[emphasized="true"] QGroupBox::indicator:unchecked:hover {
 /* ----------------- QTableView indicators ------------------ */
 
 QTableView::indicator:unchecked {
-  image: url("theme_{{ id }}:/2d.svg");
+  image: url("theme_{{ id }}://2d.svg");
 }
 
 QTableView::indicator:checked {
-  image: url("theme_{{ id }}:/check.svg");
+  image: url("theme_{{ id }}://check.svg");
 }
 
 QTableView::indicator:indeterminate {
-  image: url("theme_{{ id }}:/minus.svg");
+  image: url("theme_{{ id }}://minus.svg");
   padding: 2px;
   width: 14px;
   height: 14px;

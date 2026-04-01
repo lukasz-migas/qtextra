@@ -5,6 +5,8 @@ Also from:
 https://github.dev/royerlab/aydin/blob/c19595f37a163f6cd34243c5d5975cddb4a637c1/aydin/gui/_qt/custom_widgets/overlay.py.
 """
 
+from __future__ import annotations
+
 from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QBrush, QPainter, QPen
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
@@ -17,7 +19,7 @@ from qtextra.config import THEMES
 class QtActiveOverlay(QWidget):
     """Widget that displays that action is in progress."""
 
-    timer = None
+    timer_id: int | None = None
     counter: int = 0
 
     # Attributes
@@ -67,21 +69,29 @@ class QtActiveOverlay(QWidget):
 
     def showEvent(self, event):
         """Show event."""
-        self.timer = self.startTimer(self.INTERVAL)
+        if self.timer_id is not None:
+            self.killTimer(self.timer_id)
+        self.timer_id = self.startTimer(self.INTERVAL)
         self.counter = 0
+        super().showEvent(event)
 
     def timerEvent(self, event):
         """Timer event."""
+        if event.timerId() != self.timer_id:
+            return super().timerEvent(event)
         self.counter += 1
         if self.counter >= self.N_DOTS:
             self.REVERSE = not self.REVERSE
             self.counter = 0
         self.update()
+        return None
 
     def hideEvent(self, event):
         """Hide event."""
-        self.killTimer(self.timer)
-        self.hide()
+        if self.timer_id is not None:
+            self.killTimer(self.timer_id)
+            self.timer_id = None
+        super().hideEvent(event)
 
     def sizeHint(self) -> QSize:
         """Return the size hint for the widget."""

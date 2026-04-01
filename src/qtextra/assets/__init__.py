@@ -15,6 +15,15 @@ HERE = Path(get_module_path("qtextra.assets", "__init__.py")).parent.resolve()
 ICON_PATH = HERE / "icons"
 ICON_PATH.mkdir(exist_ok=True)
 ICONS = {x.stem: str(x) for x in ICON_PATH.iterdir() if x.suffix == ".svg"}
+if not ICONS:
+    try:
+        import napari
+
+        napari_icon_path = Path(napari.__file__).resolve().parent / "resources" / "icons"
+        ICONS = {x.stem: str(x) for x in napari_icon_path.iterdir() if x.suffix == ".svg"}
+        logger.debug(f"Using fallback icon set from '{napari_icon_path}'.")
+    except ImportError:
+        logger.warning("No SVG icons were found in qtextra assets and napari is unavailable for fallback icons.")
 
 STYLE_PATH = HERE / "stylesheets"
 STYLE_PATH.mkdir(exist_ok=True)

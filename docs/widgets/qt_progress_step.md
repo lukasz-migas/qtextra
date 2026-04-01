@@ -1,28 +1,16 @@
 # QtStepProgressBar
 
-Progress bar with defined steps. Great for showing progress of multi-step processes.
+Step-based progress visualization for multi-stage workflows.
 
-```python
-from qtpy.QtWidgets import QApplication
+## Screenshot
 
-from qtextra.config import THEMES
-from qtextra.widgets.qt_progress_step import QtStepProgressBar
+{{ show_example('qt_progress_step.py', 480) }}
 
-app = QApplication([])
+## Example
 
-widget = QtStepProgressBar()
-THEMES.apply(widget)
-widget.setMinimumWidth(600)  # to ensure it's fully visible
+Source: `examples/qt_progress_step.py`
 
-# add labels to the progress bar
-widget.labels = ["Step One", "Step Two", "Step Three", "Step Four", "Step Five", "Complete"]
-# set current step
-widget.value = 3
-
-widget.show()
-app.exec_()
-```
-
-{{ show_widget(450) }}
+{{ include_example('qt_progress_step.py') }}
+## API
 
 {{ show_members('qtextra.widgets.qt_progress_step.QtStepProgressBar') }}

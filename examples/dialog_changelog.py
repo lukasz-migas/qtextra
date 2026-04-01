@@ -7,7 +7,7 @@ from qtextra.config import THEMES
 from qtextra.dialogs.qt_changelog import ChangelogDialog
 
 app = QApplication([])
-data = get_latest_git(user="pyapp-kit", package="superqt")
+data = get_latest_git(user="lukasz-migas", package="qtextra")
 text = format_version(data)
 widget = ChangelogDialog(None, text)
 THEMES.apply(widget)

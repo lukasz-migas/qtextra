@@ -326,6 +326,10 @@ class Themes(ConfigBase):
         self._light_end_time = value
         self.synchronize_theme()
 
+    def set_theme(self, value: str) -> None:
+        """Set theme."""
+        self.theme = value
+
     @property
     def theme(self) -> str:
         """Get theme."""
@@ -492,8 +496,10 @@ class Themes(ConfigBase):
         if theme_name is None:
             theme_name = self.theme
         palette = self.themes[theme_name].to_dict()
+        palette["theme_path"] = self.get_theme_path(theme_name).as_posix()
         stylesheet = get_stylesheet()
-        return template(stylesheet, **palette)
+        stylesheet = template(stylesheet, **palette)
+        return self._resolve_theme_icon_urls(stylesheet, theme_name)
 
     get_stylesheet = get_theme_stylesheet
 
@@ -506,6 +512,15 @@ class Themes(ConfigBase):
     def apply(self, widget: QWidget) -> None:
         """Apply theme on widget."""
         self.set_theme_stylesheet(widget)
+
+    @staticmethod
+    def _resolve_theme_icon_urls(stylesheet: str, theme_name: str) -> str:
+        """Replace theme search-path URLs with concrete absolute icon paths."""
+        theme_path = Themes.get_theme_path(theme_name).as_posix().rstrip("/")
+        prefix = f"theme_{theme_name}:"
+        stylesheet = stylesheet.replace(f"{prefix}//", f"{theme_path}/")
+        stylesheet = stylesheet.replace(f"{prefix}/", f"{theme_path}/")
+        return stylesheet.replace(prefix, f"{theme_path}/")
 
     @staticmethod
     def get_theme_path(theme_name: str) -> Path:

@@ -1,6 +1,8 @@
 # ruff: noqa: D102,D103
 """Progress bar."""
 
+from __future__ import annotations
+
 from qtpy.QtCore import Property, QPoint, QRect, QSize, Qt, QVariantAnimation, Signal
 from qtpy.QtGui import QFontMetrics, QPainter, QPen
 from qtpy.QtWidgets import QWidget
@@ -24,7 +26,7 @@ class QtStepProgressBar(QWidget):
     LINE_WIDTH = 5
     HORIZONTAL_PADDING = 5
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
         self._labels = []

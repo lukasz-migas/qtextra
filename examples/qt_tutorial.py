@@ -1,4 +1,4 @@
-"""QtPopout example."""
+"""QtTutorial example."""
 
 from qtpy.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 
@@ -24,6 +24,9 @@ def create_popout():
         ],
     )
     pop.show()
+    pop.raise_()
+    pop.activateWindow()
+    pop.set_step(2)
 
 
 app = QApplication([])
@@ -38,5 +41,6 @@ widget.setLayout(layout)
 layout.addWidget(button := QPushButton("Press me to see popout"))
 button.clicked.connect(create_popout)
 widget.show()
+create_popout()
 
 app.exec_()
