@@ -1,4 +1,4 @@
-# Qt Button Variants
+# QtPushButton (variants)
 
 Theme-aware push buttons with activity and rich-text display helpers.
 

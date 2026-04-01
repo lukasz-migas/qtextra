@@ -1,4 +1,4 @@
-# Qt Icon Labels
+# QtQtaLabel (variants)
 
 Theme-aware static and animated icon labels built on QtAwesome mappings.
 
