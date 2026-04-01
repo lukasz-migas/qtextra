@@ -40,7 +40,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
     ),
     WidgetDoc(
         slug="qt_button",
-        title="Qt Button Variants",
+        title="QtPushButton (variants)",
         section="Actions And Buttons",
         summary="Theme-aware push buttons with activity and rich-text display helpers.",
         example="qt_button.py",
@@ -56,7 +56,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
     ),
     WidgetDoc(
         slug="qt_button_icon",
-        title="Qt Icon Buttons",
+        title="QtIconButtons",
         section="Actions And Buttons",
         summary="A family of icon buttons for toggles, state indicators, and common toolbar actions.",
         example="qt_button_icon.py",
@@ -175,7 +175,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
     ),
     WidgetDoc(
         slug="qt_label_icon",
-        title="Qt Icon Labels",
+        title="QtQtaLabel (variants)",
         section="Labels And Display",
         summary="Theme-aware static and animated icon labels built on QtAwesome mappings.",
         example="qt_label_icon.py",
@@ -355,18 +355,18 @@ CATALOG: tuple[WidgetDoc, ...] = (
         notes=("Supports horizontal and vertical layouts, separators, spacers, and inserted tools.",),
         screenshot_width=560,
     ),
-    WidgetDoc(
-        slug="qt_tooltip",
-        title="QtToolTip",
-        section="Feedback And Teaching",
-        summary="Custom tooltip bubbles with tail positions, optional images, and styled content.",
-        example="qt_tooltip.py",
-        classes=(
-            "qtextra.widgets.qt_tooltip.QtToolTip",
-            "qtextra.widgets.qt_tooltip.TipPosition",
-        ),
-        screenshot_width=620,
-    ),
+    # WidgetDoc(
+    #     slug="qt_tooltip",
+    #     title="QtToolTip",
+    #     section="Feedback And Teaching",
+    #     summary="Custom tooltip bubbles with tail positions, optional images, and styled content.",
+    #     example="qt_tooltip.py",
+    #     classes=(
+    #         "qtextra.widgets.qt_tooltip.QtToolTip",
+    #         "qtextra.widgets.qt_tooltip.TipPosition",
+    #     ),
+    #     screenshot_width=620,
+    # ),
     WidgetDoc(
         slug="qt_tutorial",
         title="QtTutorial",

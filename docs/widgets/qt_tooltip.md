@@ -4,7 +4,7 @@ Custom tooltip bubbles with tail positions, optional images, and styled content.
 
 ## Screenshot
 
-{{ show_example('qt_tooltip.py', 620) }}
+![screenshot](../assets/qt_tooltip.jpg){ loading=lazy; width=760 }
 
 ## Example
 

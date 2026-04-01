@@ -4,7 +4,7 @@ A PyCharm-style rich tooltip that renders HTML content, displays images and anim
 
 ## Screenshot
 
-{{ show_example('qt_tooltip_rich.py', 560) }}
+![screenshot](../assets/qt_tooltip_rich.jpg){ loading=lazy; width=760 }
 
 ## Example
 
