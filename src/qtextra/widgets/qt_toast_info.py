@@ -405,7 +405,7 @@ class QtInfoToastManager(QObject):
         self._slide_animations.append(slide_animation)
 
         toast.setProperty("slide_animation", slide_animation)
-        toast.evt_closed.connect(lambda: self.remove(toast))
+        toast.evt_closed.connect(self._make_remove_handler(toast))
         slide_animation.start()
 
     def remove(self, toast: QtInfoToast):
@@ -433,6 +433,14 @@ class QtInfoToastManager(QObject):
         # adjust the position of the remaining info toasts
         self._update_drop_animation(p)
         self._animation_groups[p].start()
+
+    def _make_remove_handler(self, toast: QtInfoToast):
+        """Create a close handler that removes ``toast`` from the manager."""
+
+        def _remove_toast() -> None:
+            self.remove(toast)
+
+        return _remove_toast
 
     def _create_slide_animation(self, toast: QtInfoToast):
         slide_animation = QPropertyAnimation(toast, b"pos")

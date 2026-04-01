@@ -149,17 +149,9 @@ class QtSelectionList(QWidget):
         self.list_widget.setWordWrap(True)
         self.list_widget.itemChanged.connect(self.on_selection_changed)
         if self.double_click_to_select:
-            self.list_widget.itemDoubleClicked.connect(
-                lambda item: item.setCheckState(
-                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
-                ),
-            )
+            self.list_widget.itemDoubleClicked.connect(self._toggle_item_check_state)
         if self.enable_single_click:
-            self.list_widget.itemClicked.connect(
-                lambda item: item.setCheckState(
-                    Qt.CheckState.Checked if item.checkState() == Qt.CheckState.Unchecked else Qt.CheckState.Unchecked,
-                ),
-            )
+            self.list_widget.itemClicked.connect(self._toggle_item_check_state)
         # self.list_widget.setAlternatingRowColors(True)
         self._layout.addRow(self.list_widget)
 
@@ -168,6 +160,11 @@ class QtSelectionList(QWidget):
         item = self.list_widget.item(index)
         if item:
             self.list_widget.setCurrentItem(item)
+
+    def _toggle_item_check_state(self, item: QListWidgetItem) -> None:
+        """Toggle the checked state for a list item."""
+        is_checked = item.checkState() == Qt.CheckState.Checked
+        item.setCheckState(Qt.CheckState.Unchecked if is_checked else Qt.CheckState.Checked)
 
     def on_selection_changed(self) -> None:
         """Update selection changed information."""

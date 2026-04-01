@@ -379,10 +379,16 @@ if __name__ == "__main__":  # pragma: no cover
             b.set_selected(b is btn)
         print(f"Color picked: {color.name(QColor.HexArgb)}")
 
+    def _make_color_changed_handler(btn: ColorCircleButton):
+        def _handle_color_changed(color: QColor) -> None:
+            _on_color_changed(btn, color)
+
+        return _handle_color_changed
+
     for i, hex_color in enumerate(["#4db8ff", "#4db8ff", "#4db8ff", "#2a6ebb", "#22264b", "#b3a0d6"]):
         btn = ColorCircleButton(color=hex_color, diameter=32)
         btn.set_selected(i == 1)  # second button selected by default
-        btn.colorChanged.connect(lambda c, b=btn: _on_color_changed(b, c))
+        btn.colorChanged.connect(_make_color_changed_handler(btn))
         ha.addWidget(btn)
         buttons.append(btn)
 

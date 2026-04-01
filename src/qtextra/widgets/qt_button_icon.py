@@ -931,10 +931,14 @@ if __name__ == "__main__":  # pragma: no cover
         ha.addWidget(hp.make_v_line())
 
         lay = QVBoxLayout()
+
+        def _print_right_click() -> None:
+            print("Right click")
+
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
             btn = QtImagePushButton()
             if i % 2 == 0:
-                btn.connect_to_right_click(lambda: print("Right click"))
+                btn.connect_to_right_click(_print_right_click)
             if i % 3 == 0:
                 btn.set_count(i)
             btn.set_qta(qta_name, scale_factor=1)

@@ -12,12 +12,16 @@ except ImportError:
     QtReloadWidget = QWidget
 
 
+def _noop_log(*_args: ty.Any) -> None:
+    """Default developer log callback."""
+
+
 class QDevPopup(QtFramelessTool):
     """Developer-tools popup."""
 
     HIDE_WHEN_CLOSE = True
 
-    def __init__(self, parent: QWidget, modules: list[str], log_func: ty.Callable = lambda *args: None) -> None:
+    def __init__(self, parent: QWidget, modules: list[str], log_func: ty.Callable = _noop_log) -> None:
         self.modules = modules
         self.log_func = log_func
         super().__init__(parent)

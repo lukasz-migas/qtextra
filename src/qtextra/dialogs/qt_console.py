@@ -31,6 +31,10 @@ from qtpy.QtWidgets import QFormLayout, QVBoxLayout, QWidget
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
 
+def _noop_push(_variables: ty.Any) -> None:
+    """Fallback push callable when an embedded console is unavailable."""
+
+
 def str_to_rgb(arg):
     """Convert an rgb string 'rgb(x,y,z)' to a list of ints [x,y,z]."""
     return list(map(int, re.match(r"rgb\((\d+),\s*(\d+),\s*(\d+)\)", arg).groups()))
@@ -115,7 +119,7 @@ class QtConsole(RichJupyterWidget):
             self.kernel_client = None
             self.kernel_manager = None
             self.shell = None
-            self.push = lambda var: None
+            self.push = _noop_push
 
         else:
             raise ValueError(f"ipython shell not recognized; got {type(shell)}")

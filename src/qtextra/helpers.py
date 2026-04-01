@@ -666,13 +666,17 @@ def run_process(
         process.setArguments(arguments)
     if detached:
         if func_stdout:
-            process.readyReadStandardOutput.connect(
-                lambda: func_stdout(process.readAllStandardOutput().data().decode()),
-            )
+
+            def _forward_stdout() -> None:
+                func_stdout(process.readAllStandardOutput().data().decode())
+
+            process.readyReadStandardOutput.connect(_forward_stdout)
         if func_error:
-            process.readyReadStandardError.connect(
-                lambda: func_error(process.readAllStandardError().data().decode()),
-            )
+
+            def _forward_stderr() -> None:
+                func_error(process.readAllStandardError().data().decode())
+
+            process.readyReadStandardError.connect(_forward_stderr)
             [process.errorOccurred.connect(func_error_) for func_error_ in _validate_func(func_error)]
         process.startDetached()
     else:
@@ -3053,7 +3057,11 @@ def confirm_dont_ask_again(
         func = None
         value = False
     else:
-        func = partial(lambda value: config.update(**{attr: bool(value)}))
+
+        def _update_config_flag(value: ty.Any) -> None:
+            config.update(**{attr: bool(value)})
+
+        func = _update_config_flag
         value = getattr(config, attr, False)
 
     dlg = _get_confirm_dlg(parent, message, title, alignment=alignment, color=color, resizable=resizable)
@@ -3532,7 +3540,11 @@ def make_auto_update_layout(parent: Qw.QWidget, func: ty.Callable):
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
 
     auto_update_check = make_checkbox(parent, "Auto-update")
-    auto_update_check.stateChanged.connect(lambda check: disable_widgets(widget, disabled=check))
+
+    def _sync_auto_update_state(check: int) -> None:
+        disable_widgets(widget, disabled=bool(check))
+
+    auto_update_check.stateChanged.connect(_sync_auto_update_state)
     auto_update_check.setChecked(True)
 
     layout = make_h_layout(widget, auto_update_check, stretch_id=(0,))

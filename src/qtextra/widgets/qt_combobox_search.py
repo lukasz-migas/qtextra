@@ -41,7 +41,7 @@ class _SearchPanel(_ScrollablePanel):
     def _build_rows(self, items: list[str]):
         for text in items:
             row = _ItemRow(text, selected=(text == self._selected))
-            row.clicked.connect(lambda _, t=text: self._pick(t))
+            row.clicked.connect(self._make_row_click_handler(text))
             self._inner_l.addWidget(row)
             self._rows.append(row)
         self._finalize_height()
@@ -76,6 +76,14 @@ class _SearchPanel(_ScrollablePanel):
 
     # Alias method to offer Qt-like interface
     addItems = set_items
+
+    def _make_row_click_handler(self, text: str) -> ty.Callable[[bool], None]:
+        """Create a click handler for a specific item label."""
+
+        def _handle_row_click(_checked: bool = False) -> None:
+            self._pick(text)
+
+        return _handle_row_click
 
 
 class _SearchComboBtn(_BaseButton):
@@ -123,7 +131,7 @@ class QtSearchComboBox(QWidget):
         self._placeholder = placeholder
         self._panel = _SearchPanel(items or [], parent=self)
         self._panel.itemSelected.connect(self._on_select)
-        self._panel.evt_hidden.connect(lambda: self._btn.set_open(False))
+        self._panel.evt_hidden.connect(self._close_panel)
         self._build()
 
     def _build(self):
@@ -136,7 +144,7 @@ class QtSearchComboBox(QWidget):
     def _toggle(self):
         if self._panel.isVisible():
             self._panel.hide()
-            self._btn.set_open(False)
+            self._close_panel()
         else:
             self._panel.show_below(self._btn)
             self._btn.set_open(True)
@@ -144,7 +152,7 @@ class QtSearchComboBox(QWidget):
     def _on_select(self, text: str):
         self._text = text
         self._btn.set_text(text)
-        self._btn.set_open(False)
+        self._close_panel()
         self.currentTextChanged.emit(text)
 
     def set_items(self, items: list[str]):
@@ -161,6 +169,10 @@ class QtSearchComboBox(QWidget):
 
     # Alias methods to offer Qt-like interface
     addItems = set_items
+
+    def _close_panel(self) -> None:
+        """Reset the button state when the popup closes."""
+        self._btn.set_open(False)
 
 
 class QtSearchableComboBox(QComboBox):
@@ -219,7 +231,16 @@ def add_search_to_combobox(combobox: QComboBox) -> None:
     completer_object.popup().setItemDelegate(QStyledItemDelegate(combobox))
     completer_object.popup().setObjectName("search_box_popup")
     combobox.completer_object = completer_object
-    combobox._text_activated = lambda: combobox.textActivated.emit(combobox.currentText())
+    combobox._text_activated = _make_text_activated_handler(combobox)
+
+
+def _make_text_activated_handler(combobox: QComboBox) -> ty.Callable[[], None]:
+    """Return a handler that emits the combobox current text."""
+
+    def _emit_current_text() -> None:
+        combobox.textActivated.emit(combobox.currentText())
+
+    return _emit_current_text
 
 
 if __name__ == "__main__":  # pragma: no cover

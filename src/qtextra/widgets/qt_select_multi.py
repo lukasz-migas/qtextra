@@ -143,7 +143,7 @@ class SelectionWidget(QtFramelessPopup):
         self.filter_by_option = hp.make_line_edit(
             self,
             placeholder="Filter by value...",
-            func_changed=lambda text, col=self.TABLE_CONFIG.option: self.table_proxy.setFilterByColumn(text, col),
+            func_changed=self._on_filter_option_changed,
         )
 
         layout = hp.make_form_layout(parent=self, margin=6)
@@ -181,6 +181,10 @@ class SelectionWidget(QtFramelessPopup):
             ),
         )
         return layout
+
+    def _on_filter_option_changed(self, text: str) -> None:
+        """Filter the proxy model by option text."""
+        self.table_proxy.setFilterByColumn(text, self.TABLE_CONFIG.option)
 
 
 class QtMultiSelect(QWidget):

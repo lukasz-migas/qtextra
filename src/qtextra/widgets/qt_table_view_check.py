@@ -56,6 +56,15 @@ __all__ = (
 )
 
 
+def _make_index_getter(index: int) -> ty.Callable[[], int]:
+    """Return a zero-argument callable that always yields ``index``."""
+
+    def _get_index() -> int:
+        return index
+
+    return _get_index
+
+
 class WrapTextDelegate(QStyledItemDelegate):
     """Wrap text delegate."""
 
@@ -1098,7 +1107,7 @@ class QtCheckableTableView(QTableView):
         self._selection = selection
 
         # register events
-        self.doubleClicked.connect(lambda v: self.evt_double_clicked.emit(v.row()))
+        self.doubleClicked.connect(self._emit_double_clicked_row)
         self.clicked.connect(self.on_table_clicked)
         if self._sortable:
             self.header.sectionClicked.connect(self.sortByColumn)
@@ -1594,12 +1603,16 @@ class QtCheckableTableView(QTableView):
         order = self.horizontalHeader().sortIndicatorOrder()
         return QTableView.sortByColumn(self, index, order)
 
+    def _emit_double_clicked_row(self, index: QModelIndex) -> None:
+        """Forward the double-clicked row index via the legacy signal."""
+        self.evt_double_clicked.emit(index.row())
+
     def keyPressEvent(self, event):
         """Process key event press."""
         super().keyPressEvent(event)
         row = self.currentIndex().row()
         self.selectRow(row)
-        event.row = lambda: row  # make row retrieval a function so its compatible with other methods
+        event.row = _make_index_getter(row)  # make row retrieval a function so its compatible with other methods
         self.evt_keypress.emit(event)
 
     #         # take into account change of order
