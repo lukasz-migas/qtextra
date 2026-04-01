@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import math
-import operator
 import typing as ty
 from contextlib import contextmanager, suppress
+from numbers import Number
 
 import numpy as np
 from koyo.typing import StrEnum
@@ -760,6 +760,8 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.checkable_columns = checkable_columns or []
         self.text_alignment = text_alignment or Qt.AlignmentFlag.AlignCenter
         self._sort_index_by_initial: dict[int, int] = {}
+        self._sort_key_cache: dict[int, list[ty.Any]] = {}
+        self._sort_strategy_cache: dict[int, str] = {}
         self._rebuild_sort_lookup()
 
     def _rebuild_sort_lookup(self) -> None:
@@ -767,6 +769,61 @@ class QtCheckableItemModel(QAbstractTableModel):
         self._sort_index_by_initial = {
             initial_row: sorted_row for sorted_row, initial_row in enumerate(self.original_index)
         }
+
+    def _clear_sort_cache(self, column: int | None = None) -> None:
+        """Clear cached sort metadata."""
+        if column is None:
+            self._sort_key_cache.clear()
+            self._sort_strategy_cache.clear()
+            return
+        self._sort_key_cache.pop(column, None)
+        self._sort_strategy_cache.pop(column, None)
+
+    def _reorder_sort_cache(self, new_index: list[int], descending: bool) -> None:
+        """Keep cached sort keys aligned with the current row order."""
+        for column, keys in list(self._sort_key_cache.items()):
+            reordered = order_by_index(keys, new_index)
+            if descending:
+                reordered.reverse()
+            self._sort_key_cache[column] = reordered
+
+    def _sort_strategy(self, column: int) -> str:
+        """Infer the cheapest safe sort strategy for a column."""
+        cached = self._sort_strategy_cache.get(column)
+        if cached is not None:
+            return cached
+
+        values = [row[column] for row in self._table]
+        non_null = [value for value in values if value is not None]
+        if not non_null:
+            strategy = "text"
+        elif all(isinstance(value, Number) and not isinstance(value, complex) for value in non_null):
+            strategy = "numeric"
+        elif all(isinstance(value, str) for value in non_null):
+            strategy = "natural" if any(any(ch.isdigit() for ch in value) for value in non_null) else "text"
+        else:
+            strategy = "natural"
+
+        self._sort_strategy_cache[column] = strategy
+        return strategy
+
+    def _normalized_sort_key(self, value: ty.Any, strategy: str) -> ty.Any:
+        """Build a comparable key for cached non-natural sorting."""
+        if strategy == "numeric":
+            return (value is None, 0.0 if value is None else float(value))
+        return (value is None, "" if value is None else str(value).casefold())
+
+    def _sort_keys(self, column: int) -> tuple[str, list[ty.Any] | None]:
+        """Return cached sort keys for the given column when applicable."""
+        strategy = self._sort_strategy(column)
+        if strategy == "natural":
+            return strategy, None
+
+        keys = self._sort_key_cache.get(column)
+        if keys is None:
+            keys = [self._normalized_sort_key(row[column], strategy) for row in self._table]
+            self._sort_key_cache[column] = keys
+        return strategy, keys
 
     def _iter_target_rows(self) -> list[int]:
         """Return source-model row indices affected by bulk row actions."""
@@ -787,6 +844,7 @@ class QtCheckableItemModel(QAbstractTableModel):
                 self._table[row][0] = state
                 changed_rows.append(row)
 
+        self._clear_sort_cache(0)
         if changed_rows:
             top_left = self.createIndex(min(changed_rows), 0)
             bottom_right = self.createIndex(max(changed_rows), 0)
@@ -831,6 +889,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         self._table.pop(row)
         self.original_index.pop(row)
         self.endRemoveRows()
+        self._clear_sort_cache()
         self._rebuild_sort_lookup()
         return True
 
@@ -890,18 +949,27 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Sort table."""
         if self.no_sort_columns and column in self.no_sort_columns:
             return
+        if self.rowCount() <= 1:
+            return
 
         # emit signal about upcoming change
         self.layoutAboutToBeChanged.emit()
 
-        # get sort index
-        new_index = index_natsorted(self._table, key=operator.itemgetter(column))
+        strategy, sort_keys = self._sort_keys(column)
+        if strategy == "natural":
+            column_values = [row[column] for row in self._table]
+            new_index = index_natsorted(column_values)
+        else:
+            assert sort_keys is not None
+            new_index = sorted(range(len(sort_keys)), key=sort_keys.__getitem__)
 
         # sort
         self._table = order_by_index(self._table, new_index)
         self.original_index = order_by_index(self.original_index, new_index)
+        descending = order == Qt.SortOrder.DescendingOrder
+        self._reorder_sort_cache(new_index, descending)
 
-        if order == Qt.SortOrder.DescendingOrder:
+        if descending:
             self._table.reverse()
             self.original_index.reverse()
         self._rebuild_sort_lookup()
@@ -924,6 +992,7 @@ class QtCheckableItemModel(QAbstractTableModel):
 
         self._table[row][column] = value
         if change:
+            self._clear_sort_cache(column)
             self.dataChanged.emit(index, index)
             if column == 0:
                 self.evt_checked.emit(row, value)
@@ -1056,6 +1125,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Add data."""
         self._table.extend(data)
         self.original_index = list(range(len(self._table)))
+        self._clear_sort_cache()
         self._rebuild_sort_lookup()
         # indicate that change to data has been made
         self.layoutAboutToBeChanged.emit()
@@ -1066,6 +1136,7 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Reset data."""
         self._table.clear()
         self.original_index.clear()
+        self._clear_sort_cache()
         self._rebuild_sort_lookup()
         self.layoutAboutToBeChanged.emit()
         self.layoutChanged.emit()

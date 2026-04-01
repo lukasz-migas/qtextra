@@ -196,6 +196,22 @@ class TestModel:
         populated_table.model().sort(0, Qt.SortOrder.DescendingOrder)
         assert populated_table.get_col_data(0) == ["Carol", "Bob", "Alice"]
 
+    def test_sort_reflects_updated_numeric_values(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        w = QtCheckableTableView(None)
+        qtbot.addWidget(w)
+        cfg = TableConfig().add("Name", "name").add("Value", "value")
+        w.setup_model_from_config(cfg)
+        w.add_data([["Alice", 30], ["Bob", 10], ["Carol", 20]])
+
+        w.model().sort(1, Qt.SortOrder.AscendingOrder)
+        assert w.get_col_data(0) == ["Bob", "Carol", "Alice"]
+
+        w.update_value(2, 1, 5, match_to_sort=False)
+        w.model().sort(1, Qt.SortOrder.AscendingOrder)
+        assert w.get_col_data(0) == ["Alice", "Bob", "Carol"]
+
     def test_n_checked_unchecked(self, qtbot):
         w = QtCheckableTableView(None)
         qtbot.addWidget(w)
