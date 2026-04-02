@@ -1,0 +1,23 @@
+{
+  "name": "dark",
+  "type": "dark",
+  "background": "rgb(38, 41, 48)",
+  "foreground": "rgb(65, 72, 81)",
+  "primary": "rgb(90, 98, 108)",
+  "secondary": "rgb(189, 147, 249)",
+  "highlight": "rgb(106, 115, 128)",
+  "text": "rgb(240, 241, 242)",
+  "icon": "rgb(209, 210, 212)",
+  "warning": "rgb(255, 105, 60)",
+  "error": "rgb(183, 52, 53)",
+  "success": "rgb(30, 215, 96)",
+  "info": "rgb(82, 158, 255)",
+  "progress": "rgb(179, 98, 0)",
+  "current": "rgb(0, 122, 204)",
+  "console": "rgb(0, 0, 0)",
+  "canvas": "rgb(0, 0, 0)",
+  "standout": "rgb(255, 255, 0)",
+  "syntax_style": "native",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}

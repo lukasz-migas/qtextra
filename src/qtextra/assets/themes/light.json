@@ -1,0 +1,23 @@
+{
+  "name": "light",
+  "type": "light",
+  "background": "rgb(239, 235, 233)",
+  "foreground": "rgb(214, 208, 206)",
+  "primary": "rgb(188, 184, 181)",
+  "secondary": "rgb(190, 185, 183)",
+  "highlight": "rgb(163, 158, 156)",
+  "text": "rgb(59, 58, 57)",
+  "icon": "rgb(107, 105, 103)",
+  "warning": "rgb(255, 105, 60)",
+  "error": "rgb(255, 18, 31)",
+  "success": "rgb(30, 215, 96)",
+  "info": "rgb(0, 122, 204)",
+  "progress": "rgb(255, 175, 77)",
+  "current": "rgb(30, 215, 96)",
+  "console": "rgb(255, 255, 255)",
+  "canvas": "rgb(255, 255, 255)",
+  "standout": "rgb(255, 252, 0)",
+  "syntax_style": "default",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}

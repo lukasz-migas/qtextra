@@ -10,6 +10,7 @@ from itertools import product
 from pathlib import Path
 
 import numpy as np
+from koyo.json import read_json_data
 from koyo.timer import MeasureTimer
 from loguru import logger
 from psygnal import EventedModel
@@ -19,55 +20,9 @@ from qtpy.QtCore import QDateTime, QTime, Signal
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QApplication, QWidget
 
+from qtextra.assets import THEME_PATH
 from qtextra.config.config import ConfigBase, _get_previous_configs
 from qtextra.utils.appdirs import USER_CACHE_DIR
-
-DARK_THEME = {
-    "name": "dark",
-    "type": "dark",
-    "background": "rgb(38, 41, 48)",
-    "foreground": "rgb(65, 72, 81)",
-    "primary": "rgb(90, 98, 108)",
-    "secondary": "rgb(189, 147, 249)",
-    "highlight": "rgb(106, 115, 128)",
-    "text": "rgb(240, 241, 242)",
-    "icon": "rgb(209, 210, 212)",
-    "warning": "rgb(255, 105, 60)",
-    "error": "rgb(183, 52, 53)",
-    "success": "rgb(30, 215, 96)",
-    "info": "rgb(82, 158, 255)",
-    "progress": "rgb(179, 98, 0)",
-    "current": "rgb(0, 122, 204)",
-    "console": "rgb(0, 0, 0)",
-    "canvas": "rgb(0, 0, 0)",
-    "standout": "rgb(255, 255, 0)",
-    "syntax_style": "native",
-    "font_size": "14pt",
-    "header_size": "18pt",
-}
-LIGHT_THEME = {
-    "name": "light",
-    "type": "light",
-    "background": "rgb(239, 235, 233)",
-    "foreground": "rgb(214, 208, 206)",
-    "primary": "rgb(188, 184, 181)",
-    "secondary": "rgb(190, 185, 183)",
-    "highlight": "rgb(163, 158, 156)",
-    "text": "rgb(59, 58, 57)",
-    "icon": "rgb(107, 105, 103)",
-    "warning": "rgb(255, 105, 60)",
-    "error": "rgb(255, 18, 31)",
-    "success": "rgb(30, 215, 96)",
-    "info": "rgb(0, 122, 204)",
-    "progress": "rgb(255, 175, 77)",
-    "current": "rgb(30, 215, 96)",
-    "console": "rgb(255, 255, 255)",
-    "canvas": "rgb(255, 255, 255)",
-    "standout": "rgb(255, 252, 0)",
-    "syntax_style": "default",
-    "font_size": "14pt",
-    "header_size": "18pt",
-}
 
 
 def time_to_qt_time(value: str) -> QTime:
@@ -87,6 +42,19 @@ def parse_time(value: str) -> tuple[int, ...]:
         return int(hh), int(mm)
     except ValueError:
         return -1, -1
+
+
+def get_builtin_theme_data(name: str) -> dict[str, ty.Any]:
+    """Load a built-in theme definition from packaged assets."""
+    path = THEME_PATH / f"{name}.json"
+    theme_data = read_json_data(path)
+    if not isinstance(theme_data, dict):
+        raise TypeError(f"Theme file must contain a JSON object: {path}")
+    return theme_data
+
+
+DARK_THEME = get_builtin_theme_data("dark")
+LIGHT_THEME = get_builtin_theme_data("light")
 
 
 class Theme(EventedModel):
@@ -256,14 +224,7 @@ class Themes(ConfigBase):
         self._light_start_time: str = "08:00"
         self._light_end_time: str = "20:00"
         self.themes: dict[str, Theme] = {}
-        self.add_theme(
-            "dark",
-            Theme(**DARK_THEME),
-        )
-        self.add_theme(
-            "light",
-            Theme(**LIGHT_THEME),
-        )
+        self._load_builtin_themes()
         # synchronize our icon with napari icon color
         try:
             from napari.utils.theme import _themes
@@ -272,6 +233,21 @@ class Themes(ConfigBase):
                 _themes[name].icon = self.get_hex_color("icon")
         except ImportError:
             pass
+
+    @staticmethod
+    def _get_builtin_theme_paths() -> list[Path]:
+        """Return built-in theme files in a stable UI order."""
+        priority = {
+            "light": 0,
+            "dark": 1,
+        }
+        return sorted(THEME_PATH.glob("*.json"), key=lambda path: (priority.get(path.stem, 99), path.stem))
+
+    def _load_builtin_themes(self) -> None:
+        """Load built-in themes from asset files."""
+        for path in self._get_builtin_theme_paths():
+            theme_data = get_builtin_theme_data(path.stem)
+            self.add_theme(theme_data["name"], Theme(**theme_data))
 
     def __getitem__(self, item):
         return self.themes[item]

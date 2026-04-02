@@ -29,6 +29,9 @@ STYLE_PATH = HERE / "stylesheets"
 STYLE_PATH.mkdir(exist_ok=True)
 STYLES = {f"{x.stem}-qtextra": str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
 
+THEME_PATH = HERE / "themes"
+THEME_PATH.mkdir(exist_ok=True)
+
 # Some gifs were made using https://loading.io/
 # orange color = #ff4500
 LOADING_SQUARE_GIF = str(HERE / "gifs" / "loading-square.gif")

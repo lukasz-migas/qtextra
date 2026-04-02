@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from qtpy.QtWidgets import QComboBox, QSpinBox, QWidget
 
-from qtextra.config.theme import DARK_THEME, Themes
+from qtextra.config.theme import DARK_THEME, Themes, get_builtin_theme_data
 from qtextra.dialogs import qt_theme_editor as editor_mod
 from qtextra.widgets.qt_button_color import QtColorSwatch
 
@@ -88,6 +88,7 @@ def test_theme_editor_restores_builtin_theme_defaults(qtbot, monkeypatch):
 
 def test_theme_editor_restores_all_builtin_defaults(qtbot, monkeypatch):
     dialog, themes, _ = _make_dialog(qtbot, monkeypatch)
+    light_theme = get_builtin_theme_data("light")
 
     themes["dark"].font_size = "22pt"
     themes["light"].font_size = "21pt"
@@ -97,6 +98,6 @@ def test_theme_editor_restores_all_builtin_defaults(qtbot, monkeypatch):
     dialog.on_restore_all_defaults()
 
     assert themes["dark"].font_size == DARK_THEME["font_size"]
-    assert themes["light"].font_size == editor_mod.LIGHT_THEME["font_size"]
+    assert themes["light"].font_size == light_theme["font_size"]
     assert themes["dark"].success.as_hex() == "#1ed760"
     assert themes["light"].info.as_hex() == "#007acc"
