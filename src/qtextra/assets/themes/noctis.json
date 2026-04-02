@@ -1,0 +1,23 @@
+{
+  "name": "noctis",
+  "type": "dark",
+  "background": "rgb(33, 37, 43)",
+  "foreground": "rgb(46, 51, 58)",
+  "primary": "rgb(94, 104, 117)",
+  "secondary": "rgb(199, 146, 234)",
+  "highlight": "rgb(63, 70, 79)",
+  "text": "rgb(217, 224, 232)",
+  "icon": "rgb(217, 224, 232)",
+  "warning": "rgb(255, 203, 107)",
+  "error": "rgb(255, 117, 127)",
+  "success": "rgb(173, 219, 103)",
+  "info": "rgb(130, 170, 255)",
+  "progress": "rgb(255, 203, 107)",
+  "current": "rgb(130, 170, 255)",
+  "console": "rgb(33, 37, 43)",
+  "canvas": "rgb(33, 37, 43)",
+  "standout": "rgb(255, 203, 107)",
+  "syntax_style": "native",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}

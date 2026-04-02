@@ -1,10 +1,13 @@
 """Test theme."""
 
+from __future__ import annotations
+
 import json
 
 import pytest
 
-from qtextra.config.theme import DARK_THEME, LIGHT_THEME, THEMES, Theme, Themes
+from qtextra.assets import THEME_PATH
+from qtextra.config.theme import DARK_THEME, LIGHT_THEME, THEMES, Theme, Themes, get_builtin_theme_data
 
 
 def test_themes(qtbot):
@@ -15,7 +18,6 @@ def test_themes(qtbot):
 
     theme = THEMES["dark"]
 
-    # check font size handling
     assert theme.font_size.endswith("pt")
     theme.font_size = 14
     assert theme.font_size == "14pt"
@@ -42,6 +44,21 @@ def test_themes(qtbot):
         theme.icon = "#00ff00"
     with qtbot.waitSignals([THEMES.evt_theme_changed], timeout=500):
         theme.font_size = 16
+
+
+def test_builtin_theme_assets_are_discoverable_and_loaded():
+    themes = Themes()
+
+    asset_names = {path.stem for path in THEME_PATH.glob("*.json")}
+
+    assert asset_names
+    assert asset_names <= set(themes.available_themes())
+    assert themes.available_themes()[:2] == ("light", "dark")
+
+
+def test_get_builtin_theme_data_matches_compatibility_constants():
+    assert get_builtin_theme_data("dark") == DARK_THEME
+    assert get_builtin_theme_data("light") == LIGHT_THEME
 
 
 def test_get_theme_as_dict_returns_serialized_colors():

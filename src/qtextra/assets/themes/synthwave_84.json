@@ -1,0 +1,23 @@
+{
+  "name": "synthwave_84",
+  "type": "dark",
+  "background": "rgb(36, 24, 60)",
+  "foreground": "rgb(51, 37, 84)",
+  "primary": "rgb(120, 81, 169)",
+  "secondary": "rgb(255, 126, 219)",
+  "highlight": "rgb(93, 54, 142)",
+  "text": "rgb(255, 248, 244)",
+  "icon": "rgb(255, 248, 244)",
+  "warning": "rgb(255, 184, 108)",
+  "error": "rgb(255, 94, 162)",
+  "success": "rgb(114, 247, 178)",
+  "info": "rgb(52, 209, 255)",
+  "progress": "rgb(255, 211, 92)",
+  "current": "rgb(52, 209, 255)",
+  "console": "rgb(36, 24, 60)",
+  "canvas": "rgb(36, 24, 60)",
+  "standout": "rgb(255, 211, 92)",
+  "syntax_style": "monokai",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}
