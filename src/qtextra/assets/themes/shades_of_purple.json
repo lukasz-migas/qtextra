@@ -1,0 +1,23 @@
+{
+  "name": "shades_of_purple",
+  "type": "dark",
+  "background": "rgb(43, 40, 126)",
+  "foreground": "rgb(59, 54, 146)",
+  "primary": "rgb(111, 86, 214)",
+  "secondary": "rgb(255, 158, 100)",
+  "highlight": "rgb(77, 66, 176)",
+  "text": "rgb(255, 255, 255)",
+  "icon": "rgb(255, 255, 255)",
+  "warning": "rgb(255, 158, 100)",
+  "error": "rgb(255, 98, 140)",
+  "success": "rgb(163, 255, 114)",
+  "info": "rgb(156, 206, 255)",
+  "progress": "rgb(255, 208, 102)",
+  "current": "rgb(255, 158, 100)",
+  "console": "rgb(43, 40, 126)",
+  "canvas": "rgb(43, 40, 126)",
+  "standout": "rgb(255, 208, 102)",
+  "syntax_style": "dracula",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}

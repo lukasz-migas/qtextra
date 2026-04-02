@@ -549,8 +549,21 @@ class QtMultiStatePushButton(QtImagePushButton):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.setMouseTracking(True)
-        if self.DEFAULT_STATE:
-            self.state = self.DEFAULT_STATE
+        default_state = self.get_default_state()
+        if default_state:
+            self.state = default_state
+
+    def get_default_state(self) -> str:
+        """Return the initial state for the button."""
+        return self.DEFAULT_STATE
+
+    def get_state_to_icon(self) -> dict[str, str]:
+        """Return the state-to-icon mapping."""
+        return self.STATE_TO_ICON
+
+    def get_state_to_option(self) -> dict[str, str]:
+        """Return the state-to-label mapping."""
+        return self.STATE_TO_OPTION
 
     @property
     def state(self) -> str:
@@ -560,7 +573,7 @@ class QtMultiStatePushButton(QtImagePushButton):
     @state.setter
     def state(self, state: str) -> None:
         self._state = state
-        self.set_qta(self.STATE_TO_ICON[state])
+        self.set_qta(self.get_state_to_icon()[state])
         self.evt_changed.emit(state)
 
     def set_state(self, state: bool) -> None:
@@ -569,12 +582,14 @@ class QtMultiStatePushButton(QtImagePushButton):
 
     def set_and_show_menu(self) -> None:
         """Set menu."""
+        state_to_option = self.get_state_to_option()
+        state_to_icon = self.get_state_to_icon()
         menu = hp.make_menu(self)
-        for state, label in self.STATE_TO_OPTION.items():
+        for state, label in state_to_option.items():
             hp.make_menu_item(
                 self,
                 label,
-                icon=self.STATE_TO_ICON[state],
+                icon=state_to_icon[state],
                 func=partial(self.set_state, state=state),
                 menu=menu,
             )
@@ -660,26 +675,41 @@ class QtMultiThemeButton(QtMultiStatePushButton):
     ICON_ON = "dark_theme"
     ICON_OFF = "light_theme"
 
-    DEFAULT_STATE = "light"
-    STATE_TO_ICON: ty.ClassVar[dict[str, str]] = {
-        "light": "light_theme",
-        "dark": "dark_theme",
-    }
-    STATE_TO_OPTION: ty.ClassVar[dict[str, str]] = {
-        "light": "Light",
-        "dark": "Dark",
-    }
-
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, auto_connect: bool = False, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
-        THEMES.evt_theme_added.connect(self._update_states)
+        THEMES.evt_theme_added.connect(self._sync_state_from_theme)
+        THEMES.evt_theme_changed.connect(self._sync_state_from_theme)
+        self._sync_state_from_theme()
+        if auto_connect:
+            self.auto_connect()
 
-    def _update_states(self) -> None:
-        """Update states."""
-        for theme in THEMES.available_themes():
-            if theme not in self.STATE_TO_OPTION:
-                self.STATE_TO_OPTION[theme] = theme.capitalize()
-                self.STATE_TO_ICON[theme] = theme
+    def get_default_state(self) -> str:
+        """Return the current global theme as the initial state."""
+        return THEMES.theme
+
+    def get_state_to_option(self) -> dict[str, str]:
+        """Build menu labels for all available themes."""
+        return {theme: theme.replace("_", " ").title() for theme in THEMES.available_themes()}
+
+    def get_state_to_icon(self) -> dict[str, str]:
+        """Use light/dark icons based on the theme type."""
+        return {
+            theme: "dark_theme" if THEMES[theme].type == "dark" else "light_theme"
+            for theme in THEMES.available_themes()
+        }
+
+    def _sync_state_from_theme(self) -> None:
+        """Keep the button icon in sync with the active theme."""
+        theme = THEMES.theme
+        state_to_icon = self.get_state_to_icon()
+        if theme not in state_to_icon:
+            return
+        with hp.qt_signals_blocked(self):
+            self.state = theme
+
+    def auto_connect(self) -> None:
+        """Automatically apply the selected theme."""
+        self.evt_changed.connect(THEMES.set_theme)
 
 
 class QtToolbarPushButton(QtImagePushButton):
@@ -985,7 +1015,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     def _main() -> None:  # type: ignore[no-untyped-def]
         from qtextra.assets import QTA_MAPPING
-        from qtextra.utils.dev import qdev, qmain
+        from qtextra.utils.dev import qframe
 
         def _disable_toolbar_labels():
             nonlocal toolbar_buttons
@@ -995,11 +1025,8 @@ if __name__ == "__main__":  # pragma: no cover
 
         toolbar_buttons = []
 
-        app, frame, va = qmain(False)
+        app, frame, va = qframe(False)
         frame.setMinimumSize(800, 800)
-
-        dev = qdev(frame)
-        va.addWidget(dev)
 
         ha = QHBoxLayout()
         ha.addWidget(hp.make_btn(frame, "Toggle toolbar label visibility", func=_disable_toolbar_labels))

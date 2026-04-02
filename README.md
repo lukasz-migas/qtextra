@@ -14,7 +14,7 @@ focuses on opinionated, application-level building blocks such as searchable
 comboboxes, step progress indicators, styled buttons, collapsible sections, and
 utility dialogs.
 
-![qtextra widget showcase](docs/assets/readme_showcase.png)
+![qtextra widget showcase](docs/assets/readme_showcase.jpg)
 
 Components are tested on:
 
@@ -26,6 +26,10 @@ Components are tested on:
 The project overlaps somewhat with [superqt](https://github.com/pyapp-kit/superqt),
 but it leans more heavily into application-ready widgets and bundled styling in
 [`src/qtextra/assets/stylesheets`](src/qtextra/assets/stylesheets).
+
+## Documentation
+
+Documentation is available at https://lukasz-migas.github.io/qtextra/
 
 ## Installation
 

@@ -2,7 +2,7 @@
 
 import pytest
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QLabel, QPushButton, QWidget
+from qtpy.QtWidgets import QLabel, QPushButton, QTabWidget, QVBoxLayout, QWidget
 
 from qtextra.widgets.qt_notification_badge import QtNotificationBadge
 
@@ -114,4 +114,37 @@ def test_notification_badge_auto_clears_on_click(qtbot):
     qtbot.mouseClick(target, Qt.MouseButton.LeftButton)
 
     assert badge.state == ""
+    assert badge.isVisible() is False
+
+
+def test_notification_badge_tracks_tab_page_visibility(qtbot):
+    host = QWidget()
+    host.resize(320, 200)
+    layout = QVBoxLayout(host)
+    tabs = QTabWidget(host)
+    first = QWidget()
+    second = QWidget()
+    second_layout = QVBoxLayout(second)
+    target = QPushButton("Target", parent=second)
+    second_layout.addWidget(target)
+    tabs.addTab(first, "First")
+    tabs.addTab(second, "Second")
+    layout.addWidget(tabs)
+    qtbot.addWidget(host)
+    host.show()
+    qtbot.waitExposed(host)
+
+    badge = QtNotificationBadge(parent=second, widget=target, state="warning", mode="dot")
+    qtbot.addWidget(badge)
+    qtbot.wait(10)
+
+    assert tabs.currentIndex() == 0
+    assert badge.isVisible() is False
+
+    tabs.setCurrentIndex(1)
+    qtbot.wait(10)
+    assert badge.isVisible() is True
+
+    tabs.setCurrentIndex(0)
+    qtbot.wait(10)
     assert badge.isVisible() is False

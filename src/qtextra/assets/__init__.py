@@ -29,6 +29,9 @@ STYLE_PATH = HERE / "stylesheets"
 STYLE_PATH.mkdir(exist_ok=True)
 STYLES = {f"{x.stem}-qtextra": str(x) for x in STYLE_PATH.iterdir() if x.suffix == ".qss"}
 
+THEME_PATH = HERE / "themes"
+THEME_PATH.mkdir(exist_ok=True)
+
 # Some gifs were made using https://loading.io/
 # orange color = #ff4500
 LOADING_SQUARE_GIF = str(HERE / "gifs" / "loading-square.gif")
@@ -221,7 +224,7 @@ QTA_MAPPING: dict[str, IconType] = {
     "neutral": "fa5s.meh",
     "neutral_color": ("fa5s.meh", {"color": "#FEBB49"}),
     "sad": "fa5s.frown",
-    "sad_color": ("fa5s.sad", {"color": "#FEBB49"}),
+    "sad_color": ("fa5s.sad-cry", {"color": "#FEBB49"}),
     "angry": "fa5s.angry",
     "angry_color": ("fa5s.angry", {"color": "#FEBB49"}),
     # theme

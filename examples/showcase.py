@@ -119,12 +119,12 @@ def _make_inputs_tab(window: QWidget) -> QWidget:
     sync_button = QPushButton("Sync queue", parent=badge_row)
     sync_button.setMinimumWidth(150)
     badge_row_layout.addWidget(sync_button)
-    hp.make_notification_badge(parent=window, widget=sync_button, state="success", mode="count", size="md", count=4)
+    hp.make_notification_badge(parent=badge_row, widget=sync_button, state="success", mode="count", size="md", count=4)
 
     bell = QtQtaLabel(large=True, parent=badge_row)
     bell.set_qta("notified", color=THEMES.get_hex_color("icon"))
     badge_row_layout.addWidget(bell)
-    hp.make_notification_badge(parent=window, widget=bell, state="warning", mode="dot", size="sm")
+    hp.make_notification_badge(parent=badge_row, widget=bell, state="warning", mode="dot", size="sm")
     badge_row_layout.addStretch(1)
     button_grid.addWidget(badge_row, 2, 1)
 

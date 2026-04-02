@@ -1,0 +1,23 @@
+{
+  "name": "jellyfish",
+  "type": "dark",
+  "background": "rgb(6, 26, 44)",
+  "foreground": "rgb(13, 39, 63)",
+  "primary": "rgb(39, 83, 124)",
+  "secondary": "rgb(255, 117, 214)",
+  "highlight": "rgb(18, 57, 89)",
+  "text": "rgb(225, 248, 255)",
+  "icon": "rgb(225, 248, 255)",
+  "warning": "rgb(255, 196, 107)",
+  "error": "rgb(255, 98, 140)",
+  "success": "rgb(96, 230, 198)",
+  "info": "rgb(85, 221, 255)",
+  "progress": "rgb(255, 214, 102)",
+  "current": "rgb(85, 221, 255)",
+  "console": "rgb(6, 26, 44)",
+  "canvas": "rgb(6, 26, 44)",
+  "standout": "rgb(255, 214, 102)",
+  "syntax_style": "dracula",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}

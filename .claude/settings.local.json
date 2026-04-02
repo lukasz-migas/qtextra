@@ -5,7 +5,13 @@
       "Bash(grep -n \"QToolBar\\\\|toolbar\\\\|ToolBar\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/assets/stylesheets/*.qss)",
       "Bash(python -m pytest tests/widgets/test_qt_table_view.py -v --tb=short)",
       "Bash(python -m pytest tests/widgets/test_qt_table_view.py::TestTableView::test_get_col_data tests/widgets/test_qt_table_view.py::TestModel::test_get_row_id tests/widgets/test_qt_table_view.py::TestTableView::test_set_value -v --tb=long)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(grep -r \"class Qt\" /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/widgets/*.py)",
+      "Bash(ls /Users/lgmigas/Documents/GitHub/qtextra/examples/*.py)",
+      "Bash(ls -1 /Users/lgmigas/Documents/GitHub/qtextra/src/qtextra/widgets/qt_*.py)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''src/qtextra/widgets/qt_tooltip_rich.py''\\).read\\(\\)\\); print\\(''Widget OK''\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''tests/widgets/test_qt_tooltip_rich.py''\\).read\\(\\)\\); print\\(''Tests OK''\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''examples/qt_tooltip_rich.py''\\).read\\(\\)\\); print\\(''Example OK''\\)\")"
     ]
   }
 }

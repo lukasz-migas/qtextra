@@ -7,9 +7,10 @@ Browse by capability below, then open the individual pages for screenshots, runn
 
 ## Actions And Buttons
 
-- [Qt Button Variants](./qt_button.md): theme-aware push buttons with activity and rich-text display helpers.
+- [QtPushButton (variants)](./qt_button.md): theme-aware push buttons with activity and rich-text display helpers.
 - [Qt Icon Buttons](./qt_button_icon.md): a family of icon buttons for toggles, state indicators, and common toolbar actions.
 - [QtPanelToolbar](./qt_toolbar_panel.md): a vertical toolbar that toggles stacked panels, with optional labelled buttons.
+- [QtIconButtons](./qt_button_icon.md): a family of icon buttons for toggles, state indicators, and common toolbar actions.
 - [QtMiniToolbar](./qt_toolbar_mini.md): a dense icon-toolbar widget for compact utility actions.
 
 ## Data Editors
@@ -28,13 +29,12 @@ Browse by capability below, then open the individual pages for screenshots, runn
 ## Feedback And Teaching
 
 - [QtPopout](./qt_popout.md): contextual popouts that point back to a target widget.
-- [QtToolTip](./qt_tooltip.md): custom tooltip bubbles with tail positions, optional images, and styled content.
 - [QtTutorial](./qt_tutorial.md): guided tutorial overlays that walk the user through a sequence of widgets.
 
 ## Labels And Display
 
 - [QReadMoreLessLabel](./qt_label_read_more.md): rich text that can stay compact by default and expand into a two-column explanation when needed.
-- [Qt Icon Labels](./qt_label_icon.md): theme-aware static and animated icon labels built on QtAwesome mappings.
+- [QtQtaLabel (variants)](./qt_label_icon.md): theme-aware static and animated icon labels built on QtAwesome mappings.
 - [QtScrollableLabel](./qt_label_scroll.md): scrollable rich text labels for longer explanations inside constrained layouts.
 
 ## Progress And Status

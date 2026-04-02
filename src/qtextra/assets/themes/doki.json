@@ -1,0 +1,23 @@
+{
+  "name": "doki",
+  "type": "dark",
+  "background": "rgb(43, 24, 54)",
+  "foreground": "rgb(62, 37, 74)",
+  "primary": "rgb(111, 79, 139)",
+  "secondary": "rgb(255, 121, 198)",
+  "highlight": "rgb(86, 56, 102)",
+  "text": "rgb(255, 236, 246)",
+  "icon": "rgb(255, 236, 246)",
+  "warning": "rgb(255, 184, 108)",
+  "error": "rgb(255, 85, 136)",
+  "success": "rgb(156, 239, 176)",
+  "info": "rgb(139, 233, 253)",
+  "progress": "rgb(255, 208, 102)",
+  "current": "rgb(255, 121, 198)",
+  "console": "rgb(43, 24, 54)",
+  "canvas": "rgb(43, 24, 54)",
+  "standout": "rgb(255, 208, 102)",
+  "syntax_style": "dracula",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}

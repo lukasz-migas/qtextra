@@ -13,7 +13,7 @@ from qtpy.QtWidgets import QComboBox, QLayout, QWidget
 
 import qtextra.helpers as hp
 from qtextra.config import THEMES
-from qtextra.config.theme import DARK_THEME, LIGHT_THEME, Theme
+from qtextra.config.theme import Theme, get_builtin_theme_data
 from qtextra.widgets.qt_button_color import QtColorSwatch
 from qtextra.widgets.qt_dialog import QtDialog
 
@@ -177,13 +177,10 @@ class DialogThemeEditor(QtDialog):
     def on_restore_theme(self) -> None:
         """Restore original theme."""
         theme_name = self.theme.currentText()
-        if theme_name == "dark":
-            theme_data = DARK_THEME
-        elif theme_name == "light":
-            theme_data = LIGHT_THEME
-        else:
+        if theme_name not in {"dark", "light"}:
             return
 
+        theme_data = get_builtin_theme_data(theme_name)
         restored_theme = Theme(**theme_data)
         for key, value in restored_theme:
             setattr(THEMES.themes[theme_name], key, value)
@@ -192,7 +189,8 @@ class DialogThemeEditor(QtDialog):
 
     def on_restore_all_defaults(self) -> None:
         """Restore built-in defaults for all bundled themes."""
-        for theme_name, theme_data in (("dark", DARK_THEME), ("light", LIGHT_THEME)):
+        for theme_name in ("dark", "light"):
+            theme_data = get_builtin_theme_data(theme_name)
             restored_theme = Theme(**theme_data)
             for key, value in restored_theme:
                 setattr(THEMES.themes[theme_name], key, value)
