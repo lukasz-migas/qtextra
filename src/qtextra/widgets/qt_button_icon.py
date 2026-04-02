@@ -15,12 +15,22 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QPointF,
     QPropertyAnimation,
     QRectF,
+    QSize,
     Qt,
     Signal,
     Slot,
 )
 from qtpy.QtGui import QBrush, QColor, QFont, QPainter
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QHBoxLayout, QLabel, QPushButton, QToolTip, QVBoxLayout, QWidget
+from qtpy.QtWidgets import (
+    QGraphicsOpacityEffect,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
 
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
@@ -713,6 +723,7 @@ class QtToolbarPushButton(QtImagePushButton):
     indicator: str = ""
     _text: str = ""
     _tooltip = None
+    _suppress_hover_tooltip = False
 
     panel_widget: QWidget | None = None
     about_widget: QWidget | None = None
@@ -732,6 +743,7 @@ class QtToolbarPushButton(QtImagePushButton):
         self.tooltip_timer.setSingleShot(True)
 
         self.evt_click.connect(self.stop_pulse)
+        self.evt_click.connect(self._suppress_tooltip_until_leave)
 
     def setToolTip(self, text: str) -> None:  # type: ignore[override]
         """Override tooltip."""
@@ -747,9 +759,16 @@ class QtToolbarPushButton(QtImagePushButton):
         """Reset tooltip reference when closed externally (e.g. via close button)."""
         self._tooltip = None
 
+    def _suppress_tooltip_until_leave(self) -> None:
+        """Disable hover tooltips until the cursor leaves the button."""
+        self._suppress_hover_tooltip = True
+        self.tooltip_timer.stop()
+        hp.close_widget(self._tooltip)
+        self._tooltip = None
+
     def _show_tooltip(self) -> None:
         """Show a tooltip if it's available."""
-        if not self._text or self._tooltip is not None:
+        if not self._text or self._tooltip is not None or self._suppress_hover_tooltip:
             return
         try:
             self._tooltip = QtToolTip.init(
@@ -770,10 +789,11 @@ class QtToolbarPushButton(QtImagePushButton):
     def event(self, evt: QEvent) -> bool:  # type: ignore[override]
         """Override event handler to quickly display/hide a tooltip."""
         if evt.type() == QEvent.Type.Enter:
-            if not self._tooltip:
+            if not self._tooltip and not self._suppress_hover_tooltip:
                 self.tooltip_timer.start()
             evt.ignore()
         elif evt.type() == QEvent.Type.Leave:
+            self._suppress_hover_tooltip = False
             self.tooltip_timer.stop()
             hp.close_widget(self._tooltip)
             self._tooltip = None
@@ -852,24 +872,32 @@ class QtToolbarPushButton(QtImagePushButton):
 
 
 class QtLabelledToolbarPushButton(QWidget):
-    """Push button with a label."""
+    """A push button with a label."""
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    LABEL_SPACING = 0
+
+    def __init__(self, *args: ty.Any, elide: bool = True, **kwargs: ty.Any):
         self._label_hidden = False
+        self._label_text = ""
+        self._elide = elide
         super().__init__(*args, **kwargs)
 
         self.image_btn = QtToolbarPushButton()
         self.label = QLabel()
+        self.label.setObjectName("toolbar_label")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        self.label.setWordWrap(False)
+        self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(1)
+        layout.setSpacing(self.LABEL_SPACING)
         layout.addWidget(self.image_btn, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         # Add methods from the QtToolbarPushButton
         self.evt_click = self.image_btn.evt_click
-        self.set_default_size = self.image_btn.set_default_size
         self.set_qta = self.image_btn.set_qta
         self.setText = self.image_btn.setText
         self.setChecked = self.image_btn.setChecked
@@ -877,6 +905,9 @@ class QtLabelledToolbarPushButton(QWidget):
         self.set_indicator = self.image_btn.set_indicator
         self.stop_pulse = self.image_btn.stop_pulse
         self.start_pulse = self.image_btn.start_pulse
+        self.setCheckable = self.image_btn.setCheckable
+        self.isChecked = self.image_btn.isChecked
+        self.click = self.image_btn.click
 
     @property
     def label_hidden(self) -> bool:
@@ -887,12 +918,93 @@ class QtLabelledToolbarPushButton(QWidget):
     def label_hidden(self, value: bool) -> None:
         self._label_hidden = value
         self.label.setHidden(value)
+        self.updateGeometry()
 
     def set_label(self, text: str) -> None:
         """Set label."""
-        self.label.setText(text)
+        self._label_text = text
+        self._update_label_geometry()
+        self.updateGeometry()
+
+    @property
+    def elide(self) -> bool:
+        """Get elide state."""
+        return self._elide
+
+    @elide.setter
+    def elide(self, value: bool) -> None:
+        self._elide = value
+        self._update_label_geometry()
+        self.updateGeometry()
+
+    def set_default_size(
+        self,
+        xxsmall: bool = False,
+        xsmall: bool = False,
+        small: bool = False,
+        normal: bool = False,
+        average: bool = False,
+        medium: bool = False,
+        large: bool = False,
+        xlarge: bool = False,
+        xxlarge: bool = False,
+    ) -> None:
+        """Size the icon button and keep the label layout in sync."""
+        self.image_btn.set_default_size(
+            xxsmall=xxsmall,
+            xsmall=xsmall,
+            small=small,
+            normal=normal,
+            average=average,
+            medium=medium,
+            large=large,
+            xlarge=xlarge,
+            xxlarge=xxlarge,
+        )
+        self._update_label_geometry()
+        self.updateGeometry()
+
+    def _update_label_geometry(self) -> None:
+        """Constrain the label so toolbar buttons stay compact."""
+        text = self._label_text.strip()
+        if not text:
+            self.label.clear()
+            self.label.setFixedSize(0, 0)
+            return
+
+        metrics = self.label.fontMetrics()
+        lines = text.splitlines() or [text]
+        icon_width = self.image_btn.sizeHint().width()
+
+        if self._elide:
+            width = icon_width
+            display_text = "\n".join(metrics.elidedText(line, Qt.TextElideMode.ElideRight, width) for line in lines)
+        else:
+            width = max(icon_width, max(metrics.horizontalAdvance(line) for line in lines) + 2)
+            display_text = "\n".join(lines)
+
+        self.label.setText(display_text)
+        self.label.setFixedWidth(width)
+        self.label.ensurePolished()
+        self.label.setFixedHeight(self.label.sizeHint().height())
+
+    def sizeHint(self) -> QSize:  # type: ignore[override]
+        """Keep toolbar buttons narrow even when labels are long."""
+        icon_size = self.image_btn.sizeHint()
+        if self._label_hidden or not self._label_text.strip():
+            return QSize(icon_size.width(), icon_size.height())
+
+        spacing = self.layout().spacing() if self.layout() is not None else 0
+        width = max(icon_size.width(), self.label.width())
+        height = icon_size.height() + spacing + self.label.height()
+        return QSize(width, height)
+
+    def minimumSizeHint(self) -> QSize:  # type: ignore[override]
+        """Match the constrained size hint."""
+        return self.sizeHint()
 
     # Alias methods to offer Qt-like interface
+    setDefaultSize = set_default_size
     setLabel = set_label
 
 

@@ -139,6 +139,13 @@ QLabel#match_label {
     font-weight: 600;
 }
 
+QLabel#toolbar_label {
+    /*font-size: {{ decrease(font_size, 2) }};*/
+    padding: 0px;
+    margin: 0px;
+    background: transparent;
+}
+
 
 /* ------------- QtClickableLabel --------- */
 QtClickableLabel{

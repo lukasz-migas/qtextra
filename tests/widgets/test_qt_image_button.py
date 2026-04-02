@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
 import pytest
-from qtpy.QtCore import Qt
+from qtpy.QtCore import QEvent, Qt
 
-from qtextra.widgets.qt_button_icon import QtAnimationPlayButton, QtImagePushButton, QtPauseButton
+from qtextra.widgets.qt_button_icon import QtAnimationPlayButton, QtImagePushButton, QtPauseButton, QtToolbarPushButton
 
 
 @pytest.fixture
@@ -37,6 +37,20 @@ def setup_pause_widget(qtbot):
     def _widget() -> QtPauseButton:
         widget = QtPauseButton()
         qtbot.addWidget(widget)
+        return widget
+
+    return _widget
+
+
+@pytest.fixture
+def setup_toolbar_widget(qtbot):
+    """Setup toolbar button."""
+
+    def _widget() -> QtToolbarPushButton:
+        widget = QtToolbarPushButton()
+        widget.setToolTip("tip")
+        qtbot.addWidget(widget)
+        widget.show()
         return widget
 
     return _widget
@@ -80,3 +94,25 @@ class TestQtPauseButton:
         assert widget.paused is False
         widget.paused = True
         assert widget.paused is True
+
+
+class TestQtToolbarPushButton:
+    def test_click_suppresses_hover_tooltip_until_leave(self, qtbot, setup_toolbar_widget):
+        widget = setup_toolbar_widget()
+
+        widget.event(QEvent(QEvent.Type.Enter))
+        assert widget.tooltip_timer.isActive() is True
+
+        qtbot.mouseClick(widget, Qt.LeftButton)
+
+        assert widget.tooltip_timer.isActive() is False
+        assert widget._suppress_hover_tooltip is True
+
+        widget.event(QEvent(QEvent.Type.Enter))
+        assert widget.tooltip_timer.isActive() is False
+
+        widget.event(QEvent(QEvent.Type.Leave))
+        assert widget._suppress_hover_tooltip is False
+
+        widget.event(QEvent(QEvent.Type.Enter))
+        assert widget.tooltip_timer.isActive() is True

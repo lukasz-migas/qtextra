@@ -1,4 +1,4 @@
-"""Widget with indicators."""
+"""Panel toolbar widgets with toggle buttons and a linked stacked panel."""
 
 from __future__ import annotations
 
@@ -71,7 +71,13 @@ class QtAboutWidget(QWidget):
 
 
 class QtPanelWidget(QWidget):
-    """Stacked panel widget."""
+    """A vertical toolbar paired with a stacked panel area.
+
+    The toolbar manages a set of `QtToolbarPushButton` or
+    `QtLabelledToolbarPushButton` instances and keeps them synchronized with
+    the panel stack. Buttons can either trigger a callback directly or toggle
+    a panel widget in the adjacent `QStackedWidget`.
+    """
 
     def __init__(
         self,
@@ -79,6 +85,8 @@ class QtPanelWidget(QWidget):
         position: ty.Literal["left", "right"] = "left",
         label_hidden: bool = True,
     ):
+        if position not in {"left", "right"}:
+            raise ValueError("`position` must be either 'left' or 'right'.")
         super().__init__(parent)
         self._label_hidden = label_hidden
 
@@ -89,7 +97,7 @@ class QtPanelWidget(QWidget):
         self._about_stack.setLayout(self._about_layout)
         self._about_stack.setVisible(False)
 
-        self._stack = QStackedWidget(parent)
+        self._stack = QStackedWidget(self)
         self._stack.setContentsMargins(0, 0, 0, 0)
 
         self._buttons = QToolBar(self)
@@ -130,8 +138,9 @@ class QtPanelWidget(QWidget):
     def label_hidden(self, value: bool) -> None:
         self._label_hidden = value
         for button in self._button_dict:
-            if hasattr(button, "hidden_label"):
-                button.hidden_label = value
+            if hasattr(button, "label_hidden"):
+                button.label_hidden = value
+        self._sync_button_widths()
 
     @property
     def stack_widget(self) -> QStackedWidget:
@@ -163,9 +172,10 @@ class QtPanelWidget(QWidget):
         widget: QWidget | None = None,
         location: str = "top",
         title: str | None = None,
+        elide: bool = True,
         func: ty.Callable | None = None,
     ) -> QtToolbarPushButton | QtLabelledToolbarPushButton:
-        """Add a widget to the stack.
+        """Add a toolbar button and optionally bind it to a panel widget.
 
         Parameters
         ----------
@@ -181,12 +191,15 @@ class QtPanelWidget(QWidget):
             `bottom` will be simple click-buttons without widgets associated with them.
         title : str, optional
             Title to be given to the button.
+        elide : bool, optional
+            Whether labAelled toolbar buttons should elide their text to stay compact.
         func : Optional[Callable]
             function that will be connected to the button click event
         """
-        assert location in ["top", "bottom"], "Incorrect location provided - use `top` or `bottom`"
+        if location not in {"top", "bottom"}:
+            raise ValueError("Incorrect location provided - use `top` or `bottom`.")
         if self.get_widget(name):
-            logger.warning(f"Button with name '{name}' already exists")
+            raise ValueError(f"Button with name '{name}' already exists.")
 
         button: QtToolbarPushButton | QtLabelledToolbarPushButton = hp.make_toolbar_btn(
             self,
@@ -194,9 +207,10 @@ class QtPanelWidget(QWidget):
             checkable=widget is not None,
             large=True,
             title=title,
+            elide=elide,
         )
-        if hasattr(button, "hidden_label"):
-            button.hidden_label = self._label_hidden
+        if hasattr(button, "label_hidden"):
+            button.label_hidden = self._label_hidden
         button.setObjectName(name)
         button.setToolTip(tooltip)
 
@@ -206,6 +220,7 @@ class QtPanelWidget(QWidget):
             self._group.addButton(button.image_btn)
         else:
             self._group.addButton(button)
+        self._sync_button_widths()
         if widget:
             self.connect_widget(name, widget, tooltip)
         elif func:
@@ -213,7 +228,7 @@ class QtPanelWidget(QWidget):
         return button
 
     def connect_widget(self, name: str, widget: QWidget, tooltip: str | None = None) -> None:
-        """Connect widget."""
+        """Bind a panel widget to an existing toolbar button."""
         button = self.get_widget(name)
         if not button:
             logger.warning(f"Button with name '{name}' not found")
@@ -249,7 +264,19 @@ class QtPanelWidget(QWidget):
         return self._buttons.insertWidget(self._spacer, button)  # type: ignore[return-value]
 
     def _add_after(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
+        """Append a toolbar button after the spacer."""
         return self._buttons.addWidget(button)  # type: ignore[return-value]
+
+    def _sync_button_widths(self) -> None:
+        """Keep visible toolbar widgets centered when one button widens."""
+        if not self._button_dict:
+            return
+
+        visible_buttons = [button for button, action in self._button_dict.items() if action.isVisible()]
+        buttons = visible_buttons or list(self._button_dict)
+        target_width = max(button.sizeHint().width() for button in buttons)
+        for button in self._button_dict:
+            button.setFixedWidth(target_width)
 
     def add_separator_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Add separator before button."""
@@ -260,11 +287,15 @@ class QtPanelWidget(QWidget):
         self._buttons.addSeparator()
 
     def _show_another(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
-        """Show another widget if current button is disabled or hidden."""
+        """Activate another visible button when the current one cannot stay active."""
         for btn in self._button_dict:
-            if btn != button:
+            if btn != button and btn not in self._hidden_dict:
                 btn.setChecked(True)
                 break
+        else:
+            with hp.qt_signals_blocked(button):
+                button.setChecked(False)
+            self._stack.setVisible(False)
 
     def _toggle_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton, value: bool) -> None:
         """Toggle widget and show appropriate widget."""
@@ -298,6 +329,7 @@ class QtPanelWidget(QWidget):
             action = self._hidden_dict.pop(button, None)
             if action:
                 action.setVisible(True)
+            self._sync_button_widths()
 
     def disable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Disable widget."""
@@ -306,6 +338,9 @@ class QtPanelWidget(QWidget):
         action = self._button_dict[button]
         self._hidden_dict[button] = action
         action.setVisible(False)
+        self._sync_button_widths()
+        if button.isChecked():
+            self._show_another(button)
 
     def add_home_button(self) -> None:
         """Add home button."""
@@ -322,7 +357,11 @@ class QtPanelWidget(QWidget):
 
 
 class QtPanelToolbar(QToolBar):
-    """Toolbar."""
+    """Toolbar wrapper around :class:`QtPanelWidget`.
+
+    This exposes the most common panel-widget methods directly on the toolbar
+    instance so it can be used like a normal `QToolBar` in applications.
+    """
 
     def __init__(
         self,
@@ -363,7 +402,7 @@ class QtPanelToolbar(QToolBar):
 
     @label_hidden.setter
     def label_hidden(self, value: bool) -> None:
-        self._widget._label_hidden = value
+        self._widget.label_hidden = value
 
     def set_disabled(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton, disable: bool) -> None:
         """Set the widget as disabled."""
