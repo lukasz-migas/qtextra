@@ -224,7 +224,7 @@ QTA_MAPPING: dict[str, IconType] = {
     "neutral": "fa5s.meh",
     "neutral_color": ("fa5s.meh", {"color": "#FEBB49"}),
     "sad": "fa5s.frown",
-    "sad_color": ("fa5s.sad", {"color": "#FEBB49"}),
+    "sad_color": ("fa5s.sad-cry", {"color": "#FEBB49"}),
     "angry": "fa5s.angry",
     "angry_color": ("fa5s.angry", {"color": "#FEBB49"}),
     # theme
