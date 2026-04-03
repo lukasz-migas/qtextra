@@ -1,9 +1,15 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from qtpy.QtCore import QEvent, Qt
 
-from qtextra.widgets.qt_button_icon import QtAnimationPlayButton, QtImagePushButton, QtPauseButton, QtToolbarPushButton
+from qtextra.widgets.qt_button_icon import (
+    QtAnimationPlayButton,
+    QtImagePushButton,
+    QtPauseButton,
+    QtPriorityButton,
+    QtToolbarPushButton,
+)
 
 
 @pytest.fixture
@@ -51,6 +57,18 @@ def setup_toolbar_widget(qtbot):
         widget.setToolTip("tip")
         qtbot.addWidget(widget)
         widget.show()
+        return widget
+
+    return _widget
+
+
+@pytest.fixture
+def setup_priority_widget(qtbot):
+    """Setup priority button."""
+
+    def _widget(*, auto_show_menu_on_hover: bool = True) -> QtPriorityButton:
+        widget = QtPriorityButton(auto_show_menu_on_hover=auto_show_menu_on_hover)
+        qtbot.addWidget(widget)
         return widget
 
     return _widget
@@ -116,3 +134,37 @@ class TestQtToolbarPushButton:
 
         widget.event(QEvent(QEvent.Type.Enter))
         assert widget.tooltip_timer.isActive() is True
+
+
+class TestQtMultiStatePushButton:
+    def test_enter_event_shows_menu_on_hover_by_default(self, setup_priority_widget):
+        widget = setup_priority_widget()
+
+        with patch.object(widget, "set_and_show_menu") as mock_set_and_show_menu:
+            widget.event(QEvent(QEvent.Type.Enter))
+
+        mock_set_and_show_menu.assert_called_once()
+
+    def test_enter_event_does_not_show_menu_when_hover_popup_disabled_in_init(self, setup_priority_widget):
+        widget = setup_priority_widget(auto_show_menu_on_hover=False)
+
+        with patch.object(widget, "set_and_show_menu") as mock_set_and_show_menu:
+            widget.event(QEvent(QEvent.Type.Enter))
+
+        mock_set_and_show_menu.assert_not_called()
+
+    def test_setter_disables_hover_popup_and_leave_event_remains_safe(self, setup_priority_widget):
+        widget = setup_priority_widget()
+        widget.set_auto_show_menu_on_hover(False)
+
+        with patch.object(widget, "set_and_show_menu") as mock_set_and_show_menu:
+            widget.event(QEvent(QEvent.Type.Enter))
+
+        mock_set_and_show_menu.assert_not_called()
+
+        menu = Mock()
+        widget._menu = menu
+        widget.event(QEvent(QEvent.Type.Leave))
+
+        menu.close.assert_called_once()
+        assert widget._menu is None
