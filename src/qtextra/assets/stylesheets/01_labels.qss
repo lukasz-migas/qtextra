@@ -9,6 +9,10 @@ QLabel#warning_label, QLabel#warning_status_label {
 QLabel#success_label, QLabel#success_status_label {
     color : {{ success }};
 }
+QLabel#success_status_label_bold {
+    color: {{ success }};
+    font-weight: bold;
+}
 
 QLabel#field_label {
     color: {{ text }};

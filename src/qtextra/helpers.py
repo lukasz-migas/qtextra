@@ -1350,6 +1350,8 @@ def make_line_edit(
     validator: QValidator | None = None,
     hide: bool = False,
     regex: str | None = None,
+    prefix_icon: str | None = None,
+    suffix_icon: str | None = None,
     **_kwargs: ty.Any,
 ) -> Qw.QLineEdit:
     """Make QLineEdit."""
@@ -1373,17 +1375,23 @@ def make_line_edit(
         widget.setObjectName(object_name)
     if validator:
         widget.setValidator(validator)
+    if prefix_icon:
+        action = widget.addAction(make_qta_icon(prefix_icon), Qw.QLineEdit.ActionPosition.LeadingPosition)
+        # action.setEnabled(False)
+    if suffix_icon:
+        action = widget.addAction(make_qta_icon(suffix_icon), Qw.QLineEdit.ActionPosition.TrailingPosition)
+        # action.setEnabled(False)
     if func:
         [widget.editingFinished.connect(func_) for func_ in _validate_func(func)]
     if func_enter:
         [widget.returnPressed.connect(func_) for func_ in _validate_func(func_enter)]
+    if func_changed:
+        [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     if func_clear:
         action = widget.findChild(Qw.QAction)
         if action:
             widget.hide_action = action
             [action.triggered.connect(func_) for func_ in _validate_func(func_clear)]
-    if func_changed:
-        [widget.textChanged.connect(func_) for func_ in _validate_func(func_changed)]
     return widget
 
 

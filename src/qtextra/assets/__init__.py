@@ -99,6 +99,7 @@ QTA_MAPPING: dict[str, IconType] = {
     "add_many": "mdi6.plus-circle-multiple-outline",
     "remove": "ri.indeterminate-circle-line",
     "check": "ri.checkbox-circle-line",
+    "search": "fa5s.search",
     # "delete": "fa5s.trash-alt",
     "delete": "mdi6.delete-empty",
     "shuffle": "ph.shuffle-bold",
