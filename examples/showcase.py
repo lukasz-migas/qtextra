@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QApplication,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
+    QMainWindow,
     QPushButton,
-    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -18,23 +20,39 @@ import qtextra.helpers as hp
 from qtextra._example_helpers import divider, section
 from qtextra.config import THEMES
 from qtextra.dialogs.qt_confirm import QtConfirmWithTextDialog
+from qtextra.dialogs.qt_logger import QtLoggerDialog
+from qtextra.dialogs.qt_theme_editor import QtThemeEditorDialog
 from qtextra.widgets.qt_button_icon import QtImageButton, QtLockButton, QtMaskButton, QtPinButton, QtThemeButton
 from qtextra.widgets.qt_button_tag import QtTagManager
 from qtextra.widgets.qt_collapsible import QtCheckCollapsible
 from qtextra.widgets.qt_combobox_color import QtColorSwatchComboBox
 from qtextra.widgets.qt_combobox_multi import QtMultiSelectComboBox
 from qtextra.widgets.qt_combobox_search import QtSearchableComboBox, QtSearchComboBox
+from qtextra.widgets.qt_countdown import QtCountdownWidget
 from qtextra.widgets.qt_label_icon import QtPulsingAttentionLabel, QtQtaLabel
 from qtextra.widgets.qt_progress_step import QtStepProgressBar
 from qtextra.widgets.qt_table_view_array import QtArrayTableView
 from qtextra.widgets.qt_table_view_dataframe import QtDataFrameWidget
 from qtextra.widgets.qt_toggle_group import QtToggleGroup
 from qtextra.widgets.qt_toolbar_mini import QtMiniToolbar
+from qtextra.widgets.qt_toolbar_panel import QtPanelToolbar
 
 
-def _make_overview_tab() -> QWidget:
-    tab = QWidget()
-    layout = QVBoxLayout(tab)
+def _set_countdown_status(label: QLabel, remaining_seconds: float) -> None:
+    """Show the remaining time for the showcase countdown."""
+    label.setText(f"Remaining: {remaining_seconds:.1f} s")
+
+
+def _reset_countdown(countdown: QtCountdownWidget, status_label: QLabel, duration_seconds: float) -> None:
+    """Reset the showcase countdown and refresh its status text."""
+    countdown.reset(duration_seconds)
+    _set_countdown_status(status_label, countdown.remaining_seconds)
+
+
+def _make_overview_panel() -> QWidget:
+    panel = QWidget()
+    panel.setObjectName("showcase_overview_panel")
+    layout = QVBoxLayout(panel)
     layout.setSpacing(12)
 
     layout.addWidget(section("Workflow"))
@@ -73,13 +91,62 @@ def _make_overview_tab() -> QWidget:
     details.addRow(QPushButton("Run preview"))
     details.expand(animate=False)
     layout.addWidget(details)
+
+    layout.addWidget(divider())
+    layout.addWidget(section("Countdown"))
+    countdown_copy = QLabel("A thin progress bar and status label highlight the upcoming refresh window.")
+    countdown_copy.setWordWrap(True)
+    layout.addWidget(countdown_copy)
+
+    countdown = QtCountdownWidget(duration_seconds=45, tick_interval_ms=100, message="Refresh in", parent=panel)
+    countdown.setObjectName("showcase_countdown")
+    layout.addWidget(countdown)
+
+    status_label = QLabel(parent=panel)
+    status_label.setObjectName("showcase_countdown_status")
+    status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    layout.addWidget(status_label)
+    _set_countdown_status(status_label, countdown.remaining_seconds)
+
+    controls = QWidget(panel)
+    controls_layout = QHBoxLayout(controls)
+    controls_layout.setContentsMargins(0, 0, 0, 0)
+    controls_layout.setSpacing(8)
+
+    btn_start = QPushButton("Start", controls)
+    btn_start.setObjectName("showcase_countdown_start")
+    btn_start.clicked.connect(countdown.start)
+    controls_layout.addWidget(btn_start)
+
+    btn_stop = QPushButton("Stop", controls)
+    btn_stop.setObjectName("showcase_countdown_stop")
+    btn_stop.clicked.connect(countdown.stop)
+    controls_layout.addWidget(btn_stop)
+
+    btn_reset = QPushButton("Reset (45 s)", controls)
+    btn_reset.setObjectName("showcase_countdown_reset")
+    btn_reset.clicked.connect(lambda: _reset_countdown(countdown, status_label, 45))
+    controls_layout.addWidget(btn_reset)
+
+    btn_toggle_label = QPushButton("Toggle label", controls)
+    btn_toggle_label.setObjectName("showcase_countdown_toggle_label")
+    btn_toggle_label.clicked.connect(lambda: setattr(countdown, "label_visible", not countdown.label_visible))
+    controls_layout.addWidget(btn_toggle_label)
+    controls_layout.addStretch(1)
+    layout.addWidget(controls)
+
+    countdown.evt_tick.connect(lambda remaining: _set_countdown_status(status_label, remaining))
+    countdown.evt_expired.connect(lambda: status_label.setText("Countdown expired!"))
+    countdown.start()
+
     layout.addStretch(1)
-    return tab
+    return panel
 
 
-def _make_inputs_tab(window: QWidget) -> QWidget:
-    tab = QWidget()
-    layout = QVBoxLayout(tab)
+def _make_inputs_panel(window: QWidget) -> QWidget:
+    panel = QWidget()
+    panel.setObjectName("showcase_inputs_panel")
+    layout = QVBoxLayout(panel)
     layout.setSpacing(12)
 
     layout.addWidget(section("Buttons and status"))
@@ -175,12 +242,13 @@ def _make_inputs_tab(window: QWidget) -> QWidget:
     multi_combo.set_selected(["UI", "Docs", "Release"])
     combo_grid.addWidget(multi_combo, 3, 1)
     layout.addStretch(1)
-    return tab
+    return panel
 
 
-def _make_tables_tab() -> QWidget:
-    tab = QWidget()
-    layout = QVBoxLayout(tab)
+def _make_tables_panel() -> QWidget:
+    panel = QWidget()
+    panel.setObjectName("showcase_tables_panel")
+    layout = QVBoxLayout(panel)
     layout.setSpacing(12)
 
     layout.addWidget(section("Array table"))
@@ -211,16 +279,17 @@ def _make_tables_tab() -> QWidget:
     dataframe_widget = QtDataFrameWidget(None, frame)
     dataframe_widget.setMinimumHeight(250)
     layout.addWidget(dataframe_widget)
-    return tab
+    return panel
 
 
-def _make_tools_tab(window: QWidget) -> QWidget:
-    tab = QWidget()
-    layout = QVBoxLayout(tab)
+def _make_tools_panel(window: QWidget) -> QWidget:
+    panel = QWidget()
+    panel.setObjectName("showcase_tools_panel")
+    layout = QVBoxLayout(panel)
     layout.setSpacing(12)
 
     layout.addWidget(section("Toolbar"))
-    toolbar = QtMiniToolbar(tab, orientation="horizontal", add_spacer=False)
+    toolbar = QtMiniToolbar(panel, orientation="horizontal", add_spacer=False)
     for icon in ["home", "settings", "help", "info", "warning", "error"]:
         toolbar.add_qta_tool(icon, tooltip=icon, func=None)
     toolbar.add_separator()
@@ -248,57 +317,128 @@ def _make_tools_tab(window: QWidget) -> QWidget:
     preview_btn = QPushButton("Open confirm dialog")
     preview_btn.clicked.connect(_open_confirm_dialog)
     dialog_layout.addWidget(preview_btn)
-    dialog_layout.addWidget(QPushButton("Theme editor"))
-    dialog_layout.addWidget(QPushButton("Logger"))
+
+    def _open_theme_dialog() -> None:
+        dialog = QtThemeEditorDialog(window)
+        THEMES.apply(dialog)
+        dialog.show()
+
+    theme_btn = QPushButton("Theme editor")
+    theme_btn.clicked.connect(_open_theme_dialog)
+    dialog_layout.addWidget(theme_btn)
+
+    def _open_logger() -> None:
+        dialog = QtLoggerDialog(window)
+        THEMES.apply(dialog)
+        dialog.show()
+
+    theme_btn = QPushButton("Logger")
+    theme_btn.clicked.connect(_open_logger)
+    dialog_layout.addWidget(theme_btn)
     dialog_layout.addStretch(1)
     layout.addWidget(dialog_row)
 
     layout.addWidget(divider())
     layout.addWidget(section("Summary"))
     summary = QLabel(
-        "This tabbed showcase is intended as a broad interactive sampler. "
-        "The capture script composites the tabs into the README image."
+        "This toolbar-panel showcase is intended as a broad interactive sampler. "
+        "The capture script composites each section into the README image."
     )
     summary.setWordWrap(True)
     layout.addWidget(summary)
     layout.addStretch(1)
-    return tab
+    return panel
 
 
-def build_showcase() -> QWidget:
-    """Build the tabbed showcase window."""
-    widget = QWidget()
-    widget.setWindowTitle("qtextra showcase")
-    widget.setMinimumSize(700, 700)
-    widget._showcase_dialogs = []
-    THEMES.apply(widget)
+def build_showcase() -> QMainWindow:
+    """Build the toolbar-panel showcase window."""
+    window = QMainWindow()
+    window.setWindowTitle("qtextra showcase")
+    window.setMinimumSize(900, 720)
+    window._showcase_dialogs = []
 
-    layout = QVBoxLayout(widget)
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    toolbar.setObjectName("showcase_toolbar")
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+
+    central_widget = QWidget(window)
+    layout = QVBoxLayout(central_widget)
+    layout.setContentsMargins(14, 14, 14, 14)
     layout.setSpacing(10)
 
-    header = QLabel("qtextra showcase")
+    header_row = QWidget(central_widget)
+    header_layout = QHBoxLayout(header_row)
+    header_layout.setContentsMargins(0, 0, 0, 0)
+    header_layout.setSpacing(10)
+
+    header = QLabel("qtextra showcase", header_row)
     header_font = header.font()
     header_font.setPointSizeF(header_font.pointSizeF() + 3)
     header_font.setBold(True)
     header.setFont(header_font)
-    layout.addWidget(header)
+    header_layout.addWidget(header)
+    header_layout.addStretch(1)
 
-    tabs = QTabWidget(widget)
-    tabs.addTab(_make_overview_tab(), "Overview")
-    tabs.addTab(_make_inputs_tab(widget), "Inputs")
-    tabs.addTab(_make_tables_tab(), "Tables")
-    tabs.addTab(_make_tools_tab(widget), "Tools")
-    layout.addWidget(tabs)
+    toggle_labels_btn = QPushButton("Hide toolbar labels", header_row)
+    toggle_labels_btn.setObjectName("showcase_toggle_toolbar_labels")
 
-    widget._showcase_tabs = tabs
-    return widget
+    def _toggle_toolbar_labels() -> None:
+        toolbar.label_hidden = not toolbar.label_hidden
+        toggle_labels_btn.setText("Show toolbar labels" if toolbar.label_hidden else "Hide toolbar labels")
+
+    toggle_labels_btn.clicked.connect(_toggle_toolbar_labels)
+    header_layout.addWidget(toggle_labels_btn)
+    layout.addWidget(header_row)
+
+    intro = QLabel(
+        "Use the left toolbar to move between the overview, input, table, and tools panels shown in the README."
+    )
+    intro.setWordWrap(True)
+    layout.addWidget(intro)
+
+    layout.addWidget(toolbar.stack_widget, stretch=1)
+    window.setCentralWidget(central_widget)
+
+    capture_buttons = [
+        toolbar.add_widget(
+            "home",
+            title="Overview",
+            tooltip="Show the overview panel.",
+            widget=_make_overview_panel(),
+        ),
+        toolbar.add_widget(
+            "zoom",
+            title="Inputs",
+            tooltip="Show the inputs panel.",
+            widget=_make_inputs_panel(window),
+        ),
+        toolbar.add_widget(
+            "help",
+            title="Tables",
+            tooltip="Show the tables panel.",
+            widget=_make_tables_panel(),
+        ),
+        toolbar.add_widget(
+            "gear",
+            title="Tools",
+            tooltip="Show the tools panel.",
+            widget=_make_tools_panel(window),
+        ),
+    ]
+
+    window._showcase_toolbar = toolbar
+    window._showcase_capture_buttons = capture_buttons
+    window._showcase_activate_capture_button = lambda button: toolbar._widget._toggle_widget(button, True)
+
+    THEMES.apply(window)
+    return window
 
 
 def main() -> int:
     """Run the showcase example."""
     app = QApplication.instance() or QApplication([])
-    widget = build_showcase()
-    widget.show()
+    window = build_showcase()
+    window.show()
     return app.exec_()
 
 

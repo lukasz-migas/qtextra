@@ -207,7 +207,7 @@ class _PageCard(QWidget):
             root.addWidget(icon_lbl, 0, Qt.AlignmentFlag.AlignCenter)
 
 
-class WhatsNewDialog(QtDialog):
+class QtWhatsNewDialog(QtDialog):
     """Drop-in "What's New" carousel dialog.
 
     Parameters
@@ -327,8 +327,12 @@ class WhatsNewDialog(QtDialog):
         settings = QSettings()
         if settings.value(last_seen_key, "") == version:
             return True
-        dlg = WhatsNewDialog(pages, version, parent)
+        dlg = QtWhatsNewDialog(pages, version, parent)
         result = dlg.exec()
         if result:
             settings.setValue(last_seen_key, version)
         return bool(result)
+
+
+# For backwards compatibility
+WhatsNewDialog = QtWhatsNewDialog

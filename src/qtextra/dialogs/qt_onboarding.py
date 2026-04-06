@@ -192,7 +192,7 @@ class _OnboardingPageWidget(QWidget):
         self.image_label.setText("")
 
 
-class OnboardingDialog(QtDialog):
+class QtOnboardingDialog(QtDialog):
     """Dialog for onboarding or release-note walkthroughs."""
 
     skipped = Signal()
@@ -336,6 +336,9 @@ class OnboardingDialog(QtDialog):
         except RuntimeError:
             return self._dont_show_again
 
+
+# For backwards compatibility
+OnboardingDialog = QtOnboardingDialog
 
 if __name__ == "__main__":
     import sys

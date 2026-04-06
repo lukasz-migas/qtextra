@@ -1,5 +1,5 @@
-# ruff: noqa: INP001,TRY004
-"""Capture the README showcase tabs as a composite PNG."""
+# ruff: noqa: INP001
+"""Capture the README showcase sections as a composite PNG."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import appdirs
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor, QImage, QPainter, QPixmap
 from qtpy.QtTest import QTest
-from qtpy.QtWidgets import QApplication, QTabWidget, QWidget
+from qtpy.QtWidgets import QApplication, QWidget
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -111,6 +111,36 @@ def _capture_widget(widget: QWidget) -> QImage:
     return _normalize_capture(widget.grab())
 
 
+def _get_capture_buttons(window: QWidget) -> list[QWidget]:
+    """Return the ordered showcase buttons used to switch capture sections."""
+    buttons = getattr(window, "_showcase_capture_buttons", None)
+    if not isinstance(buttons, list) or not buttons:
+        raise RuntimeError("Showcase window must expose an ordered _showcase_capture_buttons list")
+    if not all(isinstance(button, QWidget) for button in buttons):
+        raise RuntimeError("Each showcase capture button must be a QWidget")
+    return buttons
+
+
+def _activate_capture_button(window: QWidget, button: QWidget) -> None:
+    """Activate a showcase section before capturing the window."""
+    custom_activate = getattr(window, "_showcase_activate_capture_button", None)
+    if callable(custom_activate):
+        custom_activate(button)
+        return
+
+    click = getattr(button, "click", None)
+    if callable(click):
+        click()
+        return
+
+    set_checked = getattr(button, "setChecked", None)
+    if callable(set_checked):
+        set_checked(True)
+        return
+
+    raise RuntimeError("Showcase capture buttons must provide setChecked() or click()")
+
+
 def _build_composite(images: list[QImage], width: int, columns: int, background: QColor) -> QImage:
     """Arrange captured images in a scaled grid."""
     padding = 18
@@ -154,8 +184,16 @@ def _build_composite(images: list[QImage], width: int, columns: int, background:
     return canvas
 
 
+def _display_path(path: Path) -> str:
+    """Render a path relative to the repo when possible."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def main() -> int:
-    """Capture the showcase tabs into a composite image."""
+    """Capture the showcase sections into a composite image."""
     args = parse_args()
     source = args.source if args.source.is_absolute() else ROOT / args.source
     output = args.output if args.output.is_absolute() else ROOT / args.output
@@ -171,13 +209,10 @@ def main() -> int:
     app.processEvents()
     QTest.qWait(180)
 
-    tabs = getattr(window, "_showcase_tabs", None)
-    if not isinstance(tabs, QTabWidget):
-        raise RuntimeError("Showcase window must expose a QTabWidget as _showcase_tabs")
-
-    captures: list[QImage] = []
-    for index in range(tabs.count()):
-        tabs.setCurrentIndex(index)
+    capture_buttons = _get_capture_buttons(window)
+    captures: list[QImage] = [_capture_widget(window)]
+    for button in capture_buttons[1:]:
+        _activate_capture_button(window, button)
         app.processEvents()
         QTest.qWait(120)
         captures.append(_capture_widget(window))
@@ -195,7 +230,7 @@ def main() -> int:
     window.deleteLater()
     app.processEvents()
 
-    print(f"Captured {source.relative_to(ROOT)} -> {output.relative_to(ROOT)}")
+    print(f"Captured {_display_path(source)} -> {_display_path(output)}")
     return 0
 
 

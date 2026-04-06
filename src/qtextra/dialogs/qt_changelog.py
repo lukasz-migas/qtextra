@@ -19,7 +19,7 @@ from qtextra.widgets.qt_code_widget import Codelighter
 from qtextra.widgets.qt_dialog import QtFramelessTool
 
 
-class ChangelogDialog(QtFramelessTool):
+class QtChangelogDialog(QtFramelessTool):
     """Changelog."""
 
     HIDE_WHEN_CLOSE = False
@@ -123,6 +123,10 @@ class ChangelogDialog(QtFramelessTool):
         self.download_btn.hide()
         self.progress_label.setText(text)
         self.progress_label.show()
+
+
+# For backwards compatibility
+ChangelogDialog = QtChangelogDialog
 
 
 def get_path(path_to_file: PathLike) -> Path:

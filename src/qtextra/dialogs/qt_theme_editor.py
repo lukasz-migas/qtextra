@@ -53,7 +53,7 @@ def _font_size_value(value: str | int) -> int:
     return int(str(value).replace("px", "").replace("pt", ""))
 
 
-class DialogThemeEditor(QtDialog):
+class QtThemeEditorDialog(QtDialog):
     """Theme editor."""
 
     def __init__(self, parent, dlg: QWidget | None = None):
@@ -287,6 +287,10 @@ class PreviewDialog(QtDialog):
         main_layout = QHBoxLayout()
         main_layout.addWidget(QtSampleWidget(), stretch=True)
         return main_layout
+
+
+# For backwards compatibility
+DialogThemeEditor = QtThemeEditorDialog
 
 
 if __name__ == "__main__":  # pragma: no cover

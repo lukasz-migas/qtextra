@@ -13,7 +13,7 @@ def _make_dialog(qtbot, monkeypatch):
     monkeypatch.setattr(themes, "register_themes", lambda names=None: None)
     preview_target = QWidget()
     qtbot.addWidget(preview_target)
-    dialog = editor_mod.DialogThemeEditor(None, dlg=preview_target)
+    dialog = editor_mod.QtThemeEditorDialog(None, dlg=preview_target)
     qtbot.addWidget(dialog)
     return dialog, themes, preview_target
 

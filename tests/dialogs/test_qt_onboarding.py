@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from qtpy.QtCore import Qt
 
-from qtextra.dialogs.qt_onboarding import OnboardingDialog, WhatsNewPage
+from qtextra.dialogs.qt_onboarding import QtOnboardingDialog, WhatsNewPage
 
 
 @pytest.fixture
@@ -26,11 +26,11 @@ def test_whats_new_page_uses_pydantic_model() -> None:
 
 def test_onboarding_dialog_requires_pages() -> None:
     with pytest.raises(ValueError, match="At least one page is required"):
-        OnboardingDialog([])
+        QtOnboardingDialog([])
 
 
 def test_onboarding_dialog_navigation(qtbot, pages) -> None:
-    dialog = OnboardingDialog(pages, app_name="App", version="1.2.3")
+    dialog = QtOnboardingDialog(pages, app_name="App", version="1.2.3")
     qtbot.addWidget(dialog)
     dialog.show()
 
@@ -52,7 +52,7 @@ def test_onboarding_dialog_navigation(qtbot, pages) -> None:
 
 
 def test_onboarding_dialog_signals_and_checkbox(qtbot, pages) -> None:
-    dialog = OnboardingDialog(pages, show_dont_show_again=True)
+    dialog = QtOnboardingDialog(pages, show_dont_show_again=True)
     qtbot.addWidget(dialog)
 
     seen: list[str | bool] = []
@@ -67,7 +67,7 @@ def test_onboarding_dialog_signals_and_checkbox(qtbot, pages) -> None:
     dialog._on_skip()
     assert "skipped" in seen
 
-    dialog = OnboardingDialog(pages)
+    dialog = QtOnboardingDialog(pages)
     qtbot.addWidget(dialog)
     done: list[str] = []
     dialog.finished_viewing.connect(lambda: done.append("finished"))
@@ -78,7 +78,7 @@ def test_onboarding_dialog_signals_and_checkbox(qtbot, pages) -> None:
 
 
 def test_onboarding_dialog_key_navigation(qtbot, pages) -> None:
-    dialog = OnboardingDialog(pages)
+    dialog = QtOnboardingDialog(pages)
     qtbot.addWidget(dialog)
     dialog.show()
 

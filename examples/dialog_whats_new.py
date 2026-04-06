@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QApplication
 
 from qtextra.config import THEMES
-from qtextra.dialogs.qt_whats_new import WhatsNewDialog, WhatsNewPage
+from qtextra.dialogs.qt_whats_new import QtWhatsNewDialog, WhatsNewPage
 
 DEMO_PAGES = [
     WhatsNewPage(
@@ -58,7 +58,7 @@ DEMO_PAGES = [
 ]
 
 app = QApplication([])
-dlg = WhatsNewDialog(DEMO_PAGES, version="3.0")
+dlg = QtWhatsNewDialog(DEMO_PAGES, version="3.0")
 THEMES.apply(dlg)
 dlg.show()
 
