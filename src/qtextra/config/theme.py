@@ -441,7 +441,7 @@ class Themes(ConfigBase):
         from qtpy.QtCore import QDir
 
         QDir.addSearchPath(f"theme_{name}", str(self.get_theme_path(name)))
-        logger.debug(f"Added '{name}' theme to resources path")
+        logger.trace(f"Added '{name}' theme to resources path")
 
     def register_themes(self, names: list[str] | None = None) -> None:
         """Register themes."""
