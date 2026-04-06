@@ -187,9 +187,9 @@ def _build_composite(images: list[QImage], width: int, columns: int, background:
 def _display_path(path: Path) -> str:
     """Render a path relative to the repo when possible."""
     try:
-        return str(path.relative_to(ROOT))
+        return path.relative_to(ROOT).as_posix()
     except ValueError:
-        return str(path)
+        return path.as_posix()
 
 
 def main() -> int:
