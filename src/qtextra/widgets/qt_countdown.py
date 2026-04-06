@@ -126,8 +126,12 @@ class QtCountdownWidget(QWidget):
 
     @property
     def label_visible(self) -> bool:
-        """Whether the text label is visible."""
-        return self._label.isVisible()
+        """Whether the text label is visible.
+
+        Uses ``not isHidden()`` so it reflects the explicit show/hide state
+        regardless of whether the parent widget has been shown yet.
+        """
+        return not self._label.isHidden()
 
     @label_visible.setter
     def label_visible(self, value: bool) -> None:
