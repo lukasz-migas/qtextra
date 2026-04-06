@@ -6,7 +6,7 @@ from qtpy.QtWidgets import QPushButton
 
 from qtextra.dialogs.qt_close_window import QtConfirmCloseDialog
 from qtextra.dialogs.qt_confirm import QtConfirmWithTextDialog
-from qtextra.dialogs.qt_update_available import UpdateAvailableDialog, UpdateInfo
+from qtextra.dialogs.qt_update_available import QtUpdateAvailableDialog, UpdateInfo
 
 
 @dataclass
@@ -59,7 +59,7 @@ def test_qt_confirm_close_dialog_hides_save_when_no_callback(qtbot):
 
 
 def test_update_available_dialog_emits_actions(qtbot):
-    dialog = UpdateAvailableDialog(
+    dialog = QtUpdateAvailableDialog(
         UpdateInfo(
             app_name="App",
             current_version="1.0.0",
@@ -84,7 +84,7 @@ def test_update_available_dialog_emits_actions(qtbot):
     assert dialog.result_action == "later"
     assert seen[-1] == "later"
 
-    dialog = UpdateAvailableDialog(
+    dialog = QtUpdateAvailableDialog(
         UpdateInfo(app_name="App", current_version="1.0.0", available_version="1.1.0"),
     )
     qtbot.addWidget(dialog)
@@ -96,7 +96,7 @@ def test_update_available_dialog_emits_actions(qtbot):
 
 
 def test_update_available_dialog_update_accepts(qtbot):
-    dialog = UpdateAvailableDialog(
+    dialog = QtUpdateAvailableDialog(
         UpdateInfo(app_name="App", current_version="1.0.0", available_version="1.1.0"),
     )
     qtbot.addWidget(dialog)

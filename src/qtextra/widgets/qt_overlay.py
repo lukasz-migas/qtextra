@@ -82,7 +82,7 @@ class QtOverlay(QWidget):
         """Track anchor movement and visibility."""
         if recv is self._widget or recv in self._tracked_ancestors:
             event_type = event.type()
-            if event_type in (QEvent.Type.Resize, QEvent.Type.Move):
+            if event_type in (QEvent.Type.Resize, QEvent.Type.Move, QEvent.Type.LayoutRequest):
                 self._relayout()
             elif event_type in (QEvent.Type.Show, QEvent.Type.ShowToParent):
                 self._sync_to_anchor()
@@ -264,6 +264,7 @@ class QtOverlayLabel(QtOverlay):
         layout.setContentsMargins(5, 5, 5, 5)
         self._msg_widget = QtOverlayWidget(parent=self, text=text)
         layout.addWidget(self._msg_widget)
+        self._relayout()
 
     @property
     def text(self) -> str:
@@ -420,6 +421,7 @@ class QtOverlayMessage(QtOverlay):
         self._msg_widget.evt_dismissed.connect(self.evt_dismissed)
 
         layout.addWidget(self._msg_widget)
+        self._relayout()
 
     @property
     def is_dismissed(self) -> bool:

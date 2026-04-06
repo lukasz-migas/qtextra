@@ -1,10 +1,10 @@
 from qtpy.QtWidgets import QApplication
 
 from qtextra.config import THEMES
-from qtextra.dialogs.qt_update_available import UpdateAvailableDialog, UpdateInfo
+from qtextra.dialogs.qt_update_available import QtUpdateAvailableDialog, UpdateInfo
 
 app = QApplication([])
-dlg = UpdateAvailableDialog(
+dlg = QtUpdateAvailableDialog(
     UpdateInfo(
         app_name="My Application",
         current_version="6.6.10",

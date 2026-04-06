@@ -34,7 +34,7 @@ class UpdateInfo(BaseModel):
     message: str | None = None
 
 
-class UpdateAvailableDialog(QtDialog):
+class QtUpdateAvailableDialog(QtDialog):
     """Dialog informing the user that a newer version of the application is available."""
 
     evt_update_requested = Signal()
@@ -138,9 +138,11 @@ class UpdateAvailableDialog(QtDialog):
             self.evt_dismissed.emit()
         super().reject()
 
-    # ── Convenience ───────────────────────────────────────────────────────────
-
     @property
     def result_action(self) -> str:
         """Return one of: ``update``, ``later``, ``whats_new``, ``dismissed``."""
         return self._result_action
+
+
+# For backwards compatibility
+UpdateAvailableDialog = QtUpdateAvailableDialog

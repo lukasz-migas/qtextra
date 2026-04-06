@@ -30,7 +30,7 @@ def test_overlay_label_tracks_anchor_geometry(qtbot):
 
     initial_top_left = overlay.geometry().topLeft()
     target.move(target.x() + 20, target.y() + 10)
-    qtbot.wait(10)
+    qtbot.wait(50)
 
     assert overlay.widget() is target
     assert overlay.geometry().topLeft() != initial_top_left

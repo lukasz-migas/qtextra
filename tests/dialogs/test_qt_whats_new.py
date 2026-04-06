@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from qtextra.dialogs.qt_whats_new import WhatsNewDialog, WhatsNewPage
+from qtextra.dialogs.qt_whats_new import QtWhatsNewDialog, WhatsNewPage
 
 
 @pytest.fixture
@@ -15,7 +15,7 @@ def pages() -> list[WhatsNewPage]:
 
 
 def test_whats_new_dialog_navigation_labels(qtbot, pages) -> None:
-    dialog = WhatsNewDialog(pages, version="1.2.3")
+    dialog = QtWhatsNewDialog(pages, version="1.2.3")
     qtbot.addWidget(dialog)
     dialog.show()
 
@@ -32,7 +32,7 @@ def test_whats_new_dialog_navigation_labels(qtbot, pages) -> None:
 
 
 def test_whats_new_dialog_ignores_out_of_range_navigation(qtbot, pages) -> None:
-    dialog = WhatsNewDialog(pages)
+    dialog = QtWhatsNewDialog(pages)
     qtbot.addWidget(dialog)
 
     dialog._go_to(0, animate=False)
