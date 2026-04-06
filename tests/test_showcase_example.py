@@ -105,5 +105,5 @@ def test_showcase_overview_embeds_countdown_controls(qtbot):
 
 
 def test_capture_readme_showcase_display_path_handles_external_paths():
-    assert _display_path(SHOWCASE_PATH) == "examples/showcase.py"
+    assert _display_path(SHOWCASE_PATH).replace("\\", "/") == "examples/showcase.py"
     assert _display_path(Path("/tmp/readme_showcase.jpg")) == "/tmp/readme_showcase.jpg"
