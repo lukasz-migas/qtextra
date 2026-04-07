@@ -36,9 +36,9 @@ class QtCheckCollapsible(QCollapsible):
         # remove button item from the layout
         self.layout().takeAt(0)
 
-        self.action_btn = hp.make_qta_btn(self, icon_name=icon, standout=True, average=True)
+        self.action_btn = hp.make_qta_btn(self, icon_name=icon, standout=True, size_preset="average")
 
-        self.warning_label = hp.make_warning_label(self, "", icon_name=warning_icon, normal=True)
+        self.warning_label = hp.make_warning_label(self, "", icon_name=warning_icon, size_preset="normal")
 
         # create layout where the first item is checkbox
         layout = QHBoxLayout()

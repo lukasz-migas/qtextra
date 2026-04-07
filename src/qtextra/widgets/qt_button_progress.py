@@ -24,7 +24,7 @@ class QtActiveProgressBarButton(QWidget):
         hp.set_sizer_policy(self.progress_bar, h_stretch=True, v_stretch=False)
         hp.set_retain_hidden_size_policy(self.progress_bar)
 
-        self.cancel_btn = hp.make_qta_btn(self, "cancel", average=True)
+        self.cancel_btn = hp.make_qta_btn(self, "cancel", size_preset="average")
         self.cancel_btn.setVisible(False)
         self.evt_cancel = self.cancel_btn.clicked
 

@@ -112,7 +112,7 @@ class QtStatusbarIconWidget(QWidget):
         self.label_icon = QtQtaLabel() if not active else QtQtaNotificationLabel()
         if name:
             self.label_icon.set_qta(name)
-            self.label_icon.set_small()
+            self.label_icon.set_qta_size_preset("small")
 
         # Layout setup
         layout = QHBoxLayout(self)

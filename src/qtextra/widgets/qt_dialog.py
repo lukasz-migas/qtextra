@@ -510,7 +510,7 @@ class QtFramelessPopup(QtDialog, CloseMixin):  # type: ignore[misc]
             self,
             "move_handle",
             tooltip="Click here and drag the mouse around to move the window.",
-            normal=True,
+            size_preset="normal",
         )
         self._move_handle.setCursor(Qt.CursorShape.PointingHandCursor)
 

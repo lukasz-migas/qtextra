@@ -165,7 +165,8 @@ class QtWarningPulseLabel(QtQtaLabel):
     """A warning icon label that pulses indefinitely."""
 
     def __init__(self, interval: int = 1000):
-        super().__init__(large=True)
+        super().__init__()
+        self.set_qta_size_preset("large")
         self._base_size = 32
         self._pulse_delta = 8
         self._pulse_animation = QVariantAnimation(self)
@@ -215,7 +216,8 @@ class QtPulsingAttentionLabel(QtQtaLabel):
         interval: int = 1000,
         **kwargs: ty.Any,
     ):
-        super().__init__(large=True, **kwargs)
+        super().__init__(**kwargs)
+        self.set_qta_size_preset("large")
         self._color_from_key = color_from_key
         self._color_to_key = color_to_key
         self._color_from = QColor(THEMES.get_hex_color(color_from_key))

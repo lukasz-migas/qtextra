@@ -113,21 +113,51 @@ class QtTutorial(QDialog):
     # noinspection PyAttributeOutsideInit
     def make_ui(self) -> None:
         """Setup UI."""
-        self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=False)
-        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=False)
-        self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", small=True, retain_size=False)
+        self.chevron_up_left = hp.make_qta_label(self, "chevron_up_circle", size_preset="small", retain_size=False)
+        self.chevron_up_mid = hp.make_qta_label(self, "chevron_up_circle", size_preset="small", retain_size=False)
+        self.chevron_up_right = hp.make_qta_label(self, "chevron_up_circle", size_preset="small", retain_size=False)
 
-        self.chevron_down_left = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=False)
-        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=False)
-        self.chevron_down_right = hp.make_qta_label(self, "chevron_down_circle", small=True, retain_size=False)
+        self.chevron_down_left = hp.make_qta_label(
+            self,
+            "chevron_down_circle",
+            size_preset="small",
+            retain_size=False,
+        )
+        self.chevron_down_mid = hp.make_qta_label(self, "chevron_down_circle", size_preset="small", retain_size=False)
+        self.chevron_down_right = hp.make_qta_label(
+            self,
+            "chevron_down_circle",
+            size_preset="small",
+            retain_size=False,
+        )
 
-        self.chevron_left_top = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=False)
-        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=False)
-        self.chevron_left_bottom = hp.make_qta_label(self, "chevron_left_circle", small=True, retain_size=False)
+        self.chevron_left_top = hp.make_qta_label(self, "chevron_left_circle", size_preset="small", retain_size=False)
+        self.chevron_left_mid = hp.make_qta_label(self, "chevron_left_circle", size_preset="small", retain_size=False)
+        self.chevron_left_bottom = hp.make_qta_label(
+            self,
+            "chevron_left_circle",
+            size_preset="small",
+            retain_size=False,
+        )
 
-        self.chevron_right_top = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
-        self.chevron_right_mid = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
-        self.chevron_right_bottom = hp.make_qta_label(self, "chevron_right_circle", small=True, retain_size=False)
+        self.chevron_right_top = hp.make_qta_label(
+            self,
+            "chevron_right_circle",
+            size_preset="small",
+            retain_size=False,
+        )
+        self.chevron_right_mid = hp.make_qta_label(
+            self,
+            "chevron_right_circle",
+            size_preset="small",
+            retain_size=False,
+        )
+        self.chevron_right_bottom = hp.make_qta_label(
+            self,
+            "chevron_right_circle",
+            size_preset="small",
+            retain_size=False,
+        )
 
         self.chevrons = {
             Position.CENTER: None,
@@ -154,8 +184,7 @@ class QtTutorial(QDialog):
         self._close_btn = hp.make_qta_btn(
             header_widget,
             "cross",
-            small=True,
-            medium=False,
+            size_preset="small",
             func=self.close,
             tooltip="Close popup.",
         )
