@@ -69,7 +69,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_notification_badge import BadgeMode, BadgeSize, BadgeState, QtNotificationBadge
     from qtextra.widgets.qt_overlay import QtOverlayDismissMessage
     from qtextra.widgets.qt_progress_eta import QtLabeledProgressBar
-    from qtextra.widgets.qt_select_multi import QtMultiSelect
+    from qtextra.widgets.qt_select_multi import QtMultiIconSelect, QtMultiSelect
     from qtextra.widgets.qt_separator import QtHorzLine, QtHorzLineWithText, QtVertLine
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
@@ -1637,6 +1637,39 @@ def make_multi_select(
     )
 
 
+def make_multi_icon_select(
+    parent: Qw.QWidget,
+    description: str = "",
+    options: list[tuple[str, str]] | None = None,
+    value: str | list[str] | None = None,
+    default: str | list[str] | None = None,
+    placeholder: str = "Select...",
+    func: ty.Callable | ty.Sequence[ty.Callable] | None = None,
+    func_changed: ty.Callable | ty.Sequence[ty.Callable] | None = None,
+    items: dict[str, ty.Any] | None = None,
+    allow_multiple: bool = True,
+    icon_size: tuple[int, int] = (24, 24),
+    **kwargs: ty.Any,
+) -> QtMultiIconSelect:
+    """Make an icon-based multi-select widget."""
+    from qtextra.widgets.qt_select_multi import QtMultiIconSelect
+
+    return QtMultiIconSelect.from_schema(
+        parent,
+        description=description,
+        options=options,
+        value=value,
+        default=default,
+        placeholder=placeholder,
+        func=func,
+        func_changed=func_changed,
+        items=items,
+        allow_multiple=allow_multiple,
+        icon_size=icon_size,
+        **kwargs,
+    )
+
+
 def make_icon(path: str) -> QIcon:
     """Make an icon."""
     icon = QIcon()
@@ -3118,6 +3151,34 @@ def choose_from_list(
     return []
 
 
+def choose_from_icon_list(
+    parent: QObject | None,
+    options: list[tuple[IconType, str]],
+    selected: list[str] | None = None,
+    title: str = "Please choose from the list.",
+    text: str = "",
+    multiple: bool = True,
+    icon_size: tuple[int, int] = (24, 24),
+) -> list[str] | str:
+    """Choose one or more icons from a popup list."""
+    from qtextra.widgets.qt_select_multi import IconSelectionWidget
+
+    dlg = IconSelectionWidget(
+        parent,
+        title=title,
+        text=text,
+        allow_multiple=multiple,
+        icon_size=icon_size,
+    )
+    dlg.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
+    dlg.set_options(options, selected)
+    if dlg.exec() == Qw.QDialog.DialogCode.Accepted:
+        if not multiple and dlg.selected_options:
+            return dlg.selected_options[0]
+        return dlg.selected_options
+    return []
+
+
 def warn_pretty(parent: Qw.QWidget | None, message: str, title: str = "Warning") -> bool:
     """Confirm action."""
     from qtpy.QtWidgets import QDialog
@@ -3191,8 +3252,8 @@ def get_double(
         title,
         label,
         value=value,
-        minValue=minimum,
-        maxValue=maximum,
+        min=minimum,
+        max=maximum,
         decimals=n_decimals,
         step=step,
     )
