@@ -199,67 +199,6 @@ QtScrollableVLayoutWidget QScrollBar::sub-line:vertical {
     width: 0px;
 }
 
-/* ----------------- QtOverlay ----------------- */
-
-QtOverlay {
-    background-color: transparent;
-    border: none;
-}
-
-QFrame#overlayCard,
-QFrame#overlayMessageCard,
-QFrame#floatingProgressCard {
-    background-color: vgradient({{ lighten(background, 4) }} - {{ darken(background, 3) }});
-    border: 1px solid {{ lighten(foreground, 8) }};
-    border-radius: 16px;
-}
-
-QFrame#overlayCard {
-    padding: 6px 8px;
-}
-
-QFrame#overlayMessageCard {
-    padding: 6px;
-    border-color: {{ lighten(secondary, 10) }};
-}
-
-QFrame#floatingProgressCard {
-    padding: 8px;
-    border-color: {{ lighten(highlight, 18) }};
-}
-
-QFrame#overlayCard QLabel,
-QFrame#overlayMessageCard QLabel,
-QFrame#floatingProgressCard QLabel {
-    background: transparent;
-}
-
-QLabel#floatingProgressText {
-    color: {{ text }};
-    font-weight: bold;
-    padding-bottom: 2px;
-}
-
-QProgressBar#floatingProgressBar {
-    border: 1px solid {{ lighten(foreground, 6) }};
-    border-radius: 999px;
-    background-color: {{ darken(background, 8) }};
-    padding: 1px;
-    min-height: 12px;
-    max-height: 12px;
-}
-
-QProgressBar#floatingProgressBar::chunk {
-    border-radius: 999px;
-    background-color: vgradient({{ highlight }} - {{ success }});
-}
-
-QFrame#overlayCard:hover,
-QFrame#overlayMessageCard:hover,
-QFrame#floatingProgressCard:hover {
-    border-color: {{ highlight }};
-}
-
 /* ----------------- QGroupBox title (override: center) ----------------- */
 
 QGroupBox::title {
