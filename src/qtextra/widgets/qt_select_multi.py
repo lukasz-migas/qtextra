@@ -395,6 +395,7 @@ class IconSelectionWidget(QtFramelessPopup):
     cancel_clicked = False
     options: list[IconOption] | None = None
     original_options: list[str] | None = None
+    selection: list[str] | None = None
 
     def __init__(
         self,
@@ -412,6 +413,7 @@ class IconSelectionWidget(QtFramelessPopup):
         super().__init__(parent)
         self.setMinimumWidth(min_width)
         self.buttons: dict[str, QtImagePushButton] = {}
+        self.selection = []
 
     @property
     def selected_options(self) -> list[str]:
@@ -425,6 +427,7 @@ class IconSelectionWidget(QtFramelessPopup):
         selected = set(selected_options or [])
         self.options = options
         self.original_options = list(selected_options or [])
+        self.selection = list(selected_options or [])
         self.buttons = {}
 
         while self.grid_layout.count():
@@ -452,7 +455,8 @@ class IconSelectionWidget(QtFramelessPopup):
 
     def accept(self) -> None:
         """Emit the current selection and close the popup."""
-        self.evt_update.emit(self.selected_options)
+        self.selection = self.selected_options
+        self.evt_update.emit(self.selection)
         super().accept()
 
     def on_cancel(self) -> None:
@@ -463,6 +467,7 @@ class IconSelectionWidget(QtFramelessPopup):
     def reject(self) -> None:
         """Emit either the original or current selection before closing."""
         options = self.original_options if self.cancel_clicked else self.selected_options
+        self.selection = options or []
         self.evt_update.emit(options or [])
         super().reject()
 
@@ -486,7 +491,12 @@ class IconSelectionWidget(QtFramelessPopup):
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.grid_layout.setHorizontalSpacing(4)
         self.grid_layout.setVerticalSpacing(4)
-        layout.addRow(self.grid_layout)
+        icon_grid_widget = QWidget(self)
+        icon_grid_layout = hp.make_h_layout(parent=icon_grid_widget, spacing=0)
+        icon_grid_layout.addStretch(1)
+        icon_grid_layout.addLayout(self.grid_layout)
+        icon_grid_layout.addStretch(1)
+        layout.addRow(icon_grid_widget)
 
         if self.allow_multiple:
             layout.addRow(
@@ -500,7 +510,8 @@ class IconSelectionWidget(QtFramelessPopup):
 
     def _on_multi_button_clicked(self) -> None:
         """Emit the temporary multi-selection state."""
-        self.evt_temp_changed.emit(self.selected_options)
+        self.selection = self.selected_options
+        self.evt_temp_changed.emit(self.selection)
 
     def _on_single_button_clicked(self, icon_key: str) -> None:
         """Select one icon, emit updates, and close immediately."""
@@ -509,6 +520,7 @@ class IconSelectionWidget(QtFramelessPopup):
             button.setProperty("selected", is_selected)
             button.setChecked(is_selected)
         selected = [icon_key]
+        self.selection = selected
         self.evt_temp_changed.emit(selected)
         self.evt_update.emit(selected)
         super().accept()

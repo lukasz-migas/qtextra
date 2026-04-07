@@ -3173,9 +3173,9 @@ def choose_from_icon_list(
     dlg.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool)
     dlg.set_options(options, selected)
     if dlg.exec() == Qw.QDialog.DialogCode.Accepted:
-        if not multiple and dlg.selected_options:
-            return dlg.selected_options[0]
-        return dlg.selected_options
+        if not multiple and dlg.selection:
+            return dlg.selection[0]
+        return dlg.selection or []
     return []
 
 

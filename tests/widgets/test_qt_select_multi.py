@@ -88,16 +88,12 @@ def test_choose_from_icon_list_returns_selected_value(monkeypatch) -> None:
         return None
 
     def _exec(self) -> int:
+        self.selection = selected
         return 1
 
     monkeypatch.setattr("qtextra.widgets.qt_select_multi.IconSelectionWidget.setWindowFlags", _set_window_flags)
     monkeypatch.setattr("qtextra.widgets.qt_select_multi.IconSelectionWidget.set_options", _set_options)
     monkeypatch.setattr("qtextra.widgets.qt_select_multi.IconSelectionWidget.exec", _exec)
-    monkeypatch.setattr(
-        "qtextra.widgets.qt_select_multi.IconSelectionWidget.selected_options",
-        property(lambda self: selected),
-    )
-
     result = hp.choose_from_icon_list(None, [("help", "Help"), ("warning", "Warning")], multiple=False)
 
     assert result == "warning"
