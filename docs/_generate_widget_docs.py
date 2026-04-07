@@ -272,6 +272,19 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=620,
     ),
     WidgetDoc(
+        slug="qt_progress_report",
+        title="QtProgressReport",
+        section="Progress And Status",
+        summary="Vertical progress report with labelled circle markers and typed step models.",
+        example="qt_progress_report.py",
+        classes=(
+            "qtextra.widgets.qt_progress_report.ProgressStepStatus",
+            "qtextra.widgets.qt_progress_report.ProgressReportStep",
+            "qtextra.widgets.qt_progress_report.QtProgressReport",
+        ),
+        screenshot_width=560,
+    ),
+    WidgetDoc(
         slug="qt_progress_step",
         title="QtStepProgressBar",
         section="Progress And Status",
