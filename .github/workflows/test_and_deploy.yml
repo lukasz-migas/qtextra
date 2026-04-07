@@ -69,9 +69,6 @@ jobs:
     name: Combine and Upload Coverage
     needs: test_uv
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
       - uses: actions/checkout@v6
@@ -100,6 +97,7 @@ jobs:
         with:
           files: coverage.xml
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # before we submit to PyPi, let's test that it gets built correctly and we can submit to TestPyPi
   deploy_test:
