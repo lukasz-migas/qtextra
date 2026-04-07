@@ -20,7 +20,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QFont, QPainter
+from qtpy.QtGui import QBrush, QColor, QEnterEvent, QFont, QPainter
 from qtpy.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -545,9 +545,12 @@ class QtMultiStatePushButton(QtImagePushButton):
 
     _state: str = ""
     _menu: QWidget | None
+    _auto_show_menu_on_hover: bool
 
-    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+    def __init__(self, *args: ty.Any, auto_show_menu_on_hover: bool = True, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
+        self._menu = None
+        self._auto_show_menu_on_hover = auto_show_menu_on_hover
         self.setMouseTracking(True)
         default_state = self.get_default_state()
         if default_state:
@@ -576,9 +579,13 @@ class QtMultiStatePushButton(QtImagePushButton):
         self.set_qta(self.get_state_to_icon()[state])
         self.evt_changed.emit(state)
 
-    def set_state(self, state: bool) -> None:
+    def set_state(self, state: str) -> None:
         """Set state."""
         self.state = state
+
+    def set_auto_show_menu_on_hover(self, enabled: bool) -> None:
+        """Enable or disable automatically showing the menu when hovering."""
+        self._auto_show_menu_on_hover = enabled
 
     def set_and_show_menu(self) -> None:
         """Set menu."""
@@ -596,19 +603,23 @@ class QtMultiStatePushButton(QtImagePushButton):
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)
 
-    def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
-        """Event."""
-        self.set_and_show_menu()
-        super().enterEvent(event)  # type: ignore[arg-type]
+    def enterEvent(self, event: QEnterEvent | QEvent) -> None:  # type: ignore[override]
+        """Handle hover entry and show the state menu when enabled."""
+        if self._auto_show_menu_on_hover:
+            self.set_and_show_menu()
+        if isinstance(event, QEnterEvent):
+            super().enterEvent(event)
 
     def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
-        self._menu.close()  # type: ignore[union-attr]
-        self._menu = None
+        if self._menu is not None:
+            self._menu.close()
+            self._menu = None
         super().leaveEvent(event)
 
     # Alias methods to offer Qt-like interface
     setAndShowMenu = set_and_show_menu
+    setAutoShowMenuOnHover = set_auto_show_menu_on_hover
     setState = set_state
 
 
