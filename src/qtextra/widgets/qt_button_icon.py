@@ -20,7 +20,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QFont, QPainter
+from qtpy.QtGui import QBrush, QColor, QEnterEvent, QFont, QPainter
 from qtpy.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -603,11 +603,12 @@ class QtMultiStatePushButton(QtImagePushButton):
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)
 
-    def enterEvent(self, event: QEvent) -> None:  # type: ignore[override]
-        """Event."""
+    def enterEvent(self, event: QEnterEvent | QEvent) -> None:  # type: ignore[override]
+        """Handle hover entry and show the state menu when enabled."""
         if self._auto_show_menu_on_hover:
             self.set_and_show_menu()
-        super().enterEvent(event)  # type: ignore[arg-type]
+        if isinstance(event, QEnterEvent):
+            super().enterEvent(event)
 
     def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
