@@ -202,8 +202,48 @@ QtScrollableVLayoutWidget QScrollBar::sub-line:vertical {
 /* ----------------- QtOverlay ----------------- */
 
 QtOverlay {
-    border: 2px solid {{ secondary }};
-    border-radius: 10px;
+    background-color: transparent;
+    border: none;
+}
+
+QFrame#overlayCard,
+QFrame#overlayMessageCard,
+QFrame#floatingProgressCard {
+    background-color: {{ darken(background, 4) }};
+    border: 1px solid {{ darken(foreground, 10) }};
+    border-radius: 12px;
+}
+
+QFrame#overlayCard {
+    padding: 2px 4px;
+}
+
+QFrame#overlayMessageCard {
+    border-color: {{ secondary }};
+}
+
+QFrame#overlayCard QLabel,
+QFrame#overlayMessageCard QLabel,
+QFrame#floatingProgressCard QLabel {
+    background: transparent;
+}
+
+QLabel#floatingProgressText {
+    color: {{ highlight }};
+    font-weight: bold;
+}
+
+QProgressBar#floatingProgressBar {
+    border: 1px solid {{ darken(foreground, 10) }};
+    border-radius: 6px;
+    background-color: {{ background }};
+    min-height: 10px;
+    max-height: 10px;
+}
+
+QProgressBar#floatingProgressBar::chunk {
+    border-radius: 5px;
+    background-color: vgradient({{ highlight }} - {{ success }});
 }
 
 /* ----------------- QGroupBox title (override: center) ----------------- */

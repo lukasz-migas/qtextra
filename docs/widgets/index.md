@@ -42,6 +42,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 - [QtActiveOverlay](./qt_active_overlay.md): animated busy indicators for lightweight in-place activity feedback.
 - [QtActiveProgressBarButton](./qt_button_progress.md): a button that pairs a progress bar with inline activity and cancel affordances.
 - [QtCountdownWidget](./qt_countdown.md): a label-and-bar countdown that notifies users of upcoming updates or scheduled changes.
+- [QtFloatingProgressBar](./qt_floating_progress_bar.md): a floating progress overlay that stays anchored to a window, dialog, or child widget.
 - [QtNotificationBadge](./qt_notification_badge.md): attach count and dot badges to existing widgets without changing their layout.
 - [QtOverlay](./qt_overlay.md): floating labels and message widgets anchored to another widget.
 - [QtStepProgressBar](./qt_progress_step.md): step-based progress visualization for multi-stage workflows.

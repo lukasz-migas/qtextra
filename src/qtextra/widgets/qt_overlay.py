@@ -27,6 +27,7 @@ class QtOverlay(QWidget):
         **kwargs,
     ):
         super().__init__(parent, **kwargs)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setContentsMargins(0, 0, 0, 0)
         self._alignment = alignment
         self._widget: QWidget | None = None
@@ -235,6 +236,7 @@ class QtOverlayWidget(QFrame):
 
     def __init__(self, parent: QWidget | None = None, text: str = "", **kwargs):
         super().__init__(parent, **kwargs)
+        self.setObjectName("overlayCard")
         self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)
 
@@ -295,6 +297,7 @@ class QtMessageWidget(QFrame):
         **kwargs,
     ):
         super().__init__(parent, **kwargs)
+        self.setObjectName("overlayMessageCard")
         self._dismissed = False
 
         self.setFrameShape(QFrame.Shape.Box)
