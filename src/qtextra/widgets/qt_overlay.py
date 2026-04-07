@@ -7,11 +7,33 @@ from contextlib import suppress
 from typing import Callable
 
 from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, Signal, Slot
-from qtpy.QtGui import QPainter, QPaintEvent
-from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QStyle, QStyleOption, QVBoxLayout, QWidget
+from qtpy.QtGui import QColor, QPainter, QPaintEvent
+from qtpy.QtWidgets import (
+    QFrame,
+    QGraphicsDropShadowEffect,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QStyle,
+    QStyleOption,
+    QVBoxLayout,
+    QWidget,
+)
 
 import qtextra.helpers as hp
+from qtextra.config import THEMES
 from qtextra.widgets.qt_label_icon import QtIconLabel
+
+
+def _apply_elevated_card_effect(widget: QWidget) -> None:
+    """Apply a soft elevated-card shadow to an overlay body widget."""
+    shadow = QGraphicsDropShadowEffect(widget)
+    shadow.setBlurRadius(28)
+    shadow.setOffset(0, 8)
+    color = QColor(THEMES.get_hex_color("foreground"))
+    color.setAlpha(50)
+    shadow.setColor(color)
+    widget.setGraphicsEffect(shadow)
 
 
 class QtOverlay(QWidget):
@@ -239,6 +261,7 @@ class QtOverlayWidget(QFrame):
         self.setObjectName("overlayCard")
         self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)
+        _apply_elevated_card_effect(self)
 
         self.text_label = QLabel(text=text, wordWrap=False, textFormat=Qt.TextFormat.AutoText)
         self.text_label.setAlignment(Qt.AlignmentFlag.AlignJustify)
@@ -299,6 +322,7 @@ class QtMessageWidget(QFrame):
         super().__init__(parent, **kwargs)
         self.setObjectName("overlayMessageCard")
         self._dismissed = False
+        _apply_elevated_card_effect(self)
 
         self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)

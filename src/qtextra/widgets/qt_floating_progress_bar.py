@@ -6,7 +6,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFrame, QLabel, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_overlay import QtOverlay
+from qtextra.widgets.qt_overlay import QtOverlay, _apply_elevated_card_effect
 
 
 class _QtFloatingProgressBarBody(QFrame):
@@ -15,6 +15,7 @@ class _QtFloatingProgressBarBody(QFrame):
     def __init__(self, parent: QWidget | None = None, text: str = "") -> None:
         super().__init__(parent)
         self.setObjectName("floatingProgressCard")
+        _apply_elevated_card_effect(self)
         self.text_label = hp.make_label(
             self,
             text=text,
