@@ -265,6 +265,7 @@ filterwarnings = [
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.run]
 source = ["src"]
+relative_files = true
 omit = [
     "**/*_version.py"
 ]

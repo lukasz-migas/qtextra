@@ -65,10 +65,44 @@ jobs:
           path: ./.coverage*
           include-hidden-files: true
 
+  coverage:
+    name: Combine and Upload Coverage
+    needs: test_uv
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - run: uv sync --no-dev --group test
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: covreport-*
+          path: coverage-artifacts
+          merge-multiple: false
+
+      - name: Combine coverage data
+        run: |
+          find coverage-artifacts -name '.coverage*' -type f -exec cp {} . \;
+          uv run coverage combine
+          uv run coverage xml -o coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   # before we submit to PyPi, let's test that it gets built correctly and we can submit to TestPyPi
   deploy_test:
     name: Deploy to PyPI (test)
-    needs: [test_uv, check-manifest]
+    needs: [test_uv, coverage, check-manifest]
     if: success() && startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
