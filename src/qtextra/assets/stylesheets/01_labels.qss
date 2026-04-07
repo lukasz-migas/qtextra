@@ -126,6 +126,7 @@ QLabel#hint_label {
     color: {{ lighten(text, 30) }};
 }
 QLabel#tip_label {
+    font-size: {{ decrease(font_size, 1) }};
     color: {{ lighten(text, 30) }};
 }
 
