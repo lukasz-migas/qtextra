@@ -316,7 +316,7 @@ class QtQtaTooltipLabel(QtQtaLabel):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.set_qta("help")
-        self.set_average()
+        self.set_qta_size_preset("average")
 
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
@@ -334,7 +334,7 @@ class QtQtaHelpLabel(QtQtaLabel):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.set_qta("help")
-        self.set_average()
+        self.set_qta_size_preset("average")
 
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
@@ -359,7 +359,7 @@ class QtSeverityLabel(QtQtaLabel):
         super().__init__(*args, **kwargs)
         self._severity: str = "info"
         self.severity = "info"
-        self.set_xsmall()
+        self.set_qta_size_preset("xsmall")
 
     @property
     def severity(self) -> str:
@@ -462,7 +462,7 @@ if __name__ == "__main__":  # pragma: no cover
         label = QtQtaLabel()
         label.set_qta(icon, **qta_kws)
         label.setToolTip(f"{name} :: {icon}")
-        label.set_large()
+        label.set_qta_size_preset("large")
         lay.addWidget(label)
         if i % 20 == 0:
             ha.addLayout(lay)
@@ -473,7 +473,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtSeverityLabel.STATES:
         btn = QtSeverityLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.severity = state
         lay.addWidget(btn)
 
@@ -482,7 +482,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtStateLabel.STATES:
         btn = QtStateLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.state = state
         lay.addWidget(btn)
 
@@ -491,7 +491,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtWorkerLabel.STATES:
         btn = QtWorkerLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.state = state
         lay.addWidget(btn)
 
@@ -500,7 +500,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in [True, False]:
         btn = QtValidLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.state = state
         lay.addWidget(btn)
 

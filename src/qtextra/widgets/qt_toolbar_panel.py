@@ -205,7 +205,7 @@ class QtPanelWidget(QWidget):
             self,
             name,
             checkable=widget is not None,
-            large=True,
+            size_preset="large",
             title=title,
             elide=elide,
         )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing as ty
+import warnings
 from contextlib import suppress
 from copy import deepcopy
 from functools import partial
@@ -35,6 +36,7 @@ from qtpy.QtWidgets import (
 import qtextra.helpers as hp
 from qtextra.assets import get_icon
 from qtextra.config import THEMES
+from qtextra.typing import QtaSizePreset
 from qtextra.widgets._qta_mixin import QtaMixin
 from qtextra.widgets.qt_tooltip import QtToolTip, TipPosition
 
@@ -919,6 +921,8 @@ class QtLabelledToolbarPushButton(QWidget):
         self.setCheckable = self.image_btn.setCheckable
         self.isChecked = self.image_btn.isChecked
         self.click = self.image_btn.click
+        self.set_qta_size = self.image_btn.set_qta_size
+        self.set_qta_size_preset = self.image_btn.set_qta_size_preset
 
     @property
     def label_hidden(self) -> bool:
@@ -961,6 +965,15 @@ class QtLabelledToolbarPushButton(QWidget):
         xxlarge: bool = False,
     ) -> None:
         """Size the icon button and keep the label layout in sync."""
+        if not any((xxsmall, xsmall, small, normal, average, medium, large, xlarge, xxlarge)):
+            self._update_label_geometry()
+            self.updateGeometry()
+            return
+        warnings.warn(
+            "`set_default_size` is deprecated, use `set_qta_size_preset` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.image_btn.set_default_size(
             xxsmall=xxsmall,
             xsmall=xsmall,
@@ -972,6 +985,12 @@ class QtLabelledToolbarPushButton(QWidget):
             xlarge=xlarge,
             xxlarge=xxlarge,
         )
+        self._update_label_geometry()
+        self.updateGeometry()
+
+    def set_qta_size_preset(self, preset: QtaSizePreset) -> None:
+        """Set a named qta size preset and keep the label layout in sync."""
+        self.image_btn.set_qta_size_preset(preset)
         self._update_label_geometry()
         self.updateGeometry()
 
@@ -1016,6 +1035,7 @@ class QtLabelledToolbarPushButton(QWidget):
 
     # Alias methods to offer Qt-like interface
     setDefaultSize = set_default_size
+    setQtaSizePreset = set_qta_size_preset
     setLabel = set_label
 
 
