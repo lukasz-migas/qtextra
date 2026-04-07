@@ -5,10 +5,12 @@ from __future__ import annotations
 from enum import Enum
 from typing import ClassVar
 
-from qtpy.QtCore import Property, QSize, Qt, Signal
-from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
+from qtpy.QtCore import Property, QRect, QSize, Qt, Signal
+from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen
+from qtpy.QtWidgets import QLabel, QWidget
 
 from qtextra._pydantic_compat import BaseModel, ValidationError
+from qtextra.config import THEMES
 
 
 class ProgressStepStatus(str, Enum):
@@ -39,125 +41,78 @@ def _refresh_styles(widget: QWidget) -> None:
     widget.update()
 
 
-class _QtProgressReportItem(QWidget):
-    """Single styled row within a progress report."""
+class _QtProgressReportText(QWidget):
+    """Styled title and subtitle labels for one progress-report step."""
 
-    MARKER_TEXT: ClassVar[dict[ProgressStepStatus, str]] = {
-        ProgressStepStatus.PENDING: "",
-        ProgressStepStatus.COMPLETE: "✓",
-        ProgressStepStatus.FAILED: "✕",
-        ProgressStepStatus.IN_PROGRESS: "•",
-    }
+    TITLE_SUBTITLE_SPACING: ClassVar[int] = 4
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """Initialize the item UI."""
+        """Initialize the label container."""
         super().__init__(parent)
-        self.setObjectName("progressReportItem")
+        self.setObjectName("progressReportText")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(14)
+        self.title_label = QLabel(self)
+        self.title_label.setObjectName("progressReportTitle")
+        self.title_label.setWordWrap(True)
+        self.title_label.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
-        indicator_widget = QWidget(self)
-        indicator_widget.setObjectName("progressReportIndicator")
-        indicator_widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        indicator_layout = QVBoxLayout(indicator_widget)
-        indicator_layout.setContentsMargins(0, 0, 0, 0)
-        indicator_layout.setSpacing(0)
+        self.subtitle_label = QLabel(self)
+        self.subtitle_label.setObjectName("progressReportSubtitle")
+        self.subtitle_label.setWordWrap(True)
+        self.subtitle_label.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
-        self._top_connector = QFrame(indicator_widget)
-        self._top_connector.setObjectName("progressReportConnector")
-        self._top_connector.setFrameShape(QFrame.Shape.NoFrame)
-        self._top_connector.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+    def set_step(self, step: ProgressReportStep) -> None:
+        """Apply step content and styling properties to the labels."""
+        active_value = str(step.active).lower()
+        self.title_label.setText(step.title)
+        self.title_label.setProperty("status", step.status.value)
+        self.title_label.setProperty("active", active_value)
 
-        self._marker = QLabel(indicator_widget)
-        self._marker.setObjectName("progressReportMarker")
-        self._marker.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._marker.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self._marker.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.subtitle_label.setText(step.subtitle)
+        self.subtitle_label.setVisible(bool(step.subtitle))
+        self.subtitle_label.setProperty("status", step.status.value)
+        self.subtitle_label.setProperty("active", active_value)
 
-        self._bottom_connector = QFrame(indicator_widget)
-        self._bottom_connector.setObjectName("progressReportConnector")
-        self._bottom_connector.setFrameShape(QFrame.Shape.NoFrame)
-        self._bottom_connector.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        _refresh_styles(self.title_label)
+        _refresh_styles(self.subtitle_label)
 
-        indicator_layout.addWidget(self._top_connector, 1)
-        indicator_layout.addWidget(self._marker, 0, Qt.AlignmentFlag.AlignHCenter)
-        indicator_layout.addWidget(self._bottom_connector, 1)
+    def sizeHint(self) -> QSize:  # type: ignore[override]
+        """Return a size hint based on the two labels."""
+        title_hint = self.title_label.sizeHint()
+        subtitle_hint = self.subtitle_label.sizeHint() if self.subtitle_label.isVisible() else QSize(0, 0)
+        height = title_hint.height()
+        if self.subtitle_label.isVisible():
+            height += self.TITLE_SUBTITLE_SPACING + subtitle_hint.height()
+        return QSize(max(title_hint.width(), subtitle_hint.width()), height)
 
-        text_widget = QWidget(self)
-        text_widget.setObjectName("progressReportText")
-        text_layout = QVBoxLayout(text_widget)
-        text_layout.setContentsMargins(0, 2, 0, 2)
-        text_layout.setSpacing(2)
+    def resizeEvent(self, event) -> None:
+        """Lay out title and subtitle labels manually."""
+        super().resizeEvent(event)
+        width = self.width()
+        title_height = self.title_label.sizeHint().height()
+        self.title_label.setGeometry(0, 0, width, title_height)
 
-        self._title_label = QLabel(text_widget)
-        self._title_label.setObjectName("progressReportTitle")
-        self._title_label.setWordWrap(True)
-        self._title_label.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-
-        self._subtitle_label = QLabel(text_widget)
-        self._subtitle_label.setObjectName("progressReportSubtitle")
-        self._subtitle_label.setWordWrap(True)
-        self._subtitle_label.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-
-        text_layout.addWidget(self._title_label)
-        text_layout.addWidget(self._subtitle_label)
-
-        layout.addWidget(indicator_widget, 0)
-        layout.addWidget(text_widget, 1)
-
-    def set_step(
-        self,
-        step: ProgressReportStep,
-        top_status: ProgressStepStatus | None,
-        bottom_status: ProgressStepStatus | None,
-    ) -> None:
-        """Apply step data and connector states to the row."""
-        self._marker.setText(self.MARKER_TEXT[step.status])
-        self._title_label.setText(step.title)
-        self._subtitle_label.setText(step.subtitle)
-        self._subtitle_label.setVisible(bool(step.subtitle))
-
-        self._set_status_property(self._marker, step.status)
-        self._marker.setProperty("active", str(step.active).lower())
-
-        self._set_status_property(self._title_label, step.status)
-        self._title_label.setProperty("active", str(step.active).lower())
-
-        self._set_status_property(self._subtitle_label, step.status)
-        self._subtitle_label.setProperty("active", str(step.active).lower())
-
-        self._set_connector_status(self._top_connector, top_status)
-        self._set_connector_status(self._bottom_connector, bottom_status)
-
-        self._top_connector.setVisible(top_status is not None)
-        self._bottom_connector.setVisible(bottom_status is not None)
-
-        for widget in (
-            self,
-            self._marker,
-            self._title_label,
-            self._subtitle_label,
-            self._top_connector,
-            self._bottom_connector,
-        ):
-            _refresh_styles(widget)
-
-    @staticmethod
-    def _set_status_property(widget: QWidget, status: ProgressStepStatus) -> None:
-        widget.setProperty("status", status.value)
-
-    @staticmethod
-    def _set_connector_status(widget: QWidget, status: ProgressStepStatus | None) -> None:
-        widget.setProperty("status", "hidden" if status is None else status.value)
+        subtitle_height = self.subtitle_label.sizeHint().height() if self.subtitle_label.isVisible() else 0
+        subtitle_top = title_height + (self.TITLE_SUBTITLE_SPACING if subtitle_height else 0)
+        self.subtitle_label.setGeometry(0, subtitle_top, width, subtitle_height)
 
 
 class QtProgressReport(QWidget):
-    """Render a vertical list of progress steps with QSS-styled circle markers."""
+    """Render a vertical list of progress steps with painted markers and QSS-styled text."""
 
     evt_steps_changed = Signal(list)
+
+    LEFT_PADDING: ClassVar[int] = 20
+    RIGHT_PADDING: ClassVar[int] = 20
+    TOP_PADDING: ClassVar[int] = 20
+    BOTTOM_PADDING: ClassVar[int] = 20
+    CIRCLE_DIAMETER: ClassVar[int] = 24
+    LINE_WIDTH: ClassVar[int] = 3
+    CONNECTOR_WIDTH: ClassVar[int] = 2
+    TEXT_GAP: ClassVar[int] = 18
+    ITEM_SPACING: ClassVar[int] = 18
+    TITLE_SUBTITLE_SPACING: ClassVar[int] = 4
 
     def __init__(
         self,
@@ -170,12 +125,7 @@ class QtProgressReport(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self._steps: list[ProgressReportStep] = []
-        self._items: list[_QtProgressReportItem] = []
-
-        self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(20, 20, 20, 20)
-        self._layout.setSpacing(10)
-        self._layout.addStretch(1)
+        self._text_widgets: list[_QtProgressReportText] = []
 
         if steps:
             self.set_steps(steps)
@@ -187,8 +137,10 @@ class QtProgressReport(QWidget):
     def set_steps(self, steps: list[ProgressReportStep | dict]) -> None:
         """Set progress steps from models or dictionaries."""
         self._steps = [self._coerce_step(step) for step in steps]
-        self._rebuild_items()
+        self._sync_text_widgets()
         self.evt_steps_changed.emit(self.get_steps())
+        self.updateGeometry()
+        self.update()
 
     steps = Property(list, fget=get_steps, fset=set_steps, notify=evt_steps_changed)
 
@@ -198,8 +150,9 @@ class QtProgressReport(QWidget):
         step.status = ProgressStepStatus(status)
         if active is not None:
             step.active = bool(active)
-        self._sync_items()
+        self._sync_text_widgets()
         self.evt_steps_changed.emit(self.get_steps())
+        self.update()
 
     def set_active_step(self, index: int | None) -> None:
         """Mark one step as active and clear the active state on others."""
@@ -209,8 +162,9 @@ class QtProgressReport(QWidget):
             step.active = i == index
             if step.active and step.status == ProgressStepStatus.PENDING:
                 step.status = ProgressStepStatus.IN_PROGRESS
-        self._sync_items()
+        self._sync_text_widgets()
         self.evt_steps_changed.emit(self.get_steps())
+        self.update()
 
     def current_step_index(self) -> int | None:
         """Return the active step index, if any."""
@@ -220,12 +174,58 @@ class QtProgressReport(QWidget):
         return None
 
     def sizeHint(self) -> QSize:  # type: ignore[override]
-        """Return the preferred widget size."""
-        return QSize(420, max(160, 96 * max(len(self._steps), 1)))
+        """Return a size hint that fits the current steps."""
+        if not self._steps:
+            return QSize(320, 120)
+
+        max_text_width = 0
+        total_height = self.TOP_PADDING + self.BOTTOM_PADDING
+        for text_widget, _step in zip(self._text_widgets, self._steps, strict=False):
+            step_width = max(text_widget.title_label.sizeHint().width(), text_widget.subtitle_label.sizeHint().width())
+            max_text_width = max(max_text_width, step_width)
+            total_height += max(self.CIRCLE_DIAMETER, text_widget.sizeHint().height())
+        total_height += self.ITEM_SPACING * (len(self._steps) - 1)
+
+        return QSize(
+            max(320, self.LEFT_PADDING + self.CIRCLE_DIAMETER + self.TEXT_GAP + max_text_width + self.RIGHT_PADDING),
+            max(120, total_height),
+        )
 
     def minimumSizeHint(self) -> QSize:  # type: ignore[override]
-        """Return the minimum widget size."""
-        return QSize(260, max(120, 72 * max(len(self._steps), 1)))
+        """Return the minimum sensible size for the widget."""
+        hint = self.sizeHint()
+        return QSize(min(hint.width(), 260), min(hint.height(), 120))
+
+    def resizeEvent(self, event) -> None:
+        """Reposition step labels when the widget is resized."""
+        super().resizeEvent(event)
+        self._layout_text_widgets()
+
+    def paintEvent(self, event) -> None:
+        """Paint the progress timeline and markers."""
+        del event
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.fillRect(self.rect(), THEMES.get_qt_color("canvas"))
+
+        if not self._steps:
+            return
+
+        layouts = self._compute_layouts()
+        center_x = self.LEFT_PADDING + self.CIRCLE_DIAMETER / 2
+
+        for index, (_, circle_rect, _) in enumerate(layouts[:-1]):
+            next_circle_rect = layouts[index + 1][1]
+            self._draw_connector(
+                painter=painter,
+                center_x=center_x,
+                top=int(circle_rect.bottom()),
+                bottom=int(next_circle_rect.top()),
+                step=self._steps[index],
+            )
+
+        for step, circle_rect, _text_rect in layouts:
+            self._draw_circle(painter, circle_rect, step)
 
     @staticmethod
     def _coerce_step(step: ProgressReportStep | dict) -> ProgressReportStep:
@@ -235,25 +235,146 @@ class QtProgressReport(QWidget):
             return ProgressReportStep(**step)
         raise TypeError(f"Step must be a ProgressReportStep or dict, received {type(step)!r}")
 
-    def _rebuild_items(self) -> None:
-        while self._items:
-            item = self._items.pop()
-            self._layout.removeWidget(item)
-            item.deleteLater()
+    def _sync_text_widgets(self) -> None:
+        while len(self._text_widgets) > len(self._steps):
+            widget = self._text_widgets.pop()
+            widget.deleteLater()
 
-        for index, _step in enumerate(self._steps):
-            item = _QtProgressReportItem(self)
-            self._layout.insertWidget(index, item)
-            self._items.append(item)
+        while len(self._text_widgets) < len(self._steps):
+            self._text_widgets.append(_QtProgressReportText(self))
 
-        self._sync_items()
-        self.updateGeometry()
+        for widget, step in zip(self._text_widgets, self._steps, strict=False):
+            widget.set_step(step)
+            widget.show()
 
-    def _sync_items(self) -> None:
-        for index, (step, item) in enumerate(zip(self._steps, self._items, strict=False)):
-            previous_status = self._steps[index - 1].status if index > 0 else None
-            next_status = step.status if index < len(self._steps) - 1 else None
-            item.set_step(step, top_status=previous_status, bottom_status=next_status)
+        self._layout_text_widgets()
+
+    def _layout_text_widgets(self) -> None:
+        if not self._steps:
+            return
+
+        for text_widget, (_, _, text_rect) in zip(self._text_widgets, self._compute_layouts(), strict=False):
+            text_widget.setGeometry(text_rect)
+
+    def _compute_layouts(self) -> list[tuple[ProgressReportStep, QRect, QRect]]:
+        available_text_width = max(
+            self.width() - self.LEFT_PADDING - self.CIRCLE_DIAMETER - self.TEXT_GAP - self.RIGHT_PADDING,
+            120,
+        )
+        circle_x = self.LEFT_PADDING
+        text_x = self.LEFT_PADDING + self.CIRCLE_DIAMETER + self.TEXT_GAP
+        y = self.TOP_PADDING
+        layouts: list[tuple[ProgressReportStep, QRect, QRect]] = []
+
+        for step, text_widget in zip(self._steps, self._text_widgets, strict=False):
+            title_height = text_widget.title_label.heightForWidth(available_text_width)
+            subtitle_height = text_widget.subtitle_label.heightForWidth(available_text_width) if step.subtitle else 0
+            text_height = title_height + (self.TITLE_SUBTITLE_SPACING + subtitle_height if subtitle_height else 0)
+            item_height = max(self.CIRCLE_DIAMETER, text_height)
+
+            circle_top = y + (item_height - self.CIRCLE_DIAMETER) // 2
+            text_top = y + max((item_height - text_height) // 2, 0)
+
+            circle_rect = QRect(circle_x, circle_top, self.CIRCLE_DIAMETER, self.CIRCLE_DIAMETER)
+            text_rect = QRect(text_x, text_top, available_text_width, text_height)
+            layouts.append((step, circle_rect, text_rect))
+            y += item_height + self.ITEM_SPACING
+
+        return layouts
+
+    def _draw_connector(
+        self,
+        painter: QPainter,
+        center_x: float,
+        top: int,
+        bottom: int,
+        step: ProgressReportStep,
+    ) -> None:
+        pen = QPen(self._connector_color(step))
+        pen.setWidth(self.CONNECTOR_WIDTH)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        painter.drawLine(int(center_x), top, int(center_x), bottom)
+
+    def _draw_circle(self, painter: QPainter, rect: QRect, step: ProgressReportStep) -> None:
+        border_color, fill_color = self._circle_colors(step)
+        pen = QPen(border_color)
+        pen.setWidth(self.LINE_WIDTH)
+        painter.setPen(pen)
+        painter.setBrush(fill_color)
+        painter.drawEllipse(rect)
+
+        if step.status == ProgressStepStatus.COMPLETE:
+            self._draw_check_mark(painter, rect)
+        elif step.status == ProgressStepStatus.FAILED:
+            self._draw_cross_mark(painter, rect)
+        elif step.status == ProgressStepStatus.IN_PROGRESS:
+            self._draw_progress_dot(painter, rect, border_color)
+
+    def _circle_colors(self, step: ProgressReportStep) -> tuple[QColor, QColor]:
+        canvas = THEMES.get_qt_color("canvas")
+        if step.status == ProgressStepStatus.COMPLETE:
+            color = THEMES.get_qt_color("success")
+            return color, color
+        if step.status == ProgressStepStatus.FAILED:
+            color = THEMES.get_qt_color("error")
+            return color, color
+        if step.status == ProgressStepStatus.IN_PROGRESS:
+            color = THEMES.get_qt_color("primary")
+            return color, canvas
+        color = THEMES.get_qt_color("secondary")
+        return color, canvas
+
+    def _connector_color(self, step: ProgressReportStep) -> QColor:
+        if step.status == ProgressStepStatus.COMPLETE:
+            return THEMES.get_qt_color("success")
+        if step.status == ProgressStepStatus.FAILED:
+            return THEMES.get_qt_color("error")
+        if step.status == ProgressStepStatus.IN_PROGRESS:
+            return THEMES.get_qt_color("primary")
+        return THEMES.get_qt_color("secondary")
+
+    def _draw_check_mark(self, painter: QPainter, rect: QRect) -> None:
+        pen = QPen(THEMES.get_qt_color("canvas"))
+        pen.setWidth(3)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+
+        path = QPainterPath()
+        path.moveTo(rect.left() + rect.width() * 0.26, rect.top() + rect.height() * 0.54)
+        path.lineTo(rect.left() + rect.width() * 0.44, rect.top() + rect.height() * 0.72)
+        path.lineTo(rect.left() + rect.width() * 0.74, rect.top() + rect.height() * 0.32)
+        painter.drawPath(path)
+
+    def _draw_cross_mark(self, painter: QPainter, rect: QRect) -> None:
+        pen = QPen(THEMES.get_qt_color("canvas"))
+        pen.setWidth(3)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        painter.setPen(pen)
+        inset = rect.width() * 0.3
+        painter.drawLine(
+            int(rect.left() + inset),
+            int(rect.top() + inset),
+            int(rect.right() - inset),
+            int(rect.bottom() - inset),
+        )
+        painter.drawLine(
+            int(rect.left() + inset),
+            int(rect.bottom() - inset),
+            int(rect.right() - inset),
+            int(rect.top() + inset),
+        )
+
+    def _draw_progress_dot(self, painter: QPainter, rect: QRect, color: QColor) -> None:
+        painter.save()
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+        diameter = rect.width() // 3
+        dot_rect = QRect(0, 0, diameter, diameter)
+        dot_rect.moveCenter(rect.center())
+        painter.drawEllipse(dot_rect)
+        painter.restore()
 
 
 __all__ = ["ProgressReportStep", "ProgressStepStatus", "QtProgressReport", "ValidationError"]

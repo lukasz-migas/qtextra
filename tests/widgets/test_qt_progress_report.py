@@ -59,7 +59,7 @@ def test_progress_report_updates_active_step(qtbot):
     assert steps[0].active is False
 
 
-def test_progress_report_uses_styled_child_widgets(qtbot):
+def test_progress_report_uses_styled_text_labels(qtbot):
     widget = QtProgressReport(
         steps=[
             ProgressReportStep(title="Create account", status=ProgressStepStatus.COMPLETE),
@@ -74,14 +74,13 @@ def test_progress_report_uses_styled_child_widgets(qtbot):
     qtbot.addWidget(widget)
 
     title_labels = widget.findChildren(QLabel, "progressReportTitle")
-    marker_labels = widget.findChildren(QLabel, "progressReportMarker")
+    subtitle_labels = widget.findChildren(QLabel, "progressReportSubtitle")
 
     assert len(title_labels) == 2
-    assert len(marker_labels) == 2
+    assert len(subtitle_labels) == 2
     assert title_labels[1].property("active") == "true"
     assert title_labels[1].property("status") == ProgressStepStatus.IN_PROGRESS.value
-    assert marker_labels[0].text() == "✓"
-    assert marker_labels[1].text() == "•"
+    assert subtitle_labels[1].text() == "Current step"
 
 
 def test_progress_report_size_hint_grows_with_content(qtbot):

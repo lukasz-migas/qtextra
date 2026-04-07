@@ -95,6 +95,7 @@ button_row.addWidget(reset_button)
 
 layout.addLayout(button_row)
 
+THEMES.theme = "dark"
 THEMES.apply(window)
 window.resize(720, 480)
 window.show()

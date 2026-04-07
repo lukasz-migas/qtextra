@@ -49,3 +49,32 @@ QProgressBar::chunk#step_indicator {
     width: 5px;
     background-color: {{ success }};
 }
+
+/* ----------------- QtProgressReport ----------------- */
+
+QWidget#progressReport {
+    background-color: {{ canvas }};
+}
+
+QWidget#progressReportText {
+    background: transparent;
+}
+
+QLabel#progressReportTitle {
+    color: {{ text }};
+    font-size: {{ increase(font_size, 2) }};
+    font-weight: bold;
+}
+
+QLabel#progressReportTitle[status="pending"] {
+    color: {{ secondary }};
+}
+
+QLabel#progressReportTitle[active="true"] {
+    color: {{ primary }};
+}
+
+QLabel#progressReportSubtitle {
+    color: {{ secondary }};
+    font-size: {{ font_size }};
+}
