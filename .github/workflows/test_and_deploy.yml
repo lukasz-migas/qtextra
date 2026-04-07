@@ -80,7 +80,7 @@ jobs:
       - run: uv sync --no-dev --group test
 
       - name: Download coverage artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           pattern: covreport-*
           path: coverage-artifacts
