@@ -206,6 +206,7 @@ QtOverlay {
     border-radius: 10px;
 }
 
+
 /* ----------------- QGroupBox title (override: center) ----------------- */
 
 QGroupBox::title {

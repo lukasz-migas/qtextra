@@ -78,7 +78,7 @@ def test_progress_report_uses_styled_text_labels(qtbot):
 
     assert len(title_labels) == 2
     assert len(subtitle_labels) == 2
-    assert title_labels[1].property("active") == "true"
+    assert title_labels[1].property("active") is True
     assert title_labels[1].property("status") == ProgressStepStatus.IN_PROGRESS.value
     assert subtitle_labels[1].text() == "Current step"
 
