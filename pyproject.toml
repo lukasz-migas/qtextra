@@ -228,7 +228,7 @@ extend-ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["D", "S", "A"]
-"examples/*.py" = ["D", "S", "A"]
+"examples/*.py" = ["INP001", "D", "S", "A"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 # Disallow all relative imports.
