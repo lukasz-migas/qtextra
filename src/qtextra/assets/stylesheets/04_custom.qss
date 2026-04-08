@@ -199,13 +199,6 @@ QtScrollableVLayoutWidget QScrollBar::sub-line:vertical {
     width: 0px;
 }
 
-/* ----------------- QtOverlay ----------------- */
-
-QtOverlay {
-    border: 2px solid {{ secondary }};
-    border-radius: 10px;
-}
-
 /* ----------------- QGroupBox title (override: center) ----------------- */
 
 QGroupBox::title {
