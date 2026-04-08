@@ -903,6 +903,7 @@ def select_columns(parent: Qw.QWidget | None, table: Qw.QTableWidget, table_conf
         column = table_config.get_column(index)
         popup.selection_list.add_item(column["name"], check=not hidden[i])
     popup.selection_list.evt_selection_changed.connect(_update_visible_columns)
+    popup.setMinimumHeight(min(400, len(columns) * 25))
     popup.show()
 
 

@@ -139,6 +139,9 @@ class QtListItem(QFrame):
 class ListMixin:
     """Shared helpers for the list-widget variants in this module."""
 
+    # Current filter text; empty string means no filter is active.
+    _filter_text: str = ""
+
     def teardown(self) -> None:
         """Release subclass resources before the widget closes."""
 
@@ -147,6 +150,92 @@ class ListMixin:
 
         Subclasses are expected to reimplement this hook.
         """
+
+    # ------------------------------------------------------------------
+    # Filtering
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _get_search_terms(item_model: _M) -> list[str]:
+        """Return the list of strings used when filtering this row.
+
+        Override in subclasses to expose the attributes that should be
+        matched against the filter text.  The default returns an empty
+        list, which means no row will be shown when a filter is active
+        unless the method is overridden.
+        """
+        return []
+
+    def set_filter_text(self, text: str) -> None:
+        """Set the active filter text and immediately apply the filter."""
+        self._filter_text = text
+        self.apply_filter()
+
+    def apply_filter(self) -> int:
+        """Show or hide rows based on :attr:`_filter_text`.
+
+        If ``_filter_text`` is empty every row is shown.  Otherwise a row
+        is shown only when at least one of its :meth:`_get_search_terms`
+        values contains the filter text as a case-insensitive substring.
+
+        Returns the number of visible rows after filtering.
+        """
+        if not self._filter_text:
+            return self.filter_items(lambda _: True)
+        needle = self._filter_text.lower()
+
+        def _predicate(widget: _W) -> bool:
+            terms = self._get_search_terms(widget.item_model)
+            return any(needle in term.lower() for term in terms)
+
+        return self.filter_items(_predicate)
+
+    def filter_items(self, predicate: ty.Callable[[_W], bool]) -> int:
+        """Show or hide each row widget based on ``predicate``.
+
+        Returns the number of visible items after filtering.
+        Subclasses must override this to apply visibility changes.
+        """
+        raise NotImplementedError("Must implement method")
+
+    def filter_by_text(
+        self,
+        text: str,
+        *,
+        attr: str = "name",
+        case_sensitive: bool = False,
+    ) -> int:
+        """Show only rows whose ``attr`` value contains ``text``.
+
+        An empty ``text`` restores all rows. Returns the number of visible items.
+        """
+        if not text:
+            return self.filter_items(lambda _: True)
+        needle = text if case_sensitive else text.lower()
+
+        def _predicate(widget: _W) -> bool:
+            value = getattr(widget, attr, None)
+            if value is None:
+                try:
+                    value = getattr(widget.item_model, attr, "")
+                except Exception:  # noqa: BLE001
+                    value = ""
+            haystack = str(value) if case_sensitive else str(value).lower()
+            return needle in haystack
+
+        return self.filter_items(_predicate)
+
+    # ------------------------------------------------------------------
+    # Iterators (all items, ignoring visibility)
+    # ------------------------------------------------------------------
+
+    def all_widget_iter(self) -> ty.Iterator[_W]:
+        """Yield every row widget regardless of visibility."""
+        raise NotImplementedError("Must implement method")
+
+    # ------------------------------------------------------------------
+    # Close / size helpers
+    # ------------------------------------------------------------------
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Call :meth:`teardown` before forwarding the close event."""
@@ -157,6 +246,10 @@ class ListMixin:
     def n_rows(self) -> int:
         """Return the current number of rows in the widget."""
         return self.count()
+
+    # ------------------------------------------------------------------
+    # Check-state helpers (operate on visible rows only)
+    # ------------------------------------------------------------------
 
     def get_all_checked(self, *, reverse: bool = False) -> list[int]:
         """Get list of checked items."""
@@ -177,8 +270,8 @@ class ListMixin:
         return checked
 
     def get_index_for_hash_id(self, hash_id: str) -> int:
-        """Get the index of the item."""
-        for index, widget in enumerate(self.widget_iter()):  # type: ignore[var-annotated]
+        """Get the absolute index of the item (searches all rows)."""
+        for index, widget in enumerate(self.all_widget_iter()):  # type: ignore[var-annotated]
             if widget.hash_id == hash_id:
                 return index
         return -1
@@ -202,7 +295,7 @@ class QtListWidget(QListWidget, ListMixin):
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setFrameShape(QFrame.Shape.NoFrame)
 
     def _get_menu(self) -> None:
@@ -227,20 +320,72 @@ class QtListWidget(QListWidget, ListMixin):
         """Create the widget used to render ``item``."""
         raise NotImplementedError("Must implement method")
 
+    # ------------------------------------------------------------------
+    # Visibility-aware iterators (skip hidden rows)
+    # ------------------------------------------------------------------
+
     def widget_iter(self) -> ty.Iterator[_W]:
-        """Yield row widgets in visual order."""
+        """Yield visible row widgets in visual order."""
         for index in range(self.count()):
             item = self.item(index)
-            widget = self.itemWidget(item)
-            if widget is not None:
-                yield widget  # type: ignore[misc]
+            if item is not None and not item.isHidden():
+                widget = self.itemWidget(item)
+                if widget is not None:
+                    yield widget  # type: ignore[misc]
 
     def item_iter(
         self,
         indices: ty.Iterable[int] | None = None,
         reverse: bool = False,
     ) -> ty.Iterator[QListWidgetItemWithModel]:
-        """Yield list items for the requested indices."""
+        """Yield visible list items (or items at explicit ``indices``)."""
+        if indices is None:
+            indices = [i for i in range(self.count()) if not self.item(i).isHidden()]
+
+        iterator: ty.Iterable[int]
+        iterator = reversed(tuple(indices)) if reverse else tuple(indices)
+        for index in iterator:
+            item = self.item(index)
+            if item is not None:
+                yield item  # type: ignore[misc]
+
+    def item_model_widget_iter(self) -> ty.Iterator[tuple[QListWidgetItemWithModel, _M, _W]]:
+        """Yield ``(item, model, widget)`` triples for visible rows."""
+        for index in range(self.count()):
+            item = self.item(index)
+            if item is None or item.isHidden():
+                continue
+            widget = self.itemWidget(item)
+            if widget is not None:
+                yield item, item.item_model, widget  # type: ignore[misc,union-attr]
+
+    def model_iter(self, indices: ty.Iterable[int] | None = None) -> ty.Iterator[_M]:
+        """Yield item models for visible rows (or rows at explicit ``indices``)."""
+        if indices is None:
+            indices = [i for i in range(self.count()) if not self.item(i).isHidden()]
+        for index in indices:
+            item: QListWidgetItemWithModel = self.item(index)
+            if item:
+                yield item.item_model
+
+    # ------------------------------------------------------------------
+    # All-items iterators (ignore visibility)
+    # ------------------------------------------------------------------
+
+    def all_widget_iter(self) -> ty.Iterator[_W]:
+        """Yield every row widget regardless of visibility."""
+        for index in range(self.count()):
+            item = self.item(index)
+            widget = self.itemWidget(item)
+            if widget is not None:
+                yield widget  # type: ignore[misc]
+
+    def all_item_iter(
+        self,
+        indices: ty.Iterable[int] | None = None,
+        reverse: bool = False,
+    ) -> ty.Iterator[QListWidgetItemWithModel]:
+        """Yield all list items regardless of visibility."""
         if indices is None:
             indices = range(self.count())
 
@@ -251,22 +396,26 @@ class QtListWidget(QListWidget, ListMixin):
             if item is not None:
                 yield item  # type: ignore[misc]
 
-    def item_model_widget_iter(self) -> ty.Iterator[tuple[QListWidgetItemWithModel, _M, _W]]:
-        """Yield ``(item, model, widget)`` triples for each row."""
+    def all_item_model_widget_iter(self) -> ty.Iterator[tuple[QListWidgetItemWithModel, _M, _W]]:
+        """Yield ``(item, model, widget)`` triples for every row regardless of visibility."""
         for index in range(self.count()):
             item = self.item(index)
             widget = self.itemWidget(item)
             if item is not None and widget is not None:
                 yield item, item.item_model, widget  # type: ignore[misc,union-attr]
 
-    def model_iter(self, indices: ty.Iterable[int] | None = None) -> ty.Iterator[_M]:
-        """Yield item models for the requested indices."""
+    def all_model_iter(self, indices: ty.Iterable[int] | None = None) -> ty.Iterator[_M]:
+        """Yield item models for every row regardless of visibility."""
         if indices is None:
             indices = range(self.count())
         for index in indices:
             item: QListWidgetItemWithModel = self.item(index)
             if item:
                 yield item.item_model
+
+    # ------------------------------------------------------------------
+    # Lookup helpers (search all rows regardless of visibility)
+    # ------------------------------------------------------------------
 
     def get_hash_ids(self, indices: ty.Iterable[int]) -> list[str]:
         """Return model ``name`` values for the provided item indices."""
@@ -315,15 +464,15 @@ class QtListWidget(QListWidget, ListMixin):
         return self.get_item_widget_for_index(index)[1]
 
     def get_item_for_item_model(self, item_model: _M) -> QListWidgetItem | None:
-        """Get the item by its model."""
-        for item, _item_model, _ in self.item_model_widget_iter():  # type: ignore[var-annotated]
+        """Get the item by its model (searches all rows)."""
+        for item, _item_model, _ in self.all_item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return item
         return None
 
     def get_widget_for_item_model(self, item_model: _M) -> _W | None:
-        """Get the widget by its model."""
-        for _, _item_model, widget in self.item_model_widget_iter():  # type: ignore[var-annotated]
+        """Get the widget by its model (searches all rows)."""
+        for _, _item_model, widget in self.all_item_model_widget_iter():  # type: ignore[var-annotated]
             if _item_model is item_model or _item_model == item_model:
                 return widget
         return None
@@ -332,6 +481,10 @@ class QtListWidget(QListWidget, ListMixin):
         """Get item's hash id."""
         item = self.get_item_model_for_index(index)
         return item.name
+
+    # ------------------------------------------------------------------
+    # Mutation
+    # ------------------------------------------------------------------
 
     @Slot(QListWidgetItem)
     @Slot(QListWidgetItem, bool)
@@ -442,6 +595,19 @@ class QtListWidget(QListWidget, ListMixin):
         self.clear()
         self.evt_updated.emit(self.count())
 
+    def filter_items(self, predicate: ty.Callable[[_W], bool]) -> int:
+        """Show or hide each row based on ``predicate``. Returns visible count."""
+        visible = 0
+        for index in range(self.count()):
+            item = self.item(index)
+            widget = self.itemWidget(item)
+            if widget is not None:
+                show = predicate(widget)
+                item.setHidden(not show)
+                if show:
+                    visible += 1
+        return visible
+
     @contextmanager
     def disable_updates(self) -> ty.Iterator[None]:
         """Temporarily disable repaint/update processing."""
@@ -472,8 +638,8 @@ class QtListScrollWidget(QScrollArea, ListMixin):
 
         self.setWidgetResizable(True)
         self.setFrameShape(QFrame.Shape.NoFrame)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)  # type: ignore[attr-defined]
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def _make_widget(self, item_model: _M) -> _W:
@@ -481,23 +647,62 @@ class QtListScrollWidget(QScrollArea, ListMixin):
         raise NotImplementedError("Must implement method")
 
     def count(self) -> int:
-        """Return the current number of rows in the widget."""
+        """Return the total number of rows (visible and hidden)."""
         return len(self.widgets)
 
+    @property
+    def n_visible(self) -> int:
+        """Return the number of currently visible rows."""
+        return sum(1 for w in self.widgets.values() if not w.isHidden())
+
+    # ------------------------------------------------------------------
+    # Visibility-aware iterators (skip hidden rows)
+    # ------------------------------------------------------------------
+
     def widget_iter(self) -> ty.Iterator[_W]:
-        """Yield child widgets in visual order."""
-        yield from self.widgets.values()
+        """Yield visible child widgets in visual order."""
+        for widget in self.widgets.values():
+            if not widget.isHidden():
+                yield widget  # type: ignore[misc]
 
     def model_iter(self, indices: ty.Sequence[int] | None = None, reverse: bool = False) -> ty.Iterator[_M]:
-        """Yield item models for the requested indices."""
+        """Yield item models for visible rows (or rows at explicit ``indices``)."""
+        if indices is None:
+            widgets = [w for w in self.widgets.values() if not w.isHidden()]
+            if reverse:
+                widgets.reverse()
+            for w in widgets:
+                yield w.item_model  # type: ignore[union-attr]
+        else:
+            keys = list(self.widgets.keys())
+            selected = [keys[i] for i in indices if i < len(keys)]
+            if reverse and selected:
+                selected.reverse()
+            for key in selected:
+                yield self.widgets[key].item_model
+
+    # ------------------------------------------------------------------
+    # All-items iterators (ignore visibility)
+    # ------------------------------------------------------------------
+
+    def all_widget_iter(self) -> ty.Iterator[_W]:
+        """Yield every child widget regardless of visibility."""
+        yield from self.widgets.values()  # type: ignore[misc]
+
+    def all_model_iter(self, indices: ty.Sequence[int] | None = None, reverse: bool = False) -> ty.Iterator[_M]:
+        """Yield item models for every row regardless of visibility."""
         if indices is None:
             indices = range(self.count())
         keys = list(self.widgets.keys())
-        keys = [keys[i] for i in indices if i < len(keys)]
-        if reverse and keys:
-            keys.reverse()
-        for key in keys:
+        selected = [keys[i] for i in indices if i < len(keys)]
+        if reverse and selected:
+            selected.reverse()
+        for key in selected:
             yield self.widgets[key].item_model
+
+    # ------------------------------------------------------------------
+    # Lookup helpers
+    # ------------------------------------------------------------------
 
     def _check_existing(self, item_model: _M) -> bool:
         """Check if item with the same model already exists."""
@@ -557,3 +762,28 @@ class QtListScrollWidget(QScrollArea, ListMixin):
     def get_widget_for_index(self, index: int) -> _W:
         """Return the widget stored at ``index``."""
         return self.get_item_widget_for_index(index)[1]
+
+    def filter_items(self, predicate: ty.Callable[[_W], bool]) -> int:
+        """Show or hide each row based on ``predicate``. Returns visible count."""
+        visible = 0
+        for widget in self.widgets.values():
+            show = predicate(widget)
+            widget._toggle_visibility(show)
+            if show:
+                visible += 1
+        return visible
+
+    def reset_data(self) -> None:
+        """Remove all rows and emit lifecycle signals."""
+        for widget in list(self.widgets.values()):
+            self._layout.removeWidget(widget)
+            widget.deleteLater()
+        self.widgets.clear()
+        self.evt_cleared.emit()
+        self.evt_updated.emit(0)
+
+    def refresh(self) -> None:
+        """Refresh all row widgets from their bound models."""
+        for widget in self.widgets.values():
+            if hasattr(widget, "refresh"):
+                widget.refresh()
