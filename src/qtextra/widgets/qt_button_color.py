@@ -165,6 +165,11 @@ class QtColorSwatch(QFrame):
         """Return color in HEX code."""
         return rgbs_to_hex(self._color)[0]
 
+    @property
+    def hex_color_no_alpha(self) -> str:
+        """Return color in HEX code without alpha channel."""
+        return rgbs_to_hex(self._color)[0][0:7]
+
     @Slot(np.ndarray)
     def _update_swatch_style(self, _color: ColorType) -> None:
         """Update appearance."""

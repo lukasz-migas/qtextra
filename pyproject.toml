@@ -69,6 +69,7 @@ pyqt6 = [
     "pyqt6; platform_system != 'Windows'"
 ]
 reload = ["qtreload"]
+# TODO: remove these and use the dependency groups instead
 test = [
     "pytest>=8.1",
     "pytest-cov",
