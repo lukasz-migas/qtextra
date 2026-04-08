@@ -61,15 +61,21 @@ class QtSearchPanel(QWidget):
             self,
             "previous",
             tooltip="Find previous match.",
-            average=True,
+            size_preset="average",
             func=self.find_previous,
         )
-        self.next_button = hp.make_qta_btn(self, "next", tooltip="Find next match.", average=True, func=self.find_next)
+        self.next_button = hp.make_qta_btn(
+            self,
+            "next",
+            tooltip="Find next match.",
+            size_preset="average",
+            func=self.find_next,
+        )
         self.close_button = hp.make_qta_btn(
             self,
             "cross",
             tooltip="Close search panel.",
-            average=True,
+            size_preset="average",
             func=self.close_panel,
         )
         self.close_button.setVisible(show_close)
@@ -243,7 +249,7 @@ class QtSearchPanel(QWidget):
         return button
 
     def _make_action_button(self, icon_name: str, tooltip: str, func) -> QtImagePushButton:
-        return hp.make_qta_btn(self, icon_name, tooltip=tooltip, func=func, average=True)
+        return hp.make_qta_btn(self, icon_name, tooltip=tooltip, func=func, size_preset="average")
 
     def _refresh_matches(self) -> None:
         if self._target_editor is None:

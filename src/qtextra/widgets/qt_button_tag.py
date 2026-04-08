@@ -89,7 +89,7 @@ class QtTagButton(QFrame):
             self.setProperty("hide_check", "True")
 
         self.selected = hp.make_qta_label(self, "check")
-        self.selected.set_small()
+        self.selected.set_qta_size_preset("small")
         if not self._allow_selected:
             self.selected.evt_clicked.connect(self._handle_click)
         self.selected.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
@@ -100,7 +100,7 @@ class QtTagButton(QFrame):
             self.label.setVisible(False)
 
         self.action_btn = QtPillActionButton(parent=self)
-        self.action_btn.set_xsmall()
+        self.action_btn.set_qta_size_preset("xsmall")
         self.action_btn.clicked.connect(self._on_action)
         self.action_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.MinimumExpanding)
         self.action_btn.setVisible(allow_action)
@@ -302,7 +302,7 @@ class QtTagManager(QWidget):
 
     def add_button(self, icon_name: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
-        button = hp.make_qta_btn(self, icon_name, tooltip=tooltip, small=True, standout=True)
+        button = hp.make_qta_btn(self, icon_name, tooltip=tooltip, size_preset="small", standout=True)
         self._action_layout.addWidget(button)
         self.buttons[icon_name] = button
         return button

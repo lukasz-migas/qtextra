@@ -122,7 +122,13 @@ class PopoutView(PopoutViewBase):
         self.imageLabel = QImageLabel(self)
         self.imageLabel.setImage(self.image)
 
-        self.closeButton = hp.make_qta_btn(self, "cross", func=self.evt_closed, average=True, hide=self.is_closable)
+        self.closeButton = hp.make_qta_btn(
+            self,
+            "cross",
+            func=self.evt_closed,
+            size_preset="average",
+            hide=self.is_closable,
+        )
         self.closeButton.clicked.connect(self.evt_closed)
 
         self.titleLabel.setVisible(bool(self.title))

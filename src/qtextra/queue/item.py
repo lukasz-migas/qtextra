@@ -81,7 +81,7 @@ class TaskWidget(QFrame):
             self,
             "settings",
             tooltip="Show extra actions.",
-            normal=True,
+            size_preset="normal",
             func=self.on_open_menu,
         )
         if not QUEUE.has_actions():
@@ -91,14 +91,14 @@ class TaskWidget(QFrame):
             self,
             "clipboard",
             tooltip="Copy CLI commands to the clipboard.",
-            normal=True,
+            size_preset="normal",
             func=self.on_copy_to_clipboard,
         )
         self.info_btn = hp.make_qta_btn(
             self,
             "info",
             tooltip="Show information about the task.",
-            normal=True,
+            size_preset="normal",
             func=self.on_task_info,
         )
 
@@ -107,25 +107,25 @@ class TaskWidget(QFrame):
             "run",
             tooltip="Start task if the task has not started yet. This will override any built-in restrictions on number"
             " of simultaneous tasks and can cause your system to freeze.",
-            normal=True,
+            size_preset="normal",
             func=self.on_start_task,
         )
         self.retry_btn = hp.make_qta_btn(
             self,
             "retry",
             tooltip="Retry running task if the task has failed.",
-            normal=True,
+            size_preset="normal",
             func=self._on_retry_task,
         )
         self.pause_btn = QtPauseButton(self)
-        self.pause_btn.set_normal()
+        self.pause_btn.set_qta_size_preset("normal")
         self.pause_btn.setToolTip("Pause running task.")
         self.pause_btn.clicked.connect(self._on_pause_task)  # type: ignore[unused-ignore]
         self.cancel_btn = hp.make_qta_btn(
             self,
             "cross_full",
             tooltip="Cancel task. If a task has started, this is not guaranteed to work!",
-            normal=True,
+            size_preset="normal",
             func=self._on_cancel_task,
         )
         self.task_id = hp.make_label(

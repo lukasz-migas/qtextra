@@ -44,7 +44,7 @@ class QtFilterEdit(QWidget):
         self.text_edit.addAction(self.add_action, self.text_edit.ActionPosition.TrailingPosition)
 
         self.switch_toggle = QtAndOrButton(auto_connect=True, state=True)
-        self.switch_toggle.set_normal()
+        self.switch_toggle.set_qta_size_preset("normal")
         self.switch_toggle.evt_toggled.connect(self.emit_current_filters)
         if not enable_switch:
             self.switch_toggle.hide()

@@ -165,7 +165,8 @@ class QtWarningPulseLabel(QtQtaLabel):
     """A warning icon label that pulses indefinitely."""
 
     def __init__(self, interval: int = 1000):
-        super().__init__(large=True)
+        super().__init__()
+        self.set_qta_size_preset("large")
         self._base_size = 32
         self._pulse_delta = 8
         self._pulse_animation = QVariantAnimation(self)
@@ -215,7 +216,8 @@ class QtPulsingAttentionLabel(QtQtaLabel):
         interval: int = 1000,
         **kwargs: ty.Any,
     ):
-        super().__init__(large=True, **kwargs)
+        super().__init__(**kwargs)
+        self.set_qta_size_preset("large")
         self._color_from_key = color_from_key
         self._color_to_key = color_to_key
         self._color_from = QColor(THEMES.get_hex_color(color_from_key))
@@ -316,7 +318,7 @@ class QtQtaTooltipLabel(QtQtaLabel):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.set_qta("help")
-        self.set_average()
+        self.set_qta_size_preset("average")
 
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
@@ -334,7 +336,7 @@ class QtQtaHelpLabel(QtQtaLabel):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         super().__init__(*args, **kwargs)
         self.set_qta("help")
-        self.set_average()
+        self.set_qta_size_preset("average")
 
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
@@ -359,7 +361,7 @@ class QtSeverityLabel(QtQtaLabel):
         super().__init__(*args, **kwargs)
         self._severity: str = "info"
         self.severity = "info"
-        self.set_xsmall()
+        self.set_qta_size_preset("xsmall")
 
     @property
     def severity(self) -> str:
@@ -462,7 +464,7 @@ if __name__ == "__main__":  # pragma: no cover
         label = QtQtaLabel()
         label.set_qta(icon, **qta_kws)
         label.setToolTip(f"{name} :: {icon}")
-        label.set_large()
+        label.set_qta_size_preset("large")
         lay.addWidget(label)
         if i % 20 == 0:
             ha.addLayout(lay)
@@ -473,7 +475,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtSeverityLabel.STATES:
         btn = QtSeverityLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.severity = state
         lay.addWidget(btn)
 
@@ -482,7 +484,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtStateLabel.STATES:
         btn = QtStateLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.state = state
         lay.addWidget(btn)
 
@@ -491,7 +493,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtWorkerLabel.STATES:
         btn = QtWorkerLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.state = state
         lay.addWidget(btn)
 
@@ -500,7 +502,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in [True, False]:
         btn = QtValidLabel()
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         btn.state = state
         lay.addWidget(btn)
 
