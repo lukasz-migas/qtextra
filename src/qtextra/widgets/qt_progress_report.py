@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import ClassVar
 
-from qtpy.QtCore import Property, QEasingCurve, QRect, QSize, Qt, QVariantAnimation, Signal
+from qtpy.QtCore import Property, QEasingCurve, QRect, QSize, Qt, QTimer, QVariantAnimation, Signal
 from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen
 from qtpy.QtWidgets import QLabel, QVBoxLayout, QWidget
 
@@ -203,6 +203,11 @@ class QtProgressReport(QWidget):
         super().resizeEvent(event)
         self._layout_text_widgets()
 
+    def showEvent(self, event) -> None:
+        """Refresh layout after the widget receives its first final geometry."""
+        super().showEvent(event)
+        QTimer.singleShot(0, self._refresh_layout_after_show)
+
     def paintEvent(self, event) -> None:
         """Paint the progress timeline and markers."""
         del event
@@ -337,7 +342,7 @@ class QtProgressReport(QWidget):
         if step.status == ProgressStepStatus.IN_PROGRESS:
             color = THEMES.get_qt_color("secondary")
             return color, canvas
-        color = THEMES.get_qt_color("primary")
+        color = THEMES.get_qt_color("text")
         return color, canvas
 
     @staticmethod
@@ -346,9 +351,7 @@ class QtProgressReport(QWidget):
             return THEMES.get_qt_color("success")
         if step.status == ProgressStepStatus.FAILED:
             return THEMES.get_qt_color("error")
-        if step.status == ProgressStepStatus.IN_PROGRESS:
-            return THEMES.get_qt_color("secondary")
-        return THEMES.get_qt_color("primary")
+        return THEMES.get_qt_color("text")
 
     @staticmethod
     def _draw_check_mark(painter: QPainter, rect: QRect) -> None:
@@ -410,6 +413,12 @@ class QtProgressReport(QWidget):
         for index, step in enumerate(self._steps):
             if index >= len(old_statuses) or old_statuses[index] != step.status:
                 self._marker_animations[index].start()
+
+    def _refresh_layout_after_show(self) -> None:
+        """Relayout text after style polish and final show-time sizing."""
+        self._layout_text_widgets()
+        self.updateGeometry()
+        self.update()
 
     def _on_marker_animation_value_changed(self, value: object) -> None:
         animation = self.sender()

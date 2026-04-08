@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import pytest
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QLabel
 
+from qtextra.config import THEMES
 from qtextra.widgets.qt_progress_report import ProgressReportStep, ProgressStepStatus, QtProgressReport
 
 
@@ -120,3 +122,20 @@ def test_progress_report_renders_without_errors(qtbot):
     qtbot.waitExposed(widget)
 
     assert widget.grab().isNull() is False
+
+
+def test_progress_report_in_progress_marker_and_connector_use_different_colors(qtbot):
+    widget = QtProgressReport(
+        steps=[
+            ProgressReportStep(title="Current", status=ProgressStepStatus.IN_PROGRESS, active=True),
+            ProgressReportStep(title="Next"),
+        ]
+    )
+    qtbot.addWidget(widget)
+
+    border_color, fill_color = widget._circle_colors(widget.get_steps()[0])
+    connector_color = widget._connector_color(widget.get_steps()[0])
+
+    assert border_color == QColor(THEMES.get_qt_color("primary"))
+    assert fill_color == QColor(THEMES.get_qt_color("canvas"))
+    assert connector_color == QColor(THEMES.get_qt_color("secondary"))
