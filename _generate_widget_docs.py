@@ -175,6 +175,19 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=620,
     ),
     WidgetDoc(
+        slug="qt_progress_bar_floating",
+        title="QtFloatingProgressBar",
+        section="Progress And Status",
+        summary="A floating progress overlay that stays anchored to a window, dialog, or child widget.",
+        example="qt_progress_bar_floating.py",
+        classes=("qtextra.widgets.qt_progress_bar_floating.QtFloatingProgressBar",),
+        notes=(
+            "Use busy mode when total progress is unknown and determinate mode when you have a concrete range.",
+            "Attach it to either a child content widget or directly to a top-level dialog or main window.",
+        ),
+        screenshot_width=620,
+    ),
+    WidgetDoc(
         slug="qt_label_icon",
         title="QtQtaLabel (variants)",
         section="Labels And Display",
@@ -345,6 +358,22 @@ CATALOG: tuple[WidgetDoc, ...] = (
             "Use `from_schema` when a JSON-style schema already describes the options.",
         ),
         screenshot_width=520,
+    ),
+    WidgetDoc(
+        slug="qt_toolbar_panel",
+        title="QtPanelToolbar",
+        section="Actions And Buttons",
+        summary="A vertical toolbar that toggles stacked panels, with optional labelled buttons.",
+        example="qt_toolbar_panel.py",
+        classes=(
+            "qtextra.widgets.qt_toolbar_panel.QtPanelToolbar",
+            "qtextra.widgets.qt_toolbar_panel.QtPanelWidget",
+        ),
+        notes=(
+            "Use `title=` to create labelled toolbar buttons and `elide=False` when the full label should widen the toolbar.",
+            "Set `label_hidden` at runtime to switch between icon-only and labelled layouts.",
+        ),
+        screenshot_width=620,
     ),
     WidgetDoc(
         slug="qt_toolbar_mini",

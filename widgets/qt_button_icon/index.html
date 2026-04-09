@@ -570,6 +570,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -809,10 +815,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#evt_right_click" class="md-nav__link">
+  <a href="#evt_click" class="md-nav__link">
     <span class="md-ellipsis">
       
-        evt_right_click
+        evt_click
       
     </span>
   </a>
@@ -820,10 +826,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evt_click" class="md-nav__link">
+  <a href="#evt_right_click" class="md-nav__link">
     <span class="md-ellipsis">
       
-        evt_click
+        evt_right_click
       
     </span>
   </a>
@@ -1500,6 +1506,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../qt_countdown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QtCountdownWidget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../qt_dict_tag_editor/" class="md-nav__link">
         
   
@@ -1808,6 +1842,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../qt_progress_bar_floating/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QtFloatingProgressBar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../qt_progress_step/" class="md-nav__link">
         
   
@@ -2032,6 +2094,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../qt_toolbar_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QtPanelToolbar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../qt_tooltip/" class="md-nav__link">
         
   
@@ -2210,10 +2300,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#evt_right_click" class="md-nav__link">
+  <a href="#evt_click" class="md-nav__link">
     <span class="md-ellipsis">
       
-        evt_right_click
+        evt_click
       
     </span>
   </a>
@@ -2221,10 +2311,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evt_click" class="md-nav__link">
+  <a href="#evt_right_click" class="md-nav__link">
     <span class="md-ellipsis">
       
-        evt_click
+        evt_right_click
       
     </span>
   </a>
@@ -2803,7 +2893,7 @@
     <span class="n">btn</span> <span class="o">=</span> <span class="n">klass</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">auto_connect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">btn</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="o">*</span><span class="p">,</span> <span class="n">btn</span><span class="o">=</span><span class="n">btn</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">btn</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> clicked&quot;</span><span class="p">))</span>
     <span class="n">btn</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="n">btn</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-    <span class="n">btn</span><span class="o">.</span><span class="n">set_large</span><span class="p">()</span>
+    <span class="n">btn</span><span class="o">.</span><span class="n">set_qta_size_preset</span><span class="p">(</span><span class="s2">&quot;large&quot;</span><span class="p">)</span>
     <span class="n">row_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">btn</span><span class="p">)</span>
 
 <span class="c1"># multi-state buttons can only swap between multiple states by selection from a list</span>
@@ -2815,7 +2905,7 @@
     <span class="n">btn</span> <span class="o">=</span> <span class="n">klass</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span> <span class="n">auto_connect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">btn</span><span class="o">.</span><span class="n">evt_changed</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span> <span class="n">state</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">btn</span><span class="o">=</span><span class="n">btn</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">btn</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> clicked </span><span class="si">{</span><span class="n">state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
     <span class="n">btn</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="n">btn</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
-    <span class="n">btn</span><span class="o">.</span><span class="n">set_large</span><span class="p">()</span>
+    <span class="n">btn</span><span class="o">.</span><span class="n">set_qta_size_preset</span><span class="p">(</span><span class="s2">&quot;large&quot;</span><span class="p">)</span>
     <span class="n">row_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">btn</span><span class="p">)</span>
 <span class="n">row_layout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">()</span>
 
@@ -2831,8 +2921,8 @@
 <h2 id="qt-class">Qt Class<a class="headerlink" href="#qt-class" title="Permanent link">#</a></h2>
 <p><a href='https://doc.qt.io/qt-6/qpushbutton.html'><code>QPushButton</code></a></p>
 <h2 id="signals">Signals<a class="headerlink" href="#signals" title="Permanent link">#</a></h2>
-<h3 id="evt_right_click"><code>evt_right_click</code><a class="headerlink" href="#evt_right_click" title="Permanent link">#</a></h3>
 <h3 id="evt_click"><code>evt_click</code><a class="headerlink" href="#evt_click" title="Permanent link">#</a></h3>
+<h3 id="evt_right_click"><code>evt_right_click</code><a class="headerlink" href="#evt_right_click" title="Permanent link">#</a></h3>
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
 
 

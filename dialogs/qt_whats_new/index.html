@@ -560,34 +560,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#qtextra.dialogs.qt_whats_new.WhatsNewDialog.make_panel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        make_panel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#qtextra.dialogs.qt_whats_new.WhatsNewDialog.show_if_new" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        show_if_new
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -656,6 +628,12 @@
       
         
           
+        
+      
+        
+      
+        
+      
         
       
         
@@ -1030,6 +1008,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../widgets/qt_countdown/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QtCountdownWidget
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../widgets/qt_dict_tag_editor/" class="md-nav__link">
         
   
@@ -1338,6 +1344,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../widgets/qt_progress_bar_floating/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QtFloatingProgressBar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../widgets/qt_progress_step/" class="md-nav__link">
         
   
@@ -1562,6 +1596,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../widgets/qt_toolbar_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QtPanelToolbar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../widgets/qt_tooltip/" class="md-nav__link">
         
   
@@ -1736,34 +1798,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#qtextra.dialogs.qt_whats_new.WhatsNewDialog.make_panel" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        make_panel
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#qtextra.dialogs.qt_whats_new.WhatsNewDialog.show_if_new" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        show_if_new
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -1806,7 +1840,7 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">qtpy.QtWidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">QApplication</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">qtextra.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">THEMES</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">qtextra.dialogs.qt_whats_new</span><span class="w"> </span><span class="kn">import</span> <span class="n">WhatsNewDialog</span><span class="p">,</span> <span class="n">WhatsNewPage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qtextra.dialogs.qt_whats_new</span><span class="w"> </span><span class="kn">import</span> <span class="n">QtWhatsNewDialog</span><span class="p">,</span> <span class="n">WhatsNewPage</span>
 
 <span class="n">DEMO_PAGES</span> <span class="o">=</span> <span class="p">[</span>
     <span class="n">WhatsNewPage</span><span class="p">(</span>
@@ -1863,7 +1897,7 @@
 <span class="p">]</span>
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
-<span class="n">dlg</span> <span class="o">=</span> <span class="n">WhatsNewDialog</span><span class="p">(</span><span class="n">DEMO_PAGES</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;3.0&quot;</span><span class="p">)</span>
+<span class="n">dlg</span> <span class="o">=</span> <span class="n">QtWhatsNewDialog</span><span class="p">(</span><span class="n">DEMO_PAGES</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;3.0&quot;</span><span class="p">)</span>
 <span class="n">THEMES</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">dlg</span><span class="p">)</span>
 <span class="n">dlg</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
@@ -1880,146 +1914,13 @@
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
 
 
-<div class="doc doc-object doc-class">
+<div class="doc doc-object doc-attribute">
+
 
 
 
 
     <div class="doc doc-contents first">
-
-
-
-        <p>Drop-in "What's New" carousel dialog.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>pages</code>
-            </td>
-            <td>
-                  <code><span title="list">list</span>[<span title="qtextra.dialogs.qt_whats_new.WhatsNewPage">WhatsNewPage</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Slide data; each item describes one page of the carousel.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>version</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Shown in the window title.</p>
-              </div>
-            </td>
-            <td>
-                  <code>&#39;&#39;</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>parent</code>
-            </td>
-            <td>
-                  <code><span title="qtpy.QtWidgets.QWidget">QWidget</span> | None</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="qtextra.dialogs.qt_whats_new.WhatsNewDialog.make_panel" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">make_panel</span><span class="p">()</span></code>
-
-<a href="#qtextra.dialogs.qt_whats_new.WhatsNewDialog.make_panel" class="headerlink" title="Permanent link">#</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Build and return the dialog layout.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="qtextra.dialogs.qt_whats_new.WhatsNewDialog.show_if_new" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">show_if_new</span><span class="p">(</span><span class="n">pages</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">WhatsNewPage</span><span class="p">],</span> <span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">last_seen_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">QWidget</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span></code>
-
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
-  </span>
-
-<a href="#qtextra.dialogs.qt_whats_new.WhatsNewDialog.show_if_new" class="headerlink" title="Permanent link">#</a></h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Show the dialog only when <em>version</em> differs from the stored value.</p>
-<p>Stores the acknowledged version in QSettings under <em>last_seen_key</em>.
-Returns <code>True</code> when the user accepts, <code>False</code> on skip/close.</p>
-
-
-    </div>
-
-</div>
-
-
-
-  </div>
 
     </div>
 
