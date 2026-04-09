@@ -5,7 +5,7 @@ from __future__ import annotations
 from qtpy.QtCore import QPoint
 from qtpy.QtWidgets import QDialog, QLabel, QPushButton, QWidget
 
-from qtextra.widgets.qt_floating_progress_bar import QtFloatingProgressBar
+from qtextra.widgets.qt_progress_bar_floating import QtFloatingProgressBar
 
 
 def _floating_progress_host(qtbot) -> tuple[QWidget, QPushButton]:

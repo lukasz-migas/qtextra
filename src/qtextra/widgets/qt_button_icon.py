@@ -1124,7 +1124,7 @@ if __name__ == "__main__":  # pragma: no cover
         # for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
         #     btn = QtToolbarPushButton()
         #     btn.set_qta(qta_name)
-        #     btn.set_large()
+        #     btn.set_qta_size_preset("large")
         #     btn.setToolTip(f"{name} :: {qta_name}")
         #     lay.addWidget(btn)
         #     if i % 10 == 0:
