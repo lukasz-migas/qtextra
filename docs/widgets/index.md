@@ -45,6 +45,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 - [QtFloatingProgressBar](./qt_floating_progress_bar.md): a floating progress overlay that stays anchored to a window, dialog, or child widget.
 - [QtNotificationBadge](./qt_notification_badge.md): attach count and dot badges to existing widgets without changing their layout.
 - [QtOverlay](./qt_overlay.md): floating labels and message widgets anchored to another widget.
+- [QtProgressReport](./qt_progress_report.md): vertical progress report with labelled circle markers and typed step models.
 - [QtStepProgressBar](./qt_progress_step.md): step-based progress visualization for multi-stage workflows.
 - [QtSystemSummaryWidget](./qt_system_summary.md): a compact system summary widget for application and runtime metadata.
 

@@ -90,3 +90,42 @@ QFrame#floatingProgressCard:hover {
 QFrame#floatingProgressCard QLabel {
     background: transparent;
 }
+
+/* ----------------- QtProgressReport ----------------- */
+
+QWidget#progressReport {
+    background-color: {{ canvas }};
+}
+
+QWidget#progressReportText {
+    background: transparent;
+}
+
+QLabel#progressReportTitle {
+    color: {{ text }};
+    font-size: {{ increase(font_size, 2) }};
+    font-weight: bold;
+}
+
+QLabel#progressReportSubtitle {
+    color: {{ text }};
+    font-size: {{ font_size }};
+}
+
+QLabel#progressReportSubtitle[active="false"] {
+    color: {{ text }};
+}
+
+QLabel#progressReportTitle[status="pending"],
+QLabel#progressReportSubtitle[status="pending"],
+QLabel#progressReportSubtitle[active="true"] {
+    color: {{ primary }};
+}
+
+QLabel#progressReportTitle[status="failed"] {
+    color: {{ warning }};
+}
+
+QLabel#progressReportTitle[active="true"] {
+    color: {{ secondary }};
+}
