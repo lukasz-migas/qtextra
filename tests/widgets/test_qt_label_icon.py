@@ -136,10 +136,10 @@ def test_qta_size_deprecations_warn_and_preserve_legacy_object_name(qapp, qtbot)
     assert widget._size == QSize(32, 32)
 
     with pytest.deprecated_call(match="set_large"):
-        widget.set_qta_size_preset("large")
+        widget.set_large()
     assert widget.objectName() == "large_icon"
 
-    with pytest.deprecated_call(match="set_large"):
+    with pytest.deprecated_call(match="get_icon_size_for_name"):
         object_name, size = QtQtaLabel.get_icon_size_for_name("large")
     assert object_name == "large_icon"
     assert size == (40, 40)
