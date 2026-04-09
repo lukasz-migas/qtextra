@@ -60,11 +60,13 @@ class _QtProgressReportText(QWidget):
         self.title_label = QLabel(self)
         self.title_label.setObjectName("progressReportTitle")
         self.title_label.setWordWrap(True)
+        self.title_label.setIndent(0)
         self.title_label.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.subtitle_label = QLabel(self)
         self.subtitle_label.setObjectName("progressReportSubtitle")
         self.subtitle_label.setWordWrap(True)
+        self.subtitle_label.setIndent(0)
         self.subtitle_label.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         layout.addWidget(self.title_label)
         layout.addWidget(self.subtitle_label)
@@ -373,18 +375,19 @@ class QtProgressReport(QWidget):
         pen.setWidth(3)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-        inset = rect.width() * 0.3
+        inset_lo = rect.width() * 0.3
+        inset_hi = rect.width() * 0.7
         painter.drawLine(
-            int(rect.left() + inset),
-            int(rect.top() + inset),
-            int(rect.right() - inset),
-            int(rect.bottom() - inset),
+            int(rect.left() + inset_lo),
+            int(rect.top() + inset_lo),
+            int(rect.left() + inset_hi),
+            int(rect.top() + inset_hi),
         )
         painter.drawLine(
-            int(rect.left() + inset),
-            int(rect.bottom() - inset),
-            int(rect.right() - inset),
-            int(rect.top() + inset),
+            int(rect.left() + inset_lo),
+            int(rect.top() + inset_hi),
+            int(rect.left() + inset_hi),
+            int(rect.top() + inset_lo),
         )
 
     @staticmethod
