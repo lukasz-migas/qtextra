@@ -58,7 +58,7 @@ for klass in [
     btn = klass(widget, auto_connect=True)
     btn.clicked.connect(lambda *, btn=btn: print(f"{btn.__class__.__name__} clicked"))
     btn.setToolTip(btn.__class__.__name__)
-    btn.set_large()
+    btn.set_qta_size_preset("large")
     row_layout.addWidget(btn)
 
 # multi-state buttons can only swap between multiple states by selection from a list
@@ -70,7 +70,7 @@ for klass in [QtStateButton, QtPriorityButton]:
     btn = klass(widget, auto_connect=True)
     btn.evt_changed.connect(lambda state, *, btn=btn: print(f"{btn.__class__.__name__} clicked {state}"))
     btn.setToolTip(btn.__class__.__name__)
-    btn.set_large()
+    btn.set_qta_size_preset("large")
     row_layout.addWidget(btn)
 row_layout.addStretch()
 

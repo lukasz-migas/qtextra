@@ -68,7 +68,7 @@ for index, name in enumerate(
     label = QtQtaLabel()
     label.set_qta(qta_name, **qta_kws)
     label.setToolTip(f"{name} :: {qta_name}")
-    label.set_large()
+    label.set_qta_size_preset("large")
     grid.addWidget(label, index // 6, index % 6)
 
 widget.show()

@@ -175,6 +175,19 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=620,
     ),
     WidgetDoc(
+        slug="qt_progress_bar_floating",
+        title="QtFloatingProgressBar",
+        section="Progress And Status",
+        summary="A floating progress overlay that stays anchored to a window, dialog, or child widget.",
+        example="qt_progress_bar_floating.py",
+        classes=("qtextra.widgets.qt_progress_bar_floating.QtFloatingProgressBar",),
+        notes=(
+            "Use busy mode when total progress is unknown and determinate mode when you have a concrete range.",
+            "Attach it to either a child content widget or directly to a top-level dialog or main window.",
+        ),
+        screenshot_width=620,
+    ),
+    WidgetDoc(
         slug="qt_label_icon",
         title="QtQtaLabel (variants)",
         section="Labels And Display",

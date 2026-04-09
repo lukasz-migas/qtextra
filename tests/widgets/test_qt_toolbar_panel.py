@@ -9,7 +9,7 @@ def test_qt_labelled_toolbar_push_button_constrains_label_width(qtbot):
     widget = QtLabelledToolbarPushButton()
     qtbot.addWidget(widget)
 
-    widget.set_default_size(large=True)
+    widget.set_qta_size_preset("large")
     widget.set_label("Very long toolbar label that should not widen the whole toolbar")
     icon_width = widget.image_btn.sizeHint().width()
 
@@ -39,7 +39,7 @@ def test_qt_labelled_toolbar_push_button_preserves_explicit_multiline_labels(qtb
     widget = QtLabelledToolbarPushButton()
     qtbot.addWidget(widget)
 
-    widget.set_default_size(large=True)
+    widget.set_qta_size_preset("large")
     widget.set_label("First line\nSecond line")
 
     assert widget.label.text().count("\n") == 1
@@ -50,7 +50,7 @@ def test_qt_labelled_toolbar_push_button_can_disable_elision(qtbot):
     widget = QtLabelledToolbarPushButton(elide=False)
     qtbot.addWidget(widget)
 
-    widget.set_default_size(large=True)
+    widget.set_qta_size_preset("large")
     widget.set_label("Very long label")
 
     assert widget.elide is False

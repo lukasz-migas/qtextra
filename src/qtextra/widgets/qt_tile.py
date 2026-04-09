@@ -62,7 +62,7 @@ class QtTileWidget(QFrame):
         self._title.adjustSize()
         if self._tile.icon:
             self._image = hp.make_qta_label(self, self._tile.icon, **(self._tile.icon_kws or {}))
-            self._image.set_xxxlarge()
+            self._image.set_qta_size_preset("xxxlarge")
         else:
             self._image = hp.make_label(self, "")  # type: ignore[assignment]
         self._description = hp.make_label(

@@ -8,7 +8,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QLayout, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
-from qtextra.typing import Orientation
+from qtextra.typing import Orientation, QtaSizePreset
 from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 
@@ -20,7 +20,7 @@ class QtMiniToolbar(QFrame):
         parent: QWidget | None,
         orientation: Orientation | Qt.Orientation = Qt.Orientation.Horizontal,
         add_spacer: bool = True,
-        icon_size: ty.Literal["small", "average", "medium", "normal"] | str | None = None,
+        icon_size: QtaSizePreset | None = None,
         spacing: int = 0,
     ):
         super().__init__(parent)
@@ -37,10 +37,7 @@ class QtMiniToolbar(QFrame):
             )
 
         self.max_size = 28
-        self.icon_object_name, self.icon_size = (
-            QtImagePushButton.get_icon_size_for_name(icon_size) if icon_size else None,
-            None,
-        )
+        self.icon_size_preset = icon_size
 
     @property
     def max_size(self) -> int:
@@ -83,10 +80,10 @@ class QtMiniToolbar(QFrame):
         is_menu: bool = False,
         hide: bool = False,
     ) -> QtImagePushButton:
-        if self.icon_size:
-            size = self.icon_size
-            object_name = self.icon_object_name
-        if not any((small, average, medium, normal)) and not size:
+        size_preset = self.icon_size_preset
+        if size_preset:
+            size = None
+        if not any((small, average, medium, normal)) and not size and not size_preset:
             size = (26, 26)
         if name in self._tools:
             raise ValueError(f"Tool '{name}' already exists.")
@@ -96,6 +93,7 @@ class QtMiniToolbar(QFrame):
             tooltip=tooltip,
             flat=flat,
             medium=medium,
+            size_preset=size_preset,
             size=size,
             checkable=checkable,
             checked=check,
@@ -142,7 +140,7 @@ class QtMiniToolbar(QFrame):
             hide=hide,
             func_menu=func_menu,
         )
-        self.add_button(btn)
+        self.add_button(btn, set_size=False)
         return btn
 
     def add_layout(self, layout: QLayout) -> QLayout:
@@ -218,7 +216,7 @@ class QtMiniToolbar(QFrame):
             normal=normal,
             checked_icon_name=checked_icon_name,
         )
-        self.insert_button(btn, index)
+        self.insert_button(btn, index, set_size=False)
         if hidden:
             btn.hide()
         return btn

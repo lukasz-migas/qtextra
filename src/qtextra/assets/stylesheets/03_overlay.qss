@@ -1,0 +1,32 @@
+/* ----------------- QtOverlay ----------------- */
+
+QtOverlay {
+    background-color: transparent;
+    border: none;
+}
+
+QFrame#overlayCard,
+QFrame#overlayMessageCard{
+    border: 2px solid {{ secondary }};
+    border-radius: 10px;
+}
+
+QFrame#overlayCard {
+    padding: 6px 8px;
+}
+
+QFrame#overlayMessageCard {
+    padding: 6px;
+    border-color: {{ lighten(secondary, 10) }};
+}
+
+QFrame#overlayCard QLabel,
+QFrame#overlayMessageCard QLabel {
+    background: transparent;
+}
+
+
+QFrame#overlayCard:hover,
+QFrame#overlayMessageCard:hover {
+    border-color: {{ highlight }};
+}

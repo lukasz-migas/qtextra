@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
 from qtpy.QtCore import QPointF, QSize, Qt
 from qtpy.QtGui import QEnterEvent
 
+import qtextra.helpers as hp
 from qtextra.widgets import qt_label_icon as label_icon
 from qtextra.widgets.qt_label_icon import (
     QtActiveIcon,
@@ -75,11 +77,88 @@ def test_qt_qta_label_sets_icon_and_size(qapp, qtbot):
     qtbot.addWidget(widget)
 
     widget.set_qta("help")
-    widget.set_large()
+    widget.set_qta_size_preset("large")
 
     assert widget.pixmap() is not None
-    assert widget.minimumSize() == QSize(0, 0)
+    assert widget.minimumSize() == QSize(40, 40)
+    assert widget.maximumSize() == QSize(40, 40)
+    assert widget._size == QSize(32, 32)
+    assert widget.objectName() == ""
+
+
+def test_qt_qta_label_set_qta_size_preserves_custom_object_name(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+    widget.setObjectName("custom_name")
+
+    widget.set_qta_size((30, 18))
+
+    assert widget.minimumSize() == QSize(30, 18)
+    assert widget.maximumSize() == QSize(30, 18)
+    assert widget._size == QSize(30, 18)
+    assert widget.objectName() == "custom_name"
+
+
+def test_qt_qta_label_set_square_qta_size_from_int(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+
+    widget.set_qta_size(26)
+
+    assert widget.minimumSize() == QSize(26, 26)
+    assert widget.maximumSize() == QSize(26, 26)
+    assert widget._size == QSize(26, 26)
+
+
+def test_qt_qta_label_update_qta_preserves_size(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+    widget.set_qta_size_preset("large")
+
+    widget._update_qta()
+
+    assert widget.minimumSize() == QSize(40, 40)
+    assert widget.maximumSize() == QSize(40, 40)
+    assert widget._size == QSize(32, 32)
+
+
+def test_qta_size_deprecations_warn_and_preserve_legacy_object_name(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+
+    with pytest.deprecated_call(match="set_default_size"):
+        widget.set_default_size(large=True)
     assert widget.objectName() == "large_icon"
+    assert widget.minimumSize() == QSize(40, 40)
+    assert widget._size == QSize(32, 32)
+
+    with pytest.deprecated_call(match="set_large"):
+        widget.set_large()
+    assert widget.objectName() == "large_icon"
+
+    with pytest.deprecated_call(match="get_icon_size_for_name"):
+        object_name, size = QtQtaLabel.get_icon_size_for_name("large")
+    assert object_name == "large_icon"
+    assert size == (40, 40)
+
+
+def test_make_qta_helpers_warn_for_legacy_size_flags(qapp, qtbot):
+    with pytest.deprecated_call(match="make_qta_btn"):
+        button = hp.make_qta_btn(None, "help", large=True)
+    qtbot.addWidget(button)
+    assert button.minimumSize() == QSize(40, 40)
+    assert button.maximumSize() == QSize(40, 40)
+    assert button.iconSize() == QSize(32, 32)
+
+    with pytest.deprecated_call(match="make_qta_label"):
+        label = hp.make_qta_label(None, "help", large=True)
+    qtbot.addWidget(label)
+    assert label.minimumSize() == QSize(40, 40)
+    assert label.maximumSize() == QSize(40, 40)
+    assert label._size == QSize(32, 32)
 
 
 def test_qt_qta_notification_label_validates_state(qapp, qtbot):
