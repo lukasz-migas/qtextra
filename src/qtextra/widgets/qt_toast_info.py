@@ -111,12 +111,12 @@ class QtInfoToast(QFrame):
         )
 
         self.closeButton = hp.make_qta_btn(self, "cross", func=self.close)
-        self.closeButton.set_normal()
+        self.closeButton.set_qta_size_preset("normal")
         self.closeButton.setCursor(Qt.CursorShape.PointingHandCursor)
         self.closeButton.setVisible(self.is_closable)
 
         self.iconWidget = QtSeverityLabel(self)
-        self.iconWidget.set_normal()
+        self.iconWidget.set_qta_size_preset("normal")
         self.iconWidget.severity = icon
         hp.set_properties(self, {"type": icon, "dark": is_dark()})
 

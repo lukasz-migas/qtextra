@@ -70,7 +70,7 @@ def _add_widget(
         widget,
         layout,
         label,
-        widgets=(qp.make_qta_btn(parent, icon, average=True, func=func, tooltip=tooltip), *extras),
+        widgets=(qp.make_qta_btn(parent, icon, size_preset="average", func=func, tooltip=tooltip), *extras),
     )
 
 
@@ -345,7 +345,7 @@ def _wrap_widget_with_metadata(
         message = schema.get(key)
         if not message:
             continue
-        label_widget = factory(parent, message, normal=True)
+        label_widget = factory(parent, message, size_preset="normal")
         if layout is None:
             layout = qp.make_h_layout(label_widget, widget, spacing=1, stretch_id=(1,))
         else:

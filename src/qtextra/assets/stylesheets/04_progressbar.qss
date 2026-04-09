@@ -48,6 +48,47 @@ QProgressBar#step_indicator {
 QProgressBar::chunk#step_indicator {
     width: 5px;
     background-color: {{ success }};
+
+
+/* ----------------- FloatingProgressBar ------------------ */}
+
+QFrame#floatingProgressCard {
+    background-color: vgradient({{ lighten(background, 4) }} - {{ darken(background, 3) }});
+    border: 1px solid {{ lighten(foreground, 8) }};
+    border-radius: 16px;
+}
+
+QFrame#floatingProgressCard {
+    padding: 8px;
+    border-color: {{ lighten(highlight, 18) }};
+}
+
+QLabel#floatingProgressText {
+    color: {{ text }};
+    font-weight: bold;
+    padding-bottom: 2px;
+}
+
+QProgressBar#floatingProgressBar {
+    border: 1px solid {{ lighten(foreground, 6) }};
+    border-radius: 999px;
+    background-color: {{ darken(background, 8) }};
+    padding: 1px;
+    min-height: 12px;
+    max-height: 12px;
+}
+
+QProgressBar#floatingProgressBar::chunk {
+    border-radius: 999px;
+    background-color: vgradient({{ highlight }} - {{ success }});
+}
+
+QFrame#floatingProgressCard:hover {
+    border-color: {{ highlight }};
+}
+
+QFrame#floatingProgressCard QLabel {
+    background: transparent;
 }
 
 /* ----------------- QtProgressReport ----------------- */

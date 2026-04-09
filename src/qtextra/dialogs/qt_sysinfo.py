@@ -59,7 +59,7 @@ class QtSystemInfo(QDialog):
 
         # Add text copy button
         self.infoCopyButton = QtCopyToClipboardButton(self.infoTextBox)
-        self.infoCopyButton.set_medium()
+        self.infoCopyButton.set_qta_size_preset("medium")
         self.info_layout = QHBoxLayout()
         self.info_layout.addWidget(self.infoTextBox, 1)
         self.info_layout.addWidget(self.infoCopyButton, 0, Qt.AlignmentFlag.AlignTop)
@@ -77,7 +77,7 @@ class QtSystemInfo(QDialog):
         self.citationTextBox = QTextEdit(citation_info)
         self.citationTextBox.setFixedHeight(64)
         self.citationCopyButton = QtCopyToClipboardButton(self.citationTextBox)
-        self.citationCopyButton.set_medium()
+        self.citationCopyButton.set_qta_size_preset("medium")
         self.citation_layout = QHBoxLayout()
         self.citation_layout.addWidget(self.citationTextBox, 1)
         self.citation_layout.addWidget(self.citationCopyButton, 0, Qt.AlignmentFlag.AlignTop)

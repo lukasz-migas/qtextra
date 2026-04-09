@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing as ty
+import warnings
 
 import qtawesome
 from loguru import logger
@@ -10,10 +11,25 @@ from qtpy.QtCore import QSize
 
 from qtextra.assets import MISSING, get_icon
 from qtextra.config import THEMES
+from qtextra.typing import QtaSizePreset
 
 
 class QtaMixin:
     """Mixin class for Qta widgets."""
+
+    QTA_SIZE_MAP: ty.ClassVar[dict[QtaSizePreset, tuple[QSize, QSize]]] = {
+        "xxsmall": (QSize(10, 10), QSize(10, 10)),
+        "xsmall": (QSize(16, 16), QSize(16, 16)),
+        "small": (QSize(20, 20), QSize(16, 16)),
+        "normal": (QSize(20, 20), QSize(20, 20)),
+        "average": (QSize(24, 24), QSize(24, 24)),
+        "medium": (QSize(28, 28), QSize(28, 28)),
+        "large": (QSize(40, 40), QSize(32, 32)),
+        "xlarge": (QSize(60, 60), QSize(60, 60)),
+        "xxlarge": (QSize(80, 80), QSize(80, 80)),
+        "xxxlarge": (QSize(120, 120), QSize(120, 120)),
+    }
+    LEGACY_OBJECT_NAMES: ty.ClassVar[dict[QtaSizePreset, str]] = {preset: f"{preset}_icon" for preset in QTA_SIZE_MAP}
 
     _qta_data: tuple | None = None
     _checked_qta_data: tuple | None = None
@@ -24,6 +40,63 @@ class QtaMixin:
     setMaximumSize: ty.Callable
     setIconSize: ty.Callable
     setObjectName: ty.Callable
+    setProperty: ty.Callable
+    objectName: ty.Callable
+
+    @classmethod
+    def _get_qta_size_spec(cls, preset: QtaSizePreset) -> tuple[QSize, QSize]:
+        """Return the widget and icon size for a preset."""
+        try:
+            return cls.QTA_SIZE_MAP[preset]
+        except KeyError as exc:
+            presets = ", ".join(cls.QTA_SIZE_MAP)
+            raise ValueError(f"Unknown qta size preset '{preset}'. Expected one of: {presets}.") from exc
+
+    @classmethod
+    def _normalize_qta_size(cls, size: int | QSize | tuple[int, int]) -> QSize:
+        """Normalise a qta size input to a QSize."""
+        if isinstance(size, QSize):
+            return QSize(size)
+        if isinstance(size, int):
+            return QSize(size, size)
+        return QSize(*size)
+
+    def _clear_legacy_size_object_name(self) -> None:
+        """Remove the legacy size object name if it is currently set."""
+        object_name = self.objectName()
+        if object_name in self.LEGACY_OBJECT_NAMES.values():
+            self.setObjectName("")
+
+    def _apply_qta_size(
+        self,
+        widget_size: QSize,
+        icon_size: QSize,
+        *,
+        preset: QtaSizePreset | None = None,
+        use_legacy_object_name: bool = False,
+    ) -> None:
+        """Apply widget and icon sizes directly in code."""
+        self.setMinimumSize(widget_size)
+        self.setMaximumSize(widget_size)
+        self.setIconSize(icon_size)
+        self.setProperty("qta_size_preset", preset)
+        if preset and use_legacy_object_name:
+            self.setObjectName(self.LEGACY_OBJECT_NAMES[preset])
+        else:
+            self._clear_legacy_size_object_name()
+
+    def _set_legacy_size_preset(self, preset: QtaSizePreset) -> None:
+        """Apply a preset while preserving the legacy object name contract."""
+        widget_size, icon_size = self._get_qta_size_spec(preset)
+        self._apply_qta_size(widget_size, icon_size, preset=preset, use_legacy_object_name=True)
+
+    def _warn_deprecated_size_method(self, legacy_name: str, replacement: str) -> None:
+        """Emit a standard deprecation warning for size helpers."""
+        warnings.warn(
+            f"`{legacy_name}` is deprecated, use `{replacement}` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def _set_icon(self, *args: ty.Any, **kwargs: ty.Any) -> None:
         """Set icon."""
@@ -70,114 +143,127 @@ class QtaMixin:
         xlarge: bool = False,
         xxlarge: bool = False,
     ) -> None:
-        """Set size of the icon."""
+        """Set a named qta size preset."""
+        if not any((xxsmall, xsmall, small, normal, average, medium, large, xlarge, xxlarge)):
+            return
+        self._warn_deprecated_size_method("set_default_size", "set_qta_size_preset")
         if xxsmall:
-            self.set_xxsmall()
+            self._set_legacy_size_preset("xxsmall")
         elif xsmall:
-            self.set_xsmall()
+            self._set_legacy_size_preset("xsmall")
         elif small:
-            self.set_small()
+            self._set_legacy_size_preset("small")
         elif normal:
-            self.set_normal()
+            self._set_legacy_size_preset("normal")
         elif average:
-            self.set_average()
+            self._set_legacy_size_preset("average")
         elif medium:
-            self.set_medium()
+            self._set_legacy_size_preset("medium")
         elif large:
-            self.set_large()
+            self._set_legacy_size_preset("large")
         elif xlarge:
-            self.set_xlarge()
+            self._set_legacy_size_preset("xlarge")
         elif xxlarge:
-            self.set_xxlarge()
+            self._set_legacy_size_preset("xxlarge")
 
-    def set_qta_size(self, size: ty.Tuple[int, int]) -> None:
-        """Set maximum size of the icon."""
-        size = QSize(*size)  # type: ignore[assignment]
-        self.setMinimumSize(size)
-        self.setMaximumSize(size)
-        self.setIconSize(size)
-        self.setObjectName("")
+    def set_qta_size_preset(self, preset: QtaSizePreset) -> None:
+        """Apply a named qta size preset."""
+        widget_size, icon_size = self._get_qta_size_spec(preset)
+        self._apply_qta_size(widget_size, icon_size, preset=preset)
+
+    def set_qta_size(self, size: int | QSize | tuple[int, int]) -> None:
+        """Set an explicit fixed qta size."""
+        qsize = self._normalize_qta_size(size)
+        self._apply_qta_size(qsize, qsize)
 
     @classmethod
-    def get_icon_size_for_name(cls, name: str) -> tuple[str, tuple[int, int]]:
+    def get_icon_size_for_name(cls, name: QtaSizePreset) -> tuple[str, tuple[int, int]]:
         """Get icon size for name."""
-        if name == "xxsmall":
-            return "xxsmall_icon", (10, 10)
-        if name in ("xsmall", "small"):
-            return "xsmall_icon", (16, 16)
-        if name == "normal":
-            return "normal_icon", (20, 20)
-        if name == "average":
-            return "average_icon", (24, 24)
-        if name == "medium":
-            return "medium_icon", (28, 28)
-        if name == "large":
-            return "large_icon", (32, 32)
-        if name == "xlarge":
-            return "xlarge_icon", (60, 60)
-        if name == "xxlarge":
-            return "xxlarge_icon", (80, 80)
-        if name == "xxxlarge":
-            return "xxxlarge_icon", (120, 120)
-        return "average_icon", (24, 24)
+        warnings.warn(
+            "`get_icon_size_for_name` is deprecated, use `QTA_SIZE_MAP` or `set_qta_size_preset` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        widget_size, _ = cls._get_qta_size_spec(name)
+        return cls.LEGACY_OBJECT_NAMES[name], (widget_size.width(), widget_size.height())
 
     def set_xxsmall(self) -> None:
-        """Set large."""
-        self.setObjectName("xxsmall_icon")
-        self.setIconSize(QSize(10, 10))
+        """Set the xxsmall qta size preset."""
+        self._warn_deprecated_size_method("set_xxsmall", "set_qta_size_preset('xxsmall')")
+        self._set_legacy_size_preset("xxsmall")
 
     def set_xsmall(self) -> None:
-        """Set large."""
-        self.setObjectName("xsmall_icon")
-        self.setIconSize(QSize(16, 16))
+        """Set the xsmall qta size preset."""
+        self._warn_deprecated_size_method("set_xsmall", "set_qta_size_preset('xsmall')")
+        self._set_legacy_size_preset("xsmall")
 
     def set_small(self) -> None:
-        """Set large font."""
-        self.setObjectName("small_icon")
-        self.setIconSize(QSize(16, 16))
+        """Set the small qta size preset."""
+        self._warn_deprecated_size_method("set_small", "set_qta_size_preset('small')")
+        self._set_legacy_size_preset("small")
 
     def set_normal(self) -> None:
-        """Set medium font."""
-        self.setObjectName("normal_icon")
-        self.setIconSize(QSize(20, 20))
+        """Set the normal qta size preset."""
+        self._warn_deprecated_size_method("set_normal", "set_qta_size_preset('normal')")
+        self._set_legacy_size_preset("normal")
 
     def set_average(self) -> None:
-        """Set medium font."""
-        self.setObjectName("average_icon")
-        self.setIconSize(QSize(24, 24))
+        """Set the average qta size preset."""
+        self._warn_deprecated_size_method("set_average", "set_qta_size_preset('average')")
+        self._set_legacy_size_preset("average")
 
     def set_medium(self) -> None:
-        """Set medium font."""
-        self.setObjectName("medium_icon")
-        self.setIconSize(QSize(28, 28))
+        """Set the medium qta size preset."""
+        self._warn_deprecated_size_method("set_medium", "set_qta_size_preset('medium')")
+        self._set_legacy_size_preset("medium")
 
     def set_large(self) -> None:
-        """Set large font."""
-        self.setObjectName("large_icon")
-        self.setIconSize(QSize(32, 32))
+        """Set the large qta size preset."""
+        self._warn_deprecated_size_method("set_large", "set_qta_size_preset('large')")
+        self._set_legacy_size_preset("large")
 
     def set_xlarge(self) -> None:
-        """Set large."""
-        self.setObjectName("xlarge_icon")
-        self.setIconSize(QSize(60, 60))
+        """Set the xlarge qta size preset."""
+        self._warn_deprecated_size_method("set_xlarge", "set_qta_size_preset('xlarge')")
+        self._set_legacy_size_preset("xlarge")
 
     def set_xxlarge(self) -> None:
-        """Set large."""
-        self.setObjectName("xxlarge_icon")
-        self.setIconSize(QSize(80, 80))
+        """Set the xxlarge qta size preset."""
+        self._warn_deprecated_size_method("set_xxlarge", "set_qta_size_preset('xxlarge')")
+        self._set_legacy_size_preset("xxlarge")
 
     def set_xxxlarge(self) -> None:
-        """Set large."""
-        self.setObjectName("xxxlarge_icon")
-        self.setIconSize(QSize(120, 120))
+        """Set the xxxlarge qta size preset."""
+        self._warn_deprecated_size_method("set_xxxlarge", "set_qta_size_preset('xxxlarge')")
+        self._set_legacy_size_preset("xxxlarge")
+
+    def _get_current_icon_size(self) -> QSize | None:
+        """Return the currently applied icon size if the widget exposes it."""
+        icon_size = getattr(self, "iconSize", None)
+        if callable(icon_size):
+            return QSize(icon_size())
+        current_size = getattr(self, "_size", None)
+        if isinstance(current_size, QSize):
+            return QSize(current_size)
+        return None
 
     def _update_qta(self) -> None:
         """Update qta icon."""
         if self._qta_data:
             name, kwargs = self._qta_data
-            size = self.minimumSize()
+            minimum_size = QSize(self.minimumSize())
+            maximum_size = QSize(self.maximumSize())
+            icon_size = self._get_current_icon_size()
+            object_name = self.objectName()
+            size_preset = self.property("qta_size_preset")
             self.set_qta(name, **kwargs)
-            self.setMinimumSize(size)
+            self.setMinimumSize(minimum_size)
+            self.setMaximumSize(maximum_size)
+            if icon_size is not None:
+                self.setIconSize(icon_size)
+            self.setProperty("qta_size_preset", size_preset)
+            if object_name:
+                self.setObjectName(object_name)
 
     def _update_from_event(self, event):
         """Update theme based on event."""
@@ -190,6 +276,7 @@ class QtaMixin:
     _setQtaIcon = _set_qta_icon
     getIconSizeForName = get_icon_size_for_name
     setDefaultSize = set_default_size
+    setQtaSizePreset = set_qta_size_preset
     setQtaSize = set_qta_size
     setXXSmall = set_xxsmall
     setXSmall = set_xsmall

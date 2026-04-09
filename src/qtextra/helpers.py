@@ -44,7 +44,7 @@ from qtpy.QtGui import (
 )
 from superqt import QElidingLabel, QEnumComboBox, QLabeledDoubleSlider, QLabeledSlider
 
-from qtextra.typing import Callback, Connectable, GifOption, IconType, Orientation
+from qtextra.typing import Callback, Connectable, GifOption, IconType, Orientation, QtaSizePreset
 
 if ty.TYPE_CHECKING:
     from qtextra.utils.table_config import TableConfig
@@ -903,6 +903,7 @@ def select_columns(parent: Qw.QWidget | None, table: Qw.QTableWidget, table_conf
         column = table_config.get_column(index)
         popup.selection_list.add_item(column["name"], check=not hidden[i])
     popup.selection_list.evt_selection_changed.connect(_update_visible_columns)
+    popup.setMinimumHeight(min(400, len(columns) * 25))
     popup.show()
 
 
@@ -1048,6 +1049,7 @@ def make_tooltip_label(
     large: bool = False,
     xlarge: bool = False,
     xxlarge: bool = False,
+    size_preset: QtaSizePreset | None = None,
     retain_size: bool = False,
     hide: bool = False,
     disabled: bool = False,
@@ -1057,18 +1059,24 @@ def make_tooltip_label(
     from qtextra.widgets.qt_label_icon import QtQtaTooltipLabel
 
     widget = QtQtaTooltipLabel(parent=parent)
-    widget.set_qta(icon_name)
-    widget.set_default_size(
-        xxsmall=xxsmall,
-        xsmall=xsmall,
-        small=small,
-        normal=normal,
-        average=average,
-        medium=medium,
-        large=large,
-        xlarge=xlarge,
-        xxlarge=xxlarge,
+    widget.set_qta(icon_name, **kwargs)
+    resolved_size_preset = _resolve_qta_size_preset(
+        size_preset=size_preset,
+        flags=[
+            ("xxsmall", xxsmall),
+            ("xsmall", xsmall),
+            ("small", small),
+            ("normal", normal),
+            ("average", average),
+            ("medium", medium),
+            ("large", large),
+            ("xlarge", xlarge),
+            ("xxlarge", xxlarge),
+        ],
+        caller_name="make_tooltip_label",
     )
+    if resolved_size_preset is not None:
+        widget.set_qta_size_preset(resolved_size_preset)
     widget.setToolTip(tooltip)
     if retain_size:
         set_retain_hidden_size_policy(widget)
@@ -1184,6 +1192,32 @@ def make_click_label(
     return widget
 
 
+def _resolve_qta_size_preset(
+    *,
+    size_preset: QtaSizePreset | None,
+    flags: list[tuple[str, bool]],
+    caller_name: str,
+) -> QtaSizePreset | None:
+    """Resolve deprecated boolean qta size flags to a single preset."""
+    selected = [name for name, enabled in flags if enabled]
+    if size_preset is not None:
+        if selected:
+            warnings.warn(
+                f"Legacy qta size flags in `{caller_name}` are deprecated and ignored when `size_preset` is set.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+        return size_preset
+    if not selected:
+        return None
+    warnings.warn(
+        f'Legacy qta size flags in `{caller_name}` are deprecated, use `size_preset="{selected[0]}"` instead.',
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return ty.cast(QtaSizePreset, selected[0])
+
+
 def make_qta_label(
     parent: Qw.QWidget | None,
     icon_name: IconType,
@@ -1198,6 +1232,7 @@ def make_qta_label(
     large: bool = False,
     xlarge: bool = False,
     xxlarge: bool = False,
+    size_preset: QtaSizePreset | None = None,
     retain_size: bool = False,
     hover: bool = False,
     hide: bool = False,
@@ -1209,17 +1244,23 @@ def make_qta_label(
 
     widget = QtQtaTooltipLabel(parent=parent) if hover else QtQtaLabel(parent=parent)
     widget.set_qta(icon_name, **kwargs)
-    widget.set_default_size(
-        xxsmall=xxsmall,
-        xsmall=xsmall,
-        small=small,
-        normal=normal,
-        average=average,
-        medium=medium,
-        large=large,
-        xlarge=xlarge,
-        xxlarge=xxlarge,
+    resolved_size_preset = _resolve_qta_size_preset(
+        size_preset=size_preset,
+        flags=[
+            ("xxsmall", xxsmall),
+            ("xsmall", xsmall),
+            ("small", small),
+            ("normal", normal),
+            ("average", average),
+            ("medium", medium),
+            ("large", large),
+            ("xlarge", xlarge),
+            ("xxlarge", xxlarge),
+        ],
+        caller_name="make_qta_label",
     )
+    if resolved_size_preset is not None:
+        widget.set_qta_size_preset(resolved_size_preset)
     if alignment is not None:
         widget.setAlignment(alignment)
     if tooltip:
@@ -1871,11 +1912,16 @@ def make_qta_btn(
     tooltip: str | None = None,
     flat: bool = False,
     checkable: bool = False,
+    xxsmall: bool = False,
+    xsmall: bool = False,
     small: bool = False,
     normal: bool = False,
     average: bool = False,
     medium: bool = False,
     large: bool = False,
+    xlarge: bool = False,
+    xxlarge: bool = False,
+    size_preset: QtaSizePreset | None = None,
     size: tuple[int, int] | None = None,
     func: Callback | None = None,
     object_name: str = "",
@@ -1896,7 +1942,23 @@ def make_qta_btn(
 
     widget = QtImagePushButton(parent=parent)
     widget.set_qta(icon_name, **kwargs)
-    widget.set_default_size(small=small, normal=normal, average=average, medium=medium, large=large)
+    resolved_size_preset = _resolve_qta_size_preset(
+        size_preset=size_preset,
+        flags=[
+            ("xxsmall", xxsmall),
+            ("xsmall", xsmall),
+            ("small", small),
+            ("normal", normal),
+            ("average", average),
+            ("medium", medium),
+            ("large", large),
+            ("xlarge", xlarge),
+            ("xxlarge", xxlarge),
+        ],
+        caller_name="make_qta_btn",
+    )
+    if resolved_size_preset is not None:
+        widget.set_qta_size_preset(resolved_size_preset)
     if tooltip:
         widget.setToolTip(tooltip)
     if size and len(size) == 2:
@@ -1942,6 +2004,7 @@ def make_lock_btn(
     normal: bool = False,
     medium: bool = False,
     large: bool = False,
+    size_preset: QtaSizePreset | None = None,
     size: tuple[int, int] | None = None,
     func: Callback | None = None,
     tooltip: str | None = None,
@@ -1954,14 +2017,18 @@ def make_lock_btn(
     widget.auto_connect()
     if func:
         [widget.clicked.connect(func_) for func_ in _validate_func(func)]
-    if small:
-        widget.set_small()
-    elif normal:
-        widget.set_normal()
-    elif medium:
-        widget.set_medium()
-    elif large:
-        widget.set_large()
+    resolved_size_preset = _resolve_qta_size_preset(
+        size_preset=size_preset,
+        flags=[
+            ("small", small),
+            ("normal", normal),
+            ("medium", medium),
+            ("large", large),
+        ],
+        caller_name="make_lock_btn",
+    )
+    if resolved_size_preset is not None:
+        widget.set_qta_size_preset(resolved_size_preset)
     if size and len(size) == 2:
         widget.set_qta_size(size)
     if tooltip:
@@ -2010,6 +2077,7 @@ def make_toolbar_btn(
     large: bool = False,
     xlarge: bool = False,
     xxlarge: bool = False,
+    size_preset: QtaSizePreset | None = None,
     icon_kwargs: dict | None = None,
     title: str = "",
     elide: bool = True,
@@ -2025,17 +2093,23 @@ def make_toolbar_btn(
     widget.setText(text)
     if title:
         widget.set_label(title)
-    widget.set_default_size(
-        xxsmall=xxsmall,
-        xsmall=xsmall,
-        small=small,
-        normal=normal,
-        average=average,
-        medium=medium,
-        large=large,
-        xlarge=xlarge,
-        xxlarge=xxlarge,
+    resolved_size_preset = _resolve_qta_size_preset(
+        size_preset=size_preset,
+        flags=[
+            ("xxsmall", xxsmall),
+            ("xsmall", xsmall),
+            ("small", small),
+            ("normal", normal),
+            ("average", average),
+            ("medium", medium),
+            ("large", large),
+            ("xlarge", xlarge),
+            ("xxlarge", xxlarge),
+        ],
+        caller_name="make_toolbar_btn",
     )
+    if resolved_size_preset is not None:
+        widget.set_qta_size_preset(resolved_size_preset)
     if tooltip:
         widget.setToolTip(tooltip)
     if flat:

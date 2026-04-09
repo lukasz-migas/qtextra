@@ -160,14 +160,15 @@ def _make_inputs_panel(window: QWidget) -> QWidget:
     icon_row_layout = hp.make_h_layout(parent=icon_row, margin=0, spacing=6)
     for klass in (QtImageButton, QtLockButton, QtThemeButton, QtPinButton, QtMaskButton):
         btn = klass(icon_row, auto_connect=True)
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         icon_row_layout.addWidget(btn)
     button_grid.addWidget(icon_row, 0, 1)
 
     button_grid.addWidget(QLabel("QtLabelIcon"), 1, 0)
     label_row = QWidget()
     label_row_layout = hp.make_h_layout(parent=label_row, margin=0, spacing=10)
-    static_label = QtQtaLabel(large=True)
+    static_label = QtQtaLabel()
+    static_label.set_qta_size_preset("large")
     static_label.set_qta("info", color=THEMES.get_hex_color("icon"))
     label_row_layout.addWidget(static_label)
     warning_label = QtPulsingAttentionLabel(
@@ -188,7 +189,8 @@ def _make_inputs_panel(window: QWidget) -> QWidget:
     badge_row_layout.addWidget(sync_button)
     hp.make_notification_badge(parent=badge_row, widget=sync_button, state="success", mode="count", size="md", count=4)
 
-    bell = QtQtaLabel(large=True, parent=badge_row)
+    bell = QtQtaLabel(parent=badge_row)
+    bell.set_qta_size_preset("large")
     bell.set_qta("notified", color=THEMES.get_hex_color("icon"))
     badge_row_layout.addWidget(bell)
     hp.make_notification_badge(parent=badge_row, widget=bell, state="warning", mode="dot", size="sm")

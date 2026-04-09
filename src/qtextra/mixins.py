@@ -199,7 +199,7 @@ class CloseMixin:
             self,
             "cross",
             tooltip="Click here to close the popup window",
-            normal=True,
+            size_preset="normal",
             func=self.close,
         )
 

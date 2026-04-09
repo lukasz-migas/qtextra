@@ -39,7 +39,7 @@ class QtToast(SubWindowBase):
         title_widget.setObjectName("toast_header")
 
         self._icon_label = QtSeverityLabel(title_widget)
-        self._icon_label.set_xsmall()
+        self._icon_label.set_qta_size_preset("xsmall")
 
         self._title_label = hp.make_label(title_widget, "", bold=True, object_name="transparent")
         hp.set_expanding_sizer_policy(self._title_label, True, False)
@@ -47,7 +47,7 @@ class QtToast(SubWindowBase):
         self._date_label = hp.make_label(title_widget, "", object_name="transparent")
 
         self._close_btn = hp.make_qta_btn(title_widget, "cross", func=self.close)
-        self._close_btn.set_xsmall()
+        self._close_btn.set_qta_size_preset("xsmall")
 
         self._message_label = hp.make_label(self, "", wrap=True, enable_url=True)
 

@@ -50,7 +50,7 @@ class QtConfirmCloseDialog(QDialog):
             )
 
         icon_label = hp.make_qta_label(self, "warning", color="orange")
-        icon_label.set_xxxlarge()
+        icon_label.set_qta_size_preset("xxxlarge")
 
         self.do_not_ask = hp.make_checkbox(self, "Do not ask in future")
 
