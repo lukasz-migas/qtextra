@@ -7,9 +7,9 @@ the documentation popups found in JetBrains IDEs (e.g. PyCharm).
 
 from __future__ import annotations
 
-import contextlib
 import re
 import typing as ty
+from contextlib import suppress
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -411,7 +411,8 @@ class QtRichToolTip(QWidget):
     def _detach_global_event_filters(self) -> None:
         """Unregister this tooltip from global event sources."""
         if self._parent_window is not None:
-            self._parent_window.removeEventFilter(self)
+            with suppress(RuntimeError):
+                self._parent_window.removeEventFilter(self)
         app = QApplication.instance()
         if app is not None:
             app.removeEventFilter(self)
@@ -500,7 +501,7 @@ class QtRichToolTip(QWidget):
         self._opacity_anim.setDuration(120)
         self._opacity_anim.setStartValue(self.windowOpacity())
         self._opacity_anim.setEndValue(0.0)
-        with contextlib.suppress(RuntimeError, TypeError):
+        with suppress(RuntimeError, TypeError):
             self._opacity_anim.finished.disconnect(self.close)
         self._opacity_anim.finished.connect(self.close)
         self._opacity_anim.start()
