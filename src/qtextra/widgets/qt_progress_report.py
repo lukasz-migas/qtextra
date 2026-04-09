@@ -430,3 +430,27 @@ class QtProgressReport(QWidget):
             return
         self._marker_animation_values[index] = float(value)
         self.update()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import sys
+
+    from qtextra.utils.dev import qframe
+
+    app, frame, ha = qframe(False)
+    frame.setLayout(ha)
+    frame.setMinimumSize(400, 400)
+
+    pbar1 = QtProgressReport(
+        steps=[
+            ProgressReportStep(
+                title="Current", subtitle="Current task", status=ProgressStepStatus.COMPLETE, active=False
+            ),
+            ProgressReportStep(title="Failed", subtitle="Failed task", status=ProgressStepStatus.FAILED, active=False),
+            ProgressReportStep(title="Next", subtitle="Next task", status=ProgressStepStatus.IN_PROGRESS, active=True),
+        ]
+    )
+    ha.addWidget(pbar1)
+
+    frame.show()
+    sys.exit(app.exec_())

@@ -136,6 +136,6 @@ def test_progress_report_in_progress_marker_and_connector_use_different_colors(q
     border_color, fill_color = widget._circle_colors(widget.get_steps()[0])
     connector_color = widget._connector_color(widget.get_steps()[0])
 
-    assert border_color == QColor(THEMES.get_qt_color("primary"))
+    assert border_color == QColor(THEMES.get_qt_color("secondary"))
     assert fill_color == QColor(THEMES.get_qt_color("canvas"))
-    assert connector_color == QColor(THEMES.get_qt_color("secondary"))
+    assert connector_color == QColor(THEMES.get_qt_color("text"))
