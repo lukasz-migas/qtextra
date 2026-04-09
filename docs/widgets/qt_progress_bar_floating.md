@@ -4,13 +4,13 @@ Floating progress overlay with a status label and progress bar, anchored to anot
 
 ## Screenshot
 
-{{ show_example('qt_floating_progress_bar.py', 620) }}
+{{ show_example('qt_progress_bar_floating.py', 620) }}
 
 ## Example
 
-Source: `examples/qt_floating_progress_bar.py`
+Source: `examples/qt_progress_bar_floating.py`
 
-{{ include_example('qt_floating_progress_bar.py') }}
+{{ include_example('qt_progress_bar_floating.py') }}
 
 ## Notes
 
@@ -20,4 +20,4 @@ Source: `examples/qt_floating_progress_bar.py`
 
 ## API
 
-{{ show_members('qtextra.widgets.qt_floating_progress_bar.QtFloatingProgressBar') }}
+{{ show_members('qtextra.widgets.qt_progress_bar_floating.QtFloatingProgressBar') }}

@@ -6,7 +6,7 @@ from qtpy.QtCore import QTimer
 from qtpy.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
-from qtextra.widgets.qt_floating_progress_bar import QtFloatingProgressBar
+from qtextra.widgets.qt_progress_bar_floating import QtFloatingProgressBar
 
 
 def build_window() -> QMainWindow:

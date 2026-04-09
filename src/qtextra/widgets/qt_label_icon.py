@@ -542,7 +542,7 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addLayout(lay)
     for state in QtQtaNotificationLabel.STATES:
         btn = QtQtaNotificationLabel(state)
-        btn.set_large()
+        btn.set_qta_size_preset("large")
         lay.addWidget(btn)
         btn.state = state
 
