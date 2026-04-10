@@ -518,14 +518,41 @@ class ColumnVisibilityDialog(Qw.QDialog):
         super().__init__(parent)
         self.setWindowTitle("Columns")
         self.setModal(True)
-        self._checkboxes: dict[int, Qw.QCheckBox] = {}
+        self._items: dict[int, Qw.QListWidgetItem] = {}
+        self.resize(360, 420)
+        self.setSizeGripEnabled(True)
 
         layout = Qw.QVBoxLayout(self)
+        self.search_edit = Qw.QLineEdit(self)
+        self.search_edit.setPlaceholderText("Filter columns...")
+        self.search_edit.textChanged.connect(self._update_item_visibility)
+        layout.addWidget(self.search_edit)
+
+        self.columns_list = Qw.QListWidget(self)
+        self.columns_list.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
+        self.columns_list.setUniformItemSizes(True)
+        self.columns_list.setAlternatingRowColors(True)
+        self.columns_list.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         for column in range(proxy_model.df.columns.shape[0]):
-            checkbox = Qw.QCheckBox(_column_label_to_text(proxy_model.df.columns[column]), self)
-            checkbox.setChecked(proxy_model.is_column_visible(column))
-            self._checkboxes[column] = checkbox
-            layout.addWidget(checkbox)
+            label = _column_label_to_text(proxy_model.df.columns[column])
+            item = Qw.QListWidgetItem(label, self.columns_list)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(
+                Qt.CheckState.Checked if proxy_model.is_column_visible(column) else Qt.CheckState.Unchecked
+            )
+            item.setData(Qt.ItemDataRole.UserRole, column)
+            self._items[column] = item
+        self.columns_list.setMinimumHeight(220)
+        layout.addWidget(self.columns_list, stretch=1)
+
+        buttons_layout = Qw.QHBoxLayout()
+        select_all_button = Qw.QPushButton("Select all", self)
+        select_all_button.clicked.connect(self._select_all)
+        select_visible_button = Qw.QPushButton("Visible only", self)
+        select_visible_button.clicked.connect(self._select_visible)
+        buttons_layout.addWidget(select_all_button)
+        buttons_layout.addWidget(select_visible_button)
+        layout.addLayout(buttons_layout)
 
         button_box = Qw.QDialogButtonBox(
             Qw.QDialogButtonBox.StandardButton.Ok | Qw.QDialogButtonBox.StandardButton.Cancel,
@@ -535,9 +562,39 @@ class ColumnVisibilityDialog(Qw.QDialog):
         button_box.rejected.connect(self.reject)
         layout.addWidget(button_box)
 
+    def _update_item_visibility(self, text: str) -> None:
+        """Show only column names that match the search text."""
+        needle = text.strip().lower()
+        for row in range(self.columns_list.count()):
+            item = self.columns_list.item(row)
+            item.setHidden(bool(needle) and needle not in item.text().lower())
+
+    def _select_all(self) -> None:
+        """Check every column."""
+        for row in range(self.columns_list.count()):
+            self.columns_list.item(row).setCheckState(Qt.CheckState.Checked)
+
+    def _select_visible(self) -> None:
+        """Check only the currently visible items in the search result."""
+        hidden_items = 0
+        for row in range(self.columns_list.count()):
+            item = self.columns_list.item(row)
+            if item.isHidden():
+                hidden_items += 1
+                item.setCheckState(Qt.CheckState.Unchecked)
+                continue
+            item.setCheckState(Qt.CheckState.Checked)
+        if hidden_items == self.columns_list.count():
+            self._select_all()
+
     def checked_columns(self) -> list[int]:
         """Return the checked source columns."""
-        return [column for column, checkbox in self._checkboxes.items() if checkbox.isChecked()]
+        columns: list[int] = []
+        for row in range(self.columns_list.count()):
+            item = self.columns_list.item(row)
+            if item.checkState() == Qt.CheckState.Checked:
+                columns.append(ty.cast(int, item.data(Qt.ItemDataRole.UserRole)))
+        return columns
 
 
 class QtDataFrameWidget(Qw.QWidget):

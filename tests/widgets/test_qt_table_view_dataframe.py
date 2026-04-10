@@ -8,7 +8,7 @@ import pandas.testing as pdt
 import pytest
 from qtpy.QtCore import Qt
 
-from qtextra.widgets.qt_table_view_dataframe import QtDataFrameWidget
+from qtextra.widgets.qt_table_view_dataframe import ColumnVisibilityDialog, QtDataFrameWidget
 
 
 def test_qt_dataframe_widget_renders_pandas_dataframe_and_keeps_headers_aligned(qtbot):
@@ -266,3 +266,18 @@ def test_qt_dataframe_widget_resets_proxy_state_on_set_data(qtbot):
     assert widget.visible_columns() == [0, 1]
     assert widget.dataView.geometry().x() == widget.indexHeader.width()
     assert widget.dataView.geometry().y() == widget.columnHeader.height()
+
+
+def test_column_visibility_dialog_lists_columns_in_bounded_view(qtbot):
+    df = pd.DataFrame({f"column_{index}": [index] for index in range(40)})
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+
+    dialog = ColumnVisibilityDialog(widget, widget.proxy_model)
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.wait(10)
+
+    assert dialog.columns_list.count() == 40
+    assert dialog.checked_columns() == list(range(40))
+    assert dialog.height() <= 420
