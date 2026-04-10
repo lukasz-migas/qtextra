@@ -83,6 +83,13 @@ def _column_label_to_text(label: ty.Any) -> str:
     return str(label)
 
 
+def _row_label_to_text(label: ty.Any) -> str:
+    """Return a readable row label."""
+    if isinstance(label, tuple):
+        return " / ".join(str(part) for part in label)
+    return str(label)
+
+
 def _is_numeric_series(series: pd.Series) -> bool:
     """Return whether a series should use numeric filtering."""
     return pd.api.types.is_numeric_dtype(series.dtype) and not pd.api.types.is_bool_dtype(series.dtype)
@@ -134,6 +141,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
         self.source_model = source_model
         self._visible_rows: list[int] = list(range(source_model.rowCount()))
         self._visible_columns: list[int] = list(range(source_model.columnCount()))
+        self._hidden_source_rows: set[int] = set()
         self._column_filters: dict[int, NumericColumnFilter | StringColumnFilter] = {}
         self._sort_column: int | None = None
         self._sort_order: Qt.SortOrder | None = None
@@ -182,6 +190,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
         self._column_filters.clear()
         self._sort_column = None
         self._sort_order = None
+        self._hidden_source_rows.clear()
         self._visible_columns = list(range(self.source_model.columnCount()))
         self._refresh_mappings()
 
@@ -262,6 +271,10 @@ class DataFrameProxyModel(BaseTabularTableModel):
         """Return whether a source column is visible."""
         return column in self._visible_columns
 
+    def is_row_visible(self, row: int) -> bool:
+        """Return whether a source row is visible."""
+        return row not in self._hidden_source_rows
+
     def set_column_visible(self, column: int, visible: bool) -> bool:
         """Show or hide a source column."""
         if visible:
@@ -276,6 +289,22 @@ class DataFrameProxyModel(BaseTabularTableModel):
         if len(self._visible_columns) <= 1:
             return False
         self._visible_columns.remove(column)
+        self._refresh_mappings(update_columns=False)
+        return True
+
+    def set_row_visible(self, row: int, visible: bool) -> bool:
+        """Show or hide a source row."""
+        if visible:
+            if row in self._hidden_source_rows:
+                self._hidden_source_rows.remove(row)
+                self._refresh_mappings(update_columns=False)
+            return True
+
+        if row in self._hidden_source_rows:
+            return True
+        if row in self._visible_rows and len(self._visible_rows) <= 1:
+            return False
+        self._hidden_source_rows.add(row)
         self._refresh_mappings(update_columns=False)
         return True
 
@@ -324,7 +353,8 @@ class DataFrameProxyModel(BaseTabularTableModel):
                 else:
                     column_mask &= non_blank
             mask &= column_mask
-        return np.flatnonzero(mask).tolist()
+        rows = np.flatnonzero(mask).tolist()
+        return [row for row in rows if row not in self._hidden_source_rows]
 
     def _sorted_rows(self, rows: list[int]) -> list[int]:
         """Return rows in the current sort order."""
@@ -629,6 +659,108 @@ class ColumnVisibilityDialog(Qw.QDialog):
         return columns
 
 
+class RowVisibilityDialog(Qw.QDialog):
+    """Dialog used to show or hide rows."""
+
+    def __init__(self, parent: Qw.QWidget | None, proxy_model: DataFrameProxyModel):
+        super().__init__(parent)
+        self.setWindowTitle("Rows")
+        self.setModal(True)
+        self._initial_visibility: dict[int, bool] = {}
+        self.resize(360, 420)
+        self.setSizeGripEnabled(True)
+
+        layout = Qw.QVBoxLayout(self)
+        self.search_edit = Qw.QLineEdit(self)
+        self.search_edit.setPlaceholderText("Filter rows...")
+        self.search_edit.textChanged.connect(self._update_item_visibility)
+        layout.addWidget(self.search_edit)
+
+        self.visibility_filter = Qw.QComboBox(self)
+        self.visibility_filter.addItems(["All rows", "Visible rows", "Hidden rows"])
+        self.visibility_filter.currentIndexChanged.connect(self._apply_filters)
+        layout.addWidget(self.visibility_filter)
+
+        self.rows_list = Qw.QListWidget(self)
+        self.rows_list.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
+        self.rows_list.setUniformItemSizes(True)
+        self.rows_list.setAlternatingRowColors(True)
+        self.rows_list.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
+        for row in range(proxy_model.df.index.shape[0]):
+            label = _row_label_to_text(proxy_model.df.index[row])
+            item = Qw.QListWidgetItem(label, self.rows_list)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            is_visible = proxy_model.is_row_visible(row)
+            item.setCheckState(Qt.CheckState.Checked if is_visible else Qt.CheckState.Unchecked)
+            item.setData(Qt.ItemDataRole.UserRole, row)
+            self._initial_visibility[row] = is_visible
+        self.rows_list.setMinimumHeight(220)
+        layout.addWidget(self.rows_list, stretch=1)
+
+        buttons_layout = Qw.QHBoxLayout()
+        check_all_button = Qw.QPushButton("Check all", self)
+        check_all_button.clicked.connect(self._check_all)
+        uncheck_all_button = Qw.QPushButton("Uncheck all", self)
+        uncheck_all_button.clicked.connect(self._uncheck_all)
+        buttons_layout.addWidget(check_all_button)
+        buttons_layout.addWidget(uncheck_all_button)
+        layout.addLayout(buttons_layout)
+
+        button_box = Qw.QDialogButtonBox(
+            Qw.QDialogButtonBox.StandardButton.Ok | Qw.QDialogButtonBox.StandardButton.Cancel,
+            parent=self,
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def _update_item_visibility(self, text: str) -> None:
+        """Show only row labels that match the search text."""
+        self._apply_filters(text)
+
+    def _apply_filters(self, text: str | int = "") -> None:
+        """Apply the current text and visibility filters to the list."""
+        if isinstance(text, int):
+            text = self.search_edit.text()
+        needle = text.strip().lower()
+        for row in range(self.rows_list.count()):
+            item = self.rows_list.item(row)
+            source_row = ty.cast(int, item.data(Qt.ItemDataRole.UserRole))
+            is_visible_row = self._initial_visibility.get(source_row, True)
+            visibility_mode = self.visibility_filter.currentText()
+            visibility_match = True
+            if visibility_mode == "Visible rows":
+                visibility_match = is_visible_row
+            elif visibility_mode == "Hidden rows":
+                visibility_match = not is_visible_row
+            text_match = not needle or needle in item.text().lower()
+            item.setHidden(not (visibility_match and text_match))
+
+    def _check_all(self) -> None:
+        """Check every row."""
+        for row in range(self.rows_list.count()):
+            self.rows_list.item(row).setCheckState(Qt.CheckState.Checked)
+        self._apply_filters()
+
+    def _uncheck_all(self) -> None:
+        """Uncheck every row except the first one."""
+        if self.rows_list.count() == 0:
+            return
+        for row in range(self.rows_list.count()):
+            item = self.rows_list.item(row)
+            item.setCheckState(Qt.CheckState.Checked if row == 0 else Qt.CheckState.Unchecked)
+        self._apply_filters()
+
+    def checked_rows(self) -> list[int]:
+        """Return the checked source rows."""
+        rows: list[int] = []
+        for row in range(self.rows_list.count()):
+            item = self.rows_list.item(row)
+            if item.checkState() == Qt.CheckState.Checked:
+                rows.append(ty.cast(int, item.data(Qt.ItemDataRole.UserRole)))
+        return rows
+
+
 class QtDataFrameWidget(Qw.QWidget):
     """
     Displays a DataFrame as a table.
@@ -927,9 +1059,18 @@ class QtDataFrameWidget(Qw.QWidget):
         if self.proxy_model.set_column_visible(column, visible):
             self._refresh_after_proxy_change()
 
+    def set_row_visible(self, row: int, visible: bool) -> None:
+        """Show or hide a source row."""
+        if self.proxy_model.set_row_visible(row, visible):
+            self._refresh_after_proxy_change()
+
     def visible_columns(self) -> list[int]:
         """Return the visible source column positions."""
         return self.proxy_model.visible_columns
+
+    def visible_rows(self) -> list[int]:
+        """Return the visible source row positions."""
+        return self.proxy_model.visible_rows
 
     def toggle_sort(self, column: int) -> None:
         """Toggle sorting for a source column."""
@@ -1761,6 +1902,15 @@ class HeaderView(Qw.QTableView):
                 if column >= 0:
                     self._show_context_menu(self.proxy_model.source_column(column), event.globalPos())
                     return True
+            if (
+                self.orientation == Qt.Orientation.Vertical
+                and event.button() == Qt.MouseButton.RightButton
+                and self.header_being_resized is None
+            ):
+                row = self.rowAt(event.pos().y())
+                if row >= 0:
+                    self._show_row_context_menu(self.proxy_model.source_row(row), event.globalPos())
+                    return True
             self.header_being_resized = None
             self._press_position = None
             self._pressed_section = None
@@ -1916,6 +2066,55 @@ class HeaderView(Qw.QTableView):
 
         for column in range(self.proxy_model.df.columns.shape[0]):
             self.parent.proxy_model.set_column_visible(column, column in checked_columns)
+        self.parent._refresh_after_proxy_change()
+
+    def _show_row_context_menu(self, source_row: int, position: Qc.QPoint) -> None:
+        """Show the row actions menu."""
+        menu = Qw.QMenu(self)
+        row_label = _row_label_to_text(self.proxy_model.df.index[source_row])
+        hide_row_action = menu.addAction(f"Hide row {row_label}")
+        hide_row_action.setEnabled(len(self.parent.visible_rows()) > 1)
+        hide_row_action.triggered.connect(lambda _checked=False: self.parent.set_row_visible(source_row, False))
+
+        selected_source_rows = self._selected_source_rows()
+        hide_selected_rows_action = menu.addAction("Hide selected rows")
+        hide_selected_rows_action.setEnabled(
+            bool(selected_source_rows) and len(self.parent.visible_rows()) > len(selected_source_rows)
+        )
+        hide_selected_rows_action.triggered.connect(self._hide_selected_rows)
+
+        choose_rows_action = menu.addAction("Choose rows...")
+        choose_rows_action.triggered.connect(self._open_row_visibility_dialog)
+        menu.exec(position)
+
+    def _selected_source_rows(self) -> list[int]:
+        """Return the currently selected source rows."""
+        rows = sorted({index.row() for index in self.selectionModel().selectedIndexes()})
+        return [self.proxy_model.source_row(row) for row in rows]
+
+    def _hide_selected_rows(self) -> None:
+        """Hide all selected visible rows while keeping at least one row visible."""
+        selected_rows = self._selected_source_rows()
+        if not selected_rows:
+            return
+        visible_rows = set(self.parent.visible_rows())
+        rows_to_hide = [row for row in selected_rows if row in visible_rows]
+        if len(visible_rows) <= len(rows_to_hide):
+            rows_to_hide = rows_to_hide[:-1]
+        for row in rows_to_hide:
+            self.parent.proxy_model.set_row_visible(row, False)
+        self.parent._refresh_after_proxy_change()
+
+    def _open_row_visibility_dialog(self) -> None:
+        """Open the row chooser dialog."""
+        dialog = RowVisibilityDialog(self, self.proxy_model)
+        if dialog.exec() != Qw.QDialog.DialogCode.Accepted:
+            return
+        checked_rows = dialog.checked_rows()
+        if not checked_rows:
+            return
+        for row in range(self.proxy_model.df.index.shape[0]):
+            self.parent.proxy_model.set_row_visible(row, row in checked_rows)
         self.parent._refresh_after_proxy_change()
 
 
