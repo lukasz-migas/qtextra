@@ -9,7 +9,7 @@ import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication
 
-from qtextra.widgets.qt_table_view_dataframe import ColumnVisibilityDialog, QtDataFrameWidget
+from qtextra.widgets.qt_table_view_dataframe import ColumnVisibilityDialog, QtDataFrameWidget, RowVisibilityDialog
 
 
 def test_qt_dataframe_widget_renders_pandas_dataframe_and_keeps_headers_aligned(qtbot):
@@ -261,6 +261,24 @@ def test_qt_dataframe_widget_hides_and_restores_columns(qtbot):
     assert widget.dataView.model().columnCount() == 3
 
 
+def test_qt_dataframe_widget_hides_and_restores_rows(qtbot):
+    df = pd.DataFrame({"alpha": [1, 2, 3], "beta": [4, 5, 6]}, index=["r1", "r2", "r3"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.set_row_visible(1, False)
+    assert widget.visible_rows() == [0, 2]
+    assert widget.dataView.model().rowCount() == 2
+    assert widget.indexHeader.model().data(widget.indexHeader.model().index(1, 0)) == "r3"
+
+    widget.set_row_visible(1, True)
+    assert widget.visible_rows() == [0, 1, 2]
+    assert widget.dataView.model().rowCount() == 3
+
+
 def test_qt_dataframe_widget_keeps_last_visible_column(qtbot):
     df = pd.DataFrame({"alpha": [1, 2]})
 
@@ -271,6 +289,19 @@ def test_qt_dataframe_widget_keeps_last_visible_column(qtbot):
 
     widget.set_column_visible(0, False)
     assert widget.visible_columns() == [0]
+
+
+def test_qt_dataframe_widget_keeps_last_visible_row(qtbot):
+    df = pd.DataFrame({"alpha": [1, 2]}, index=["r1", "r2"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.set_row_visible(0, False)
+    widget.set_row_visible(1, False)
+    assert widget.visible_rows() == [1]
 
 
 def test_qt_dataframe_widget_resets_proxy_state_on_set_data(qtbot):
@@ -343,6 +374,42 @@ def test_column_visibility_dialog_supports_checking_and_filtering(qtbot):
         if not dialog.columns_list.item(row).isHidden()
     ]
     assert visible_items == ["alpha", "gamma"]
+
+
+def test_row_visibility_dialog_supports_checking_and_filtering(qtbot):
+    df = pd.DataFrame({"alpha": [1, 2, 3]}, index=["r1", "r2", "r3"])
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.set_row_visible(1, False)
+
+    dialog = RowVisibilityDialog(widget, widget.proxy_model)
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.wait(10)
+
+    dialog._uncheck_all()
+    assert dialog.checked_rows() == [0]
+
+    dialog._check_all()
+    assert dialog.checked_rows() == [0, 1, 2]
+
+    dialog.visibility_filter.setCurrentText("Hidden rows")
+    qtbot.wait(10)
+    visible_items = [
+        dialog.rows_list.item(row).text()
+        for row in range(dialog.rows_list.count())
+        if not dialog.rows_list.item(row).isHidden()
+    ]
+    assert visible_items == ["r2"]
+
+    dialog.visibility_filter.setCurrentText("Visible rows")
+    qtbot.wait(10)
+    visible_items = [
+        dialog.rows_list.item(row).text()
+        for row in range(dialog.rows_list.count())
+        if not dialog.rows_list.item(row).isHidden()
+    ]
+    assert visible_items == ["r1", "r3"]
 
 
 def test_qt_dataframe_widget_copy_selection_includes_headers_and_index(qtbot):
