@@ -42,7 +42,7 @@ class QtRemovableComboBox(QWidget):
             self,
             "delete",
             tooltip=remove_tooltip,
-            small=True,
+            size_preset="small",
             func=self._on_remove,
         )
 

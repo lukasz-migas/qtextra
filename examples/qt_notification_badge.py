@@ -40,13 +40,13 @@ layout.addWidget(hp.make_label(widget, "QtClickLabel"), 2, 0)
 layout.addWidget(text_label, 2, 1)
 hp.make_notification_badge(parent=widget, widget=text_label, state="warning", mode="count", size="lg", count=12)
 
-icon_label = hp.make_qta_label(widget, "info", large=True)
+icon_label = hp.make_qta_label(widget, "info", size_preset="large")
 icon_label.setToolTip("Information icon")
 layout.addWidget(hp.make_label(widget, "QtQtaLabel"), 3, 0)
 layout.addWidget(icon_label, 3, 1)
 hp.make_notification_badge(parent=widget, widget=icon_label, state="info", mode="dot", size="sm")
 
-image_button = hp.make_qta_btn(widget, "warning", tooltip="Warnings", large=True)
+image_button = hp.make_qta_btn(widget, "warning", tooltip="Warnings", size_preset="large")
 layout.addWidget(hp.make_label(widget, "QtImagePushButton"), 4, 0)
 layout.addWidget(image_button, 4, 1)
 hp.make_notification_badge(
