@@ -227,7 +227,6 @@ class _RichToolTipContent(QFrame):
 
         if icon:
             icon_lbl = hp.make_qta_label(self, icon, size_preset="small")
-            icon_lbl.setScaledContents(True)
             header.addWidget(icon_lbl, 0, Qt.AlignmentFlag.AlignVCenter)
 
         if title:

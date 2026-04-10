@@ -82,7 +82,7 @@ def test_qt_qta_label_sets_icon_and_size(qapp, qtbot):
     assert widget.pixmap() is not None
     assert widget.minimumSize() == QSize(40, 40)
     assert widget.maximumSize() == QSize(40, 40)
-    assert widget._size == QSize(32, 32)
+    assert widget._size == QSize(40, 40)
     assert widget.objectName() == ""
 
 
@@ -112,6 +112,33 @@ def test_qt_qta_label_set_square_qta_size_from_int(qapp, qtbot):
     assert widget._size == QSize(26, 26)
 
 
+def test_qt_qta_label_accepts_tuple_icon_size_and_reports_icon_size(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+
+    widget.setIconSize((30, 18))
+
+    assert widget.iconSize() == QSize(30, 18)
+    assert widget._size == QSize(30, 18)
+    assert widget.pixmap() is not None
+    assert widget.pixmap().deviceIndependentSize().toSize() == QSize(30, 18)
+
+
+def test_qt_qta_label_preset_icon_size_matches_widget_size(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+
+    widget.set_qta_size_preset("large")
+
+    assert widget.minimumSize() == QSize(40, 40)
+    assert widget.maximumSize() == QSize(40, 40)
+    assert widget.iconSize() == QSize(40, 40)
+    assert widget.pixmap() is not None
+    assert widget.pixmap().deviceIndependentSize().toSize() == QSize(40, 40)
+
+
 def test_qt_qta_label_pixmap_respects_contents_rect(qapp, qtbot):
     widget = QtQtaLabel()
     qtbot.addWidget(widget)
@@ -136,7 +163,22 @@ def test_qt_qta_label_update_qta_preserves_size(qapp, qtbot):
 
     assert widget.minimumSize() == QSize(40, 40)
     assert widget.maximumSize() == QSize(40, 40)
-    assert widget._size == QSize(32, 32)
+    assert widget._size == QSize(40, 40)
+
+
+def test_qt_qta_label_ignores_scaled_contents_to_preserve_icon_size(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+    widget.resize(64, 64)
+
+    widget.setScaledContents(True)
+    widget.setIconSize(QSize(18, 18))
+
+    assert widget.hasScaledContents() is False
+    assert widget.iconSize() == QSize(18, 18)
+    assert widget.pixmap() is not None
+    assert widget.pixmap().deviceIndependentSize().toSize() == QSize(18, 18)
 
 
 def test_qta_size_deprecations_warn_and_preserve_legacy_object_name(qapp, qtbot):
@@ -147,7 +189,7 @@ def test_qta_size_deprecations_warn_and_preserve_legacy_object_name(qapp, qtbot)
         widget.set_default_size(large=True)
     assert widget.objectName() == "large_icon"
     assert widget.minimumSize() == QSize(40, 40)
-    assert widget._size == QSize(32, 32)
+    assert widget._size == QSize(40, 40)
 
     with pytest.deprecated_call(match="set_large"):
         widget.set_large()
@@ -172,7 +214,7 @@ def test_make_qta_helpers_warn_for_legacy_size_flags(qapp, qtbot):
     qtbot.addWidget(label)
     assert label.minimumSize() == QSize(40, 40)
     assert label.maximumSize() == QSize(40, 40)
-    assert label._size == QSize(32, 32)
+    assert label._size == QSize(40, 40)
 
 
 def test_qt_qta_notification_label_validates_state(qapp, qtbot):

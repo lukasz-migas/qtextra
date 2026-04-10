@@ -1,8 +1,11 @@
 """QtIconButtons."""
 
+import typing as ty
+
 from qtpy.QtWidgets import QApplication, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from qtextra.config import THEMES
+from qtextra.typing import QtaSizePreset
 from qtextra.widgets.qt_button_icon import (
     QtAndOrButton,
     QtAnimationPlayButton,
@@ -11,6 +14,7 @@ from qtextra.widgets.qt_button_icon import (
     QtFullscreenButton,
     QtHorizontalDirectionButton,
     QtImageButton,
+    QtImagePushButton,
     QtLockButton,
     QtMinimizeButton,
     QtPauseButton,
@@ -31,6 +35,18 @@ THEMES.apply(widget)
 
 layout = QVBoxLayout()
 widget.setLayout(layout)
+
+# Label sizing
+layout.addWidget(QLabel("Buttons sizes"))
+row_layout = QHBoxLayout()
+layout.addLayout(row_layout)
+for _index, preset in enumerate(ty.get_args(QtaSizePreset)):
+    btn = QtImagePushButton()
+    btn.set_qta("happy")
+    btn.set_qta_size_preset(preset)
+    btn.setStyleSheet("QWidget { background-color: red; }")
+    row_layout.addWidget(btn)
+
 
 # single-state buttons can only swap between two states
 layout.addWidget(QLabel("Single-state buttons"))
