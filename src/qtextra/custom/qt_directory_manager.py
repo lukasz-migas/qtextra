@@ -60,7 +60,7 @@ class QtDirectoryWidget(QFrame):
             "new",
             tooltip=DirectoryMessages.WILL_BE_CREATED if exist_obj_name == SuccessObjName else DirectoryMessages.EXISTS,
             hide=True,
-            normal=True,
+            size_preset="normal",
             retain_size=True,
         )
 
@@ -68,7 +68,7 @@ class QtDirectoryWidget(QFrame):
             self,
             tooltip=DirectoryMessages.EXISTS if exist_obj_name == WarningObjName else DirectoryMessages.WILL_BE_CREATED,
             hide=True,
-            normal=True,
+            size_preset="normal",
             retain_size=True,
         )
 

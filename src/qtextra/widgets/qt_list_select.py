@@ -117,20 +117,24 @@ class QtSelectionList(QWidget):
         self.info_label = hp.make_label(self, "")
 
         self.toolbar = QtMiniToolbar(self, add_spacer=False, spacing=2, icon_size="average")
-        self.toolbar.add_qta_tool("toggle_on", func=self.on_select_all, average=True, tooltip="Select all items")
-        self.toolbar.add_qta_tool("toggle_off", func=self.on_deselect_all, average=True, tooltip="Deselect all items")
+        self.toolbar.add_qta_tool(
+            "toggle_on", func=self.on_select_all, size_preset="average", tooltip="Select all items"
+        )
+        self.toolbar.add_qta_tool(
+            "toggle_off", func=self.on_deselect_all, size_preset="average", tooltip="Deselect all items"
+        )
         self.toolbar.add_qta_tool(
             "invert_selection",
             func=self.on_invert_selection,
-            average=True,
+            size_preset="average",
             tooltip="Invert selection",
             hide=not self.allow_visible_toggle,
         )
-        self.toolbar.add_qta_tool("visible", func=self.on_show_all, average=True, tooltip="Show all items")
+        self.toolbar.add_qta_tool("visible", func=self.on_show_all, size_preset="average", tooltip="Show all items")
         self.toolbar.add_qta_tool(
             "visible_off",
             func=self.on_hide_deselected,
-            average=True,
+            size_preset="average",
             tooltip="Hide deselected items",
             hide=not self.allow_visible_toggle,
         )
