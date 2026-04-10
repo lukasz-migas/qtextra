@@ -218,6 +218,31 @@ def test_qt_dataframe_widget_filters_strings_with_current_values(qtbot):
     assert widget.indexHeader.model().data(widget.indexHeader.model().index(0, 0)) == "r2"
 
 
+def test_qt_dataframe_widget_can_clear_all_filters(qtbot):
+    df = pd.DataFrame(
+        {
+            "team": ["red", "red", "blue", None],
+            "city": ["london", "paris", "paris", "rome"],
+        },
+        index=["r1", "r2", "r3", "r4"],
+    )
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.set_value_filter(1, {"paris"}, include_blanks=False)
+    widget.set_value_filter(0, {"red"}, include_blanks=False)
+    assert widget.dataView.model().rowCount() == 1
+
+    widget.clear_filters()
+
+    assert widget.dataView.model().rowCount() == 4
+    assert not widget.proxy_model.is_column_filtered(0)
+    assert not widget.proxy_model.is_column_filtered(1)
+
+
 def test_qt_dataframe_widget_hides_and_restores_columns(qtbot):
     df = pd.DataFrame({"alpha": [1, 2], "beta": [3, 4], "gamma": [5, 6]})
 

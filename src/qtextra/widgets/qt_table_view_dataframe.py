@@ -1856,6 +1856,8 @@ class HeaderView(Qw.QTableView):
             filter_action.triggered.connect(lambda _checked=False: self._open_filter_dialog(source_column))
             clear_filter_action = menu.addAction("Clear filter")
             clear_filter_action.triggered.connect(lambda _checked=False: self._clear_filter(source_column))
+            clear_all_filters_action = menu.addAction("Clear all filters")
+            clear_all_filters_action.triggered.connect(self.parent.clear_filters)
             menu.addSeparator()
 
         if self.parent.column_visibility_control:
