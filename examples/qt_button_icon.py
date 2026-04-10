@@ -44,7 +44,6 @@ for _index, preset in enumerate(ty.get_args(QtaSizePreset)):
     btn = QtImagePushButton()
     btn.set_qta("happy")
     btn.set_qta_size_preset(preset)
-    btn.setStyleSheet("QWidget { background-color: red; }")
     row_layout.addWidget(btn)
 
 
