@@ -8,6 +8,7 @@ QTableWidgets... DataTableView for the DataFrame's contents, and two HeaderView 
 from __future__ import annotations
 
 import contextlib
+import io
 import typing as ty
 from dataclasses import dataclass, field
 
@@ -85,6 +86,19 @@ def _column_label_to_text(label: ty.Any) -> str:
 def _is_numeric_series(series: pd.Series) -> bool:
     """Return whether a series should use numeric filtering."""
     return pd.api.types.is_numeric_dtype(series.dtype) and not pd.api.types.is_bool_dtype(series.dtype)
+
+
+def _set_span_if_needed(
+    view: Qw.QTableView,
+    row: int,
+    column: int,
+    row_span: int,
+    column_span: int,
+) -> None:
+    """Apply a span only when it covers more than one cell."""
+    if row_span <= 1 and column_span <= 1:
+        return
+    view.setSpan(row, column, row_span, column_span)
 
 
 @dataclass(slots=True)
@@ -519,6 +533,7 @@ class ColumnVisibilityDialog(Qw.QDialog):
         self.setWindowTitle("Columns")
         self.setModal(True)
         self._items: dict[int, Qw.QListWidgetItem] = {}
+        self._initial_visibility: dict[int, bool] = {}
         self.resize(360, 420)
         self.setSizeGripEnabled(True)
 
@@ -527,6 +542,11 @@ class ColumnVisibilityDialog(Qw.QDialog):
         self.search_edit.setPlaceholderText("Filter columns...")
         self.search_edit.textChanged.connect(self._update_item_visibility)
         layout.addWidget(self.search_edit)
+
+        self.visibility_filter = Qw.QComboBox(self)
+        self.visibility_filter.addItems(["All columns", "Visible columns", "Hidden columns"])
+        self.visibility_filter.currentIndexChanged.connect(self._apply_filters)
+        layout.addWidget(self.visibility_filter)
 
         self.columns_list = Qw.QListWidget(self)
         self.columns_list.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
@@ -537,21 +557,21 @@ class ColumnVisibilityDialog(Qw.QDialog):
             label = _column_label_to_text(proxy_model.df.columns[column])
             item = Qw.QListWidgetItem(label, self.columns_list)
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(
-                Qt.CheckState.Checked if proxy_model.is_column_visible(column) else Qt.CheckState.Unchecked
-            )
+            is_visible = proxy_model.is_column_visible(column)
+            item.setCheckState(Qt.CheckState.Checked if is_visible else Qt.CheckState.Unchecked)
             item.setData(Qt.ItemDataRole.UserRole, column)
             self._items[column] = item
+            self._initial_visibility[column] = is_visible
         self.columns_list.setMinimumHeight(220)
         layout.addWidget(self.columns_list, stretch=1)
 
         buttons_layout = Qw.QHBoxLayout()
-        select_all_button = Qw.QPushButton("Select all", self)
-        select_all_button.clicked.connect(self._select_all)
-        select_visible_button = Qw.QPushButton("Visible only", self)
-        select_visible_button.clicked.connect(self._select_visible)
-        buttons_layout.addWidget(select_all_button)
-        buttons_layout.addWidget(select_visible_button)
+        check_all_button = Qw.QPushButton("Check all", self)
+        check_all_button.clicked.connect(self._check_all)
+        uncheck_all_button = Qw.QPushButton("Uncheck all", self)
+        uncheck_all_button.clicked.connect(self._uncheck_all)
+        buttons_layout.addWidget(check_all_button)
+        buttons_layout.addWidget(uncheck_all_button)
         layout.addLayout(buttons_layout)
 
         button_box = Qw.QDialogButtonBox(
@@ -564,28 +584,40 @@ class ColumnVisibilityDialog(Qw.QDialog):
 
     def _update_item_visibility(self, text: str) -> None:
         """Show only column names that match the search text."""
+        self._apply_filters(text)
+
+    def _apply_filters(self, text: str | int = "") -> None:
+        """Apply the current text and visibility filters to the list."""
+        if isinstance(text, int):
+            text = self.search_edit.text()
         needle = text.strip().lower()
         for row in range(self.columns_list.count()):
             item = self.columns_list.item(row)
-            item.setHidden(bool(needle) and needle not in item.text().lower())
+            column = ty.cast(int, item.data(Qt.ItemDataRole.UserRole))
+            is_visible_column = self._initial_visibility.get(column, True)
+            visibility_mode = self.visibility_filter.currentText()
+            visibility_match = True
+            if visibility_mode == "Visible columns":
+                visibility_match = is_visible_column
+            elif visibility_mode == "Hidden columns":
+                visibility_match = not is_visible_column
+            text_match = not needle or needle in item.text().lower()
+            item.setHidden(not (visibility_match and text_match))
 
-    def _select_all(self) -> None:
+    def _check_all(self) -> None:
         """Check every column."""
         for row in range(self.columns_list.count()):
             self.columns_list.item(row).setCheckState(Qt.CheckState.Checked)
+        self._apply_filters()
 
-    def _select_visible(self) -> None:
-        """Check only the currently visible items in the search result."""
-        hidden_items = 0
+    def _uncheck_all(self) -> None:
+        """Uncheck every column except the first one."""
+        if self.columns_list.count() == 0:
+            return
         for row in range(self.columns_list.count()):
             item = self.columns_list.item(row)
-            if item.isHidden():
-                hidden_items += 1
-                item.setCheckState(Qt.CheckState.Unchecked)
-                continue
-            item.setCheckState(Qt.CheckState.Checked)
-        if hidden_items == self.columns_list.count():
-            self._select_all()
+            item.setCheckState(Qt.CheckState.Checked if row == 0 else Qt.CheckState.Unchecked)
+        self._apply_filters()
 
     def checked_columns(self) -> list[int]:
         """Return the checked source columns."""
@@ -1036,6 +1068,8 @@ class DataTableView(Qw.QTableView):
         self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.horizontalHeader().setDefaultSectionSize(DEFAULT_COLUMN_WIDTH)
         self.verticalHeader().setDefaultSectionSize(DEFAULT_ROW_HEIGHT)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
 
     def set_data(self, df):
         """Set data model."""
@@ -1080,24 +1114,88 @@ class DataTableView(Qw.QTableView):
 
     def copy(self):
         """Copy the selected cells to clipboard in an Excel-pasteable format."""
-        # from threading import Thread
-        #
-        # # Get the bounds using the top left and bottom right selected cells
-        # indexes = self.selectionModel().selection().indexes()
-        #
-        # rows = [ix.row() for ix in indexes]
-        # cols = [ix.column() for ix in indexes]
-        #
-        # df = self.model().df.iloc[min(rows) : max(rows) + 1, min(cols) : max(cols) + 1]
-        #
-        # # If I try to use Pyperclip without starting new thread large values give access denied error
-        # def thread_function(df):
-        #     df.to_clipboard(index=False, header=False)
-        #
-        # Thread(target=thread_function, args=(df,)).start()
-        #
-        # clipboard = Qg.QGuiApplication.clipboard()
-        # clipboard.setText(text)
+        self.copy_selection_to_clipboard()
+
+    def copy_selection_to_clipboard(self) -> None:
+        """Copy the current rectangular selection with row labels and column headers."""
+        export_df = self._selection_dataframe()
+        if export_df is None:
+            return
+        self._copy_dataframe_to_clipboard(export_df)
+
+    def copy_selected_rows_to_clipboard(self) -> None:
+        """Copy the selected rows with visible columns."""
+        export_df = self._selected_rows_dataframe()
+        if export_df is None:
+            return
+        self._copy_dataframe_to_clipboard(export_df)
+
+    def copy_selected_columns_to_clipboard(self) -> None:
+        """Copy the selected visible columns across visible rows."""
+        export_df = self._selected_columns_dataframe()
+        if export_df is None:
+            return
+        self._copy_dataframe_to_clipboard(export_df)
+
+    def _copy_dataframe_to_clipboard(self, df: pd.DataFrame) -> None:
+        """Copy a dataframe to the clipboard as tab-separated text."""
+        buffer = io.StringIO()
+        df.to_csv(buffer, sep="\t", index=True, header=True, lineterminator="\n")
+        Qg.QGuiApplication.clipboard().setText(buffer.getvalue())
+
+    def _visible_dataframe(self) -> pd.DataFrame:
+        """Return the dataframe currently exposed by the proxy model."""
+        assert self.proxy_model is not None
+        row_positions = self.proxy_model.visible_rows
+        column_positions = self.proxy_model.visible_columns
+        return self.proxy_model.df.iloc[row_positions, column_positions]
+
+    def _selection_dataframe(self) -> pd.DataFrame | None:
+        """Return the currently selected rectangular dataframe slice."""
+        indexes = self.selectionModel().selectedIndexes()
+        if not indexes:
+            return None
+        selected_rows = sorted({index.row() for index in indexes})
+        selected_columns = sorted({index.column() for index in indexes})
+        if not selected_rows or not selected_columns:
+            return None
+        visible_df = self._visible_dataframe()
+        return visible_df.iloc[selected_rows, selected_columns]
+
+    def _selected_rows_dataframe(self) -> pd.DataFrame | None:
+        """Return the currently selected rows for all visible columns."""
+        indexes = self.selectionModel().selectedIndexes()
+        if not indexes:
+            return None
+        selected_rows = sorted({index.row() for index in indexes})
+        if not selected_rows:
+            return None
+        visible_df = self._visible_dataframe()
+        return visible_df.iloc[selected_rows, :]
+
+    def _selected_columns_dataframe(self) -> pd.DataFrame | None:
+        """Return the currently selected columns for all visible rows."""
+        indexes = self.selectionModel().selectedIndexes()
+        if not indexes:
+            return None
+        selected_columns = sorted({index.column() for index in indexes})
+        if not selected_columns:
+            return None
+        visible_df = self._visible_dataframe()
+        return visible_df.iloc[:, selected_columns]
+
+    def _show_context_menu(self, position: Qc.QPoint) -> None:
+        """Show the selection copy context menu."""
+        if not self.selectionModel().selectedIndexes():
+            return
+        menu = Qw.QMenu(self)
+        copy_selection_action = menu.addAction("Copy selection")
+        copy_selection_action.triggered.connect(self.copy_selection_to_clipboard)
+        copy_rows_action = menu.addAction("Copy selected rows")
+        copy_rows_action.triggered.connect(self.copy_selected_rows_to_clipboard)
+        copy_columns_action = menu.addAction("Copy selected columns")
+        copy_columns_action.triggered.connect(self.copy_selected_columns_to_clipboard)
+        menu.exec(self.viewport().mapToGlobal(position))
 
     def paste(self):
         """Paste data from clipboard."""
@@ -1309,7 +1407,7 @@ class CornerView(Qw.QTableView):
         rows = self.model().rowCount()
         cols = self.model().columnCount()
         if rows > 1 and cols > 1:
-            self.setSpan(0, 0, rows - 1, cols - 1)
+            _set_span_if_needed(self, 0, 0, rows - 1, cols - 1)
 
 
 class HeaderView(Qw.QTableView):
@@ -1330,6 +1428,9 @@ class HeaderView(Qw.QTableView):
         self.header_being_resized = None
         self.resize_start_position = None
         self.initial_header_size = None
+        self._press_position: Qc.QPoint | None = None
+        self._pressed_section: int | None = None
+        self._dragged_during_press = False
 
         # Handled by self.eventFilter()
         self.setMouseTracking(True)
@@ -1543,12 +1644,12 @@ class HeaderView(Qw.QTableView):
                         if col == len(arr) - 1:
                             match_end = col
                             span_size = match_end - match_start + 1
-                            self.setSpan(level, match_start, 1, span_size)
+                            _set_span_if_needed(self, level, match_start, 1, span_size)
                     else:
                         if match_start is not None:
                             match_end = col - 1
                             span_size = match_end - match_start + 1
-                            self.setSpan(level, match_start, 1, span_size)
+                            _set_span_if_needed(self, level, match_start, 1, span_size)
                             match_start = None
 
         # Find spans for vertical HeaderView
@@ -1580,12 +1681,12 @@ class HeaderView(Qw.QTableView):
                         if row == len(arr) - 1:
                             match_end = row
                             span_size = match_end - match_start + 1
-                            self.setSpan(match_start, level, span_size, 1)
+                            _set_span_if_needed(self, match_start, level, span_size, 1)
                     else:
                         if match_start is not None:
                             match_end = row - 1
                             span_size = match_end - match_start + 1
-                            self.setSpan(match_start, level, span_size, 1)
+                            _set_span_if_needed(self, match_start, level, span_size, 1)
                             match_start = None
 
     def over_header_edge(self, mouse_position, margin=3):
@@ -1615,10 +1716,15 @@ class HeaderView(Qw.QTableView):
         """Event filter."""
         # If mouse is on an edge, start the drag resize process
         if event.type() == Qc.QEvent.Type.MouseButtonPress:
+            self._press_position = event.pos()
+            self._pressed_section = None
+            self._dragged_during_press = False
             if self.orientation == Qt.Orientation.Horizontal:
                 mouse_position = event.pos().x()
+                self._pressed_section = self.columnAt(mouse_position)
             elif self.orientation == Qt.Orientation.Vertical:
                 mouse_position = event.pos().y()
+                self._pressed_section = self.rowAt(mouse_position)
 
             if self.over_header_edge(mouse_position) is not None:
                 self.header_being_resized = self.over_header_edge(mouse_position)
@@ -1638,7 +1744,12 @@ class HeaderView(Qw.QTableView):
                 and self.header_being_resized is None
             ):
                 column = self.columnAt(event.pos().x())
-                if column >= 0 and self.parent.sortable:
+                if (
+                    column >= 0
+                    and self.parent.sortable
+                    and not self._dragged_during_press
+                    and column == self._pressed_section
+                ):
                     self.parent.toggle_sort(self.proxy_model.source_column(column))
                     return True
             if (
@@ -1651,6 +1762,9 @@ class HeaderView(Qw.QTableView):
                     self._show_context_menu(self.proxy_model.source_column(column), event.globalPos())
                     return True
             self.header_being_resized = None
+            self._press_position = None
+            self._pressed_section = None
+            self._dragged_during_press = False
 
         # Auto size the column that was double clicked
         if event.type() == Qc.QEvent.Type.MouseButtonDblClick:
@@ -1674,6 +1788,11 @@ class HeaderView(Qw.QTableView):
                 mouse_position = event.pos().x()
             elif self.orientation == Qt.Orientation.Vertical:
                 mouse_position = event.pos().y()
+
+            if self._press_position is not None:
+                manhattan_length = (event.pos() - self._press_position).manhattanLength()
+                if manhattan_length >= Qw.QApplication.startDragDistance():
+                    self._dragged_during_press = True
 
             # If this is None, there is no drag resize happening
             if self.header_being_resized is not None:

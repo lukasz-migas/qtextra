@@ -7,6 +7,7 @@ import pandas as pd
 import pandas.testing as pdt
 import pytest
 from qtpy.QtCore import Qt
+from qtpy.QtGui import QGuiApplication
 
 from qtextra.widgets.qt_table_view_dataframe import ColumnVisibilityDialog, QtDataFrameWidget
 
@@ -281,3 +282,111 @@ def test_column_visibility_dialog_lists_columns_in_bounded_view(qtbot):
     assert dialog.columns_list.count() == 40
     assert dialog.checked_columns() == list(range(40))
     assert dialog.height() <= 420
+
+
+def test_column_visibility_dialog_supports_checking_and_filtering(qtbot):
+    df = pd.DataFrame({"alpha": [1], "beta": [2], "gamma": [3]})
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.set_column_visible(1, False)
+
+    dialog = ColumnVisibilityDialog(widget, widget.proxy_model)
+    qtbot.addWidget(dialog)
+    dialog.show()
+    qtbot.wait(10)
+
+    dialog._uncheck_all()
+    assert dialog.checked_columns() == [0]
+
+    dialog._check_all()
+    assert dialog.checked_columns() == [0, 1, 2]
+
+    dialog.visibility_filter.setCurrentText("Hidden columns")
+    qtbot.wait(10)
+    visible_items = [
+        dialog.columns_list.item(row).text()
+        for row in range(dialog.columns_list.count())
+        if not dialog.columns_list.item(row).isHidden()
+    ]
+    assert visible_items == ["beta"]
+
+    dialog.visibility_filter.setCurrentText("Visible columns")
+    qtbot.wait(10)
+    visible_items = [
+        dialog.columns_list.item(row).text()
+        for row in range(dialog.columns_list.count())
+        if not dialog.columns_list.item(row).isHidden()
+    ]
+    assert visible_items == ["alpha", "gamma"]
+
+
+def test_qt_dataframe_widget_copy_selection_includes_headers_and_index(qtbot):
+    df = pd.DataFrame({"alpha": [1, 2], "beta": [3, 4]}, index=["r1", "r2"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.dataView.selectRow(0)
+    widget.dataView.copy_selection_to_clipboard()
+
+    clipboard_text = QGuiApplication.clipboard().text()
+    assert "alpha" in clipboard_text
+    assert "beta" in clipboard_text
+    assert "r1" in clipboard_text
+    assert "1" in clipboard_text
+    assert "3" in clipboard_text
+
+
+def test_qt_dataframe_widget_copy_selected_columns_uses_visible_rows(qtbot):
+    df = pd.DataFrame({"alpha": [1, 2], "beta": [3, 4]}, index=["r1", "r2"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.dataView.selectColumn(1)
+    widget.dataView.copy_selected_columns_to_clipboard()
+
+    clipboard_text = QGuiApplication.clipboard().text()
+    assert "beta" in clipboard_text
+    assert "alpha" not in clipboard_text
+    assert "r1" in clipboard_text
+    assert "r2" in clipboard_text
+
+
+def test_qt_dataframe_widget_drag_select_on_header_does_not_sort(qtbot):
+    df = pd.DataFrame({"b": [2, 1, 3], "a": [20, 10, 30]}, index=["r2", "r1", "r3"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    first_rect = widget.columnHeader.visualRect(widget.columnHeader.model().index(0, 0))
+    second_rect = widget.columnHeader.visualRect(widget.columnHeader.model().index(0, 1))
+    start_pos = first_rect.center()
+    end_pos = second_rect.center()
+
+    qtbot.mousePress(widget.columnHeader.viewport(), Qt.MouseButton.LeftButton, pos=start_pos)
+    qtbot.mouseMove(widget.columnHeader.viewport(), pos=end_pos)
+    qtbot.mouseRelease(widget.columnHeader.viewport(), Qt.MouseButton.LeftButton, pos=end_pos)
+
+    assert widget.proxy_model.sort_column is None
+    assert widget.dataView.model().data(widget.dataView.model().index(0, 0)) == "2"
+
+
+def test_qt_dataframe_widget_single_level_headers_do_not_create_single_cell_spans(qtbot):
+    df = pd.DataFrame({"alpha": [1, 2], "beta": [3, 4]}, index=["r1", "r2"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    assert widget.columnHeader.columnSpan(0, 0) == 1
+    assert widget.columnHeader.columnSpan(0, 1) == 1
+    assert widget.indexHeader.rowSpan(0, 0) == 1
+    assert widget.indexHeader.rowSpan(1, 0) == 1
