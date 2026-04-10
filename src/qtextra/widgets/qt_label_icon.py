@@ -144,21 +144,51 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
         with suppress(RuntimeError):
             THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
+    def _update_pixmap(self) -> None:
+        """Render the icon within the available label content rect."""
+        if self._icon is None:
+            return
+        target_size = self.contentsRect().size()
+        if not target_size.isValid() or target_size.isEmpty():
+            target_size = QSize(self._size)
+        else:
+            target_size = target_size.boundedTo(self._size)
+        self.setPixmap(self._icon.pixmap(target_size))
+
     def setIcon(self, _icon) -> None:
         """Update icon."""
         self._icon = _icon
-        self.setPixmap(_icon.pixmap(self._size))
+        self._update_pixmap()
 
     def setIconSize(self, size: QSize) -> None:
         """Set icon size."""
-        self._size = size
-        self.update()
+        self._size = QSize(size)
+        self._update_pixmap()
+        self.updateGeometry()
 
     def update(self, *args: ty.Any, **kwargs: ty.Any) -> None:
         """Update label."""
-        if self._icon:
-            self.setPixmap(self._icon.pixmap(self._size))
+        self._update_pixmap()
         return super().update(*args, **kwargs)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore[override]
+        """Keep the rendered pixmap in sync with the current label geometry."""
+        self._update_pixmap()
+        super().resizeEvent(event)
+
+    def sizeHint(self) -> QSize:  # type: ignore[override]
+        """Prefer the fixed label size when one has been applied."""
+        minimum_size = self.minimumSize()
+        maximum_size = self.maximumSize()
+        if minimum_size.isValid() and minimum_size == maximum_size and not minimum_size.isEmpty():
+            return QSize(minimum_size)
+        if self.pixmap() is not None:
+            return self.pixmap().size()
+        return QSize(self._size)
+
+    def minimumSizeHint(self) -> QSize:  # type: ignore[override]
+        """Match the constrained size hint."""
+        return self.sizeHint()
 
 
 class QtWarningPulseLabel(QtQtaLabel):

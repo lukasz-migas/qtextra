@@ -112,6 +112,20 @@ def test_qt_qta_label_set_square_qta_size_from_int(qapp, qtbot):
     assert widget._size == QSize(26, 26)
 
 
+def test_qt_qta_label_pixmap_respects_contents_rect(qapp, qtbot):
+    widget = QtQtaLabel()
+    qtbot.addWidget(widget)
+    widget.set_qta("help")
+    widget.set_qta_size_preset("large")
+    widget.setMinimumSize(QSize(0, 0))
+    widget.setMaximumSize(QSize(26, 14))
+    widget.resize(26, 14)
+    widget.update()
+
+    assert widget.pixmap() is not None
+    assert widget.pixmap().deviceIndependentSize().toSize() == QSize(26, 14)
+
+
 def test_qt_qta_label_update_qta_preserves_size(qapp, qtbot):
     widget = QtQtaLabel()
     qtbot.addWidget(widget)
