@@ -414,7 +414,7 @@ class QtHorizontalDirectionButton(QtTogglePushButton):
 
 
 class QtVisibleButton(QtTogglePushButton):
-    """Lock button with shown/hidden icon."""
+    """A button with a shown/hidden icon."""
 
     ICON_ON = "visible_on"
     ICON_OFF = "visible_off"
@@ -438,7 +438,7 @@ class QtVisibleButton(QtTogglePushButton):
 
 
 class QtHiddenButton(QtTogglePushButton):
-    """Lock button with shown/hidden icon."""
+    """A button with hidden/shown icon."""
 
     ICON_ON = "visible_off"
     ICON_OFF = "visible_on"
@@ -449,7 +449,7 @@ class QtHiddenButton(QtTogglePushButton):
     @property
     def hidden(self) -> bool:
         """Get toggle state."""
-        return self.visible
+        return self.state
 
     @hidden.setter
     def hidden(self, state: bool) -> None:
@@ -459,6 +459,16 @@ class QtHiddenButton(QtTogglePushButton):
     def visible(self) -> bool:
         """Get toggle state."""
         return not self.state
+
+
+class QtFilterButton(QtTogglePushButton):
+    """A button with filter on / filter off icon."""
+
+    ICON_ON = "filter_on"
+    ICON_OFF = "filter_off"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
 
 
 class QtPinButton(QtTogglePushButton):
@@ -1106,6 +1116,8 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtLockButton(parent=frame, auto_connect=True))
         lay.addWidget(QtHorizontalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtVisibleButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtHiddenButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtFilterButton(parent=frame, auto_connect=True))
         lay.addWidget(QtVerticalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtToggleButton(parent=frame, auto_connect=True))
         lay.addWidget(QtExpandButton(parent=frame, auto_connect=True))
