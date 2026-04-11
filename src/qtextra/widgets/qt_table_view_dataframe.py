@@ -814,6 +814,7 @@ class QtDataFrameWidget(Qw.QWidget):
         self.columnHeader.horizontalScrollBar().valueChanged.connect(self.dataView.horizontalScrollBar().setValue)
         self.indexHeader.verticalScrollBar().valueChanged.connect(self.dataView.verticalScrollBar().setValue)
         self.dataView.horizontalScrollBar().valueChanged.connect(self._sync_horizontal_offset)
+        self.dataView.verticalScrollBar().valueChanged.connect(self._sync_vertical_offset)
         self.dataView.horizontalScrollBar().rangeChanged.connect(self._sync_header_scroll_metrics)
         self.dataView.verticalScrollBar().rangeChanged.connect(self._sync_header_scroll_metrics)
 
@@ -903,14 +904,30 @@ class QtDataFrameWidget(Qw.QWidget):
         self._sync_header_scroll_metrics()
 
     def _sync_horizontal_offset(self, value: int) -> None:
-        """Keep the header aligned with the data viewport."""
-        if self.columnHeader.horizontalScrollBar().value() != value:
-            self.columnHeader.horizontalScrollBar().setValue(value)
+        """Keep the column header aligned with the data viewport."""
+        header_hbar = self.columnHeader.horizontalScrollBar()
+        data_hbar = self.dataView.horizontalScrollBar()
+        if header_hbar.maximum() != data_hbar.maximum():
+            header_hbar.setRange(data_hbar.minimum(), data_hbar.maximum())
+        if header_hbar.value() != value:
+            header_hbar.setValue(value)
         self.columnHeader.viewport().update()
+        self.dataView.viewport().update()
+
+    def _sync_vertical_offset(self, value: int) -> None:
+        """Keep the index header aligned with the data viewport."""
+        header_vbar = self.indexHeader.verticalScrollBar()
+        data_vbar = self.dataView.verticalScrollBar()
+        if header_vbar.maximum() != data_vbar.maximum():
+            header_vbar.setRange(data_vbar.minimum(), data_vbar.maximum())
+        if header_vbar.value() != value:
+            header_vbar.setValue(value)
+        self.indexHeader.viewport().update()
         self.dataView.viewport().update()
 
     def _sync_header_scroll_metrics(self, *_args: ty.Any) -> None:
         """Mirror scrollbar range metrics onto the header views."""
+        # Horizontal: column header ↔ data view
         data_hbar = self.dataView.horizontalScrollBar()
         header_hbar = self.columnHeader.horizontalScrollBar()
         if header_hbar.pageStep() != data_hbar.pageStep():
@@ -921,6 +938,18 @@ class QtDataFrameWidget(Qw.QWidget):
             header_hbar.setRange(data_hbar.minimum(), data_hbar.maximum())
         if header_hbar.value() != data_hbar.value():
             header_hbar.setValue(data_hbar.value())
+
+        # Vertical: index header ↔ data view
+        data_vbar = self.dataView.verticalScrollBar()
+        header_vbar = self.indexHeader.verticalScrollBar()
+        if header_vbar.pageStep() != data_vbar.pageStep():
+            header_vbar.setPageStep(data_vbar.pageStep())
+        if header_vbar.singleStep() != data_vbar.singleStep():
+            header_vbar.setSingleStep(data_vbar.singleStep())
+        if header_vbar.maximum() != data_vbar.maximum():
+            header_vbar.setRange(data_vbar.minimum(), data_vbar.maximum())
+        if header_vbar.value() != data_vbar.value():
+            header_vbar.setValue(data_vbar.value())
 
     def _resize_all_rows(self):
         """Auto-resize every row to its content height."""
@@ -1968,6 +1997,10 @@ class HeaderView(Qw.QTableView):
                 self.viewport().setCursor(Qg.QCursor(Qt.CursorShape.ArrowCursor))
 
         return False
+
+    def wheelEvent(self, event: Qg.QWheelEvent):
+        """Forward wheel events to the data view so the header never scrolls independently."""
+        self.table.wheelEvent(event)
 
     # Return the size of the header needed to match the corresponding DataTableView
     def sizeHint(self):
