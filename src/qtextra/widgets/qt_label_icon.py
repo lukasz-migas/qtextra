@@ -111,6 +111,7 @@ class QtIconLabel(QLabel):
 class QtQtaLabel(QtIconLabel, QtaMixin):
     """Label."""
 
+    QTA_ICON_SIZE_FOLLOWS_WIDGET_SIZE = True
     _icon = None
 
     def __init__(
@@ -128,7 +129,10 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
         **kwargs,
     ):
         super().__init__("", *args, **kwargs)
-        self._size = QSize(28, 28)
+        self._size = QSize(20, 20)
+        self.setMinimumSize(self._size)
+        self.setMaximumSize(self._size)
+        super().setScaledContents(False)
         self.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
         self.set_default_size(
             xxsmall=xxsmall,
@@ -160,11 +164,22 @@ class QtQtaLabel(QtIconLabel, QtaMixin):
         self._icon = _icon
         self._update_pixmap()
 
-    def setIconSize(self, size: QSize) -> None:
-        """Set icon size."""
-        self._size = QSize(size)
+    def iconSize(self) -> QSize:
+        """Return the requested icon size."""
+        return QSize(self._size)
+
+    def setIconSize(self, size: int | QSize | tuple[int, int]) -> None:
+        """Set icon size and resize the label to match."""
+        self._size = self._normalize_qta_size(size)
+        self.setMinimumSize(self._size)
+        self.setMaximumSize(self._size)
+        self.resize(self._size)
         self._update_pixmap()
         self.updateGeometry()
+
+    def setScaledContents(self, enable: bool) -> None:  # type: ignore[override]
+        """Ignore QLabel pixmap scaling so the requested icon size stays visible."""
+        super().setScaledContents(False)
 
     def update(self, *args: ty.Any, **kwargs: ty.Any) -> None:
         """Update label."""

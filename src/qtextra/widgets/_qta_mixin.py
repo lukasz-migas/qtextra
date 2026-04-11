@@ -17,6 +17,7 @@ from qtextra.typing import QtaSizePreset
 class QtaMixin:
     """Mixin class for Qta widgets."""
 
+    QTA_ICON_SIZE_FOLLOWS_WIDGET_SIZE: ty.ClassVar[bool] = False
     QTA_SIZE_MAP: ty.ClassVar[dict[QtaSizePreset, tuple[QSize, QSize]]] = {
         "xxsmall": (QSize(10, 10), QSize(10, 10)),
         "xsmall": (QSize(16, 16), QSize(16, 16)),
@@ -47,10 +48,13 @@ class QtaMixin:
     def _get_qta_size_spec(cls, preset: QtaSizePreset) -> tuple[QSize, QSize]:
         """Return the widget and icon size for a preset."""
         try:
-            return cls.QTA_SIZE_MAP[preset]
+            widget_size, icon_size = cls.QTA_SIZE_MAP[preset]
         except KeyError as exc:
             presets = ", ".join(cls.QTA_SIZE_MAP)
             raise ValueError(f"Unknown qta size preset '{preset}'. Expected one of: {presets}.") from exc
+        if cls.QTA_ICON_SIZE_FOLLOWS_WIDGET_SIZE:
+            return QSize(widget_size), QSize(widget_size)
+        return QSize(widget_size), QSize(icon_size)
 
     @classmethod
     def _normalize_qta_size(cls, size: int | QSize | tuple[int, int]) -> QSize:

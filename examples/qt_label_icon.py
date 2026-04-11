@@ -1,10 +1,13 @@
 """QtQtaLabel."""
 
+import typing as ty
+
 from qtpy.QtWidgets import QApplication, QGridLayout, QHBoxLayout, QVBoxLayout, QWidget
 
 from qtextra._example_helpers import divider, section
 from qtextra.assets import get_icon
 from qtextra.config import THEMES
+from qtextra.typing import QtaSizePreset
 from qtextra.widgets.qt_label_icon import QtPulsingAttentionLabel, QtQtaLabel, QtWarningPulseLabel
 
 app = QApplication([])
@@ -39,6 +42,21 @@ for qta_name, theme_color in [
     label.setToolTip(f"Pulsing attention — {qta_name}")
     active_layout.addWidget(label)
 active_layout.addStretch(1)
+main_layout.addWidget(divider())
+
+# Label sizing
+main_layout.addWidget(section("Label sizes"))
+grid = QGridLayout()
+grid.setHorizontalSpacing(12)
+grid.setVerticalSpacing(8)
+main_layout.addLayout(grid)
+qta_name, qta_kws = get_icon("happy")
+for index, preset in enumerate(ty.get_args(QtaSizePreset)):
+    label = QtQtaLabel()
+    label.set_qta(qta_name, **qta_kws)
+    label.setToolTip(f"happy :: {qta_name} :: {preset}")
+    label.set_qta_size_preset(preset)
+    grid.addWidget(label, index // 6, index % 6)
 main_layout.addWidget(divider())
 
 # General labels

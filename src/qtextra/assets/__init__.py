@@ -195,6 +195,7 @@ QTA_MAPPING: dict[str, IconType] = {
     "dev": "mdi6.code-braces",
     "import": "mdi.file-import",
     "export": "mdi.file-export",
+    "pop_out": "fa6s.arrow-up-right-from-square",
     # arrows
     "arrow_up": "fa5s.arrow-up",
     "arrow_down": "fa5s.arrow-down",

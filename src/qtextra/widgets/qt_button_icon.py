@@ -56,6 +56,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
         super().__init__()
+        self.setFixedSize(20, 20)
         self.setProperty("transparent", False)
         self.transparent = False
         with suppress(RuntimeError):
