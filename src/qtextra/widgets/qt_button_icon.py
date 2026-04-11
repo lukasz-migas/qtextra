@@ -63,7 +63,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
             THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
     def set_count(self, count: int, enabled: bool = True) -> None:
-        """Enable count indicator."""
+        """Enable a count indicator."""
         self.count = count
         self.count_enabled = enabled
 

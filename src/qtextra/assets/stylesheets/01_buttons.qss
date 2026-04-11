@@ -232,21 +232,31 @@ QtSegmentedButton > QPushButton#mainButton {
     min-height: 24px;
 }
 
-QtSegmentedButton > QPushButton:hover {
+QtSegmentedButton > QPushButton#mainButton:hover {
     background-color: {{ primary }};
 }
 
-QtSegmentedButton > QPushButton:pressed {
+QtSegmentedButton > QPushButton#mainButton:pressed {
     background-color: {{ foreground }};
 }
 
-QtSegmentedButton > QPushButton:disabled {
+QtSegmentedButton > QPushButton#mainButton:disabled {
     color: {{ opacity(text, 60) }};
 }
 
 QtSegmentedButton[flat="true"] {
     border: none;
     background-color: transparent;
+}
+
+/* Action buttons inside segmented button restore hover (overrides [transparent=true] which comes earlier) */
+QtSegmentedButton QtImagePushButton:hover {
+    border-radius: 3px;
+    background-color: {{ primary }};
+}
+
+QtSegmentedButton QtImagePushButton:pressed {
+    background-color: {{ foreground }};
 }
 
 /* Separator inside segmented button matches the outer border — no standout */

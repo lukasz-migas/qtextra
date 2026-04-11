@@ -48,7 +48,7 @@ class QtSegmentedButton(QFrame):
         self._layout = QHBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
-        self._layout.addWidget(self._main_btn, alignment=Qt.AlignmentFlag.AlignCenter, stretch=1)
+        self._layout.addWidget(self._main_btn, stretch=1)
 
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 

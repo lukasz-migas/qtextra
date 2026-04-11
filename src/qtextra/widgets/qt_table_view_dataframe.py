@@ -1083,6 +1083,12 @@ class QtDataFrameWidget(Qw.QWidget):
         self.proxy_model.set_string_filter(column, allowed_values=allowed_values, include_blanks=include_blanks)
         self._refresh_after_proxy_change()
 
+    def clear_filter(self, column: int) -> None:
+        """Clear filter (if it's present)."""
+        if column in self.proxy_model._column_filters:
+            self.proxy_model.clear_filter_for_column(3)
+            self._refresh_after_proxy_change()
+
     def set_column_visible(self, column: int, visible: bool) -> None:
         """Show or hide a source column."""
         if self.proxy_model.set_column_visible(column, visible):
