@@ -162,6 +162,7 @@ def qframe(
         layout = QtWidgets.QHBoxLayout() if horz else QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
             w = qdev(modules=modules)
+            w.side_layout.addWidget(theme_toggle_btn(frame))
             # w.setMaximumHeight(300)
             layout.addWidget(w)
         frame.setLayout(layout)
@@ -171,8 +172,8 @@ def qframe(
         from koyo.hooks import install_debugger_hook
 
         install_debugger_hook()
-    if toggle and layout is not None:
-        layout.addWidget(theme_toggle_btn(frame))
+    # if toggle and layout is not None:
+    #     layout.addWidget(theme_toggle_btn(frame))
     return app, frame, layout
 
 
