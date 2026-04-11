@@ -437,6 +437,30 @@ class QtVisibleButton(QtTogglePushButton):
         return not self.visible
 
 
+class QtHiddenButton(QtTogglePushButton):
+    """Lock button with shown/hidden icon."""
+
+    ICON_ON = "visible_off"
+    ICON_OFF = "visible_on"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def hidden(self) -> bool:
+        """Get toggle state."""
+        return self.visible
+
+    @hidden.setter
+    def hidden(self, state: bool) -> None:
+        self.state = state
+
+    @property
+    def visible(self) -> bool:
+        """Get toggle state."""
+        return not self.state
+
+
 class QtPinButton(QtTogglePushButton):
     """Lock button with shown/hidden icon."""
 
