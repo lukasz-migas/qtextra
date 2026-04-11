@@ -905,15 +905,23 @@ class QtDataFrameWidget(Qw.QWidget):
 
     def _sync_horizontal_offset(self, value: int) -> None:
         """Keep the column header aligned with the data viewport."""
-        if self.columnHeader.horizontalScrollBar().value() != value:
-            self.columnHeader.horizontalScrollBar().setValue(value)
+        header_hbar = self.columnHeader.horizontalScrollBar()
+        data_hbar = self.dataView.horizontalScrollBar()
+        if header_hbar.maximum() != data_hbar.maximum():
+            header_hbar.setRange(data_hbar.minimum(), data_hbar.maximum())
+        if header_hbar.value() != value:
+            header_hbar.setValue(value)
         self.columnHeader.viewport().update()
         self.dataView.viewport().update()
 
     def _sync_vertical_offset(self, value: int) -> None:
         """Keep the index header aligned with the data viewport."""
-        if self.indexHeader.verticalScrollBar().value() != value:
-            self.indexHeader.verticalScrollBar().setValue(value)
+        header_vbar = self.indexHeader.verticalScrollBar()
+        data_vbar = self.dataView.verticalScrollBar()
+        if header_vbar.maximum() != data_vbar.maximum():
+            header_vbar.setRange(data_vbar.minimum(), data_vbar.maximum())
+        if header_vbar.value() != value:
+            header_vbar.setValue(value)
         self.indexHeader.viewport().update()
         self.dataView.viewport().update()
 
@@ -1989,6 +1997,10 @@ class HeaderView(Qw.QTableView):
                 self.viewport().setCursor(Qg.QCursor(Qt.CursorShape.ArrowCursor))
 
         return False
+
+    def wheelEvent(self, event: Qg.QWheelEvent):
+        """Forward wheel events to the data view so the header never scrolls independently."""
+        self.table.wheelEvent(event)
 
     # Return the size of the header needed to match the corresponding DataTableView
     def sizeHint(self):
