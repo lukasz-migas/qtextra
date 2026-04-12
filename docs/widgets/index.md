@@ -9,6 +9,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 
 - [QtPushButton (variants)](./qt_button.md): theme-aware push buttons with activity and rich-text display helpers.
 - [Qt Icon Buttons](./qt_button_icon.md): a family of icon buttons for toggles, state indicators, and common toolbar actions.
+- [QtSegmentedButton](./qt_button_segmented.md): a unified segmented button combining a main text push-button with attached icon action buttons.
 - [QtPanelToolbar](./qt_toolbar_panel.md): a vertical toolbar that toggles stacked panels, with optional labelled buttons.
 - [QtIconButtons](./qt_button_icon.md): a family of icon buttons for toggles, state indicators, and common toolbar actions.
 - [QtMiniToolbar](./qt_toolbar_mini.md): a dense icon-toolbar widget for compact utility actions.

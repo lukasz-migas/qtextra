@@ -228,7 +228,7 @@ QtSegmentedButton > QPushButton#mainButton {
     border: none;
     border-radius: 0px;
     padding: 3px 8px;
-    text-align: left;
+    text-align: center;
     min-height: 24px;
 }
 

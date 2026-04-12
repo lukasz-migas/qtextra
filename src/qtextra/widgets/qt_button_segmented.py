@@ -65,7 +65,7 @@ class QtSegmentedButton(QFrame):
         tooltip: str = "",
         func: ty.Callable | list[ty.Callable] | None = None,
         *,
-        size_preset: str = "small",
+        size_preset: str = "average",
     ) -> QtImagePushButton:
         """Append an icon action button to the right side of the widget.
 
