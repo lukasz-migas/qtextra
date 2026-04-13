@@ -1,0 +1,29 @@
+QTreeWidget {
+    alternate-background-color: {{ darken_or_lighten_for_theme(foreground, 10) }};
+}
+QTreeWidget::item {
+    color: {{ text }};
+}
+QTreeWidget::branch {
+    color: {{ text }};
+}
+QTreeWidget::branch:open {
+    color: #92000A;
+}
+QTreeWidget::branch:closed:has-children {
+    color: {{ text }};
+    image: url("theme_{{ id }}:/right_arrow.svg");
+}
+QTreeWidget::branch:open:has-children {
+    color: {{ text }};
+    image: url("theme_{{ id }}:/down_arrow.svg");
+}
+QTreeView::indicator:unchecked {
+    image: url("theme_{{ id }}://2d.svg");
+}
+QTreeView::indicator:checked {
+    image: url("theme_{{ id }}://check.svg");
+}
+QTreeView::indicator:indeterminate {
+    image: url("theme_{{ id }}://minus.svg");
+}

@@ -18,6 +18,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QRectF,
     QSize,
     Qt,
+    QTimer,
     Signal,
     Slot,
 )
@@ -640,6 +641,12 @@ class QtMultiStatePushButton(QtImagePushButton):
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)
 
+    def on_click(self) -> None:
+        """Show the state menu on click when auto-hover is disabled."""
+        if not self._auto_show_menu_on_hover:
+            QTimer.singleShot(0, self.set_and_show_menu)
+        super().on_click()
+
     def enterEvent(self, event: QEnterEvent | QEvent) -> None:  # type: ignore[override]
         """Handle hover entry and show the state menu when enabled."""
         if self._auto_show_menu_on_hover:
@@ -649,7 +656,7 @@ class QtMultiStatePushButton(QtImagePushButton):
 
     def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
-        if self._menu is not None:
+        if self._auto_show_menu_on_hover and self._menu is not None:
             self._menu.close()
             self._menu = None
         super().leaveEvent(event)
@@ -1133,7 +1140,7 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtPriorityButton(parent=frame, auto_connect=True))
         lay.addWidget(QtStateButton(parent=frame, auto_connect=True))
         lay.addWidget(QtEmotionButton(parent=frame, auto_connect=True))
-        lay.addWidget(QtMultiThemeButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtMultiThemeButton(parent=frame, auto_connect=True, auto_show_menu_on_hover=False))
 
         ha.addWidget(hp.make_v_line())
 

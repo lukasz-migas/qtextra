@@ -95,6 +95,39 @@ def _is_numeric_series(series: pd.Series) -> bool:
     return pd.api.types.is_numeric_dtype(series.dtype) and not pd.api.types.is_bool_dtype(series.dtype)
 
 
+def _rgba_array_from_colormap(values: np.ndarray, norm: ty.Any, cmap: ty.Any) -> np.ndarray:
+    """Apply a matplotlib norm+cmap to a 1-D float array and return uint8 RGBA (N, 4).
+
+    NaN values receive alpha=0 (transparent sentinel — no color will be rendered).
+    """
+    nan_mask = np.isnan(values)
+    safe = np.where(nan_mask, 0.0, values)
+    rgba_float = cmap(np.clip(norm(safe), 0.0, 1.0))  # (N, 4) float64
+    rgba_u8 = (rgba_float * 255).astype(np.uint8)
+    rgba_u8[nan_mask, 3] = 0
+    return rgba_u8
+
+
+def _foreground_from_background(bg_rgba: np.ndarray) -> np.ndarray:
+    """Compute foreground RGBA from background RGBA using WCAG relative luminance.
+
+    Dark backgrounds get white text; light backgrounds get black text.
+    NaN sentinels (alpha=0) propagate — foreground alpha is also set to 0.
+    Returns uint8 (N, 4).
+    """
+    r = bg_rgba[:, 0].astype(np.float32) / 255.0
+    g = bg_rgba[:, 1].astype(np.float32) / 255.0
+    b = bg_rgba[:, 2].astype(np.float32) / 255.0
+    is_dark = (1.0 - (0.299 * r + 0.587 * g + 0.114 * b)) >= 0.45
+    fg = np.where(
+        is_dark[:, np.newaxis],
+        np.array([255, 255, 255, 255], dtype=np.uint8),
+        np.array([0, 0, 0, 255], dtype=np.uint8),
+    )
+    fg[bg_rgba[:, 3] == 0, 3] = 0  # propagate NaN sentinel
+    return fg.astype(np.uint8)
+
+
 def _set_span_if_needed(
     view: Qw.QTableView,
     row: int,
@@ -1089,6 +1122,118 @@ class QtDataFrameWidget(Qw.QWidget):
             self.proxy_model.clear_filter_for_column(3)
             self._refresh_after_proxy_change()
 
+    # ------------------------------------------------------------------
+    # Cell coloring API
+    # ------------------------------------------------------------------
+
+    @property
+    def _source_model(self) -> DataTableModel:
+        """Return the active DataTableModel."""
+        return self.dataView.source_model
+
+    def _resolve_color_columns(
+        self,
+        column: int | str | None,
+        predicate: ty.Callable[[pd.Series], bool],
+    ) -> list[int]:
+        """Return source column indices to color.
+
+        If *column* is given, return ``[resolved_index]``.
+        If *column* is ``None``, return all columns matching *predicate*.
+        """
+        if column is not None:
+            return [self._source_model._resolve_column_index(column)]
+        df = self._source_model.df
+        return [i for i in range(len(df.columns)) if predicate(df.iloc[:, i])]
+
+    def color_numeric(
+        self,
+        column: int | str | None = None,
+        colormap: str = "RdBu_r",
+        vmin: float | None = None,
+        vmax: float | None = None,
+        vcenter: float | None = 0.0,
+    ) -> None:
+        """Apply a diverging or sequential colormap to numeric column(s).
+
+        Parameters
+        ----------
+        column:
+            Column name, integer index, or ``None`` to colour all numeric columns.
+        colormap:
+            Matplotlib colormap name.  Default ``'RdBu_r'`` (diverging red-blue).
+        vmin:
+            Normalization minimum.  Defaults to per-column minimum.
+        vmax:
+            Normalization maximum.  Defaults to per-column maximum.
+        vcenter:
+            Centre value for diverging normalization (TwoSlopeNorm).
+            Set to ``None`` for a simple sequential colormap (Normalize).
+            Default ``0.0``.
+        """
+        cols = self._resolve_color_columns(column, _is_numeric_series)
+        for col_idx in cols:
+            self._source_model.set_numeric_colormap(col_idx, colormap=colormap, vmin=vmin, vmax=vmax, vcenter=vcenter)
+        if cols:
+            self.dataView.viewport().update()
+
+    def color_categorical(
+        self,
+        column: int | str | None = None,
+        colormap: str = "tab20",
+    ) -> None:
+        """Apply distinct colours to unique values in categorical (text) column(s).
+
+        Parameters
+        ----------
+        column:
+            Column name, integer index, or ``None`` to colour all non-numeric columns.
+        colormap:
+            Matplotlib qualitative colormap name.  Default ``'tab20'``.
+        """
+        cols = self._resolve_color_columns(column, lambda s: not _is_numeric_series(s))
+        for col_idx in cols:
+            self._source_model.set_categorical_colormap(col_idx, colormap=colormap)
+        if cols:
+            self.dataView.viewport().update()
+
+    def color_table(
+        self,
+        colormap_numeric: str = "RdBu_r",
+        colormap_categorical: str = "tab20",
+        vcenter: float | None = 0.0,
+    ) -> None:
+        """Auto-detect and colour all columns.
+
+        Numeric columns get *colormap_numeric*; text/categorical columns get
+        *colormap_categorical*.
+
+        Parameters
+        ----------
+        colormap_numeric:
+            Matplotlib colormap for numeric columns.
+        colormap_categorical:
+            Matplotlib qualitative colormap for categorical columns.
+        vcenter:
+            Diverging centre for numeric columns.  ``None`` for sequential.
+        """
+        self.color_numeric(column=None, colormap=colormap_numeric, vcenter=vcenter)
+        self.color_categorical(column=None, colormap=colormap_categorical)
+
+    def clear_colors(self, column: int | str | None = None) -> None:
+        """Clear cell color mappings for one or all columns.
+
+        Parameters
+        ----------
+        column:
+            Column name, integer index, or ``None`` to clear all columns.
+        """
+        if column is None:
+            self._source_model.clear_all_colors()
+        else:
+            self._source_model.clear_column_colors(column)
+        self.dataView.viewport().update()
+
     def set_column_visible(self, column: int, visible: bool) -> None:
         """Show or hide a source column."""
         if self.proxy_model.set_column_visible(column, visible):
@@ -1186,6 +1331,9 @@ class DataTableModel(BaseTabularTableModel):
         self.df = df
         self._values = df.to_numpy(copy=False)
         self.set_shape(len(df), df.columns.shape[0])
+        # Per-column pre-computed color arrays.  Key = source column int index.
+        # Value = {'bg': uint8 (N,4), 'fg': uint8 (N,4)}.  Missing key → no color.
+        self._column_colors: dict[int, dict[str, np.ndarray]] = {}
 
     def headerData(self, section, orientation, role=None):
         # Headers for DataTableView are hidden. Header data is shown in HeaderView
@@ -1219,6 +1367,144 @@ class DataTableModel(BaseTabularTableModel):
             return False
         self.dataChanged.emit(index, index)
         return True
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        """Return data for supported roles, including background/foreground colors."""
+        if not index.isValid():
+            return None
+        if role == Qt.ItemDataRole.BackgroundRole:
+            entry = self._column_colors.get(index.column())
+            if entry is not None:
+                bg = entry["bg"][index.row()]
+                if bg[3] != 0:
+                    return Qg.QBrush(Qg.QColor(int(bg[0]), int(bg[1]), int(bg[2]), int(bg[3])))
+            return None
+        if role == Qt.ItemDataRole.ForegroundRole:
+            entry = self._column_colors.get(index.column())
+            if entry is not None:
+                fg = entry["fg"][index.row()]
+                if fg[3] != 0:
+                    return Qg.QBrush(Qg.QColor(int(fg[0]), int(fg[1]), int(fg[2]), int(fg[3])))
+            return None
+        return super().data(index, role)
+
+    def _resolve_column_index(self, column: int | str) -> int:
+        """Resolve a column name or integer to a source column integer."""
+        if isinstance(column, str):
+            cols = list(self.df.columns)
+            if column not in cols:
+                raise KeyError(f"Column {column!r} not found in DataFrame")
+            return cols.index(column)
+        if not (0 <= column < len(self.df.columns)):
+            raise IndexError(f"Column index {column} out of range [0, {len(self.df.columns)})")
+        return column
+
+    def set_numeric_colormap(
+        self,
+        col: int | str,
+        colormap: str = "RdBu_r",
+        vmin: float | None = None,
+        vmax: float | None = None,
+        vcenter: float | None = None,
+    ) -> None:
+        """Pre-compute background/foreground RGBA arrays for a numeric column.
+
+        Parameters
+        ----------
+        col:
+            Source column index (int) or column name (str).
+        colormap:
+            Matplotlib colormap name.
+        vmin:
+            Normalization minimum.  Defaults to column min (ignoring NaN).
+        vmax:
+            Normalization maximum.  Defaults to column max (ignoring NaN).
+        vcenter:
+            If provided, uses TwoSlopeNorm with this centre value (diverging).
+            If None, uses standard Normalize (sequential).
+        """
+        import matplotlib.cm
+        import matplotlib.colors
+
+        col_idx = self._resolve_column_index(col)
+        float_values = pd.to_numeric(self.df.iloc[:, col_idx], errors="coerce").to_numpy(np.float64)
+        valid = float_values[~np.isnan(float_values)]
+        if len(valid) == 0:
+            self._column_colors.pop(col_idx, None)
+            self._emit_color_changed(col_idx)
+            return
+        lo = float(valid.min()) if vmin is None else float(vmin)
+        hi = float(valid.max()) if vmax is None else float(vmax)
+        if lo == hi:
+            lo -= 1.0
+            hi += 1.0
+        if vcenter is not None:
+            safe_vc = float(np.clip(vcenter, lo + 1e-9, hi - 1e-9))
+            norm = matplotlib.colors.TwoSlopeNorm(vmin=lo, vcenter=safe_vc, vmax=hi)
+        else:
+            norm = matplotlib.colors.Normalize(vmin=lo, vmax=hi, clip=True)
+        cmap = matplotlib.cm.get_cmap(colormap)
+        bg = _rgba_array_from_colormap(float_values, norm, cmap)
+        self._column_colors[col_idx] = {"bg": bg, "fg": _foreground_from_background(bg)}
+        self._emit_color_changed(col_idx)
+
+    def set_categorical_colormap(self, col: int | str, colormap: str = "tab20") -> None:
+        """Pre-compute background/foreground RGBA arrays for a categorical column.
+
+        Each unique non-NaN value is assigned a distinct colour sampled from the
+        colormap.  Null/NaN values receive alpha=0 (no colour rendered).
+
+        Parameters
+        ----------
+        col:
+            Source column index (int) or column name (str).
+        colormap:
+            Matplotlib qualitative colormap name (e.g. ``'tab20'``, ``'Set3'``).
+        """
+        import matplotlib.cm
+
+        col_idx = self._resolve_column_index(col)
+        series = self.df.iloc[:, col_idx]
+        nan_mask = series.isna().to_numpy()
+        str_vals = series.astype(str).to_numpy()
+        unique_vals = list(pd.unique(str_vals[~nan_mask]))
+        if len(unique_vals) == 0:
+            self._column_colors.pop(col_idx, None)
+            self._emit_color_changed(col_idx)
+            return
+        cmap = matplotlib.cm.get_cmap(colormap)
+        n = len(unique_vals)
+        positions = np.linspace(0.0, 1.0, max(n, 2))[:n]
+        val_to_color = {v: (np.array(cmap(positions[i])) * 255).astype(np.uint8) for i, v in enumerate(unique_vals)}
+        bg = np.zeros((len(series), 4), dtype=np.uint8)
+        for i, (v, is_nan) in enumerate(zip(str_vals, nan_mask)):
+            if not is_nan:
+                bg[i] = val_to_color[v]
+        self._column_colors[col_idx] = {"bg": bg, "fg": _foreground_from_background(bg)}
+        self._emit_color_changed(col_idx)
+
+    def clear_column_colors(self, col: int | str) -> None:
+        """Remove the color mapping for a single column."""
+        col_idx = self._resolve_column_index(col)
+        self._column_colors.pop(col_idx, None)
+        self._emit_color_changed(col_idx)
+
+    def clear_all_colors(self) -> None:
+        """Remove all column color mappings."""
+        cols = list(self._column_colors.keys())
+        self._column_colors.clear()
+        for col_idx in cols:
+            self._emit_color_changed(col_idx)
+
+    def _emit_color_changed(self, col_idx: int) -> None:
+        """Emit dataChanged for an entire column for background/foreground roles."""
+        if self._row_count == 0:
+            return
+        self.dataChanged.emit(
+            self.index(0, col_idx),
+            self.index(self._row_count - 1, col_idx),
+            [Qt.ItemDataRole.BackgroundRole, Qt.ItemDataRole.ForegroundRole],
+        )
 
 
 class DataTableView(Qw.QTableView):
@@ -1371,6 +1657,19 @@ class DataTableView(Qw.QTableView):
         copy_rows_action.triggered.connect(self.copy_selected_rows_to_clipboard)
         copy_columns_action = menu.addAction("Copy selected columns")
         copy_columns_action.triggered.connect(self.copy_selected_columns_to_clipboard)
+
+        menu.addSeparator()
+        color_menu = menu.addMenu("Color")
+        color_all_action = color_menu.addAction("Color entire table (auto)")
+        color_all_action.triggered.connect(lambda _checked=False: self.parent.color_table())
+        color_numeric_action = color_menu.addAction("Color numeric columns (diverging)")
+        color_numeric_action.triggered.connect(lambda _checked=False: self.parent.color_numeric())
+        color_cat_action = color_menu.addAction("Color categorical columns")
+        color_cat_action.triggered.connect(lambda _checked=False: self.parent.color_categorical())
+        color_menu.addSeparator()
+        clear_all_action = color_menu.addAction("Clear all colors")
+        clear_all_action.triggered.connect(lambda _checked=False: self.parent.clear_colors())
+
         menu.exec(self.viewport().mapToGlobal(position))
 
     def paste(self):
@@ -2056,7 +2355,38 @@ class HeaderView(Qw.QTableView):
             columns_action = menu.addAction("Choose columns...")
             columns_action.triggered.connect(self._open_column_visibility_dialog)
 
+        menu.addSeparator()
+        self._add_color_menu(menu, source_column)
+
         menu.exec(position)
+
+    def _add_color_menu(self, menu: Qw.QMenu, source_column: int) -> None:
+        """Append the 'Color' submenu to *menu* for *source_column*."""
+        series = self.proxy_model.df.iloc[:, source_column]
+        is_numeric = _is_numeric_series(series)
+
+        color_menu = menu.addMenu("Color")
+
+        if is_numeric:
+            div_action = color_menu.addAction("This column — numeric (diverging, center=0)")
+            div_action.triggered.connect(lambda _checked=False: self.parent.color_numeric(source_column, vcenter=0.0))
+            seq_action = color_menu.addAction("This column — numeric (sequential)")
+            seq_action.triggered.connect(
+                lambda _checked=False: self.parent.color_numeric(source_column, colormap="viridis", vcenter=None)
+            )
+        else:
+            cat_action = color_menu.addAction("This column — categorical (unique values)")
+            cat_action.triggered.connect(lambda _checked=False: self.parent.color_categorical(source_column))
+
+        clear_col_action = color_menu.addAction("Clear this column")
+        clear_col_action.triggered.connect(lambda _checked=False: self.parent.clear_colors(source_column))
+
+        color_menu.addSeparator()
+
+        all_action = color_menu.addAction("Color entire table (auto)")
+        all_action.triggered.connect(lambda _checked=False: self.parent.color_table())
+        clear_all_action = color_menu.addAction("Clear all colors")
+        clear_all_action.triggered.connect(lambda _checked=False: self.parent.clear_colors())
 
     def _clear_filter(self, source_column: int) -> None:
         """Clear a source column filter."""

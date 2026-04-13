@@ -231,13 +231,9 @@ QtTagButton QLabel[text="Incomplete"],
 QtTagButton QLabel[text="Cancelling"]{
     color: #000000;
 }
-
-QtTagButton[active=True]{
-    border: 5px solid {{ text }};
-}
 QtTagButton[text="Cancelled"][active=True],
 QtTagButton[text="Invalid"][active=True] {
-    border: 5px solid {{ highlight }};
+    border: 2px solid {{ highlight }};
 }
 QtTagManager[small_text=True] QLabel {
     font-size: {{ decrease(font_size, 1) }};
@@ -245,4 +241,8 @@ QtTagManager[small_text=True] QLabel {
 QtTagManager[small_text=True] QtTagButton {
     margin: 0px;
     padding: 0px;
+}
+
+QtTagButton[active=True]{
+    border: 2px solid {{ text }};
 }
