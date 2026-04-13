@@ -75,6 +75,28 @@ def darken_or_lighten(color: ty.Union[str, Color], percentage: float = 10) -> st
     return lighten(color, percentage)
 
 
+def dark_or_light_color_darken(
+    dark_color: ty.Union[str, Color], light_color: ty.Union[str, Color], percentage: float = 10
+) -> str:
+    """Darken or lighten the color.
+
+    If color is light, darken it, otherwise lighten it.
+    """
+    color = dark_color if is_dark_theme() else light_color
+    return darken(color, percentage)
+
+
+def dark_or_light_color_lighten(
+    dark_color: ty.Union[str, Color], light_color: ty.Union[str, Color], percentage: float = 10
+) -> str:
+    """Darken or lighten the color.
+
+    If color is light, darken it, otherwise lighten it.
+    """
+    color = dark_color if is_dark_theme() else light_color
+    return lighten(color, percentage)
+
+
 def darken_or_lighten_for_theme(color: ty.Union[str, Color], is_dark: bool = False, percentage: float = 10) -> str:
     """Darken the color if it is light, otherwise lighten it."""
     if is_dark:

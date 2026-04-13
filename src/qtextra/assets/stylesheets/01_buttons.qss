@@ -213,3 +213,57 @@ QPushButton#cancel_btn {
 QPushButton#error_btn {
     background-color: {{ lighten(error, 50) }};
 }
+
+/* ----------------- QtSegmentedButton ----------------- */
+
+QtSegmentedButton {
+    border: 1px solid {{ foreground }};
+    border-radius: 4px;
+    background-color: {{ background }};
+    padding: 0px;
+}
+
+QtSegmentedButton > QPushButton#mainButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 0px;
+    padding: 3px 8px;
+    text-align: center;
+    min-height: 24px;
+}
+
+QtSegmentedButton > QPushButton#mainButton:hover {
+    background-color: {{ primary }};
+}
+
+QtSegmentedButton > QPushButton#mainButton:pressed {
+    background-color: {{ foreground }};
+}
+
+QtSegmentedButton > QPushButton#mainButton:disabled {
+    color: {{ opacity(text, 60) }};
+}
+
+QtSegmentedButton[flat="true"] {
+    border: none;
+    background-color: transparent;
+}
+
+/* Action buttons inside segmented button restore hover (overrides [transparent=true] which comes earlier) */
+QtSegmentedButton QtImagePushButton:hover {
+    border-radius: 3px;
+    background-color: {{ primary }};
+}
+
+QtSegmentedButton QtImagePushButton:pressed {
+    background-color: {{ foreground }};
+}
+
+/* Separator inside segmented button matches the outer border — no standout */
+QtSegmentedButton QtVertLine {
+    border: 0px;
+    border-left: 1px solid {{ foreground }};
+    background-color: transparent;
+    max-width: 1px;
+    min-width: 1px;
+}

@@ -2659,11 +2659,23 @@ def make_advanced_collapsible(
     return advanced_widget
 
 
-def make_group_box(parent: Qw.QWidget | None, title: str, is_flat: bool = True, bold: bool = False) -> Qw.QGroupBox:
+def make_group_box(
+    parent: Qw.QWidget | None,
+    title: str,
+    is_flat: bool = True,
+    bold: bool = False,
+    checkable: bool = False,
+    value: bool = False,
+    func: Callback | None = None,
+) -> Qw.QGroupBox:
     """Make group box."""
     widget = Qw.QGroupBox(parent)
     widget.setFlat(is_flat)
     widget.setTitle(title)
+    widget.setCheckable(checkable)
+    widget.setChecked(value)
+    if func:
+        [widget.toggled.connect(func_) for func_ in _validate_func(func)]
     return widget
 
 

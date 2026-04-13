@@ -80,6 +80,8 @@ QTA_MAPPING: dict[str, IconType] = {
     "log": "mdi6.clipboard-text",
     "filter_and": "mdi6.filter-plus",
     "filter_or": "mdi6.filter-minus",
+    "filter_on": "mdi6.filter",
+    "filter_off": "mdi6.filter-off",
     "and": "mdi6.ampersand",
     "or": "fa5s.grip-lines-vertical",
     # "ruler": "fa5s.ruler-horizontal",

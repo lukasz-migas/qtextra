@@ -162,9 +162,11 @@ class TestQtMultiStatePushButton:
 
         mock_set_and_show_menu.assert_not_called()
 
+        # When hover is disabled, leaveEvent should NOT close the menu
+        # (the menu was opened by click and the user needs to reach it)
         menu = Mock()
         widget._menu = menu
         widget.event(QEvent(QEvent.Type.Leave))
 
-        menu.close.assert_called_once()
-        assert widget._menu is None
+        menu.close.assert_not_called()
+        assert widget._menu is menu

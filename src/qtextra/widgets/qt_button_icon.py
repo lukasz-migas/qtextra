@@ -18,6 +18,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QRectF,
     QSize,
     Qt,
+    QTimer,
     Signal,
     Slot,
 )
@@ -63,7 +64,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
             THEMES.evt_theme_icon_changed.connect(self._update_qta)
 
     def set_count(self, count: int, enabled: bool = True) -> None:
-        """Enable count indicator."""
+        """Enable a count indicator."""
         self.count = count
         self.count_enabled = enabled
 
@@ -414,7 +415,7 @@ class QtHorizontalDirectionButton(QtTogglePushButton):
 
 
 class QtVisibleButton(QtTogglePushButton):
-    """Lock button with shown/hidden icon."""
+    """A button with a shown/hidden icon."""
 
     ICON_ON = "visible_on"
     ICON_OFF = "visible_off"
@@ -438,7 +439,7 @@ class QtVisibleButton(QtTogglePushButton):
 
 
 class QtHiddenButton(QtTogglePushButton):
-    """Lock button with shown/hidden icon."""
+    """A button with hidden/shown icon."""
 
     ICON_ON = "visible_off"
     ICON_OFF = "visible_on"
@@ -449,7 +450,7 @@ class QtHiddenButton(QtTogglePushButton):
     @property
     def hidden(self) -> bool:
         """Get toggle state."""
-        return self.visible
+        return self.state
 
     @hidden.setter
     def hidden(self, state: bool) -> None:
@@ -459,6 +460,16 @@ class QtHiddenButton(QtTogglePushButton):
     def visible(self) -> bool:
         """Get toggle state."""
         return not self.state
+
+
+class QtFilterButton(QtTogglePushButton):
+    """A button with filter on / filter off icon."""
+
+    ICON_ON = "filter_on"
+    ICON_OFF = "filter_off"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
 
 
 class QtPinButton(QtTogglePushButton):
@@ -630,6 +641,12 @@ class QtMultiStatePushButton(QtImagePushButton):
         self._menu = menu
         hp.show_below_widget(menu, self, x_offset=20)
 
+    def on_click(self) -> None:
+        """Show the state menu on click when auto-hover is disabled."""
+        if not self._auto_show_menu_on_hover:
+            QTimer.singleShot(0, self.set_and_show_menu)
+        super().on_click()
+
     def enterEvent(self, event: QEnterEvent | QEvent) -> None:  # type: ignore[override]
         """Handle hover entry and show the state menu when enabled."""
         if self._auto_show_menu_on_hover:
@@ -639,7 +656,7 @@ class QtMultiStatePushButton(QtImagePushButton):
 
     def leaveEvent(self, event: QEvent) -> None:  # type: ignore[override]
         """Event."""
-        if self._menu is not None:
+        if self._auto_show_menu_on_hover and self._menu is not None:
             self._menu.close()
             self._menu = None
         super().leaveEvent(event)
@@ -1106,6 +1123,8 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtLockButton(parent=frame, auto_connect=True))
         lay.addWidget(QtHorizontalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtVisibleButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtHiddenButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtFilterButton(parent=frame, auto_connect=True))
         lay.addWidget(QtVerticalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtToggleButton(parent=frame, auto_connect=True))
         lay.addWidget(QtExpandButton(parent=frame, auto_connect=True))
@@ -1121,7 +1140,7 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtPriorityButton(parent=frame, auto_connect=True))
         lay.addWidget(QtStateButton(parent=frame, auto_connect=True))
         lay.addWidget(QtEmotionButton(parent=frame, auto_connect=True))
-        lay.addWidget(QtMultiThemeButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtMultiThemeButton(parent=frame, auto_connect=True, auto_show_menu_on_hover=False))
 
         ha.addWidget(hp.make_v_line())
 

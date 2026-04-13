@@ -79,8 +79,10 @@ class QtMiniToolbar(QFrame):
         object_name: str | None = None,
         is_menu: bool = False,
         hide: bool = False,
+        size_preset: QtaSizePreset | None = None,
     ) -> QtImagePushButton:
-        size_preset = self.icon_size_preset
+        if size_preset is None:
+            size_preset = self.icon_size_preset
         if size_preset:
             size = None
         if not any((small, average, medium, normal)) and not size and not size_preset:
@@ -124,6 +126,7 @@ class QtMiniToolbar(QFrame):
         is_menu: bool = False,
         hide: bool = False,
         func_menu: ty.Callable | None = None,
+        size_preset: QtaSizePreset | None = None,
     ) -> QtImagePushButton:
         """Insert tool."""
         btn = self._make_qta_button(
@@ -139,6 +142,7 @@ class QtMiniToolbar(QFrame):
             is_menu=is_menu,
             hide=hide,
             func_menu=func_menu,
+            size_preset=size_preset,
         )
         self.add_button(btn, set_size=False)
         return btn
@@ -200,6 +204,7 @@ class QtMiniToolbar(QFrame):
         normal: bool = False,
         hidden: bool = False,
         checked_icon_name: str | None = None,
+        size_preset: QtaSizePreset | None = None,
     ) -> QtImagePushButton:
         """Insert tool."""
         btn = self._make_qta_button(
@@ -215,6 +220,7 @@ class QtMiniToolbar(QFrame):
             average=average,
             normal=normal,
             checked_icon_name=checked_icon_name,
+            size_preset=size_preset,
         )
         self.insert_button(btn, index, set_size=False)
         if hidden:
