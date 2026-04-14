@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import QRectF, Qt, Signal
+from PyQt6.QtGui import QStandardItem, QStandardItemModel
+from qtpy.QtCore import QRectF, QSortFilterProxyModel, Qt, Signal
 from qtpy.QtGui import QPainter, QPen
 from qtpy.QtWidgets import QComboBox, QCompleter, QHBoxLayout, QLineEdit, QStyledItemDelegate, QWidget
 
@@ -213,6 +214,47 @@ class QtSearchableComboBox(QComboBox):
         """Remove item."""
         super().removeItem(index)
         self.completer_object.setModel(self.model())
+
+    def _get_model_for_updates(self):
+        """Return the writable model backing the choice combobox."""
+        model = self.model()
+        if isinstance(model, QSortFilterProxyModel):
+            source_model = model.sourceModel()
+            if source_model is not None:
+                return source_model
+        return model
+
+    def set_data(self, data: dict[ty.Any, str], current_item: ty.Any = None) -> None:
+        """Replace combobox data using a bulk model update."""
+        from qtextra.helpers import qt_signals_blocked
+
+        current_index = -1
+        model = self.model()
+        if isinstance(model, QSortFilterProxyModel):
+            replacement_model = QStandardItemModel(model)
+            target_model = replacement_model
+        else:
+            replacement_model = QStandardItemModel(self)
+            target_model = replacement_model
+
+        for index, (item, text) in enumerate(data.items()):
+            row = QStandardItem(text)
+            row.setData(item, Qt.ItemDataRole.UserRole)
+            target_model.appendRow(row)
+            if current_item is not None and current_item in (item, text):
+                current_index = index
+
+        with qt_signals_blocked(self):
+            if isinstance(model, QSortFilterProxyModel):
+                model.setSourceModel(replacement_model)
+                self.setModel(model)
+            else:
+                self.setModel(replacement_model)
+            if current_index >= 0:
+                self.setCurrentIndex(current_index)
+        completer = getattr(self, "completer_object", None)
+        if completer is not None:
+            completer.setModel(self.model())
 
     # Alias methods to offer Qt-like interface
     _textActivated = _text_activated
