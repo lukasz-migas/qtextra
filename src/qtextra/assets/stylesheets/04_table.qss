@@ -23,6 +23,7 @@ QtDataFrameWidget > DataTableView {
     gridline-color: {{ highlight }};
     selection-color: {{ text }};
     selection-background-color: {{ lighten(highlight, 35) }};
+    alternate-background-color: {{ darken_or_lighten_for_theme(foreground, 10) }};
 }
 
 QtDataFrameWidget > CornerView {
