@@ -1,9 +1,9 @@
 /* ------------ QtTagButton ------------ */
 QtTagManager QtImagePushButton{
-    min-width : 24px;
-    min-height : 24px;
-    max-width : 28px;
-    max-height : 28px;
+    /*min-width : 24px;*/
+    /*min-height : 24px;*/
+    /*max-width : 28px;*/
+    /*max-height : 28px;*/
     padding: 1px;
     border: 1px;
     margin: 1px;

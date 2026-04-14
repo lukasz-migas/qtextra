@@ -18,19 +18,31 @@ class QtaMixin:
     """Mixin class for Qta widgets."""
 
     QTA_ICON_SIZE_FOLLOWS_WIDGET_SIZE: ty.ClassVar[bool] = False
-    QTA_SIZE_MAP: ty.ClassVar[dict[QtaSizePreset, tuple[QSize, QSize]]] = {
-        "xxsmall": (QSize(10, 10), QSize(10, 10)),
-        "xsmall": (QSize(16, 16), QSize(16, 16)),
-        "small": (QSize(20, 20), QSize(16, 16)),
-        "normal": (QSize(20, 20), QSize(20, 20)),
-        "average": (QSize(24, 24), QSize(24, 24)),
-        "medium": (QSize(28, 28), QSize(28, 28)),
-        "large": (QSize(40, 40), QSize(32, 32)),
-        "xlarge": (QSize(60, 60), QSize(60, 60)),
-        "xxlarge": (QSize(80, 80), QSize(80, 80)),
-        "xxxlarge": (QSize(120, 120), QSize(120, 120)),
+    QTA_SIZE_NAME_MAP: ty.ClassVar[dict[str, str]] = {
+        "xxsmall": "10px",
+        "xsmall": "16px",
+        "small": "20px",
+        "normal": "24px",
+        "average": "24px",
+        "medium": "28px",
+        "large": "40px",
+        "xlarge": "60px",
+        "xxlarge": "80px",
+        "xxxlarge": "120px",
     }
-    LEGACY_OBJECT_NAMES: ty.ClassVar[dict[QtaSizePreset, str]] = {preset: f"{preset}_icon" for preset in QTA_SIZE_MAP}
+    QTA_SIZE_MAP: ty.ClassVar[dict[str, tuple[QSize, QSize]]] = {
+        "10px": (QSize(10, 10), QSize(10, 10)),
+        "16px": (QSize(16, 16), QSize(16, 16)),
+        "20px": (QSize(20, 20), QSize(16, 16)),
+        "24px": (QSize(24, 24), QSize(24, 24)),
+        "28px": (QSize(28, 28), QSize(28, 28)),
+        "32px": (QSize(32, 32), QSize(32, 32)),
+        "40px": (QSize(40, 40), QSize(32, 32)),
+        "60px": (QSize(60, 60), QSize(60, 60)),
+        "80px": (QSize(80, 80), QSize(80, 80)),
+        "120px": (QSize(120, 120), QSize(120, 120)),
+    }
+    LEGACY_OBJECT_NAMES: ty.ClassVar[dict[str, str]] = {preset: f"{preset}_icon" for preset in QTA_SIZE_NAME_MAP}
 
     _qta_data: tuple | None = None
     _checked_qta_data: tuple | None = None
@@ -48,6 +60,7 @@ class QtaMixin:
     def _get_qta_size_spec(cls, preset: QtaSizePreset) -> tuple[QSize, QSize]:
         """Return the widget and icon size for a preset."""
         try:
+            preset = cls.QTA_SIZE_NAME_MAP.get(preset, preset)
             widget_size, icon_size = cls.QTA_SIZE_MAP[preset]
         except KeyError as exc:
             presets = ", ".join(cls.QTA_SIZE_MAP)
