@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import typing as ty
 
-from PyQt6.QtGui import QStandardItem, QStandardItemModel
 from qtpy.QtCore import QRectF, QSortFilterProxyModel, Qt, Signal
-from qtpy.QtGui import QPainter, QPen
+from qtpy.QtGui import QPainter, QPen, QStandardItem, QStandardItemModel
 from qtpy.QtWidgets import QComboBox, QCompleter, QHBoxLayout, QLineEdit, QStyledItemDelegate, QWidget
 
 from qtextra.config import QtStyler
