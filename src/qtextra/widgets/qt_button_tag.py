@@ -302,7 +302,7 @@ class QtTagManager(QWidget):
 
     def add_button(self, icon_name: str, tooltip: str = "") -> QtImagePushButton:
         """Add button."""
-        button = hp.make_qta_btn(self, icon_name, tooltip=tooltip, size_preset="small", standout=True)
+        button = hp.make_qta_btn(self, icon_name, tooltip=tooltip, size_preset="average", standout=True)
         self._action_layout.addWidget(button)
         self.buttons[icon_name] = button
         return button

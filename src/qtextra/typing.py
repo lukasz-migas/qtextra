@@ -20,6 +20,17 @@ QtaSizePreset = ty.Literal[
     "xlarge",
     "xxlarge",
     "xxxlarge",
+    # also let's now add some better naming since it's not clear...
+    "10px",  # xxsmall
+    "16px",  # xsmall
+    "20px",  # small
+    "24px",  # normal
+    "28px",  # medium
+    "32px",
+    "40px",  # large
+    "60px",  # xlarge
+    "80px",  # xxlarge
+    "120px",  # xxxlarge
 ]
 
 
