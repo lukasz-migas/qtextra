@@ -1,31 +1,37 @@
 /* ----------------- QComboBox ------------------ */
 
 QComboBox {
-  border-radius: 2px;
-  background-color: {{ foreground }};
-  padding: 3px 10px 3px 8px; /* top right bottom left */
-  font-size: {{ increase(font_size, 1) }};
+  border-radius: 8px;
+  background-color: {{ background }};
+  border: 1px solid {{ foreground }};
+  min-height: 20px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+QComboBox:hover {
+  background-color: {{ primary }};
 }
 
 QComboBox:on {
-  border-radius: 0px;
+  border: 1.5px solid {{ highlight }};
 }
 
 QComboBox:disabled {
-  background-color: {{ opacity(foreground, 75) }};
-  border: 1px solid;
-  border-color: {{ foreground }};
+  background-color: {{ opacity(background, 75) }};
+  border: 1px solid {{ opacity(foreground, 75) }};
   color: {{ opacity(text, 90) }};
 }
 
 QWidget[emphasized="true"]  QComboBox {
   background-color: {{ primary }};
+  border-color: {{ primary }};
 }
 
 QComboBox::drop-down {
   width: 26px;
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
 }
 
 QComboBox::down-arrow {
