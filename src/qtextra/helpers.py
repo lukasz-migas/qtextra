@@ -585,6 +585,8 @@ def set_regex_validator(widget: Qw.QWidget, pattern: str) -> None:
 
 def is_valid(widget: Qw.QWidget) -> bool:
     """Is valid."""
+    if widget is None:
+        return False
     try:
         if hasattr(widget, "x"):
             widget.x()
@@ -764,12 +766,15 @@ def set_combobox_data(
     data: ty.Union[dict, ty.OrderedDict, Enum],
     current_item: str | None = None,
     block_signals: bool = True,
+    clear: bool = True,
 ):
     """Set data/value on combobox."""
     if not isinstance(data, (dict, ty.OrderedDict)):
         data = {m: m.value for m in data}
 
     with qt_signals_blocked(widget, block_signals=block_signals):
+        if clear:
+            widget.clear()
         for index, (item, text) in enumerate(data.items()):
             if not isinstance(text, str):
                 text = item.value
