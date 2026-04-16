@@ -737,7 +737,7 @@ class QtListScrollWidget(QScrollArea, ListMixin):
 
     def remove_by_item_model(self, item_model: _M, force: bool = False, **_kwargs: ty.Any):
         """Remove item from the list based on the item model."""
-        self.remove_item(item_model, force)
+        self.remove_item(item_model, force=force)
 
     def get_item_widget_for_index(self, index: int) -> tuple[_M, _W]:
         """Return the model and widget stored at ``index``."""
