@@ -4,12 +4,14 @@ import pytest
 from qtpy.QtCore import QEvent, Qt
 
 from qtextra.widgets.qt_button_icon import (
+    PRESET_TO_BADGE_SIZE,
     QtAnimationPlayButton,
     QtImagePushButton,
     QtPauseButton,
     QtPriorityButton,
     QtToolbarPushButton,
 )
+from qtextra.widgets.qt_notification_badge import QtNotificationBadge
 
 
 @pytest.fixture
@@ -96,6 +98,65 @@ class TestQtImagePushButton:
         widget.connect_to_right_click(self._on_right_click)
         qtbot.mouseClick(widget, Qt.RightButton)
         assert self.right_click == 1
+
+    def test_set_count_attaches_badge_in_count_mode(self, setup_image_widget):
+        widget = setup_image_widget()
+        widget.set_count(5)
+
+        assert isinstance(widget._badge, QtNotificationBadge)
+        assert widget._badge.mode == "count"
+        assert widget._badge.count == 5
+        assert widget._badge.state == "info"
+        assert widget.count_enabled is True
+
+    def test_set_count_caps_display_at_99_plus(self, setup_image_widget):
+        widget = setup_image_widget()
+        widget.set_count(150)
+
+        assert widget._badge.count == 150
+        assert widget._badge._display_text == "99+"
+
+    def test_set_count_disabled_hides_badge(self, setup_image_widget):
+        widget = setup_image_widget()
+        widget.set_count(3)
+        widget.set_count(0, enabled=False)
+
+        assert widget._badge.state == ""
+        assert widget.count_enabled is False
+
+    def test_set_badge_dot_mode(self, setup_image_widget):
+        widget = setup_image_widget()
+        widget.set_badge(state="warning", mode="dot")
+
+        assert widget._badge.state == "warning"
+        assert widget._badge.mode == "dot"
+
+    def test_clear_badge_resets_state(self, setup_image_widget):
+        widget = setup_image_widget()
+        widget.set_count(2)
+        widget.clear_badge()
+
+        assert widget.count == 0
+        assert widget.count_enabled is False
+        assert widget._badge.state == ""
+
+    @pytest.mark.parametrize(
+        ("preset", "expected"),
+        [
+            ("xxsmall", "xs"),
+            ("small", "sm"),
+            ("normal", "md"),
+            ("large", "lg"),
+            ("xxlarge", "xl"),
+        ],
+    )
+    def test_preset_syncs_badge_size(self, setup_image_widget, preset, expected):
+        widget = setup_image_widget()
+        widget.set_count(1)
+        widget.set_qta_size_preset(preset)
+
+        assert widget._badge.badge_size == expected
+        assert PRESET_TO_BADGE_SIZE[preset] == expected
 
 
 class TestQtAnimationPlayButton:
