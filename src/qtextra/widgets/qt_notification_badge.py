@@ -6,7 +6,7 @@ import typing as ty
 from contextlib import suppress
 
 from qtpy.QtCore import QEvent, QSize, Qt
-from qtpy.QtGui import QColor, QFont, QPainter, QPaintEvent
+from qtpy.QtGui import QColor, QFont, QFontMetrics, QPainter, QPaintEvent
 from qtpy.QtWidgets import QWidget
 
 from qtextra.config import THEMES
@@ -172,7 +172,8 @@ class QtNotificationBadge(QtOverlay):
         text = self._display_text
         if self._mode == "dot" or not text:
             return QSize(diameter, diameter)
-        metrics = self.fontMetrics()
+        # Use the same scaled font as paintEvent so digits never overflow the geometry.
+        metrics = QFontMetrics(self._badge_font())
         width = max(diameter, metrics.horizontalAdvance(text) + max(6, diameter // 2))
         return QSize(width, diameter)
 
