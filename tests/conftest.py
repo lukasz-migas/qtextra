@@ -23,7 +23,11 @@ def get_icon_path(tmpdir_factory):
 
 
 @pytest.fixture(scope="session", autouse=False)
-def add_qt_widget(qtbot: Any, widget: T) -> T:
-    """Register a widget with ``qtbot`` and return it."""
-    qtbot.addWidget(widget)
-    return widget
+def add_qt_widget() -> Any:
+    """Return a helper that registers a widget with ``qtbot``."""
+
+    def _add(qtbot: Any, widget: T) -> T:
+        qtbot.addWidget(widget)
+        return widget
+
+    return _add
