@@ -15,14 +15,13 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QPoint,
     QPointF,
     QPropertyAnimation,
-    QRectF,
     QSize,
     Qt,
     QTimer,
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QEnterEvent, QFont, QPainter
+from qtpy.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPolygonF
 from qtpy.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -39,9 +38,24 @@ from qtextra.assets import get_icon
 from qtextra.config import THEMES
 from qtextra.typing import QtaSizePreset
 from qtextra.widgets._qta_mixin import QtaMixin
+from qtextra.widgets.qt_notification_badge import BadgeMode, BadgeSize, BadgeState, QtNotificationBadge
 from qtextra.widgets.qt_tooltip import QtToolTip, TipPosition
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
+
+# Map button size presets to badge size presets so the count scales with the button.
+PRESET_TO_BADGE_SIZE: dict[str, BadgeSize] = {
+    "xxsmall": "xs",
+    "xsmall": "xs",
+    "small": "sm",
+    "normal": "md",
+    "average": "md",
+    "medium": "lg",
+    "large": "lg",
+    "xlarge": "xl",
+    "xxlarge": "xl",
+    "xxxlarge": "xl",
+}
 
 
 class QtImagePushButton(QPushButton, QtaMixin):
@@ -56,6 +70,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
+        self._badge: QtNotificationBadge | None = None
+        self._base_button_size: QSize = QSize(20, 20)
         super().__init__()
         self.setFixedSize(20, 20)
         self.setProperty("transparent", False)
@@ -67,6 +83,120 @@ class QtImagePushButton(QPushButton, QtaMixin):
         """Enable a count indicator."""
         self.count = count
         self.count_enabled = enabled
+        badge = self._ensure_badge()
+        badge.set_mode("count")
+        badge.set_state("info" if enabled else "")
+        badge.set_count(count if enabled else 0)
+        self._refresh_button_footprint()
+
+    def set_badge(
+        self,
+        *,
+        count: int | None = None,
+        state: BadgeState = "info",
+        mode: BadgeMode = "count",
+        visible_when_zero: bool = False,
+    ) -> None:
+        """Configure the badge overlay with full control over state and mode."""
+        badge = self._ensure_badge()
+        badge.set_state(state)
+        badge.set_mode(mode)
+        badge.set_visible_when_zero(visible_when_zero)
+        if mode == "count":
+            badge.set_count(count if count is not None else self.count)
+            if count is not None:
+                self.count = count
+            self.count_enabled = bool(state)
+        self._refresh_button_footprint()
+
+    def clear_badge(self) -> None:
+        """Clear any badge currently displayed on this button."""
+        self.count = 0
+        self.count_enabled = False
+        if self._badge is not None:
+            self._badge.clear()
+        self._refresh_button_footprint()
+
+    def _ensure_badge(self) -> QtNotificationBadge:
+        """Lazily construct and attach the badge overlay."""
+        if self._badge is None:
+            badge = QtNotificationBadge(state="info", mode="count", size=self._preset_to_badge_size())
+            badge.attach_to(self)
+            self._badge = badge
+        else:
+            self._badge.set_badge_size(self._preset_to_badge_size())
+        return self._badge
+
+    def _preset_to_badge_size(self) -> BadgeSize:
+        """Pick a badge size that matches the current button size preset."""
+        preset = self.property("qta_size_preset")
+        if isinstance(preset, str) and preset in PRESET_TO_BADGE_SIZE:
+            return PRESET_TO_BADGE_SIZE[preset]
+        height = self._base_button_size.height() or self.height() or self.sizeHint().height()
+        if height < 16:
+            return "xs"
+        if height < 24:
+            return "sm"
+        if height < 40:
+            return "md"
+        if height < 80:
+            return "lg"
+        return "xl"
+
+    def _badge_reserved_size(self) -> QSize:
+        """Return the extra (width, height) reserved in the button for the badge."""
+        if self._badge is None or not self._badge.state:
+            return QSize(0, 0)
+        badge_hint = self._badge.sizeHint()
+        # Reserve the badge's own size (plus a 2 px breathing-room) on top and right.
+        return QSize(badge_hint.width() + 2, badge_hint.height() + 2)
+
+    def _refresh_button_footprint(self) -> None:
+        """Resize the button so the badge fits at the top-right without clipping the icon."""
+        reserve = self._badge_reserved_size()
+        total = QSize(
+            self._base_button_size.width() + reserve.width(),
+            self._base_button_size.height() + reserve.height(),
+        )
+        QPushButton.setMinimumSize(self, total)
+        QPushButton.setMaximumSize(self, total)
+        # Push the icon into the original bottom-left sub-rect so it doesn't drift when
+        # the badge appears or disappears.
+        self.setContentsMargins(0, reserve.height(), reserve.width(), 0)
+        self.updateGeometry()
+
+    def setFixedSize(self, *args: ty.Any, **kwargs: ty.Any) -> None:  # type: ignore[override]
+        """Capture the base button footprint; badge reservation is added on top."""
+        if len(args) == 1 and isinstance(args[0], QSize):
+            self._base_button_size = QSize(args[0])
+        elif len(args) == 2:
+            self._base_button_size = QSize(int(args[0]), int(args[1]))
+        else:
+            super().setFixedSize(*args, **kwargs)
+            self._base_button_size = QSize(self.minimumSize())
+            self._refresh_button_footprint()
+            return
+        self._refresh_button_footprint()
+
+    def _apply_qta_size(  # type: ignore[override]
+        self,
+        widget_size: QSize,
+        icon_size: QSize,
+        *,
+        preset: QtaSizePreset | None = None,
+        use_legacy_object_name: bool = False,
+    ) -> None:
+        """Apply size and keep the badge size + button footprint in sync with the preset."""
+        self._base_button_size = QSize(widget_size)
+        super()._apply_qta_size(
+            widget_size,
+            icon_size,
+            preset=preset,
+            use_legacy_object_name=use_legacy_object_name,
+        )
+        if self._badge is not None:
+            self._badge.set_badge_size(self._preset_to_badge_size())
+        self._refresh_button_footprint()
 
     def setText(self, text: str) -> None:  # type: ignore[override]
         """Override text."""
@@ -137,37 +267,59 @@ class QtImagePushButton(QPushButton, QtaMixin):
     def paintEvent(self, *args: ty.Any) -> None:
         """Paint event."""
         super().paintEvent(*args)
-        paint = QPainter(self)
-        if self.has_right_click or self.menu_enabled:
-            width = self.rect().width() / 6
-            radius = self.rect().width() / 8
-            x = self.rect().width() - width
-            y = self.rect().height() - width
-            color = THEMES.get_hex_color("success" if self.has_right_click else "highlight")
-            paint.setPen(QColor(color))
-            paint.setBrush(QColor(color))
-            paint.drawEllipse(QPointF(x, y), radius, radius)
+        if self.menu_enabled:
+            self._paint_menu_chevron()
+        elif self.has_right_click:
+            self._paint_right_click_corner()
 
-        if self.count_enabled:
-            # add text
-            text = "9+" if self.count > 9 else str(self.count)
+    def _paint_menu_chevron(self) -> None:
+        """Draw a small downward chevron in the bottom-right corner."""
+        rect = self.rect()
+        glyph_size = max(5, min(14, int(rect.width() * 0.25)))
+        margin = max(1, rect.width() // 12)
+        cx = rect.width() - margin - glyph_size // 2
+        cy = rect.height() - margin
+        half = glyph_size / 2.0
+        points = [
+            QPointF(cx - half, cy - half),
+            QPointF(cx, cy),
+            QPointF(cx + half, cy - half),
+        ]
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        pen = painter.pen()
+        pen.setColor(QColor(THEMES.get_hex_color("highlight")))
+        pen.setWidth(max(1, glyph_size // 5))
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPolyline(QPolygonF(points))
 
-            color = THEMES.get_hex_color("text")
-            paint.setPen(QColor(color))
-            paint.setBrush(QColor(color))
-            radius = self.rect().width() / 6
-            x = self.rect().x()
-            y = self.rect().y()
-            rect = QRectF(x, y, radius * 4, radius * 4)
-            font: QFont = paint.font()
-            font.setPointSize(12)
-            font.setBold(True)
-            paint.setFont(font)
-            paint.drawText(rect, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft, text)
+    def _paint_right_click_corner(self) -> None:
+        """Draw a filled triangular 'page-fold' in the bottom-right corner."""
+        rect = self.rect()
+        glyph_size = max(5, min(14, int(rect.width() * 0.25)))
+        margin = max(1, rect.width() // 12)
+        right = rect.width() - margin
+        bottom = rect.height() - margin
+        points = [
+            QPointF(right, bottom - glyph_size),
+            QPointF(right - glyph_size, bottom),
+            QPointF(right, bottom),
+        ]
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        color = QColor(THEMES.get_hex_color("success"))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+        painter.drawPolygon(QPolygonF(points))
 
     # Alias methods to offer Qt-like interface
     _onToggle = _on_toggle
     setCount = set_count
+    setBadge = set_badge
+    clearBadge = clear_badge
     setTransparent = set_transparent
     setToggleQta = set_toggle_qta
     onClick = on_click
