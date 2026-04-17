@@ -19,7 +19,8 @@ class _QtFloatingProgressBarBody(QFrame):
         self.text_label = hp.make_label(
             self,
             text=text,
-            alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            alignment=Qt.AlignmentFlag.AlignCenter,
+            wrap=True,
         )
         self.text_label.setObjectName("floatingProgressText")
         self.progress_bar = QProgressBar(self)

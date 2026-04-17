@@ -295,8 +295,10 @@ class QtListSelectPopup(QtFramelessPopup):
         enable_single_click: bool = False,
         double_click_to_select: bool = True,
         text: str = "",
+        hint: str = "",
     ) -> None:
-        self.text: str = text
+        self.text = text
+        self.hint = hint
         self.allow_toolbar = allow_toolbar
         self.allow_sort = allow_sort
         self.allow_filter = allow_filter
@@ -323,6 +325,12 @@ class QtListSelectPopup(QtFramelessPopup):
         layout.addRow(hp.make_label(self, self.text, hide=self.text == ""))
         layout.addRow(hp.make_h_line(self))
         layout.addRow(self.selection_list)
+        layout.addRow(hp.make_h_line(self, hide=self.hint == ""))
+        layout.addRow(
+            hp.make_label(
+                self, self.hint, hide=self.hint == "", object_name="tip_label", alignment=Qt.AlignmentFlag.AlignHCenter
+            )
+        )
         return layout
 
 

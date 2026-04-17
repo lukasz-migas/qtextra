@@ -74,7 +74,9 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_toggle_group import QtToggleGroup
 
 
-## Layout functions
+# ---------------------------------------------------------------------------
+# Layout
+# ---------------------------------------------------------------------------
 
 
 def make_form_layout(
@@ -616,7 +618,9 @@ def close_widget(widget: Qw.QWidget):
     return
 
 
-## Timer functions
+# ---------------------------------------------------------------------------
+# Timer
+# ---------------------------------------------------------------------------
 
 
 def call_later(parent: Qw.QWidget, func: ty.Callable, delay: int) -> None:
@@ -637,7 +641,9 @@ def make_periodic_timer(parent: Qw.QWidget, func: ty.Callable, delay: int, start
     return timer
 
 
-## QProcess functions
+# ---------------------------------------------------------------------------
+# QProcess
+# ---------------------------------------------------------------------------
 
 
 def run_process(
@@ -692,7 +698,9 @@ def get_orientation(orientation: Orientation | Qt.Orientation) -> Qt.Orientation
     return orientation
 
 
-## Combobox functions
+# ---------------------------------------------------------------------------
+# ComboBox
+# ---------------------------------------------------------------------------
 
 
 def combobox_setter(
@@ -839,7 +847,11 @@ def set_combobox_current_index(widget: Qw.QComboBox, current_data: ty.Any) -> No
             break
 
 
-# Table functions
+# ---------------------------------------------------------------------------
+# Table
+# ---------------------------------------------------------------------------
+
+
 def make_table(
     parent: Qw.QWidget,
     table_config: TableConfig,
@@ -903,7 +915,11 @@ def select_columns(parent: Qw.QWidget | None, table: Qw.QTableWidget, table_conf
     columns = table_config.get_selected_columns()
     hidden = [table.isColumnHidden(col_id) for col_id in columns]
 
-    popup = QtListSelectPopup(parent, text="Select columns that should be visible in the table.")
+    popup = QtListSelectPopup(
+        parent,
+        text="Select columns that should be visible in the table.",
+        hint="Click outside the popup to close the window.",
+    )
     for i, index in enumerate(columns):
         column = table_config.get_column(index)
         popup.selection_list.add_item(column["name"], check=not hidden[i])
@@ -921,7 +937,16 @@ def update_table_column(table: Qw.QTableWidget, table_config: TableConfig, name:
         table.setColumnHidden(index, check)
 
 
-## Widgets functions
+# ---------------------------------------------------------------------------
+# Widgets
+# ---------------------------------------------------------------------------
+
+
+def make_color_icon(color_name: str, size: int = 12) -> QIcon:
+    """Make color icon."""
+    pixmap = QPixmap(size, size)
+    pixmap.fill(QColor(color_name))
+    return QIcon(pixmap)
 
 
 def make_label(
