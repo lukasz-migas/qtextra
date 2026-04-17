@@ -275,7 +275,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
     def _paint_menu_chevron(self) -> None:
         """Draw a small downward chevron in the bottom-right corner."""
         rect = self.rect()
-        glyph_size = max(6, min(20, int(rect.width() * 0.33)))
+        glyph_size = max(5, min(14, int(rect.width() * 0.25)))
         margin = max(1, rect.width() // 12)
         cx = rect.width() - margin - glyph_size // 2
         cy = rect.height() - margin
@@ -299,7 +299,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
     def _paint_right_click_corner(self) -> None:
         """Draw a filled triangular 'page-fold' in the bottom-right corner."""
         rect = self.rect()
-        glyph_size = max(6, min(20, int(rect.width() * 0.33)))
+        glyph_size = max(5, min(14, int(rect.width() * 0.25)))
         margin = max(1, rect.width() // 12)
         right = rect.width() - margin
         bottom = rect.height() - margin

@@ -223,7 +223,7 @@ class QtNotificationBadge(QtOverlay):
     def _badge_font(self) -> QFont:
         font = QFont(self.font())
         font.setBold(True)
-        font.setPointSizeF(max(6.0, self._diameter * 0.48))
+        font.setPointSizeF(max(7.0, self._diameter * 0.55))
         return font
 
     def _sync_visibility(self) -> None:
