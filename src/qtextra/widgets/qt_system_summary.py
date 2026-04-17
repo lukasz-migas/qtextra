@@ -92,7 +92,7 @@ class QtSystemSummaryWidget(QWidget):
         layout.addRow("CUDA GPU:", self.cuda_gpu_label)
         hp.set_object_name(
             self.cuda_gpu_label,
-            object_name="success_status_label" if cuda_gpu_name != "N/A" else "error_status_label",
+            object_name="success_status_label" if cuda_gpu_name != "N/A" else "warning_status_label",
         )
 
         self.gpu_memory_free_label = hp.make_label(self, "")
@@ -176,7 +176,7 @@ class QtSystemSummaryWidget(QWidget):
             hp.set_object_name(
                 self.gpu_memory_free_label,
                 self.gpu_memory_total_label,
-                object_name="error_status_label",
+                object_name="warning_status_label",
             )
         else:
             hp.set_object_name(
@@ -187,7 +187,7 @@ class QtSystemSummaryWidget(QWidget):
             hp.set_object_name(
                 self.gpu_memory_free_label,
                 object_name=(
-                    "error_status_label"
+                    "warning_status_label"
                     if free_ratio < 0.4
                     else "warning_status_label"
                     if free_ratio < 0.8
@@ -205,7 +205,7 @@ class SystemSummaryPopup(QtFramelessTool):
     def make_panel(self):
         """Create widget."""
         layout = hp.make_v_layout(spacing=0, margin=0)
-        layout.addLayout(self._make_hide_layout("System summary"))
+        layout.addLayout(self._make_hide_layout("System Summary"))
         layout.addWidget(QtSystemSummaryWidget(self), stretch=True)
         return layout
 

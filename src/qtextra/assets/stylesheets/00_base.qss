@@ -84,7 +84,7 @@ QPushButton:pressed {
 }
 
 QPushButton:checked {
-  background-color: {{ highlight }};
+  background-color: {{ secondary }};
 }
 
 QPushButton:disabled {
@@ -142,23 +142,6 @@ QMenuBar::item:selected {
    background-color: {{ secondary }};
 }
 
-QLCDNumber {
-  background: none;
-}
-
-/* ----------------- QMenu ------------------
-
-QMenu::item {
-    font-size: {{ font_size }};
-    padding: 3px;
-}
-
-QMenu::item:selected {
-    font-size: {{ font_size }};
-    background-color: {{ secondary }};
-}
-*/
-
 /* ----------------- QStatusBar ------------------ */
 
 QStatusBar::item{
@@ -178,11 +161,18 @@ QToolTip {
 /* ----------------- QSplitter ----------------- */
 
 QSplitter::handle:vertical {
+    /*background: {{ secondary }};*/
     image: url("theme_{{ id }}://horizontal_separator.svg");
-    height: 5px;
+    height: 7px;
 }
 
 QSplitter::handle:horizontal {
+    /*background: {{ secondary }};*/
     image: url("theme_{{ id }}://vertical_separator.svg");
-    width: 5px;
+    width: 7px;
+}
+
+QSplitter#with_background::handle {
+    /*background: {{ secondary }};*/
+    background: {{ darken_or_lighten_for_theme(secondary, 50) }};
 }

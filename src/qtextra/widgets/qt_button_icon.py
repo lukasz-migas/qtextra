@@ -152,7 +152,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
             # add text
             text = "9+" if self.count > 9 else str(self.count)
 
-            color = THEMES.get_hex_color("icon")
+            color = THEMES.get_hex_color("text")
             paint.setPen(QColor(color))
             paint.setBrush(QColor(color))
             radius = self.rect().width() / 6
@@ -1151,10 +1151,13 @@ if __name__ == "__main__":  # pragma: no cover
 
         for i, (name, qta_name) in enumerate(QTA_MAPPING.items()):
             btn = QtImagePushButton()
+            btn.set_qta_size_preset("large")
             if i % 2 == 0:
                 btn.connect_to_right_click(_print_right_click)
             if i % 3 == 0:
                 btn.set_count(i)
+            if i % 5 == 0:
+                btn.menu_enabled = True
             btn.set_qta(qta_name, scale_factor=1)
             btn.setToolTip(f"{name} :: {qta_name}")
             btn.setCheckable(True)
