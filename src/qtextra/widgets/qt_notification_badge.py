@@ -174,8 +174,11 @@ class QtNotificationBadge(QtOverlay):
             return QSize(diameter, diameter)
         # Use the same scaled font as paintEvent so digits never overflow the geometry.
         metrics = QFontMetrics(self._badge_font())
-        width = max(diameter, metrics.horizontalAdvance(text) + max(6, diameter // 2))
-        return QSize(width, diameter)
+        # Allow the badge to grow vertically when the scaled font is taller than the
+        # nominal diameter, so text never clips top/bottom.
+        height = max(diameter, metrics.height() + 2)
+        width = max(height, metrics.horizontalAdvance(text) + max(6, height // 2))
+        return QSize(width, height)
 
     def minimumSizeHint(self) -> QSize:  # type: ignore[override]
         """Return minimum badge size."""
@@ -223,7 +226,7 @@ class QtNotificationBadge(QtOverlay):
     def _badge_font(self) -> QFont:
         font = QFont(self.font())
         font.setBold(True)
-        font.setPointSizeF(max(7.0, self._diameter * 0.55))
+        font.setPointSizeF(max(10.0, self._diameter * 0.82))
         return font
 
     def _sync_visibility(self) -> None:
