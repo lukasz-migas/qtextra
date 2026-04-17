@@ -15,7 +15,6 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QPoint,
     QPointF,
     QPropertyAnimation,
-    QRect,
     QSize,
     Qt,
     QTimer,
@@ -59,26 +58,6 @@ PRESET_TO_BADGE_SIZE: dict[str, BadgeSize] = {
 }
 
 
-class _QtButtonBadge(QtNotificationBadge):
-    """Badge variant that anchors to the button's top-right and may extend outside its bounds."""
-
-    def _relayout(self) -> None:  # type: ignore[override]
-        widget = self.widget()
-        if widget is None or (self.parentWidget() is None and not self.isWindow()):
-            return
-        bounds = self._anchor_bounds()
-        if not bounds.isValid():
-            return
-        size = self.sizeHint()
-        if not size.isValid() or size.width() <= 0 or size.height() <= 0:
-            return
-        # Center the badge on the button's top-right corner so half of it sits outside the
-        # button rect - keeps the count readable even on very small (10-20 px) buttons.
-        x = bounds.right() - size.width() // 2 + 1
-        y = bounds.y() - size.height() // 2
-        self.setGeometry(QRect(QPoint(x, y), size))
-
-
 class QtImagePushButton(QPushButton, QtaMixin):
     """Image button."""
 
@@ -91,7 +70,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
 
     def __init__(self, *args: ty.Any, **kwargs: ty.Any):
         self._icon_color = kwargs.pop("icon_color_override", None)
-        self._badge: _QtButtonBadge | None = None
+        self._badge: QtNotificationBadge | None = None
+        self._base_button_size: QSize = QSize(20, 20)
         super().__init__()
         self.setFixedSize(20, 20)
         self.setProperty("transparent", False)
@@ -107,6 +87,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         badge.set_mode("count")
         badge.set_state("info" if enabled else "")
         badge.set_count(count if enabled else 0)
+        self._refresh_button_footprint()
 
     def set_badge(
         self,
@@ -126,6 +107,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
             if count is not None:
                 self.count = count
             self.count_enabled = bool(state)
+        self._refresh_button_footprint()
 
     def clear_badge(self) -> None:
         """Clear any badge currently displayed on this button."""
@@ -133,11 +115,12 @@ class QtImagePushButton(QPushButton, QtaMixin):
         self.count_enabled = False
         if self._badge is not None:
             self._badge.clear()
+        self._refresh_button_footprint()
 
-    def _ensure_badge(self) -> _QtButtonBadge:
+    def _ensure_badge(self) -> QtNotificationBadge:
         """Lazily construct and attach the badge overlay."""
         if self._badge is None:
-            badge = _QtButtonBadge(state="info", mode="count", size=self._preset_to_badge_size())
+            badge = QtNotificationBadge(state="info", mode="count", size=self._preset_to_badge_size())
             badge.attach_to(self)
             self._badge = badge
         else:
@@ -149,7 +132,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         preset = self.property("qta_size_preset")
         if isinstance(preset, str) and preset in PRESET_TO_BADGE_SIZE:
             return PRESET_TO_BADGE_SIZE[preset]
-        height = self.height() or self.sizeHint().height()
+        height = self._base_button_size.height() or self.height() or self.sizeHint().height()
         if height < 16:
             return "xs"
         if height < 24:
@@ -160,6 +143,41 @@ class QtImagePushButton(QPushButton, QtaMixin):
             return "lg"
         return "xl"
 
+    def _badge_reserved_size(self) -> QSize:
+        """Return the extra (width, height) reserved in the button for the badge."""
+        if self._badge is None or not self._badge.state:
+            return QSize(0, 0)
+        badge_hint = self._badge.sizeHint()
+        # Reserve the badge's own size (plus a 2 px breathing-room) on top and right.
+        return QSize(badge_hint.width() + 2, badge_hint.height() + 2)
+
+    def _refresh_button_footprint(self) -> None:
+        """Resize the button so the badge fits at the top-right without clipping the icon."""
+        reserve = self._badge_reserved_size()
+        total = QSize(
+            self._base_button_size.width() + reserve.width(),
+            self._base_button_size.height() + reserve.height(),
+        )
+        QPushButton.setMinimumSize(self, total)
+        QPushButton.setMaximumSize(self, total)
+        # Push the icon into the original bottom-left sub-rect so it doesn't drift when
+        # the badge appears or disappears.
+        self.setContentsMargins(0, reserve.height(), reserve.width(), 0)
+        self.updateGeometry()
+
+    def setFixedSize(self, *args: ty.Any, **kwargs: ty.Any) -> None:  # type: ignore[override]
+        """Capture the base button footprint; badge reservation is added on top."""
+        if len(args) == 1 and isinstance(args[0], QSize):
+            self._base_button_size = QSize(args[0])
+        elif len(args) == 2:
+            self._base_button_size = QSize(int(args[0]), int(args[1]))
+        else:
+            super().setFixedSize(*args, **kwargs)
+            self._base_button_size = QSize(self.minimumSize())
+            self._refresh_button_footprint()
+            return
+        self._refresh_button_footprint()
+
     def _apply_qta_size(  # type: ignore[override]
         self,
         widget_size: QSize,
@@ -168,7 +186,8 @@ class QtImagePushButton(QPushButton, QtaMixin):
         preset: QtaSizePreset | None = None,
         use_legacy_object_name: bool = False,
     ) -> None:
-        """Apply size and keep the badge size in sync with the preset."""
+        """Apply size and keep the badge size + button footprint in sync with the preset."""
+        self._base_button_size = QSize(widget_size)
         super()._apply_qta_size(
             widget_size,
             icon_size,
@@ -177,6 +196,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         )
         if self._badge is not None:
             self._badge.set_badge_size(self._preset_to_badge_size())
+        self._refresh_button_footprint()
 
     def setText(self, text: str) -> None:  # type: ignore[override]
         """Override text."""

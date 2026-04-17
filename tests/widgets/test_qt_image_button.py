@@ -158,6 +158,24 @@ class TestQtImagePushButton:
         assert widget._badge.badge_size == expected
         assert PRESET_TO_BADGE_SIZE[preset] == expected
 
+    def test_button_grows_when_badge_attached(self, setup_image_widget):
+        widget = setup_image_widget()
+        base = widget.maximumSize()
+
+        widget.set_count(5)
+        grown = widget.maximumSize()
+
+        assert grown.width() > base.width()
+        assert grown.height() > base.height()
+
+    def test_button_shrinks_back_when_badge_cleared(self, setup_image_widget):
+        widget = setup_image_widget()
+        base = widget.maximumSize()
+        widget.set_count(5)
+        widget.clear_badge()
+
+        assert widget.maximumSize() == base
+
 
 class TestQtAnimationPlayButton:
     def test_init(self, qtbot, setup_animation_widget):
