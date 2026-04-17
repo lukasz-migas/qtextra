@@ -60,6 +60,7 @@ class QtThemeEditorDialog(QtDialog):
         self.dlg = dlg
         self.widgets: dict[str, QWidget] = {}
         super().__init__(parent, title="Theme Editor")
+        self.setWindowFlag(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         if self.dlg is None:
             self.on_preview()
 

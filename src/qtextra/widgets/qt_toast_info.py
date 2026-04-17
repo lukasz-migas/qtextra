@@ -101,6 +101,7 @@ class QtInfoToast(QFrame):
         self.is_closable = is_closable
         self.position = position
 
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.titleLabel = hp.make_label(self, object_name="titleLabel", bold=True)
         self.contentLabel = hp.make_label(
             self,
