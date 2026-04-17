@@ -16,7 +16,6 @@ from qtextra.games._dinosaur import (
     create_initial_state,
     jump_dinosaur,
 )
-from tests._test_helpers import add_widget
 
 
 def test_create_initial_state_sets_grounded_dinosaur() -> None:
@@ -107,8 +106,8 @@ def test_advance_state_sets_game_over_on_collision() -> None:
     assert result.is_game_over is True
 
 
-def test_dinosaur_dialog_constructs(qtbot) -> None:
-    widget = add_widget(qtbot, DinosaurDialog(None, rng=random.Random(0)))
+def test_dinosaur_dialog_constructs(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, DinosaurDialog(None, rng=random.Random(0)))
 
     assert widget.windowTitle() == "Dinosaur Game"
     assert widget.score_label.text() == "Score: 0"
@@ -116,8 +115,8 @@ def test_dinosaur_dialog_constructs(qtbot) -> None:
 
 
 @pytest.mark.xfail()
-def test_dinosaur_dialog_pause_stops_progress(qtbot) -> None:
-    widget = add_widget(qtbot, DinosaurDialog(None, rng=random.Random(0)))
+def test_dinosaur_dialog_pause_stops_progress(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, DinosaurDialog(None, rng=random.Random(0)))
     start_score = widget._state.score
 
     qtbot.wait(80)
@@ -131,8 +130,8 @@ def test_dinosaur_dialog_pause_stops_progress(qtbot) -> None:
     assert widget._state.score == paused_score
 
 
-def test_dinosaur_dialog_restart_resets_score(qtbot) -> None:
-    widget = add_widget(qtbot, DinosaurDialog(None, rng=random.Random(0)))
+def test_dinosaur_dialog_restart_resets_score(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, DinosaurDialog(None, rng=random.Random(0)))
     widget._state = DinosaurGameState(
         width=720,
         height=240,

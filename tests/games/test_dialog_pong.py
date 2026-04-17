@@ -16,7 +16,6 @@ from qtextra.games._pong import (
     create_initial_state,
     move_player_paddle,
 )
-from tests._test_helpers import add_widget
 
 
 def test_create_initial_state_sets_scores_and_ball() -> None:
@@ -114,16 +113,16 @@ def test_advance_state_scores_point_for_player() -> None:
     assert result.ai_score == 0
 
 
-def test_pong_dialog_constructs(qtbot) -> None:
-    widget = add_widget(qtbot, PongDialog(None, rng=random.Random(0)))
+def test_pong_dialog_constructs(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, PongDialog(None, rng=random.Random(0)))
 
     assert widget.windowTitle() == "Pong"
     assert widget.score_label.text() == "Score: 0 - 0"
     assert widget.status_label.text() == "Running"
 
 
-def test_pong_dialog_pause_stops_ball_progress(qtbot) -> None:
-    widget = add_widget(qtbot, PongDialog(None, rng=random.Random(0)))
+def test_pong_dialog_pause_stops_ball_progress(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, PongDialog(None, rng=random.Random(0)))
     start_x = widget._state.ball_x
 
     qtbot.wait(60)
@@ -137,8 +136,8 @@ def test_pong_dialog_pause_stops_ball_progress(qtbot) -> None:
     assert widget._state.ball_x == paused_x
 
 
-def test_pong_dialog_restart_resets_score(qtbot) -> None:
-    widget = add_widget(qtbot, PongDialog(None, rng=random.Random(0)))
+def test_pong_dialog_restart_resets_score(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, PongDialog(None, rng=random.Random(0)))
     widget._state = PongGameState(
         width=640,
         height=360,

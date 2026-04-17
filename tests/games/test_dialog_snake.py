@@ -16,7 +16,6 @@ from qtextra.games._snake import (
     create_initial_state,
     spawn_food,
 )
-from tests._test_helpers import add_widget
 
 
 def test_create_initial_state_places_food_off_snake() -> None:
@@ -167,8 +166,8 @@ def test_spawn_food_avoids_snake_cells() -> None:
         assert food not in snake
 
 
-def test_snake_dialog_constructs(qtbot) -> None:
-    widget = add_widget(qtbot, SnakeDialog(None, tick_interval_ms=1_000))
+def test_snake_dialog_constructs(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, SnakeDialog(None, tick_interval_ms=1_000))
 
     assert widget.windowTitle() == "Snake Game"
     assert widget.score_label.text() == "Score: 0"
@@ -176,8 +175,8 @@ def test_snake_dialog_constructs(qtbot) -> None:
     assert widget.restart_button.isEnabled()
 
 
-def test_snake_dialog_pause_toggles_timer_progress(qtbot) -> None:
-    widget = add_widget(qtbot, SnakeDialog(None, tick_interval_ms=20, rng=random.Random(0)))
+def test_snake_dialog_pause_toggles_timer_progress(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, SnakeDialog(None, tick_interval_ms=20, rng=random.Random(0)))
     start_head = widget._state.snake[0]
 
     qtbot.wait(60)
@@ -196,8 +195,8 @@ def test_snake_dialog_pause_toggles_timer_progress(qtbot) -> None:
     assert widget._state.snake[0] != paused_head
 
 
-def test_snake_dialog_restart_resets_state_after_game_over(qtbot) -> None:
-    widget = add_widget(qtbot, SnakeDialog(None, width=4, height=4, tick_interval_ms=1_000, rng=random.Random(0)))
+def test_snake_dialog_restart_resets_state_after_game_over(qtbot, add_qt_widget) -> None:
+    widget = add_qt_widget(qtbot, SnakeDialog(None, width=4, height=4, tick_interval_ms=1_000, rng=random.Random(0)))
     widget._state = SnakeGameState(
         width=4,
         height=4,
