@@ -26,6 +26,8 @@ them is a good next contribution target.
 
 - [WhatsNewDialog](./qt_whats_new.md): multi-page release notes and feature-introduction dialog
 
+- [WhatsNewStaticDialog](./qt_whats_new_static.md): static release notes page with video, highlight tiles, and a call-to-action
+
 - [UpdateAvailableDialog](./qt_update_available.md): update prompt with release-note and remind-later actions
 
 - [DialogThemeEditor](./qt_theme_editor.md): live theme editor for colors,
