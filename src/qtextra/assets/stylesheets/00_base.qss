@@ -65,57 +65,6 @@ QTextEdit > QWidget {
   background-color: {{ console }};
 }
 
-/* ----------------- QPushButton ------------------ */
-
-QPushButton, QtPushButton, QtToolButton {
-  background-color: {{ foreground }};
-  border-radius: 4px;
-  padding: 4px 20px;
-  border: 0px;
-  font-size: {{ increase(font_size, 1) }};
-}
-
-QPushButton:hover {
-  background-color: {{ primary }};
-}
-
-QPushButton:pressed {
-  background-color: {{ highlight }};
-}
-
-QPushButton:checked {
-  background-color: {{ secondary }};
-}
-
-QPushButton:disabled {
-  background-color: {{ opacity(foreground, 75) }};
-  border: 1px solid;
-  border-color: {{ foreground }};
-  color: {{ opacity(text, 90) }};
-}
-
-QWidget[emphasized="true"] QPushButton {
-   background-color: {{ primary }};
-}
-
-QWidget[emphasized="true"] QPushButton:disabled {
-  background-color: {{ darken(foreground, 20) }};
-}
-
-QWidget[emphasized="true"] QPushButton:hover {
-    background-color: {{ highlight }};
-}
-
-QWidget[emphasized="true"] QPushButton:pressed {
-  background-color: {{ secondary }};
-}
-
-QWidget[emphasized="true"] QPushButton:checked {
-  background-color: {{ current }};
-}
-
-/* ----------------- QLineEdit ------------------ */
-
 QLineEdit {
   background-color: {{ darken(background, 15) }};
   color: {{ text }};

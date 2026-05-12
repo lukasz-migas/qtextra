@@ -41,9 +41,13 @@ layout.addWidget(QLabel("Buttons sizes"))
 row_layout = QHBoxLayout()
 layout.addLayout(row_layout)
 for _index, preset in enumerate(ty.get_args(QtaSizePreset)):
+    if "px" in preset:
+        continue
     btn = QtImagePushButton()
     btn.set_qta("happy")
     btn.set_qta_size_preset(preset)
+    btn.menu_enabled = True
+    # btn.connect_to_right_click(lambda _: print("Right clicked"))
     row_layout.addWidget(btn)
 
 
