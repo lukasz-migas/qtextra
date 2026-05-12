@@ -75,13 +75,25 @@ QtLargeLabel {
 QLabel#h1 {
   font-size: 28px;
 }
+QLabel#h1_b {
+    font-size: 28px;
+    font-weight: bold;
+}
 QLabel#h2 {
   font-size: 22px;
   color: {{ secondary }};
 }
+QLabel#h2_b {
+    font-size: 22px;
+    font-weight: bold;
+}
 QLabel#h3 {
   font-size: 18px;
   color: {{ secondary }};
+}
+QLabel#h3_b {
+    font-size: 18px;
+    font-weight: bold;
 }
 QLabel#96px {
     font-size: 96px;

@@ -1,3 +1,51 @@
+/* ----------------- QPushButton ------------------ */
+QPushButton, QtPushButton, QtToolButton {
+  background-color: {{ foreground }};
+  border-radius: 4px;
+  padding: 4px 20px;
+  border: 0px;
+  font-size: {{ increase(font_size, 1) }};
+}
+
+QPushButton:hover {
+  background-color: {{ primary }};
+}
+
+QPushButton:pressed {
+  background-color: {{ highlight }};
+}
+
+QPushButton:checked {
+  background-color: {{ secondary }};
+}
+
+QPushButton:disabled {
+  background-color: {{ opacity(foreground, 75) }};
+  border: 1px solid;
+  border-color: {{ foreground }};
+  color: {{ opacity(text, 90) }};
+}
+
+QWidget[emphasized="true"] QPushButton {
+   background-color: {{ primary }};
+}
+
+QWidget[emphasized="true"] QPushButton:disabled {
+  background-color: {{ darken(foreground, 20) }};
+}
+
+QWidget[emphasized="true"] QPushButton:hover {
+    background-color: {{ highlight }};
+}
+
+QWidget[emphasized="true"] QPushButton:pressed {
+  background-color: {{ secondary }};
+}
+
+QWidget[emphasized="true"] QPushButton:checked {
+  background-color: {{ current }};
+}
+
 /* ----------------- QtImagePushButton ----------------- */
 QtImagePushButton{
     padding: 1px;
@@ -117,54 +165,6 @@ QtDeleteButton:pressed {
   background-color: {{ warning }};
 }
 
-/* ----------------- QToolBar ----------------- */
-QToolBar {
-    background-color: {{ background }};
-    border: none;
-    spacing: 2px;
-    padding: 2px;
-}
-
-QToolBar::separator {
-    background-color: {{ foreground }};
-    width: 1px;
-    margin: 4px 3px;
-}
-
-QToolBar::handle {
-    width: 0px;
-    height: 0px;
-}
-
-/* ----------------- QtToolbarPushButton ----------------- */
-QtToolbarPushButton {
-    min-width: 32px;
-    max-width: 32px;
-    min-height: 32px;
-    max-height: 32px;
-    padding: 5px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    margin: 1px;
-    background-color: transparent;
-}
-
-QtToolbarPushButton:checked {
-    border: 3px solid {{ success }};
-    background-color: {{ background }};
-    border-radius: 4px;
-}
-
-QtToolbarPushButton:pressed {
-    background-color: {{ foreground }};
-    border-radius: 4px;
-}
-
-QtToolbarPushButton:hover {
-    background-color: {{ primary }};
-    border-radius: 4px;
-}
-
 /* ----------------- QtPauseButton / QtLockButton ----------------- */
 QtLockButton:hover, QtLockButton:hover{
     background: {{ primary }};
@@ -217,9 +217,9 @@ QPushButton#error_btn {
 /* ----------------- QtSegmentedButton ----------------- */
 
 QtSegmentedButton {
-    border: 1px solid {{ foreground }};
+    border: 0px solid {{ background }};
     border-radius: 4px;
-    background-color: {{ background }};
+    background-color: {{ foreground }};
     padding: 0px;
 }
 
@@ -229,7 +229,7 @@ QtSegmentedButton > QPushButton#mainButton {
     border-radius: 0px;
     padding: 3px 8px;
     text-align: center;
-    min-height: 24px;
+    /*min-height: 24px;*/
 }
 
 QtSegmentedButton > QPushButton#mainButton:hover {
@@ -262,7 +262,7 @@ QtSegmentedButton QtImagePushButton:pressed {
 /* Separator inside segmented button matches the outer border — no standout */
 QtSegmentedButton QtVertLine {
     border: 0px;
-    border-left: 1px solid {{ foreground }};
+    border-left: 0px solid {{ foreground }};
     background-color: transparent;
     max-width: 1px;
     min-width: 1px;
