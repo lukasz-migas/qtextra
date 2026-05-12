@@ -47,23 +47,6 @@ QWidget[drag=true] {
     border-radius: 2px;
 }
 
-/* ----------------- QPushButton / QLabel type variants ----------------- */
-
-QtPushButton#pick_option_button {
-    font-size: {{ increase(font_size, 4) }};
-    font-weight: bold;
-}
-
-QPushButton[type="error"], QLabel[type="error"] {
-    color: {{ error }};
-}
-QPushButton[type="warning"], QLabel[type="warning"] {
-    color: {{ warning }};
-}
-QPushButton[type="success"], QLabel[type="success"] {
-    color: {{ success }};
-}
-
 /* ----------------- QtIndicator ----------------- */
 
 QtIndicator[state=none] {

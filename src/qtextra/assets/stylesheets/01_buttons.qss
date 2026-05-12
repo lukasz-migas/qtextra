@@ -229,7 +229,6 @@ QtSegmentedButton > QPushButton#mainButton {
     border-radius: 0px;
     padding: 3px 8px;
     text-align: center;
-    /*min-height: 24px;*/
 }
 
 QtSegmentedButton > QPushButton#mainButton:hover {
@@ -260,10 +259,29 @@ QtSegmentedButton QtImagePushButton:pressed {
 }
 
 /* Separator inside segmented button matches the outer border — no standout */
-QtSegmentedButton QtVertLine {
-    border: 0px;
-    border-left: 0px solid {{ foreground }};
-    background-color: transparent;
-    max-width: 1px;
-    min-width: 1px;
+/*QtSegmentedButton QtVertLine {*/
+/*    border: 0px;*/
+/*    !*border-left: 0px solid {{ foreground }};*!*/
+/*    !*border-right: 0px solid {{ foreground }};*!*/
+/*    background-color: transparent;*/
+/*    max-width: 1px;*/
+/*    min-width: 1px;*/
+/*}*/
+
+
+/* ----------------- QPushButton / QLabel type variants ----------------- */
+
+QtPushButton#pick_option_button {
+    font-size: {{ increase(font_size, 4) }};
+    font-weight: bold;
+}
+
+QPushButton[type="error"] {
+    color: {{ error }};
+}
+QPushButton[type="warning"] {
+    color: {{ warning }};
+}
+QPushButton[type="success"] {
+    color: {{ success }};
 }

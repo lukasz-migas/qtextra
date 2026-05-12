@@ -10,6 +10,9 @@ from qtpy.QtWidgets import QFrame, QHBoxLayout, QPushButton, QSizePolicy, QWidge
 import qtextra.helpers as hp
 from qtextra.widgets.qt_button_icon import QtImagePushButton
 
+if ty.TYPE_CHECKING:
+    from qtextra.typing import QtaSizePreset
+
 
 class QtSegmentedButton(QFrame):
     """Segmented button: a main text button with attached icon action buttons.
@@ -35,6 +38,7 @@ class QtSegmentedButton(QFrame):
         parent: QWidget | None = None,
         *,
         flat: bool = False,
+        tooltip: str = "",
     ):
         super().__init__(parent=parent)
         self._actions: list[QtImagePushButton] = []
@@ -44,6 +48,7 @@ class QtSegmentedButton(QFrame):
         self._main_btn.setObjectName("mainButton")
         self._main_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self._main_btn.clicked.connect(self.evt_clicked)
+        self._main_btn.setToolTip(tooltip)
 
         self._layout = QHBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
@@ -65,7 +70,7 @@ class QtSegmentedButton(QFrame):
         tooltip: str = "",
         func: ty.Callable | list[ty.Callable] | None = None,
         *,
-        size_preset: str = "average",
+        size_preset: QtaSizePreset = "average",
     ) -> QtImagePushButton:
         """Append an icon action button to the right side of the widget.
 

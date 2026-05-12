@@ -178,3 +178,16 @@ QLabel#ToolTip {
     border: 1px solid {{ foreground }};
     padding: 2px;
 }
+
+
+/* ----------------- QLabel type variants ----------------- */
+
+QLabel[type="error"] {
+    color: {{ error }};
+}
+QLabel[type="warning"] {
+    color: {{ warning }};
+}
+QLabel[type="success"] {
+    color: {{ success }};
+}
