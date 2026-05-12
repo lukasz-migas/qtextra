@@ -107,12 +107,13 @@ class QtaMixin:
         widget_size, icon_size = self._get_qta_size_spec(preset)
         self._apply_qta_size(widget_size, icon_size, preset=preset, use_legacy_object_name=True)
 
-    def _warn_deprecated_size_method(self, legacy_name: str, replacement: str) -> None:
+    @staticmethod
+    def _warn_deprecated_size_method(legacy_name: str, replacement: str) -> None:
         """Emit a standard deprecation warning for size helpers."""
         warnings.warn(
             f"`{legacy_name}` is deprecated, use `{replacement}` instead.",
             DeprecationWarning,
-            stacklevel=2,
+            stacklevel=4,
         )
 
     def _set_icon(self, *args: ty.Any, **kwargs: ty.Any) -> None:
