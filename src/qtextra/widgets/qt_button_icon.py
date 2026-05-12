@@ -272,32 +272,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         elif self.has_right_click:
             self._paint_right_click_corner()
 
-    def _paint_menu_chevron(self) -> None:
-        """Draw a small downward chevron in the bottom-right corner."""
-        rect = self.rect()
-        glyph_size = max(5, min(14, int(rect.width() * 0.25)))
-        margin = max(1, rect.width() // 12)
-        cx = rect.width() - margin - glyph_size // 2
-        cy = rect.height() - margin
-        half = glyph_size / 2.0
-        points = [
-            QPointF(cx - half, cy - half),
-            QPointF(cx, cy),
-            QPointF(cx + half, cy - half),
-        ]
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        pen = painter.pen()
-        pen.setColor(QColor(THEMES.get_hex_color("highlight")))
-        pen.setWidth(max(1, glyph_size // 5))
-        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-        painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawPolyline(QPolygonF(points))
-
-    def _paint_right_click_corner(self) -> None:
-        """Draw a filled triangular 'page-fold' in the bottom-right corner."""
+    def _paint_corner(self, color: str) -> None:
         rect = self.rect()
         glyph_size = max(5, min(14, int(rect.width() * 0.25)))
         margin = max(1, rect.width() // 12)
@@ -310,10 +285,18 @@ class QtImagePushButton(QPushButton, QtaMixin):
         ]
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        color = QColor(THEMES.get_hex_color("success"))
+        color = QColor(THEMES.get_hex_color(color))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(color)
         painter.drawPolygon(QPolygonF(points))
+
+    def _paint_menu_chevron(self) -> None:
+        """Draw a small downward chevron in the bottom-right corner."""
+        self._paint_corner("info")
+
+    def _paint_right_click_corner(self) -> None:
+        """Draw a filled triangular 'page-fold' in the bottom-right corner."""
+        self._paint_corner("success")
 
     # Alias methods to offer Qt-like interface
     _onToggle = _on_toggle
