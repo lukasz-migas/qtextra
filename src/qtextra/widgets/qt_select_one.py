@@ -22,7 +22,7 @@ class QtPickOptionBase(QDialog):
 
     def __init__(self, parent: QWidget, text: str, options: dict[str, ty.Any]):
         super().__init__(parent)
-        self.setWindowTitle("Select option")
+        self.setWindowTitle("Select an option")
 
         self.text = text
         self.options = options
