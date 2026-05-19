@@ -5,12 +5,12 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, replace
 
-from qtpy.QtCore import QSize, Qt, QTimer
+from qtpy.QtCore import QSize, Qt
 from qtpy.QtGui import QColor, QKeyEvent, QPainter, QPaintEvent, QPen
-from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QWidget
 
-import qtextra.helpers as hp
 from qtextra.config.theme import THEMES
+from qtextra.games._base import GameBoardWidget, GameDialogMixin
 from qtextra.widgets.qt_dialog import QtDialog
 
 BOARD_WIDTH = 720
@@ -179,24 +179,19 @@ def advance_state(state: DinosaurGameState, rng: random.Random) -> DinosaurGameS
     )
 
 
-class DinosaurBoardWidget(QWidget):
+class DinosaurBoardWidget(GameBoardWidget):
     """Paint the dinosaur runner board."""
+
+    _state: DinosaurGameState | None  # narrowed from GameBoardWidget
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """Initialize the board widget."""
         super().__init__(parent)
-        self._state: DinosaurGameState | None = None
         self.setMinimumSize(480, 220)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def sizeHint(self) -> QSize:
         """Return the preferred board size."""
         return QSize(560, 240)
-
-    def set_state(self, state: DinosaurGameState) -> None:
-        """Store state and schedule repaint."""
-        self._state = state
-        self.update()
 
     def paintEvent(self, event: QPaintEvent) -> None:
         """Paint the current game state."""
@@ -213,8 +208,6 @@ class DinosaurBoardWidget(QWidget):
         line_color = QColor(THEMES.get_hex_color("primary"))
         dino_color = QColor(THEMES.get_hex_color("success"))
         obstacle_color = QColor(THEMES.get_hex_color("warning"))
-        overlay_color = QColor(THEMES.get_hex_color("error"))
-        overlay_color.setAlpha(70)
 
         painter.fillRect(self.rect(), sky_color)
 
@@ -239,10 +232,10 @@ class DinosaurBoardWidget(QWidget):
             painter.fillRect(obstacle_x, obstacle_y, obstacle_width, obstacle_height, obstacle_color)
 
         if self._state.is_game_over:
-            painter.fillRect(self.rect(), overlay_color)
+            painter.fillRect(self.rect(), self._game_over_overlay(70))
 
 
-class DinosaurDialog(QtDialog):
+class DinosaurDialog(GameDialogMixin, QtDialog):
     """Standalone dialog that hosts a minimal dinosaur runner."""
 
     def __init__(self, parent: QWidget | None, *, rng: random.Random | None = None) -> None:
@@ -253,51 +246,28 @@ class DinosaurDialog(QtDialog):
         super().__init__(parent, title="Dinosaur Game")
         self.setMinimumSize(560, 400)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-
-        self.timer = QTimer(self)
-        self.timer.setInterval(TICK_INTERVAL_MS)
-        self.timer.timeout.connect(self.advance_game)
-
+        self._setup_game_timer(TICK_INTERVAL_MS)
         self.restart_game()
 
-    def make_panel(self) -> QVBoxLayout:
-        """Build the dialog layout."""
-        self.score_label = hp.make_label(self, "", bold=True, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.status_label = hp.make_label(self, "", alignment=Qt.AlignmentFlag.AlignRight)
+    # ── GameDialogMixin interface ──────────────────────────────────────────────
 
-        header_layout = QHBoxLayout()
-        header_layout.addWidget(self.score_label)
-        header_layout.addStretch(1)
-        header_layout.addWidget(self.status_label)
+    def _create_board_widget(self) -> DinosaurBoardWidget:
+        """Return the dinosaur board widget."""
+        return DinosaurBoardWidget(self)
 
-        self.board_widget = DinosaurBoardWidget(self)
-        self.instructions_label = hp.make_label(
-            self,
-            "Space, Up, or W jumps. P pauses. R restarts.",
-            wrap=True,
-            alignment=Qt.AlignmentFlag.AlignHCenter,
-        )
+    def _instructions_text(self) -> str:
+        """Return keyboard instructions."""
+        return "Space, Up, or W jumps. P pauses. R restarts."
 
-        self.pause_button = hp.make_btn(self, "Pause")
-        self.pause_button.clicked.connect(self.toggle_pause)
-        self.restart_button = hp.make_btn(self, "Restart")
-        self.restart_button.clicked.connect(self.restart_game)
+    def _do_restart(self) -> None:
+        """Reset game state for a new run."""
+        self._state = create_initial_state(rng=self._rng)
 
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(self.pause_button)
-        button_layout.addWidget(self.restart_button)
+    def _do_advance_state(self) -> None:
+        """Advance the runner by one tick."""
+        self._state = advance_state(self._state, self._rng)
 
-        layout = hp.make_v_layout()
-        layout.addLayout(header_layout)
-        layout.addWidget(self.board_widget, stretch=1)
-        layout.addWidget(self.instructions_label)
-        layout.addLayout(button_layout)
-        return layout
-
-    def closeEvent(self, event) -> None:  # type: ignore[override]
-        """Stop the timer when the dialog closes."""
-        self.timer.stop()
-        super().closeEvent(event)
+    # ── keyboard handling ──────────────────────────────────────────────────────
 
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
         """Handle keyboard controls."""
@@ -320,57 +290,11 @@ class DinosaurDialog(QtDialog):
 
         super().keyPressEvent(event)
 
-    def restart_game(self) -> None:
-        """Reset the game and start a new run."""
-        self._state = create_initial_state(rng=self._rng)
-        self._is_paused = False
-        self.timer.start()
-        self._refresh_ui()
-        self.setFocus()
-
-    def toggle_pause(self) -> None:
-        """Pause or resume the game."""
-        if self._state.is_game_over:
-            self.setFocus()
-            return
-        self._is_paused = not self._is_paused
-        if self._is_paused:
-            self.timer.stop()
-        else:
-            self.timer.start()
-        self._refresh_ui()
-        self.setFocus()
-
-    def advance_game(self) -> None:
-        """Advance the game by one timer tick."""
-        if self._is_paused or self._state.is_game_over:
-            return
-        self._state = advance_state(self._state, self._rng)
-        if self._state.is_game_over:
-            self.timer.stop()
-        self._refresh_ui()
-
-    def _refresh_ui(self) -> None:
-        """Update labels and board state."""
-        self.score_label.setText(f"Score: {self._state.score}")
-        if self._state.is_game_over:
-            status = "Game over"
-            pause_text = "Pause"
-        elif self._is_paused:
-            status = "Paused"
-            pause_text = "Resume"
-        else:
-            status = "Running"
-            pause_text = "Pause"
-        self.status_label.setText(status)
-        self.pause_button.setText(pause_text)
-        self.board_widget.set_state(self._state)
-
 
 if __name__ == "__main__":  # pragma: no cover
     import sys
 
-    from ionglow.utils.dev import apply_style, qapplication
+    from qtextra.utils.dev import apply_style, qapplication
 
     _ = qapplication()  # analysis:ignore
     dlg = DinosaurDialog(None)

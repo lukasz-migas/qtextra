@@ -306,6 +306,11 @@ QTA_MAPPING: dict[str, IconType] = {
     "approve": "fa5s.thumbs-up",
     "reject": "fa5s.thumbs-down",
     "target": "mdi.target",
+    # games
+    "snake": "mdi6.snake",
+    "pong": "ri.ping-pong-fill",
+    "game": "fa6s.gamepad",
+    "pacman": "fa6s.face-grin-wide",
 }
 
 

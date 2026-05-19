@@ -57,6 +57,7 @@ def test_advance_state_bounces_off_top_wall() -> None:
         ai_score=0,
         is_game_over=False,
         winner=None,
+        ai_target_offset=0.0,
     )
 
     result = advance_state(state, random.Random(0))
@@ -81,6 +82,7 @@ def test_advance_state_bounces_off_player_paddle() -> None:
         ai_score=0,
         is_game_over=False,
         winner=None,
+        ai_target_offset=0.0,
     )
 
     result = advance_state(state, random.Random(0))
@@ -105,6 +107,7 @@ def test_advance_state_scores_point_for_player() -> None:
         ai_score=0,
         is_game_over=False,
         winner=None,
+        ai_target_offset=0.0,
     )
 
     result = advance_state(state, random.Random(0))
@@ -154,6 +157,7 @@ def test_pong_dialog_restart_resets_score(qtbot, add_qt_widget) -> None:
         ai_score=5,
         is_game_over=True,
         winner="Computer",
+        ai_target_offset=0.0,
     )
     widget._refresh_ui()
 
