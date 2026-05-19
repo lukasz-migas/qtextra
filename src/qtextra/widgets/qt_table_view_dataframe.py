@@ -40,6 +40,8 @@ MAX_VERTICAL_SPAN_ROWS = 5000
 BLANK_FILTER_LABEL = "(Blank)"
 ASCENDING_SORT_INDICATOR = " ▲"
 DESCENDING_SORT_INDICATOR = " ▼"
+CellFormatter = str | ty.Callable[[ty.Any], str]
+ColumnFormatters = ty.Mapping[int | str, CellFormatter]
 
 
 def _sample_count(total: int, limit: int) -> int:
@@ -93,6 +95,13 @@ def _row_label_to_text(label: ty.Any) -> str:
 def _is_numeric_series(series: pd.Series) -> bool:
     """Return whether a series should use numeric filtering."""
     return pd.api.types.is_numeric_dtype(series.dtype) and not pd.api.types.is_bool_dtype(series.dtype)
+
+
+def _format_cell_value(value: ty.Any, formatter: CellFormatter) -> str:
+    """Return a display string using a format string or callable."""
+    if callable(formatter):
+        return str(formatter(value))
+    return formatter.format(value)
 
 
 def _rgba_array_from_colormap(values: np.ndarray, norm: ty.Any, cmap: ty.Any) -> np.ndarray:
@@ -213,9 +222,13 @@ class DataFrameProxyModel(BaseTabularTableModel):
         """Map a visible column to a source column."""
         return self._visible_columns[column]
 
-    def set_source_dataframe(self, df: pd.DataFrame) -> None:
+    def set_source_dataframe(
+        self,
+        df: pd.DataFrame,
+        column_formatters: ColumnFormatters | None = None,
+    ) -> None:
         """Replace the source dataframe and reset proxy state."""
-        self.source_model = DataTableModel(df)
+        self.source_model = DataTableModel(df, column_formatters=column_formatters)
         self.clear_state()
 
     def clear_state(self) -> None:
@@ -813,6 +826,7 @@ class QtDataFrameWidget(Qw.QWidget):
         sortable: bool = True,
         filterable: bool = True,
         column_visibility_control: bool = True,
+        column_formatters: ColumnFormatters | None = None,
     ):
         super().__init__(parent)
         df = _normalize_tabular_data(df, inplace=inplace)
@@ -823,10 +837,11 @@ class QtDataFrameWidget(Qw.QWidget):
         self.sortable = sortable
         self.filterable = filterable
         self.column_visibility_control = column_visibility_control
+        self._column_formatters = column_formatters
         self._column_widths: dict[int, int] = {}
 
         # Set up DataFrame TableView and Model
-        self.dataView = DataTableView(df, parent=self)
+        self.dataView = DataTableView(df, parent=self, column_formatters=self._column_formatters)
         self.dataView.setObjectName("dataView")
         if not editable:
             self.dataView.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -896,14 +911,16 @@ class QtDataFrameWidget(Qw.QWidget):
         self._loaded = True
         event.accept()
 
-    def set_data(self, df):
+    def set_data(self, df, column_formatters: ColumnFormatters | None = None):
         """Replace the dataframe and reset view state."""
         df = _normalize_tabular_data(df)
+        if column_formatters is not None:
+            self._column_formatters = column_formatters
         self._loaded = False
         self._column_widths.clear()
         self.setUpdatesEnabled(False)
         try:
-            self.dataView.set_data(df)
+            self.dataView.set_data(df, column_formatters=self._column_formatters)
             proxy_model = self.dataView.proxy_model
             self.columnHeader.set_data(proxy_model)
             self.indexHeader.set_data(proxy_model)
@@ -1325,12 +1342,18 @@ class NoFocusDelegate(Qw.QStyledItemDelegate):
 class DataTableModel(BaseTabularTableModel):
     """Model for DataTableView to connect for DataFrame data."""
 
-    def __init__(self, df, parent=None):
+    def __init__(
+        self,
+        df,
+        parent=None,
+        column_formatters: ColumnFormatters | None = None,
+    ):
         super().__init__(parent, editable=True)
         df = _normalize_tabular_data(df)
         self.df = df
         self._values = df.to_numpy(copy=False)
         self.set_shape(len(df), df.columns.shape[0])
+        self._column_formatters = self._resolve_column_formatters(column_formatters or {})
         # Per-column pre-computed color arrays.  Key = source column int index.
         # Value = {'bg': uint8 (N,4), 'fg': uint8 (N,4)}.  Missing key → no color.
         self._column_colors: dict[int, dict[str, np.ndarray]] = {}
@@ -1350,6 +1373,15 @@ class DataTableModel(BaseTabularTableModel):
         if is_float_like(value):
             return f"{value:.4f}"
         return str(value)
+
+    def _display_value_for_column(self, value, column: int) -> str:
+        """Return display value using a column-specific formatter when configured."""
+        if pd.isnull(value):
+            return ""
+        formatter = self._column_formatters.get(column)
+        if formatter is not None:
+            return _format_cell_value(value, formatter)
+        return self._display_value(value)
 
     def _set_value_at(self, row: int, column: int, value) -> None:
         """Set the data at the given index."""
@@ -1386,7 +1418,21 @@ class DataTableModel(BaseTabularTableModel):
                 if fg[3] != 0:
                     return Qg.QBrush(Qg.QColor(int(fg[0]), int(fg[1]), int(fg[2]), int(fg[3])))
             return None
+        if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
+            value = self._value_at(index.row(), index.column())
+            return self._display_value_for_column(value, index.column())
         return super().data(index, role)
+
+    def _resolve_column_formatters(self, column_formatters: ColumnFormatters) -> dict[int, CellFormatter]:
+        """Resolve formatter keys for columns present in the current dataframe."""
+        resolved: dict[int, CellFormatter] = {}
+        for column, formatter in column_formatters.items():
+            if isinstance(column, str):
+                if column in self.df.columns:
+                    resolved[list(self.df.columns).index(column)] = formatter
+            elif 0 <= column < len(self.df.columns):
+                resolved[column] = formatter
+        return resolved
 
     def _resolve_column_index(self, column: int | str) -> int:
         """Resolve a column name or integer to a source column integer."""
@@ -1510,14 +1556,14 @@ class DataTableModel(BaseTabularTableModel):
 class DataTableView(Qw.QTableView):
     """Displays the DataFrame data as a table."""
 
-    def __init__(self, df, parent):
+    def __init__(self, df, parent, column_formatters: ColumnFormatters | None = None):
         super().__init__(parent)
         self.parent = parent
         self.source_model: DataTableModel | None = None
         self.proxy_model: DataFrameProxyModel | None = None
 
         # Create and set model
-        self.set_data(df)
+        self.set_data(df, column_formatters=column_formatters)
 
         # Hide the headers. The DataFrame headers (index & columns) will be displayed in the DataFrameHeaderViews
         self.horizontalHeader().hide()
@@ -1533,12 +1579,12 @@ class DataTableView(Qw.QTableView):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
 
-    def set_data(self, df):
+    def set_data(self, df, column_formatters: ColumnFormatters | None = None):
         """Set data model."""
         df = _normalize_tabular_data(df)
         with contextlib.suppress(Exception):
             self.selectionModel().selectionChanged.disconnect(self.on_selection_changed)
-        self.source_model = DataTableModel(df)
+        self.source_model = DataTableModel(df, column_formatters=column_formatters)
         self.proxy_model = DataFrameProxyModel(self.source_model, self)
         self.setModel(self.proxy_model)
         self.selectionModel().selectionChanged.connect(self.on_selection_changed)

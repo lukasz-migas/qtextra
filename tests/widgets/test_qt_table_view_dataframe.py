@@ -40,6 +40,55 @@ def test_qt_dataframe_widget_renders_pandas_dataframe_and_keeps_headers_aligned(
     assert widget.cornerView.height() == widget.columnHeader.height()
 
 
+def test_qt_dataframe_widget_supports_column_display_formatters(qtbot):
+    df = pd.DataFrame(
+        {
+            "p_value": [5.0e-12, 0.012345],
+            "score": [1.23456, 2.34567],
+        },
+    )
+
+    widget = QtDataFrameWidget(None, df, column_formatters={"p_value": "{:.3e}"})
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    model = widget.dataView.model()
+    assert model.data(model.index(0, 0)) == "5.000e-12"
+    assert model.data(model.index(0, 1)) == "1.2346"
+    assert model.data(model.index(0, 0), role=Qt.ItemDataRole.ToolTipRole) == "5e-12"
+    assert widget.dataView.source_model.df.loc[0, "p_value"] == 5.0e-12
+
+
+def test_qt_dataframe_widget_preserves_formatters_on_set_data(qtbot):
+    widget = QtDataFrameWidget(None, pd.DataFrame({"p_value": [0.1]}), column_formatters={"p_value": "{:.2e}"})
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.set_data(pd.DataFrame({"p_value": [4.2e-8]}))
+    qtbot.wait(10)
+
+    model = widget.dataView.model()
+    assert model.data(model.index(0, 0)) == "4.20e-08"
+
+
+def test_qt_dataframe_widget_allows_formatters_before_columns_exist(qtbot):
+    widget = QtDataFrameWidget(None, None, column_formatters={"p_value": "{:.2e}"})
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    assert widget.dataView.model().columnCount() == 0
+
+    widget.set_data(pd.DataFrame({"p_value": [4.2e-8], "score": [1.23456]}))
+    qtbot.wait(10)
+
+    model = widget.dataView.model()
+    assert model.data(model.index(0, 0)) == "4.20e-08"
+    assert model.data(model.index(0, 1)) == "1.2346"
+
+
 def test_qt_dataframe_widget_handles_pandas_multiindex(qtbot):
     columns = pd.MultiIndex.from_tuples(
         [("A", "x"), ("A", "y"), ("B", "z")],
