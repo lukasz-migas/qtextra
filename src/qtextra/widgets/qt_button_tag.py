@@ -348,6 +348,7 @@ class QtTagManager(QWidget):
             placeholder=placeholder,
             func_changed=self._handle_filter_by,
             func_clear=self._handle_filter_by,
+            prefix_icon="search",
         )
         if max_width:
             self._filter_edit.setMaximumWidth(max_width)

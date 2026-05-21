@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from koyo.path import open_directory_alt
+from koyo.path import open_directory_universal
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QDialog, QHBoxLayout, QLabel, QTextBrowser, QTextEdit, QVBoxLayout, QWidget
 
@@ -55,7 +55,7 @@ class QtSystemInfo(QDialog):
         self.infoTextBox.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
         self.infoTextBox.setOpenLinks(True)
         self.infoTextBox.setOpenExternalLinks(True)
-        self.infoTextBox.anchorClicked.connect(open_directory_alt)
+        self.infoTextBox.anchorClicked.connect(open_directory_universal)
 
         # Add text copy button
         self.infoCopyButton = QtCopyToClipboardButton(self.infoTextBox)
