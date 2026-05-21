@@ -143,30 +143,17 @@ class QtImagePushButton(QPushButton, QtaMixin):
             return "lg"
         return "xl"
 
-    def _badge_reserved_size(self) -> QSize:
-        """Return the extra (width, height) reserved in the button for the badge."""
-        if self._badge is None or not self._badge.state:
-            return QSize(0, 0)
-        badge_hint = self._badge.sizeHint()
-        # Reserve the badge's own size (plus a 2 px breathing-room) on top and right.
-        return QSize(badge_hint.width() + 2, badge_hint.height() + 2)
-
     def _refresh_button_footprint(self) -> None:
-        """Resize the button so the badge fits at the top-right without clipping the icon."""
-        reserve = self._badge_reserved_size()
-        total = QSize(
-            self._base_button_size.width() + reserve.width(),
-            self._base_button_size.height() + reserve.height(),
-        )
-        QPushButton.setMinimumSize(self, total)
-        QPushButton.setMaximumSize(self, total)
-        # Push the icon into the original bottom-left sub-rect so it doesn't drift when
-        # the badge appears or disappears.
-        self.setContentsMargins(0, reserve.height(), reserve.width(), 0)
+        """Refresh the badge overlay without changing the button footprint."""
+        self.setContentsMargins(0, 0, 0, 0)
+        if self._badge is not None:
+            self._badge.set_badge_size(self._preset_to_badge_size())
+            self._badge._relayout()
+            self._badge._sync_visibility()
         self.updateGeometry()
 
     def setFixedSize(self, *args: ty.Any, **kwargs: ty.Any) -> None:  # type: ignore[override]
-        """Capture the base button footprint; badge reservation is added on top."""
+        """Capture and apply the fixed button footprint."""
         if len(args) == 1 and isinstance(args[0], QSize):
             self._base_button_size = QSize(args[0])
         elif len(args) == 2:
@@ -176,6 +163,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
             self._base_button_size = QSize(self.minimumSize())
             self._refresh_button_footprint()
             return
+        super().setFixedSize(self._base_button_size)
         self._refresh_button_footprint()
 
     def _apply_qta_size(  # type: ignore[override]
@@ -186,7 +174,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         preset: QtaSizePreset | None = None,
         use_legacy_object_name: bool = False,
     ) -> None:
-        """Apply size and keep the badge size + button footprint in sync with the preset."""
+        """Apply size and keep the badge overlay in sync with the preset."""
         self._base_button_size = QSize(widget_size)
         super()._apply_qta_size(
             widget_size,

@@ -2,6 +2,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from qtpy.QtCore import QEvent, Qt
+from qtpy.QtWidgets import QVBoxLayout, QWidget
 
 from qtextra.widgets.qt_button_icon import (
     PRESET_TO_BADGE_SIZE,
@@ -158,23 +159,53 @@ class TestQtImagePushButton:
         assert widget._badge.badge_size == expected
         assert PRESET_TO_BADGE_SIZE[preset] == expected
 
-    def test_button_grows_when_badge_attached(self, setup_image_widget):
+    def test_button_size_stays_fixed_when_badge_attached(self, setup_image_widget):
         widget = setup_image_widget()
-        base = widget.maximumSize()
+        widget.set_qta_size_preset("normal")
+        base_minimum = widget.minimumSize()
+        base_maximum = widget.maximumSize()
 
         widget.set_count(5)
-        grown = widget.maximumSize()
 
-        assert grown.width() > base.width()
-        assert grown.height() > base.height()
+        assert widget.minimumSize() == base_minimum
+        assert widget.maximumSize() == base_maximum
 
-    def test_button_shrinks_back_when_badge_cleared(self, setup_image_widget):
+    def test_button_size_stays_fixed_when_badge_cleared(self, setup_image_widget):
         widget = setup_image_widget()
-        base = widget.maximumSize()
+        widget.set_qta_size_preset("normal")
+        base_minimum = widget.minimumSize()
+        base_maximum = widget.maximumSize()
         widget.set_count(5)
         widget.clear_badge()
 
-        assert widget.maximumSize() == base
+        assert widget.minimumSize() == base_minimum
+        assert widget.maximumSize() == base_maximum
+
+    def test_badge_visibility_follows_button_visibility(self, qtbot):
+        host = QWidget()
+        layout = QVBoxLayout(host)
+        widget = QtImagePushButton(parent=host)
+        widget.set_qta_size_preset("normal")
+        layout.addWidget(widget)
+        qtbot.addWidget(host)
+        host.show()
+        qtbot.waitExposed(host)
+
+        widget.set_count(5)
+        qtbot.wait(10)
+        assert widget._badge.isVisible() is True
+
+        widget.hide()
+        qtbot.wait(10)
+        assert widget._badge.isVisible() is False
+
+        widget.show()
+        qtbot.wait(10)
+        assert widget._badge.isVisible() is True
+
+        host.hide()
+        qtbot.wait(10)
+        assert widget._badge.isVisible() is False
 
 
 class TestQtAnimationPlayButton:
