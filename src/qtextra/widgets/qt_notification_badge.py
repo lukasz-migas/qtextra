@@ -103,6 +103,7 @@ class QtNotificationBadge(QtOverlay):
             raise ValueError(f"Invalid mode: {mode}. Must be one of {self.MODES}")
         self._mode = mode
         self.updateGeometry()
+        self._relayout()
         self._sync_visibility()
         self.update()
 
@@ -119,6 +120,8 @@ class QtNotificationBadge(QtOverlay):
         diameter = self._diameter
         self.setMinimumSize(QSize(diameter, diameter))
         self.updateGeometry()
+        self._relayout()
+        self._sync_visibility()
         self.update()
 
     @property
@@ -134,6 +137,7 @@ class QtNotificationBadge(QtOverlay):
             raise ValueError("Badge count must be >= 0")
         self._count = int(count)
         self.updateGeometry()
+        self._relayout()
         self._sync_visibility()
         self.update()
 
@@ -230,11 +234,25 @@ class QtNotificationBadge(QtOverlay):
         return font
 
     def _sync_visibility(self) -> None:
-        has_widget = self.widget() is not None
         should_show = (
-            has_widget and bool(self._state) and (self._mode == "dot" or self._count > 0 or self._visible_when_zero)
+            self._anchor_is_visible()
+            and bool(self._state)
+            and (self._mode == "dot" or self._count > 0 or self._visible_when_zero)
         )
         self.setVisible(should_show)
+
+    def _sync_to_anchor(self) -> None:
+        """Sync visibility using both badge state and anchor visibility."""
+        self._sync_visibility()
+
+    def _anchor_is_visible(self) -> bool:
+        widget = self.widget()
+        if widget is None:
+            return False
+        window = self.window()
+        if window is None or window is widget:
+            return widget.isVisible()
+        return widget.isVisible() and window.isVisible() and widget.isVisibleTo(window)
 
     def _on_theme_changed(self) -> None:
         self.update()
