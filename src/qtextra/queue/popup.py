@@ -44,7 +44,7 @@ class QueuePopup(QtFramelessTool):
         return layout
 
 
-def create_queue_filter(parent: QWidget, subset: tuple[str, ...] = ()) -> QtTagManager:
+def create_queue_filter(parent: QWidget, subset: tuple[str, ...] = (), add_filter: bool = True) -> QtTagManager:
     """Create queue filter widget."""
     state_filter = QtTagManager(parent, flow=True)
     state_filter.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Minimum)
@@ -53,7 +53,8 @@ def create_queue_filter(parent: QWidget, subset: tuple[str, ...] = ()) -> QtTagM
         subset = [s.lower() for s in subset]
         states = [state for state in states if state.lower() in subset]
     state_filter.add_tags(states, hide_check=True, set_property=True)
-    state_filter.add_filter(placeholder="Filter...", case_sensitive=False)
+    if add_filter:
+        state_filter.add_filter(placeholder="Filter...", case_sensitive=False)
     state_filter.add_clear()
     return state_filter
 

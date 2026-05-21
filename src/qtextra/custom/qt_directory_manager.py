@@ -140,10 +140,10 @@ class QtDirectoryWidget(QFrame):
 
     def _on_open(self) -> None:
         """Open the directory."""
-        from koyo.path import open_directory_alt
+        from koyo.path import open_directory_universal
 
         if Path(self._path):
-            open_directory_alt(self._path)
+            open_directory_universal(self._path)
 
 
 class QtDirectoryManager(QScrollArea):

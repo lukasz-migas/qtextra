@@ -137,12 +137,12 @@ class QtLogger(QWidget):
 
     def on_open_log_dir(self):
         """Open directory containing log files."""
-        from koyo.path import open_directory_alt
+        from koyo.path import open_directory_universal
 
         if self.log_dir is None:
             logger.warning("Log directory is not set.")
             return
-        open_directory_alt(self.log_dir)
+        open_directory_universal(self.log_dir)
 
     def swap_theme(self):
         """Swap theme."""
