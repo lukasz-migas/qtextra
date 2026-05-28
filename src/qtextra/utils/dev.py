@@ -162,7 +162,8 @@ def qframe(
         layout = QtWidgets.QHBoxLayout() if horz else QtWidgets.QVBoxLayout()  # type: ignore[assignment]
         if add_reload:
             w = qdev(modules=modules)
-            w.side_layout.addWidget(theme_toggle_btn(frame))
+            if hasattr(w, "side_layout"):
+                w.side_layout.addWidget(theme_toggle_btn(frame))
             # w.setMaximumHeight(300)
             layout.addWidget(w)
         frame.setLayout(layout)

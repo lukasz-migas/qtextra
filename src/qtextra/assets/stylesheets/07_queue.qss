@@ -81,6 +81,7 @@ QtTagButton[text="Invalid"] {
     border-radius: 5px;
     background-color: #000000;
     border: 3px solid #000000;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Queued"] {
@@ -92,6 +93,7 @@ QtTagButton[text="Queued"] {
     border-radius: 5px;
     background-color: #00C851;
     border: 3px solid #00C851;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Running"] {
@@ -103,6 +105,7 @@ QtTagButton[text="Running"] {
     border-radius: 5px;
     background-color: #8E24AA;
     border: 3px solid #8E24AA;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Run-next"] {
@@ -114,6 +117,7 @@ QtTagButton[text="Run-next"] {
     border-radius: 5px;
     background-color: #dfc5fe;
     border: 3px solid #dfc5fe;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Paused"] {
@@ -125,6 +129,7 @@ QtTagButton[text="Paused"] {
     border-radius: 5px;
     background-color: #e91e63;
     border: 3px solid #e91e63;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Pausing"] {
@@ -136,6 +141,7 @@ QtTagButton[text="Pausing"] {
     border-radius: 5px;
     background-color: #ffb7ce;
     border: 3px solid #ffb7ce;
+    color: #000000;
 }
 
 QLabel#task_state[text="Finished"] {
@@ -147,6 +153,7 @@ QtTagButton[text="Finished"] {
     border-radius: 5px;
     background-color: #4285F4;
     border: 3px solid #4285F4;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Incomplete"] {
@@ -158,6 +165,7 @@ QtTagButton[text="Incomplete"] {
     border-radius: 5px;
     background-color: #1DE9B6;
     border: 3px solid #1DE9B6;
+    color: #000000;
 }
 
 QLabel#task_state[text="Part-failed"] {
@@ -169,6 +177,7 @@ QtTagButton[text="Part-failed"] {
     border-radius: 5px;
     background-color: #ff3d00;
     border: 3px solid #ff3d00;
+    color: #ffffff;
 }
 
 QLabel#task_state[text="Failed"] {
@@ -192,6 +201,7 @@ QtTagButton[text="Cancelling"] {
     border-radius: 5px;
     background-color: #9e9e9e;
     border: 3px solid #9e9e9e;
+    color: #FFFFFF;
 }
 
 QLabel#task_state[text="Cancelled"] {
@@ -203,6 +213,7 @@ QtTagButton[text="Cancelled"] {
     border-radius: 5px;
     background-color: #263238;
     border: 3px solid #263238;
+    color: #FFFFFF;
 }
 
 QLabel#task_state[text="Locked"] {
@@ -214,9 +225,8 @@ QtTagButton[text="Locked"] {
     border-radius: 5px;
     background-color: #795548;
     border: 3px solid #795548;
+    color: #ffffff;
 }
-
-
 QtTagButton QLabel[text="Invalid"],
 QtTagButton QLabel[text="Queued"],
 QtTagButton QLabel[text="Running"],
@@ -224,16 +234,18 @@ QtTagButton QLabel[text="Paused"],
 QtTagButton QLabel[text="Finished"],
 QtTagButton QLabel[text="Part-failed"],
 QtTagButton QLabel[text="Failed"],
-QtTagButton QLabel[text="Cancelled"],
-QtTagButton QLabel[text="Locked"] {
-    color: #ffffff;
+QtTagButton QLabel[text="Cancelling"],
+QtTagButton QLabel[text="Locked"],
+QtTagButton QLabel[text="Cancelled"] {
+    color: #FFFFFF;
 }
+
 QtTagButton QLabel[text="Run-next"],
 QtTagButton QLabel[text="Pausing"],
-QtTagButton QLabel[text="Incomplete"],
-QtTagButton QLabel[text="Cancelling"]{
+QtTagButton QLabel[text="Incomplete"] {
     color: #000000;
 }
+
 QtTagButton[text="Cancelled"][active=True],
 QtTagButton[text="Invalid"][active=True] {
     border: 2px solid {{ highlight }};
