@@ -83,9 +83,8 @@ class TaskWidget(QFrame):
             tooltip="Show extra actions.",
             size_preset="normal",
             func=self.on_open_menu,
+            hide=not QUEUE.has_actions(),
         )
-        if not QUEUE.has_actions():
-            self.options_btn.hide()
 
         self.clipboard_btn = hp.make_qta_btn(
             self,

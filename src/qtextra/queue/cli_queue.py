@@ -76,6 +76,7 @@ class CLIQueueHandler(QObject):
     def add_action(self, title: str, func: ty.Callable[[Task], None], icon: str | None = None) -> None:
         """ADd action that will be shown in the task widget."""
         self.actions.append({"title": title, "icon": icon, "func": func})
+        logger.trace(f"Added action '{title}'.")
 
     def has_actions(self) -> bool:
         """Check whether there are any actions defined."""

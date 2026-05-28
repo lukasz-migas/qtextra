@@ -181,7 +181,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
     def __init__(self, source_model: DataTableModel, parent: Qw.QWidget | None = None):
         super().__init__(parent, editable=source_model._editable)
         self.source_model = source_model
-        self._visible_rows: list[int] = list(range(source_model.rowCount()))
+        self._visible_rows: np.ndarray = np.arange(source_model.rowCount(), dtype=np.intp)
         self._visible_columns: list[int] = list(range(source_model.columnCount()))
         self._hidden_source_rows: set[int] = set()
         self._column_filters: dict[int, NumericColumnFilter | StringColumnFilter] = {}
@@ -207,16 +207,26 @@ class DataFrameProxyModel(BaseTabularTableModel):
     @property
     def visible_rows(self) -> list[int]:
         """Return the visible source row positions."""
-        return list(self._visible_rows)
+        return self._visible_rows.tolist()
 
     @property
     def visible_columns(self) -> list[int]:
         """Return the visible source column positions."""
         return list(self._visible_columns)
 
+    @property
+    def visible_row_count(self) -> int:
+        """Return the number of visible source rows without copying mappings."""
+        return int(self._visible_rows.size)
+
+    @property
+    def visible_column_count(self) -> int:
+        """Return the number of visible source columns without copying mappings."""
+        return len(self._visible_columns)
+
     def source_row(self, row: int) -> int:
         """Map a visible row to a source row."""
-        return self._visible_rows[row]
+        return int(self._visible_rows[row])
 
     def source_column(self, column: int) -> int:
         """Map a visible column to a source column."""
@@ -348,7 +358,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
 
         if row in self._hidden_source_rows:
             return True
-        if row in self._visible_rows and len(self._visible_rows) <= 1:
+        if self._contains_visible_row(row) and self.visible_row_count <= 1:
             return False
         self._hidden_source_rows.add(row)
         self._refresh_mappings(update_columns=False)
@@ -357,7 +367,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
     def distinct_values_for_column(self, column: int) -> list[str]:
         """Return visible distinct non-blank values for a source column."""
         rows = self._filtered_rows(exclude_column=column)
-        series = self.df.iloc[rows, column] if rows else self.df.iloc[0:0, column]
+        series = self.df.iloc[rows, column] if rows.size else self.df.iloc[0:0, column]
         values = {str(value) for value in series if not pd.isna(value)}
         return sorted(values, key=str.casefold)
 
@@ -365,23 +375,28 @@ class DataFrameProxyModel(BaseTabularTableModel):
         """Return the current filter state for a source column."""
         return self._column_filters.get(column)
 
-    def _filtered_rows(self, exclude_column: int | None = None) -> list[int]:
+    def _contains_visible_row(self, row: int) -> bool:
+        """Return whether a source row is currently visible."""
+        return bool(np.any(self._visible_rows == row))
+
+    def _filtered_rows(self, exclude_column: int | None = None) -> np.ndarray:
         """Return source rows that pass the current filters."""
         if self.df.empty:
-            return []
+            return np.empty(0, dtype=np.intp)
 
-        mask = np.ones(self.df.shape[0], dtype=bool)
+        row_count = self.df.shape[0]
+        mask = np.ones(row_count, dtype=bool)
         for column, filter_state in self._column_filters.items():
             if column == exclude_column:
                 continue
             series = self.df.iloc[:, column]
             if isinstance(filter_state, NumericColumnFilter):
                 non_blank = ~series.isna().to_numpy()
-                column_mask = np.ones(series.shape[0], dtype=bool)
+                column_mask = np.ones(row_count, dtype=bool)
                 if filter_state.minimum is not None:
-                    column_mask &= (series >= filter_state.minimum).fillna(False).to_numpy()
+                    column_mask &= (series >= filter_state.minimum).fillna(False).to_numpy(dtype=bool)
                 if filter_state.maximum is not None:
-                    column_mask &= (series <= filter_state.maximum).fillna(False).to_numpy()
+                    column_mask &= (series <= filter_state.maximum).fillna(False).to_numpy(dtype=bool)
                 if filter_state.include_blanks:
                     column_mask |= ~non_blank
                 else:
@@ -389,22 +404,28 @@ class DataFrameProxyModel(BaseTabularTableModel):
             else:
                 non_blank = ~series.isna().to_numpy()
                 if filter_state.allowed_values:
-                    column_mask = np.zeros(series.shape[0], dtype=bool)
+                    column_mask = np.zeros(row_count, dtype=bool)
                     non_blank_values = series[non_blank].astype(str)
-                    column_mask[non_blank] = non_blank_values.isin(filter_state.allowed_values).to_numpy()
+                    column_mask[non_blank] = non_blank_values.isin(filter_state.allowed_values).to_numpy(dtype=bool)
                 else:
-                    column_mask = np.ones(series.shape[0], dtype=bool)
+                    column_mask = np.ones(row_count, dtype=bool)
                 if filter_state.include_blanks:
                     column_mask |= ~non_blank
                 else:
                     column_mask &= non_blank
             mask &= column_mask
-        rows = np.flatnonzero(mask).tolist()
-        return [row for row in rows if row not in self._hidden_source_rows]
+        if self._hidden_source_rows:
+            hidden_rows = np.fromiter(
+                (row for row in self._hidden_source_rows if 0 <= row < row_count),
+                dtype=np.intp,
+            )
+            if hidden_rows.size:
+                mask[hidden_rows] = False
+        return np.flatnonzero(mask).astype(np.intp, copy=False)
 
-    def _sorted_rows(self, rows: list[int]) -> list[int]:
+    def _sorted_rows(self, rows: np.ndarray) -> np.ndarray:
         """Return rows in the current sort order."""
-        if self._sort_column is None or self._sort_order is None or len(rows) <= 1:
+        if self._sort_column is None or self._sort_order is None or rows.size <= 1:
             return rows
 
         series = self.df.iloc[rows, self._sort_column].reset_index(drop=True)
@@ -412,8 +433,8 @@ class DataFrameProxyModel(BaseTabularTableModel):
             ascending=self._sort_order == Qt.SortOrder.AscendingOrder,
             kind="mergesort",
             na_position="last",
-        ).index.to_list()
-        return [rows[position] for position in sorted_positions]
+        ).index.to_numpy(dtype=np.intp, copy=False)
+        return rows[sorted_positions]
 
     def _refresh_mappings(self, *, update_columns: bool = True) -> None:
         """Recompute row and column mappings."""
@@ -423,7 +444,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
                 column for column in range(self.source_model.columnCount()) if column in self._visible_columns
             ]
         self._visible_rows = self._sorted_rows(self._filtered_rows())
-        self.set_shape(len(self._visible_rows), len(self._visible_columns))
+        self.set_shape(self.visible_row_count, self.visible_column_count)
         self.endResetModel()
 
     def _value_at(self, row: int, column: int):
@@ -434,8 +455,7 @@ class DataFrameProxyModel(BaseTabularTableModel):
         """Return mapped source data for supported roles."""
         if not index.isValid():
             return None
-        source_index = self.source_model.index(self.source_row(index.row()), self.source_column(index.column()))
-        return self.source_model.data(source_index, role)
+        return self.source_model._data_at(self.source_row(index.row()), self.source_column(index.column()), role)
 
     def _set_value_at(self, row: int, column: int, value) -> None:
         """Set a visible cell value in the source model."""
@@ -1136,7 +1156,7 @@ class QtDataFrameWidget(Qw.QWidget):
     def clear_filter(self, column: int) -> None:
         """Clear filter (if it's present)."""
         if column in self.proxy_model._column_filters:
-            self.proxy_model.clear_filter_for_column(3)
+            self.proxy_model.clear_filter_for_column(column)
             self._refresh_after_proxy_change()
 
     # ------------------------------------------------------------------
@@ -1254,12 +1274,12 @@ class QtDataFrameWidget(Qw.QWidget):
     def set_column_visible(self, column: int, visible: bool) -> None:
         """Show or hide a source column."""
         if self.proxy_model.set_column_visible(column, visible):
-            self._refresh_after_proxy_change()
+            self._refresh_after_proxy_change(update_sizes=True, resize_rows=True)
 
     def set_row_visible(self, row: int, visible: bool) -> None:
         """Show or hide a source row."""
         if self.proxy_model.set_row_visible(row, visible):
-            self._refresh_after_proxy_change()
+            self._refresh_after_proxy_change(update_sizes=True, resize_rows=True)
 
     def visible_columns(self) -> list[int]:
         """Return the visible source column positions."""
@@ -1290,16 +1310,16 @@ class QtDataFrameWidget(Qw.QWidget):
             self.columnHeader.setColumnWidth(visible_column, width)
             self.dataView.setColumnWidth(visible_column, width)
 
-    def _refresh_after_proxy_change(self) -> None:
+    def _refresh_after_proxy_change(self, *, update_sizes: bool = False, resize_rows: bool = False) -> None:
         """Refresh headers and geometry after proxy state changes."""
-        self.columnHeader.set_data(self.proxy_model)
-        self.indexHeader.set_data(self.proxy_model)
-        self.cornerView.set_data(self.proxy_model)
+        self.columnHeader.refresh_data(update_sizes=update_sizes)
+        self.indexHeader.refresh_data(update_sizes=update_sizes)
         self._restore_column_widths()
-        self._resize_all_rows()
+        if resize_rows:
+            self._resize_all_rows()
         self.columnHeader._apply_extent()
         self.indexHeader._apply_extent()
-        self._sync_corner_view()
+        self.cornerView.refresh()
         self._update_scrollbar_visibility()
         self._sync_header_scroll_metrics()
         self.updateGeometry()
@@ -1400,28 +1420,34 @@ class DataTableModel(BaseTabularTableModel):
         self.dataChanged.emit(index, index)
         return True
 
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        """Return data for supported roles, including background/foreground colors."""
-        if not index.isValid():
-            return None
+    def _data_at(self, row: int, column: int, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> ty.Any:
+        """Return data for a source row and column without allocating an index."""
         if role == Qt.ItemDataRole.BackgroundRole:
-            entry = self._column_colors.get(index.column())
+            entry = self._column_colors.get(column)
             if entry is not None:
-                bg = entry["bg"][index.row()]
+                bg = entry["bg"][row]
                 if bg[3] != 0:
                     return Qg.QBrush(Qg.QColor(int(bg[0]), int(bg[1]), int(bg[2]), int(bg[3])))
             return None
         if role == Qt.ItemDataRole.ForegroundRole:
-            entry = self._column_colors.get(index.column())
+            entry = self._column_colors.get(column)
             if entry is not None:
-                fg = entry["fg"][index.row()]
+                fg = entry["fg"][row]
                 if fg[3] != 0:
                     return Qg.QBrush(Qg.QColor(int(fg[0]), int(fg[1]), int(fg[2]), int(fg[3])))
             return None
         if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
-            value = self._value_at(index.row(), index.column())
-            return self._display_value_for_column(value, index.column())
-        return super().data(index, role)
+            value = self._value_at(row, column)
+            return self._display_value_for_column(value, column)
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self._tooltip_value(self._value_at(row, column))
+        return None
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        """Return data for supported roles, including background/foreground colors."""
+        if not index.isValid():
+            return None
+        return self._data_at(index.row(), index.column(), role)
 
     def _resolve_column_formatters(self, column_formatters: ColumnFormatters) -> dict[int, CellFormatter]:
         """Resolve formatter keys for columns present in the current dataframe."""
@@ -1747,7 +1773,7 @@ class HeaderModel(Qc.QAbstractTableModel):
     def columnCount(self, parent=None):
         """Number of columns."""
         if self.orientation == Qt.Orientation.Horizontal:
-            return len(self.proxy_model.visible_columns)
+            return self.proxy_model.visible_column_count
         # Vertical
         return self.df.index.nlevels
 
@@ -1756,8 +1782,14 @@ class HeaderModel(Qc.QAbstractTableModel):
         if self.orientation == Qt.Orientation.Horizontal:
             return self.df.columns.nlevels
         if self.orientation == Qt.Orientation.Vertical:
-            return len(self.proxy_model.visible_rows)
+            return self.proxy_model.visible_row_count
         return None
+
+    def refresh(self) -> None:
+        """Reset the header model against the current proxy mappings."""
+        self.beginResetModel()
+        self.df = self.proxy_model.df
+        self.endResetModel()
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         """Data."""
@@ -1910,6 +1942,11 @@ class CornerView(Qw.QTableView):
         self._apply_spans()
         self.sync_to_headers()
 
+    def refresh(self) -> None:
+        """Refresh corner geometry without replacing the model."""
+        self.sync_to_headers()
+        self.viewport().update()
+
     def sync_to_headers(self) -> None:
         """Align corner geometry and sections with the index and column headers."""
         index_header = self.parent.indexHeader
@@ -2000,6 +2037,23 @@ class HeaderView(Qw.QTableView):
         self.setSpans()
         self.initSize()
         self._apply_extent()
+        self.updateGeometry()
+
+    def refresh_data(self, *, update_sizes: bool = False, update_spans: bool = True) -> None:
+        """Refresh header contents without replacing the active model."""
+        model = self.model()
+        if not isinstance(model, HeaderModel):
+            self.set_data(self.proxy_model)
+            return
+        self.df = self.proxy_model.df
+        model.refresh()
+        if update_spans:
+            self.clearSpans()
+            self.setSpans()
+        if update_sizes:
+            self.initSize()
+        self._apply_extent()
+        self.viewport().update()
         self.updateGeometry()
 
     # Header

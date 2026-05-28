@@ -292,6 +292,85 @@ def test_qt_dataframe_widget_can_clear_all_filters(qtbot):
     assert not widget.proxy_model.is_column_filtered(1)
 
 
+def test_qt_dataframe_widget_clears_requested_filter_column(qtbot):
+    df = pd.DataFrame(
+        {
+            "team": ["red", "red", "blue", None],
+            "city": ["london", "paris", "paris", "rome"],
+        },
+        index=["r1", "r2", "r3", "r4"],
+    )
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.set_value_filter(0, {"red"}, include_blanks=False)
+    widget.set_value_filter(1, {"paris"}, include_blanks=False)
+
+    widget.clear_filter(0)
+
+    assert not widget.proxy_model.is_column_filtered(0)
+    assert widget.proxy_model.is_column_filtered(1)
+    assert widget.visible_rows() == [1, 2]
+
+
+def test_qt_dataframe_widget_large_sort_and_filter_smoke(qtbot):
+    row_count = 20_000
+    source_rows = np.arange(row_count)
+    values = source_rows[::-1]
+    groups = np.where(source_rows % 4 == 0, "keep", "drop")
+    df = pd.DataFrame({"value": values, "group": groups}, index=[f"row_{row}" for row in source_rows])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    widget.toggle_sort(0)
+
+    expected_sorted = np.argsort(values, kind="mergesort")
+    assert widget.visible_rows()[:10] == expected_sorted[:10].tolist()
+    assert widget.dataView.model().rowCount() == row_count
+
+    widget.set_value_filter(1, {"keep"}, include_blanks=False)
+
+    expected_string_rows = np.flatnonzero(groups == "keep")
+    expected_string_rows = expected_string_rows[np.argsort(values[expected_string_rows], kind="mergesort")]
+    assert widget.dataView.model().rowCount() == len(expected_string_rows)
+    assert widget.visible_rows()[:10] == expected_string_rows[:10].tolist()
+
+    widget.clear_filters()
+    widget.set_numeric_filter(0, minimum=100, maximum=199, include_blanks=False)
+
+    expected_numeric_rows = np.flatnonzero((values >= 100) & (values <= 199))
+    expected_numeric_rows = expected_numeric_rows[np.argsort(values[expected_numeric_rows], kind="mergesort")]
+    assert widget.dataView.model().rowCount() == len(expected_numeric_rows)
+    assert widget.visible_rows() == expected_numeric_rows.tolist()
+
+
+def test_qt_dataframe_widget_sort_and_filter_reuse_header_models(qtbot):
+    df = pd.DataFrame({"value": [2, 1, 3], "group": ["drop", "keep", "keep"]}, index=["r2", "r1", "r3"])
+
+    widget = QtDataFrameWidget(None, df)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    column_header_model = widget.columnHeader.model()
+    index_header_model = widget.indexHeader.model()
+    corner_model = widget.cornerView.model()
+
+    widget.toggle_sort(0)
+    widget.set_value_filter(1, {"keep"}, include_blanks=False)
+
+    assert widget.columnHeader.model() is column_header_model
+    assert widget.indexHeader.model() is index_header_model
+    assert widget.cornerView.model() is corner_model
+    assert widget.indexHeader.model().data(widget.indexHeader.model().index(0, 0)) == "r1"
+
+
 def test_qt_dataframe_widget_hides_and_restores_columns(qtbot):
     df = pd.DataFrame({"alpha": [1, 2], "beta": [3, 4], "gamma": [5, 6]})
 
