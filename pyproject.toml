@@ -230,6 +230,7 @@ extend-ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["D", "S", "A"]
 "examples/*.py" = ["INP001", "D", "S", "A"]
+"src/qtextra/widgets/qt_command_palette.py" = ["A003"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 # Disallow all relative imports.

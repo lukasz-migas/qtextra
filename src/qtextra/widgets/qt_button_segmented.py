@@ -149,42 +149,38 @@ class QtSegmentedButton(QFrame):
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import sys
 
-    def _main() -> None:
-        import sys
+    from qtextra.utils.dev import qframe
 
-        from qtextra.utils.dev import qframe
+    app, frame, va = qframe(False)
+    frame.setMinimumSize(500, 200)
 
-        app, frame, va = qframe(False)
-        frame.setMinimumSize(500, 200)
+    # Basic segmented button
+    btn1 = QtSegmentedButton("Run pipeline", frame)
+    btn1.evt_clicked.connect(lambda: print("Run clicked"))
+    btn1.add_action("settings", "Configure", lambda: print("Settings clicked"))
+    btn1.add_action("close", "Cancel", lambda: print("Cancel clicked"))
+    va.addWidget(btn1)
 
-        # Basic segmented button
-        btn1 = QtSegmentedButton("Run pipeline", frame)
-        btn1.evt_clicked.connect(lambda: print("Run clicked"))
-        btn1.add_action("settings", "Configure", lambda: print("Settings clicked"))
-        btn1.add_action("close", "Cancel", lambda: print("Cancel clicked"))
-        va.addWidget(btn1)
+    # With multiple actions
+    btn2 = QtSegmentedButton("Export", frame)
+    btn2.evt_clicked.connect(lambda: print("Export clicked"))
+    btn2.add_action("save", "Save to file", lambda: print("Save clicked"))
+    btn2.add_action("copy", "Copy to clipboard", lambda: print("Copy clicked"))
+    btn2.add_action("delete", "Discard", lambda: print("Discard clicked"))
+    va.addWidget(btn2)
 
-        # With multiple actions
-        btn2 = QtSegmentedButton("Export", frame)
-        btn2.evt_clicked.connect(lambda: print("Export clicked"))
-        btn2.add_action("save", "Save to file", lambda: print("Save clicked"))
-        btn2.add_action("copy", "Copy to clipboard", lambda: print("Copy clicked"))
-        btn2.add_action("delete", "Discard", lambda: print("Discard clicked"))
-        va.addWidget(btn2)
+    # Flat style
+    btn3 = QtSegmentedButton("Flat button", frame, flat=True)
+    btn3.evt_clicked.connect(lambda: print("Flat clicked"))
+    btn3.add_action("add", "Add item", lambda: print("Add clicked"))
+    va.addWidget(btn3)
 
-        # Flat style
-        btn3 = QtSegmentedButton("Flat button", frame, flat=True)
-        btn3.evt_clicked.connect(lambda: print("Flat clicked"))
-        btn3.add_action("add", "Add item", lambda: print("Add clicked"))
-        va.addWidget(btn3)
+    # No actions - plain main button
+    btn4 = QtSegmentedButton("No actions", frame)
+    btn4.evt_clicked.connect(lambda: print("No-action clicked"))
+    va.addWidget(btn4)
 
-        # No actions - plain main button
-        btn4 = QtSegmentedButton("No actions", frame)
-        btn4.evt_clicked.connect(lambda: print("No-action clicked"))
-        va.addWidget(btn4)
-
-        frame.show()
-        sys.exit(app.exec_())
-
-    _main()
+    frame.show()
+    sys.exit(app.exec_())
