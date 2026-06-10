@@ -35,11 +35,11 @@ class TestQtSegmentedButton:
         w = make_widget("Hello")
         w.setText("World")
         assert w.text == "World"
-        assert w._main_btn.text() == "World"
+        assert w.button.text() == "World"
 
     def test_add_action_returns_image_button(self, make_widget):
         w = make_widget()
-        btn = w.add_action("settings", "Configure")
+        btn, _ = w.add_action("settings", "Configure")
         assert isinstance(btn, QtImagePushButton)
 
     def test_add_action_appends_to_lists(self, make_widget):
@@ -59,7 +59,7 @@ class TestQtSegmentedButton:
         w = make_widget()
         seen = []
         w.evt_clicked.connect(lambda: seen.append(1))
-        w._main_btn.click()
+        w.button.click()
         assert seen == [1]
 
     def test_evt_clicked_not_fired_by_action_button(self, make_widget):
@@ -86,14 +86,14 @@ class TestQtSegmentedButton:
 
     def test_action_no_callback_does_not_raise(self, make_widget):
         w = make_widget()
-        btn = w.add_action("settings", "")
+        btn, _ = w.add_action("settings", "")
         btn.click()  # should not raise
 
     def test_set_enabled_false_propagates(self, make_widget):
         w = make_widget()
         w.add_action("settings", "")
         w.setEnabled(False)
-        assert not w._main_btn.isEnabled()
+        assert not w.button.isEnabled()
         assert not w._actions[0].isEnabled()
 
     def test_set_enabled_true_restores(self, make_widget):
@@ -101,7 +101,7 @@ class TestQtSegmentedButton:
         w.add_action("settings", "")
         w.setEnabled(False)
         w.setEnabled(True)
-        assert w._main_btn.isEnabled()
+        assert w.button.isEnabled()
         assert w._actions[0].isEnabled()
 
     def test_flat_init(self, make_widget):

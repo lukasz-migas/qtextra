@@ -8,10 +8,11 @@ from qtpy.QtCore import QSize, Qt, Signal  # type: ignore[attr-defined]
 from qtpy.QtWidgets import QFrame, QHBoxLayout, QPushButton, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_button_icon import QtImagePushButton
 
 if ty.TYPE_CHECKING:
     from qtextra.typing import QtaSizePreset
+    from qtextra.widgets.qt_button_icon import QtImagePushButton
+    from qtextra.widgets.qt_separator import QtVertLine
 
 
 class QtSegmentedButton(QFrame):
@@ -39,21 +40,24 @@ class QtSegmentedButton(QFrame):
         *,
         flat: bool = False,
         tooltip: str = "",
+        func: ty.Callable | list[ty.Callable] | None = None,
     ):
         super().__init__(parent=parent)
         self._actions: list[QtImagePushButton] = []
         self._separators: list[QWidget] = []
 
-        self._main_btn = QPushButton(text, self)
-        self._main_btn.setObjectName("mainButton")
-        self._main_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        self._main_btn.clicked.connect(self.evt_clicked)
-        self._main_btn.setToolTip(tooltip)
+        self.button = QPushButton(text, self)
+        self.button.setObjectName("mainButton")
+        self.button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.button.clicked.connect(self.evt_clicked)
+        if func:
+            [self.button.clicked.connect(f) for f in hp._validate_func(func)]
+        self.button.setToolTip(tooltip)
 
         self._layout = QHBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(0)
-        self._layout.addWidget(self._main_btn, stretch=1)
+        self._layout.addWidget(self.button, stretch=1)
 
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -71,7 +75,8 @@ class QtSegmentedButton(QFrame):
         func: ty.Callable | list[ty.Callable] | None = None,
         *,
         size_preset: QtaSizePreset = "average",
-    ) -> QtImagePushButton:
+        hide: bool = False,
+    ) -> tuple[QtImagePushButton, QtVertLine]:
         """Append an icon action button to the right side of the widget.
 
         Parameters
@@ -84,15 +89,17 @@ class QtSegmentedButton(QFrame):
         func:
             Callable or list of callables connected to the button's
             ``clicked`` signal.
-        size_preset:
+        size_preset: str
             QtaMixin size preset controlling icon/button size.
+        hide : bool
+            Hide the button and the separator.
 
         Returns
         -------
         QtImagePushButton
             The newly created action button, for further customisation.
         """
-        sep = hp.make_v_line(self)
+        sep = hp.make_v_line(self, hide=hide)
         self._layout.addWidget(sep)
         self._separators.append(sep)
 
@@ -102,25 +109,26 @@ class QtSegmentedButton(QFrame):
             tooltip=tooltip,
             size_preset=size_preset,
             func=func,
+            hide=hide,
         )
         btn.setProperty("transparent", True)
 
         self._layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
         self._actions.append(btn)
-        return btn
+        return btn, sep
 
     @property
     def text(self) -> str:
         """Return the main button label."""
-        return self._main_btn.text()
+        return self.button.text()
 
     def setText(self, text: str) -> None:
         """Set the main button label."""
-        self._main_btn.setText(text)
+        self.button.setText(text)
 
     def setEnabled(self, enabled: bool) -> None:  # type: ignore[override]
         """Enable or disable the whole widget including all action buttons."""
-        self._main_btn.setEnabled(enabled)
+        self.button.setEnabled(enabled)
         for btn in self._actions:
             btn.setEnabled(enabled)
 
@@ -131,8 +139,8 @@ class QtSegmentedButton(QFrame):
 
     def sizeHint(self) -> QSize:
         """Return combined size hint."""
-        w = self._main_btn.sizeHint().width()
-        h = self._main_btn.sizeHint().height()
+        w = self.button.sizeHint().width()
+        h = self.button.sizeHint().height()
         for btn in self._actions:
             bh = btn.sizeHint()
             w += bh.width()
