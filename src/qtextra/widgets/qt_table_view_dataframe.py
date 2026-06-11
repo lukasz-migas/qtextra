@@ -1495,8 +1495,8 @@ class DataTableModel(BaseTabularTableModel):
             If provided, uses TwoSlopeNorm with this centre value (diverging).
             If None, uses standard Normalize (sequential).
         """
-        import matplotlib.cm
         import matplotlib.colors
+        from matplotlib.pyplot import get_cmap
 
         col_idx = self._resolve_column_index(col)
         float_values = pd.to_numeric(self.df.iloc[:, col_idx], errors="coerce").to_numpy(np.float64)
@@ -1515,7 +1515,7 @@ class DataTableModel(BaseTabularTableModel):
             norm = matplotlib.colors.TwoSlopeNorm(vmin=lo, vcenter=safe_vc, vmax=hi)
         else:
             norm = matplotlib.colors.Normalize(vmin=lo, vmax=hi, clip=True)
-        cmap = matplotlib.cm.get_cmap(colormap)
+        cmap = get_cmap(colormap)
         bg = _rgba_array_from_colormap(float_values, norm, cmap)
         self._column_colors[col_idx] = {"bg": bg, "fg": _foreground_from_background(bg)}
         self._emit_color_changed(col_idx)
@@ -1533,7 +1533,7 @@ class DataTableModel(BaseTabularTableModel):
         colormap:
             Matplotlib qualitative colormap name (e.g. ``'tab20'``, ``'Set3'``).
         """
-        import matplotlib.cm
+        from matplotlib.pyplot import get_cmap
 
         col_idx = self._resolve_column_index(col)
         series = self.df.iloc[:, col_idx]
@@ -1544,7 +1544,7 @@ class DataTableModel(BaseTabularTableModel):
             self._column_colors.pop(col_idx, None)
             self._emit_color_changed(col_idx)
             return
-        cmap = matplotlib.cm.get_cmap(colormap)
+        cmap = get_cmap(colormap)
         n = len(unique_vals)
         positions = np.linspace(0.0, 1.0, max(n, 2))[:n]
         val_to_color = {v: (np.array(cmap(positions[i])) * 255).astype(np.uint8) for i, v in enumerate(unique_vals)}

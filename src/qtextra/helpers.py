@@ -1473,10 +1473,15 @@ def make_text_edit(
     placeholder: str = "",
     func_changed: Callback | None = None,
     func_clear: Callback | None = None,
+    read_only: bool = False,
+    max_height: int | None = None,
 ) -> Qw.QTextEdit:
     """Make QTextEdit - a multiline version of QLineEdit."""
     widget = Qw.QTextEdit(parent)
+    widget.setReadOnly(read_only)
     widget.setText(text)
+    if max_height:
+        widget.setMaximumHeight(max_height)
     if tooltip:
         widget.setToolTip(tooltip)
     if func_clear:
