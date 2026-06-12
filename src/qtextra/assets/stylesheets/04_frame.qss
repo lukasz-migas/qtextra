@@ -1,0 +1,42 @@
+/* ------------ QFrame[card] ------------ */
+QFrame[card=true] {
+    background-color: {{ background }};
+    border: 2px solid {{ foreground }};
+    border-radius: 2px;
+    color: {{ text }};
+}
+QFrame[card=true]:hover {
+    border: 3px solid {{ highlight }};
+}
+
+QFrame[card=true] QLabel{
+  background: none;
+}
+
+QFrame[card=true] QtImagePushButton {
+    background-color: {{ background }};
+    border-radius: 5px;
+}
+
+QFrame[card=true] QtImagePushButton:hover {
+  background-color: {{ primary }};
+}
+
+QFrame[card=true] QtImagePushButton:pressed {
+  background-color: {{ highlight }};
+}
+
+QFrame[active=true] {
+    border: 3px solid {{ current }};
+}
+
+QFrame[active=true]::hover {
+    border: 3px solid {{ current }};
+}
+
+
+
+/* ------------ QScrollArea[cardList] ------------ */
+QScrollArea[cardList=true] {
+    background: {{ foreground }};
+}
