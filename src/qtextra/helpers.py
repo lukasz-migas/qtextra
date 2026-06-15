@@ -2562,6 +2562,54 @@ def make_toggle_group(
     return layout, widget
 
 
+def make_icon_toggle_group(
+    parent: Qw.QWidget | None,
+    *qta_icon: str,
+    func: Callback | None = None,
+    tooltip: str = "",
+    checked_qta_icon: list[str] | None = None,
+    value: str | list[str] = "",
+    orientation: Orientation = "horizontal",
+    exclusive: bool = True,
+) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
+    """Make toggle button."""
+    widget = Qw.QButtonGroup(parent)
+    widget.setExclusive(exclusive)
+
+    if not isinstance(value, list):
+        value = [value]
+    qta_icon = list(qta_icon)
+    if not checked_qta_icon:
+        checked_qta_icon = len(qta_icon) * [None]
+    if checked_qta_icon and not len(checked_qta_icon) == len(qta_icon):
+        raise ValueError("The number of of icons and checked icons must match.")
+
+    alignment = Qt.AlignmentFlag.AlignVCenter
+    if orientation == "flow":
+        layout = make_animated_flow_layout()
+    else:
+        orientation = get_orientation(orientation)
+        layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
+        alignment = {"horizontal": Qt.AlignmentFlag.AlignVCenter, "vertical": Qt.AlignmentFlag.AlignHCenter}[
+            orientation
+        ]
+    layout.setSpacing(2)
+    for btn_id, (icon, check_icon) in enumerate(zip(qta_icon, checked_qta_icon)):
+        radio_btn = make_qta_btn(
+            parent,
+            icon,
+            checked_icon_name=check_icon,
+            func=func,
+            checkable=True,
+            tooltip=tooltip,
+            checked=icon in value,
+            size_preset="24px",
+        )
+        widget.addButton(radio_btn, btn_id)
+        layout.addWidget(radio_btn, alignment=alignment)
+    return layout, widget
+
+
 def make_toggle(
     parent: Qw.QWidget | None,
     *label: str,

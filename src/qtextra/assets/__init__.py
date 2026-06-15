@@ -280,6 +280,8 @@ QTA_MAPPING: dict[str, IconType] = {
     "7": "mdi6.numeric-7-circle",
     "8": "mdi6.numeric-8-circle",
     "9": "mdi6.numeric-9-circle",
+    "thumbs_up": "fa6s.thumbs-up",
+    "thumbs_down": "fa6s.thumbs-down",
     # viewer
     "home": "fa5s.home",
     # "pan_zoom": "ri.drag-move-line",

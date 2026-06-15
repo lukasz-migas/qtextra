@@ -44,6 +44,7 @@ class QtaMixin:
     }
     LEGACY_OBJECT_NAMES: ty.ClassVar[dict[str, str]] = {preset: f"{preset}_icon" for preset in QTA_SIZE_NAME_MAP}
 
+    icon_text: str | tuple[str, ...] = None
     _qta_data: tuple | None = None
     _checked_qta_data: tuple | None = None
     _icon_color: str | None = None
@@ -129,6 +130,7 @@ class QtaMixin:
 
     def set_qta(self, name: str | tuple[str, dict], **kwargs: ty.Any) -> None:
         """Set QtAwesome icon."""
+        self.icon_text = name
         name_, kwargs_ = get_icon(name)  # type: ignore[misc]
         kwargs.update(kwargs_)
         self._qta_data = (name_, kwargs)

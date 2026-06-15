@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 from qtpy.QtCore import Signal
-from qtpy.QtWidgets import QFrame, QWidget
+from qtpy.QtWidgets import QButtonGroup, QFrame, QWidget
 
 from qtextra.typing import OptionalCallback
 
@@ -18,6 +18,9 @@ class QtToggleGroup(QFrame):
     evt_changed = Signal(object)
     evt_index_changed = Signal(object)
 
+    button_group: QButtonGroup
+    allowed_kwargs = ()
+
     def __init__(
         self,
         parent: QWidget | None,
@@ -27,12 +30,33 @@ class QtToggleGroup(QFrame):
         orientation: str = "horizontal",
         exclusive: bool = True,
         multiline: bool = False,
+        **kwargs: ty.Any,
     ):
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.Box)
         self.setLineWidth(1)
         self.setMinimumHeight(26)
 
+        self._make_button_group(
+            options=options,
+            value=value,
+            tooltip=tooltip,
+            orientation=orientation,
+            exclusive=exclusive,
+            multiline=multiline,
+            **kwargs,
+        )
+
+    def _make_button_group(
+        self,
+        options: list[str],
+        value: str = "",
+        tooltip: str = "",
+        orientation: str = "horizontal",
+        exclusive: bool = True,
+        multiline: bool = False,
+        **kwargs: ty.Any,
+    ):
         import qtextra.helpers as hp
 
         layout, self.button_group = hp.make_toggle_group(
@@ -47,6 +71,8 @@ class QtToggleGroup(QFrame):
         )
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(1)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch(1)
         self.setLayout(layout)
 
     def _on_changed(self, _: ty.Any) -> None:
@@ -135,6 +161,11 @@ class QtToggleGroup(QFrame):
             options = items["enum"]
         if "enum" in kwargs:
             options = kwargs["enum"]
+        allowed_kwargs = {}
+        for kw in cls.allowed_kwargs:
+            if kw in kwargs:
+                allowed_kwargs[kw] = kwargs[kw]
+
         widget = cls(
             parent,
             options=options,
@@ -143,10 +174,78 @@ class QtToggleGroup(QFrame):
             orientation=orientation,
             exclusive=exclusive,
             multiline=multiline,
+            **allowed_kwargs,
         )
         if func:
             [widget.evt_changed.connect(func_) for func_ in hp._validate_func(func)]
         return widget
+
+
+class QtQtaToggleGroup(QtToggleGroup):
+    """Widget for icon toggle group."""
+
+    allowed_kwargs = ("checked_options",)
+
+    def _make_button_group(
+        self,
+        options: list[str],
+        value: str = "",
+        tooltip: str = "",
+        orientation: str = "horizontal",
+        exclusive: bool = True,
+        multiline: bool = False,
+        checked_options: list[str] | None = None,
+        **kwargs: ty.Any,
+    ):
+        import qtextra.helpers as hp
+
+        layout, self.button_group = hp.make_icon_toggle_group(
+            self,
+            *options,
+            checked_qta_icon=checked_options,
+            value=value,
+            tooltip=tooltip,
+            func=self._on_changed,
+            orientation=orientation,
+            exclusive=exclusive,
+        )
+        self.setMinimumHeight(32)
+        layout.setContentsMargins(3, 3, 3, 3)
+        layout.setSpacing(2)
+        if hasattr(layout, "addStretch"):
+            layout.addStretch(1)
+        self.setLayout(layout)
+
+    @property
+    def options(self) -> list[str]:
+        """Options."""
+        return [button.icon_text for button in self.buttons]
+
+    @property
+    def checked_buttons(self) -> ty.Any:
+        """Button."""
+        value = []
+        for button in self.button_group.buttons():
+            if button.isChecked():
+                value.append(button)
+        return value
+
+    @property
+    def value(self) -> str | list[str] | None:
+        """Get value."""
+        buttons = self.checked_buttons
+        value = [button.icon_text for button in buttons]
+        if self.button_group.exclusive():
+            return value[0] if value else None
+        return value
+
+    @value.setter
+    def value(self, value: str | list[str]) -> None:
+        """Set value."""
+        if not isinstance(value, list):
+            value = [value]
+        for button in self.button_group.buttons():
+            button.setChecked(button.text() in value)
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -178,6 +277,15 @@ if __name__ == "__main__":  # pragma: no cover
     ha.addWidget(wdg)
 
     wdg = QtToggleGroup.from_schema(None, [str(i) for i in range(15)], "1", func=print)
+    wdg.setObjectName("warning")
+    ha.addWidget(wdg)
+
+    wdg = QtQtaToggleGroup.from_schema(
+        None,
+        ["thumbs_up", "thumbs_down"],
+        value="thumbs_down",
+        func=print,
+    )
     wdg.setObjectName("warning")
     ha.addWidget(wdg)
 

@@ -217,6 +217,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         self._qta_data = (name, kwargs)
         self._checked_qta_data = (checked_name, checked_kwargs)
         color_ = kwargs.pop("color", None)
+        color_ = checked_kwargs.pop("color", color_)
         color = color_ or self._icon_color or THEMES.get_hex_color("icon")
         icon = qtawesome.icon(
             checked_name if self.isChecked() else name,

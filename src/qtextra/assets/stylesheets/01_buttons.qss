@@ -57,13 +57,13 @@ QtImagePushButton {
     background-color: none;
 }
 
+/*QtImagePushButton:unchecked{*/
+/*    background-color: {{ background }};*/
+/*}*/
+
 QtImagePushButton:checked{
     border-radius: 5px;
-    background-color: {{ foreground }};
-}
-
-QtImagePushButton:unchecked{
-    background-color: {{ background }};
+    background-color: {{ secondary }};
 }
 
 QtImagePushButton:pressed{
