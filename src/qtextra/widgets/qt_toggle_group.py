@@ -71,8 +71,6 @@ class QtToggleGroup(QFrame):
         )
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(1)
-        if hasattr(layout, "addStretch"):
-            layout.addStretch(1)
         self.setLayout(layout)
 
     def _on_changed(self, _: ty.Any) -> None:
