@@ -345,23 +345,20 @@ class TestQtSearchableComboBox:
         assert combo.insertPolicy() == QComboBox.InsertPolicy.NoInsert
 
     def test_line_edit_click_opens_popup(self, qtbot):
-        class PopupTrackingComboBox(QtSearchableComboBox):
-            def __init__(self) -> None:
-                super().__init__()
-                self.popup_count = 0
-
-            def showPopup(self) -> None:
-                """Track popup requests without showing a platform popup."""
-                self.popup_count += 1
-
-        w = PopupTrackingComboBox()
+        w = QtSearchableComboBox()
+        w.addItems(["Alpha", "Beta"])
         qtbot.addWidget(w)
+        w.show()
+        qtbot.waitExposed(w)
         line_edit = w.lineEdit()
         assert line_edit is not None
 
         qtbot.mouseClick(line_edit, Qt.MouseButton.LeftButton)
 
-        qtbot.waitUntil(lambda: w.popup_count == 1)
+        qtbot.waitUntil(lambda: w.completer_object.popup().isVisible())
+        qtbot.keyClicks(w, "x")
+
+        assert "x" in line_edit.text()
 
 
 # ---------------------------------------------------------------------------

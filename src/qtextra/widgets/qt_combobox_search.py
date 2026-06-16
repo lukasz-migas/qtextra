@@ -190,6 +190,7 @@ class QtSearchableComboBox(QComboBox):
         self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
         self.completer_object.popup().setItemDelegate(QStyledItemDelegate(self))
         self.completer_object.popup().setObjectName("search_box_popup")
+        self.completer_object.popup().installEventFilter(self)
         line_edit = self.lineEdit()
         if line_edit is not None:
             line_edit.installEventFilter(self)
@@ -197,8 +198,29 @@ class QtSearchableComboBox(QComboBox):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """Open the dropdown when the editable text field is clicked."""
         if watched is self.lineEdit() and self._is_left_mouse_release(event):
-            QTimer.singleShot(0, self.showPopup)
+            QTimer.singleShot(0, self._show_completer_popup)
+        elif watched is self.completer_object.popup() and self._is_left_mouse_release(event):
+            QTimer.singleShot(0, self._focus_line_edit)
         return super().eventFilter(watched, event)
+
+    def _show_completer_popup(self) -> None:
+        """Show matching choices while keeping keyboard focus in the editor."""
+        line_edit = self.lineEdit()
+        if line_edit is None:
+            return
+        self.completer_object.setCompletionPrefix("")
+        self.completer_object.complete()
+        QTimer.singleShot(0, self._defer_line_edit_focus)
+
+    def _defer_line_edit_focus(self) -> None:
+        """Queue editor focus after the completer popup finishes opening."""
+        QTimer.singleShot(0, self._focus_line_edit)
+
+    def _focus_line_edit(self) -> None:
+        """Restore keyboard focus to the editor after showing the popup."""
+        line_edit = self.lineEdit()
+        if line_edit is not None:
+            line_edit.setFocus(Qt.FocusReason.MouseFocusReason)
 
     @staticmethod
     def _is_left_mouse_release(event: QEvent) -> bool:
