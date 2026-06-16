@@ -31,17 +31,17 @@ QtToolbarPushButton {
 }
 
 
-QtImagePushButton[checkable=true]::checked, QtToolbarPushButton:checked {
+QtPanelWidget QtImagePushButton[checkable=true]::checked, QtToolbarPushButton:checked {
     border-left: 6px solid {{ success }};
     border-radius: 0px;
     background-color: transparent;
 }
 
-QtImagePushButton[checkable=true]:hover, QtToolbarPushButton:hover {
+QtPanelWidget QtImagePushButton[checkable=true]:hover, QtToolbarPushButton:hover {
     background-color: {{ primary }};
 }
 
-QtImagePushButton[checkable=true]:pressed, QtToolbarPushButton:pressed {
+QtPanelWidget QtImagePushButton[checkable=true]:pressed, QtToolbarPushButton:pressed {
     background-color: {{ primary }};
 }
 
