@@ -81,7 +81,7 @@ QWidget[emphasized="true"] QLineEdit {
 /* ----------------- QLabel ------------------ */
 
 QLabel {
-  background-color: none;
+  background-color: transparent;
   font-size: {{ increase(font_size, 1) }};
 }
 

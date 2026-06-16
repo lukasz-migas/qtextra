@@ -54,12 +54,8 @@ QtImagePushButton{
 }
 
 QtImagePushButton {
-    background-color: none;
+    background-color: transparent;
 }
-
-/*QtImagePushButton:unchecked{*/
-/*    background-color: {{ background }};*/
-/*}*/
 
 QtImagePushButton:checked{
     border-radius: 5px;
@@ -76,14 +72,14 @@ QtImagePushButton:hover{
 }
 
 QtImagePushButton:disabled {
-    background-color: none;
+    background-color: transparent;
     border: 0px;
-    border-color: none;
+    border-color: transparent;
     color: {{ opacity(text, 90) }};
 }
 
 QtImagePushButton[transparent=true]{
-    background-color: none;
+    background-color: transparent;
 }
 
 QtImagePushButton[standout=true]{
@@ -113,7 +109,7 @@ QtImagePushButton[text_in_center="true"]{
 }
 
 QtImagePushButton[flat="true"]{
-    background-color: none;
+    background-color: transparent;
 }
 
 QtImagePushButton[layer_button="true"]{

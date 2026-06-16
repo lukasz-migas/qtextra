@@ -23,7 +23,7 @@ QSplitter {
 
 QLabel#step_label {
     color: {{ highlight }};
-    background: none;
+    background: transparent;
 }
 
 /* ----------------- QWidget state borders ----------------- */
@@ -50,7 +50,7 @@ QWidget[drag=true] {
 /* ----------------- QtIndicator ----------------- */
 
 QtIndicator[state=none] {
-    color: none;
+    color: transparent;
 }
 
 QtIndicator[state=active] {
@@ -150,7 +150,7 @@ QtScrollableHLayoutWidget QScrollBar:down-arrow {
 QtScrollableHLayoutWidget QScrollBar::add-line:horizontal,
 QtScrollableHLayoutWidget QScrollBar::sub-line:horizontal {
     border: none;
-    background: none;
+    background: transparent;
     height: 0px;
     width: 0px;
 }
@@ -177,7 +177,7 @@ QtScrollableVLayoutWidget QScrollBar:down-arrow {
 QtScrollableVLayoutWidget QScrollBar::add-line:vertical,
 QtScrollableVLayoutWidget QScrollBar::sub-line:vertical {
     border: none;
-    background: none;
+    background: transparent;
     height: 0px;
     width: 0px;
 }

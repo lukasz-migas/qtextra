@@ -66,7 +66,7 @@ QtListItem {
     border-radius: 2px;
 }
 QtListItem QLabel {
-    background: none;
+    background: transparent;
 }
 
 QtListItem:hover {

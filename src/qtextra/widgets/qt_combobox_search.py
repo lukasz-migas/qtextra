@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 
-from qtpy.QtCore import QRectF, QSortFilterProxyModel, Qt, Signal
-from qtpy.QtGui import QPainter, QPen, QStandardItem, QStandardItemModel
-from qtpy.QtWidgets import QComboBox, QCompleter, QHBoxLayout, QLineEdit, QStyledItemDelegate, QWidget
+from qtpy.QtCore import QEvent, QObject, QRectF, QSortFilterProxyModel, Qt, QTimer, Signal
+from qtpy.QtGui import QColor, QMouseEvent, QPainter, QPalette, QPen, QStandardItem, QStandardItemModel
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
+    QCompleter,
+    QHBoxLayout,
+    QLineEdit,
+    QStyledItemDelegate,
+    QWidget,
+)
 
 from qtextra.config import QtStyler
 from qtextra.widgets._qt_combobox import _BTN_H, _base_font, _BaseButton, _ItemRow, _ScrollablePanel
@@ -190,6 +199,60 @@ class QtSearchableComboBox(QComboBox):
         self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
         self.completer_object.popup().setItemDelegate(QStyledItemDelegate(self))
         self.completer_object.popup().setObjectName("search_box_popup")
+        _style_search_popup(self.completer_object.popup())
+        self.completer_object.popup().installEventFilter(self)
+        line_edit = self.lineEdit()
+        if line_edit is not None:
+            line_edit.installEventFilter(self)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """Open the dropdown when the editable text field is clicked."""
+        if watched is self.lineEdit() and self._is_left_mouse_release(event):
+            QTimer.singleShot(0, self._show_completer_popup)
+        elif watched is self.completer_object.popup() and self._is_left_mouse_release(event):
+            QTimer.singleShot(0, self._focus_line_edit)
+        return super().eventFilter(watched, event)
+
+    def showPopup(self) -> None:
+        """Show the completer popup for both editor and chevron interactions."""
+        self._show_completer_popup()
+
+    def hidePopup(self) -> None:
+        """Hide the completer popup when the combobox popup is dismissed."""
+        self.completer_object.popup().hide()
+        super().hidePopup()
+
+    def _show_completer_popup(self) -> None:
+        """Show matching choices while keeping keyboard focus in the editor."""
+        with suppress(RuntimeError):
+            line_edit = self.lineEdit()
+            if line_edit is None:
+                return
+            _style_search_popup(self.completer_object.popup())
+            self.completer_object.setCompletionPrefix("")
+            self.completer_object.complete()
+            QTimer.singleShot(0, self._defer_line_edit_focus)
+
+    def _defer_line_edit_focus(self) -> None:
+        """Queue editor focus after the completer popup finishes opening."""
+        with suppress(RuntimeError):
+            QTimer.singleShot(0, self._focus_line_edit)
+
+    def _focus_line_edit(self) -> None:
+        """Restore keyboard focus to the editor after showing the popup."""
+        with suppress(RuntimeError):
+            line_edit = self.lineEdit()
+            if line_edit is not None:
+                line_edit.setFocus(Qt.FocusReason.MouseFocusReason)
+
+    @staticmethod
+    def _is_left_mouse_release(event: QEvent) -> bool:
+        """Return whether an event is a left mouse release."""
+        return (
+            event.type() == QEvent.Type.MouseButtonRelease
+            and isinstance(event, QMouseEvent)
+            and event.button() == Qt.MouseButton.LeftButton
+        )
 
     def _text_activated(self):  # pragma: no cover
         self.textActivated.emit(self.currentText())
@@ -260,6 +323,52 @@ class QtSearchableComboBox(QComboBox):
     onActivated = on_activated
 
 
+def _style_search_popup(popup: QAbstractItemView) -> None:
+    """Apply the active qtextra theme to a search popup view."""
+    background = QtStyler.foreground()
+    highlight = QtStyler.highlight()
+    hover = QtStyler.highlight().lighter(120)
+    text = QtStyler.text()
+    popup.setPalette(_search_popup_palette(background, highlight, text))
+    popup.setStyleSheet(
+        f"""
+        QAbstractItemView#search_box_popup {{
+            background-color: {background.name()};
+            color: {text.name()};
+            border-radius: 4px;
+            outline: 0;
+            selection-background-color: {highlight.name()};
+            selection-color: {text.name()};
+        }}
+        QAbstractItemView#search_box_popup::item {{
+            background-color: transparent;
+            color: {text.name()};
+            border: 0;
+        }}
+        QAbstractItemView#search_box_popup::item:hover {{
+            background-color: {hover.name()};
+            color: {text.name()};
+        }}
+        QAbstractItemView#search_box_popup::item:selected {{
+            background-color: {highlight.name()};
+            color: {text.name()};
+        }}
+        """
+    )
+
+
+def _search_popup_palette(background: QColor, highlight: QColor, text: QColor) -> QPalette:
+    """Return the palette used by a search popup view."""
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Base, background)
+    palette.setColor(QPalette.ColorRole.Window, background)
+    palette.setColor(QPalette.ColorRole.Text, text)
+    palette.setColor(QPalette.ColorRole.WindowText, text)
+    palette.setColor(QPalette.ColorRole.Highlight, highlight)
+    palette.setColor(QPalette.ColorRole.HighlightedText, text)
+    return palette
+
+
 def add_search_to_combobox(combobox: QComboBox) -> None:
     """Add search to combobox."""
     combobox.setEditable(True)
@@ -271,6 +380,7 @@ def add_search_to_combobox(combobox: QComboBox) -> None:
     combobox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
     completer_object.popup().setItemDelegate(QStyledItemDelegate(combobox))
     completer_object.popup().setObjectName("search_box_popup")
+    _style_search_popup(completer_object.popup())
     combobox.completer_object = completer_object
     combobox._text_activated = _make_text_activated_handler(combobox)
 

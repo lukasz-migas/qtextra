@@ -127,5 +127,5 @@ QScrollBar::down-arrow:pressed {
 
 QScrollBar::add-page,
 QScrollBar::sub-page {
-    background: none;
+    background: transparent;
 }

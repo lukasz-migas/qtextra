@@ -61,7 +61,7 @@ QMainWindow::separator:vertical {
 }
 
 #QtCustomTitleBar > QPushButton {
-  background-color: none;
+  background-color: transparent;
   max-width: 12px;
   max-height: 12px;
 }
