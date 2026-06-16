@@ -7,6 +7,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox
 
+from qtextra.config import QtStyler
 from qtextra.widgets._qt_combobox import _BaseButton, _ItemRow
 from qtextra.widgets.qt_combobox_color import QtColorSwatchComboBox
 from qtextra.widgets.qt_combobox_multi import QtMultiSelectComboBox, _MultiItemRow, _MultiPanel
@@ -360,6 +361,24 @@ class TestQtSearchableComboBox:
 
         assert "x" in line_edit.text()
 
+    def test_show_popup_uses_completer_popup(self, combo, qtbot):
+        combo.addItems(["Alpha", "Beta"])
+        combo.show()
+        qtbot.waitExposed(combo)
+
+        combo.showPopup()
+
+        qtbot.waitUntil(lambda: combo.completer_object.popup().isVisible())
+        assert not combo.view().isVisible()
+
+    def test_completer_popup_uses_theme_colors(self, combo):
+        popup = combo.completer_object.popup()
+        stylesheet = popup.styleSheet()
+
+        assert f"background-color: {QtStyler.foreground().name()}" in stylesheet
+        assert f"color: {QtStyler.text().name()}" in stylesheet
+        assert popup.palette().color(popup.palette().ColorRole.Base) == QtStyler.foreground()
+
 
 # ---------------------------------------------------------------------------
 # add_search_to_combobox
@@ -396,6 +415,14 @@ class TestAddSearchToCombobox:
         plain_combo._text_activated()
 
         assert seen == ["Beta"]
+
+    def test_popup_uses_theme_colors(self, plain_combo):
+        add_search_to_combobox(plain_combo)
+        popup = plain_combo.completer_object.popup()
+        stylesheet = popup.styleSheet()
+
+        assert f"background-color: {QtStyler.foreground().name()}" in stylesheet
+        assert f"color: {QtStyler.text().name()}" in stylesheet
 
 
 class TestQtColorSwatchComboBox:

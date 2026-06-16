@@ -115,3 +115,26 @@ _SearchPanel QLineEdit:focus {
     border-color: {{ highlight }};
     background: {{ background }};
 }
+
+/* ----------------- QtSearchableComboBox ------------------ */
+/*QAbstractItemView#search_box_popup {*/
+/*    background-color: {{ background }};*/
+/*    color: {{ text }};*/
+/*    border-radius: 4px;*/
+/*    outline: 0;*/
+/*    selection-background-color: {{ highlight }};*/
+/*    selection-color: {{ text }};*/
+/*}*/
+/*QAbstractItemView#search_box_popup::item {*/
+/*    background-color: transparent;*/
+/*    color: {{ text }};*/
+/*    border: 0;*/
+/*}*/
+/*QAbstractItemView#search_box_popup::item:hover {*/
+/*    background-color: {{ lighten(highlight, 20) }};*/
+/*    color: {{ text }};*/
+/*}*/
+/*QAbstractItemView#search_box_popup::item:selected {*/
+/*    background-color: {{ highlight }};*/
+/*    color: {{ text }};*/
+/*}*/
