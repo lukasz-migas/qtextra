@@ -34,7 +34,7 @@ QtTagButton[active=False]{
 }
 
 QtTagButton > QtIconLabel, QtLeftPillLabel, QtPillActionButton, QtTagButton{
-    background: none;
+    background: transparent;
 }
 QtTagButton > QtLeftPillLabel{
     font-size: {{ increase(font_size, 2) }};

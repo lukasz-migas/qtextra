@@ -1,7 +1,7 @@
 /* ----------------- QSlider ------------------ */
 
 QSlider {
-   background-color: none;
+   background-color: transparent;
 }
 
 QSlider::groove:horizontal {

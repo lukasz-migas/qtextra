@@ -30,24 +30,25 @@ QtToolbarPushButton {
     background-color: transparent;
 }
 
-QtToolbarPushButton:hover {
+
+QtImagePushButton[checkable=true]::checked, QtToolbarPushButton:checked {
+    border-left: 6px solid {{ success }};
+    border-radius: 0px;
+    background-color: transparent;
+}
+
+QtImagePushButton[checkable=true]:hover, QtToolbarPushButton:hover {
     background-color: {{ primary }};
 }
 
-QtToolbarPushButton:checked {
-    border: 3px solid {{ success }};
-    background-color: {{ primary }};
-    border-radius: 4px;
-}
-
-QtToolbarPushButton:pressed {
+QtImagePushButton[checkable=true]:pressed, QtToolbarPushButton:pressed {
     background-color: {{ primary }};
 }
 
 /* ----------------- QtPanelToolbar ----------------- */
 
 QWidget#toolbarSpacer{
-    background: none;
+    background: transparent;
 }
 
 QtPanelToolbar {

@@ -10,7 +10,7 @@ QFrame[card=true]:hover {
 }
 
 QFrame[card=true] QLabel{
-  background: none;
+  background: transparent;
 }
 
 QFrame[card=true] QtImagePushButton {

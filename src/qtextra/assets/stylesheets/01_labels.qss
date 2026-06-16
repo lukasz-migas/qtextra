@@ -45,7 +45,7 @@ QtDragWidget[drag=true] {
 QtWelcomeLabel {
     font-size: 20px;
     color: {{ text }};
-    background: none;
+    background: transparent;
 }
 
 QtShortcut {
@@ -57,7 +57,7 @@ QtShortcut {
 
 
 QtShortcutLabel {
-    background: none;
+    background: transparent;
     color: {{ text }};
     font-size: 16px;
 }
@@ -70,7 +70,7 @@ QtLargeLabel {
     padding: 1px;
     border: 1px;
     margin: 1px;
-    background: none;
+    background: transparent;
 }
 QLabel#h1 {
   font-size: 28px;

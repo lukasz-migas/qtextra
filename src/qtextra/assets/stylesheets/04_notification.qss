@@ -4,7 +4,7 @@ QtNotification {
 }
 
 QtNotification > QWidget {
-    background: none;
+    background: transparent;
 }
 
 QtNotification::hover {
@@ -12,13 +12,13 @@ QtNotification::hover {
 }
 
 QtNotification QElidingLabel, QtNotification QLabel {
-    background: none;
+    background: transparent;
     color: {{ icon }};
     font-size: 14px;
 }
 
 QtNotification QtImagePushButton {
-    background-color: none;
+    background-color: transparent;
 }
 
 QtNotification QtImagePushButton::hover {
@@ -40,5 +40,5 @@ QtNotification #actionButtons > QPushButton::hover {
 QtNotification #source_label {
     color: {{ opacity(text, 25) }};
     font-size: 11px;
-    background: none;
+    background: transparent;
 }

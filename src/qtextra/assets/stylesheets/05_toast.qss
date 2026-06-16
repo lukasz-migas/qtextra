@@ -63,7 +63,7 @@ QtToast{
 }
 
 QtToast > QLabel, QtToast > QtImagePushButton {
-    background: none;
+    background: transparent;
 }
 
 QtToast > QWidget#toast_header {

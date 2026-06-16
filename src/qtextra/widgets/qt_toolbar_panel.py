@@ -427,7 +427,7 @@ if __name__ == "__main__":  # pragma: no cover fmt: off
 
         from qtextra.assets import QTA_MAPPING
         from qtextra.helpers import make_btn
-        from qtextra.utils.dev import qmain, theme_toggle_btn
+        from qtextra.utils.dev import qdev, qmain, theme_toggle_btn
         from qtextra.widgets.qt_dialog import QtTab
 
         def _add_button() -> None:
@@ -470,22 +470,16 @@ if __name__ == "__main__":  # pragma: no cover fmt: off
         toolbar = QtPanelToolbar(frame)
         frame.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
 
-        btn2 = make_btn(frame, "Click me to add widget")
-        btn2.clicked.connect(_add_button)
-        ha.addWidget(btn2)
-
-        btn2 = make_btn(frame, "Click me to add panel")
-        btn2.clicked.connect(_add_widget)
-        ha.addWidget(btn2)
-
+        ha.addWidget(qdev(frame))
         ha.addWidget(theme_toggle_btn(frame))
 
-        btn2 = make_btn(frame, "Enable button")
-        btn2.clicked.connect(_enable_btn)
+        btn2 = make_btn(frame, "Click me to add widget", func=_add_button)
         ha.addWidget(btn2)
-
-        btn2 = make_btn(frame, "Disable button")
-        btn2.clicked.connect(_disable_btn)
+        btn2 = make_btn(frame, "Click me to add panel", func=_add_widget)
+        ha.addWidget(btn2)
+        btn2 = make_btn(frame, "Enable button", func=_enable_btn)
+        ha.addWidget(btn2)
+        btn2 = make_btn(frame, "Disable button", func=_disable_btn)
         ha.addWidget(btn2)
 
         frame.show()

@@ -5,9 +5,9 @@ QtTutorial{
 }
 
 QtTutorial > QLabel, QtTutorial > QtImagePushButton {
-    background: none;
+    background: transparent;
 }
 
 QtTutorial > QWidget#tutorial_header, QtTutorial > QWidget#tutorial_footer {
-    background: none;
+    background: transparent;
 }

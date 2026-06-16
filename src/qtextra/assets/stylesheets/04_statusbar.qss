@@ -30,13 +30,13 @@ QtStatusbarIconWidget > QtIconLabel::pressed {
 
 QtStatusbarWidget > QLabel, QtStatusbarWidget > QtStatusbarLabel {
     /*background-color: {{ darken(background, 5) }};*/
-    background-color: none;
+    background-color: transparent;
 }
 
 
 QtStatusbarWidget > QtIconLabel::hover {
     /*background-color: {{ darken(foreground, 5) }};*/
-    background-color: none;
+    background-color: transparent;
     border-radius: 5px;
 }
 
@@ -46,7 +46,7 @@ QtStatusbarWidget > QtIconLabel::pressed {
 }
 
 QQtStatusbarSpinner {
-    background: none;
+    background: transparent;
 }
 
 /* ------------ QStatusBar QSpinBox ------------ */
