@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import typing as ty
 
-from qtpy.QtCore import QRectF, QSortFilterProxyModel, Qt, Signal
-from qtpy.QtGui import QPainter, QPen, QStandardItem, QStandardItemModel
+from qtpy.QtCore import QEvent, QObject, QRectF, QSortFilterProxyModel, Qt, QTimer, Signal
+from qtpy.QtGui import QMouseEvent, QPainter, QPen, QStandardItem, QStandardItemModel
 from qtpy.QtWidgets import QComboBox, QCompleter, QHBoxLayout, QLineEdit, QStyledItemDelegate, QWidget
 
 from qtextra.config import QtStyler
@@ -190,6 +190,24 @@ class QtSearchableComboBox(QComboBox):
         self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)  # ensures that incorrect values are not added
         self.completer_object.popup().setItemDelegate(QStyledItemDelegate(self))
         self.completer_object.popup().setObjectName("search_box_popup")
+        line_edit = self.lineEdit()
+        if line_edit is not None:
+            line_edit.installEventFilter(self)
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """Open the dropdown when the editable text field is clicked."""
+        if watched is self.lineEdit() and self._is_left_mouse_release(event):
+            QTimer.singleShot(0, self.showPopup)
+        return super().eventFilter(watched, event)
+
+    @staticmethod
+    def _is_left_mouse_release(event: QEvent) -> bool:
+        """Return whether an event is a left mouse release."""
+        return (
+            event.type() == QEvent.Type.MouseButtonRelease
+            and isinstance(event, QMouseEvent)
+            and event.button() == Qt.MouseButton.LeftButton
+        )
 
     def _text_activated(self):  # pragma: no cover
         self.textActivated.emit(self.currentText())
