@@ -61,7 +61,7 @@ class _BaseButton(QAbstractButton):
         if self._open:
             return QtStyler.background()
         if self._hovered:
-            return QtStyler.primary()
+            return QtStyler.highlight()
         return QtStyler.background()
 
     def _draw_frame(self, p: QPainter):
