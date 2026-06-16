@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 
 from qtpy.QtCore import QEvent, QObject, QRectF, QSortFilterProxyModel, Qt, QTimer, Signal
 from qtpy.QtGui import QColor, QMouseEvent, QPainter, QPalette, QPen, QStandardItem, QStandardItemModel
@@ -223,23 +224,26 @@ class QtSearchableComboBox(QComboBox):
 
     def _show_completer_popup(self) -> None:
         """Show matching choices while keeping keyboard focus in the editor."""
-        line_edit = self.lineEdit()
-        if line_edit is None:
-            return
-        _style_search_popup(self.completer_object.popup())
-        self.completer_object.setCompletionPrefix("")
-        self.completer_object.complete()
-        QTimer.singleShot(0, self._defer_line_edit_focus)
+        with suppress(RuntimeError):
+            line_edit = self.lineEdit()
+            if line_edit is None:
+                return
+            _style_search_popup(self.completer_object.popup())
+            self.completer_object.setCompletionPrefix("")
+            self.completer_object.complete()
+            QTimer.singleShot(0, self._defer_line_edit_focus)
 
     def _defer_line_edit_focus(self) -> None:
         """Queue editor focus after the completer popup finishes opening."""
-        QTimer.singleShot(0, self._focus_line_edit)
+        with suppress(RuntimeError):
+            QTimer.singleShot(0, self._focus_line_edit)
 
     def _focus_line_edit(self) -> None:
         """Restore keyboard focus to the editor after showing the popup."""
-        line_edit = self.lineEdit()
-        if line_edit is not None:
-            line_edit.setFocus(Qt.FocusReason.MouseFocusReason)
+        with suppress(RuntimeError):
+            line_edit = self.lineEdit()
+            if line_edit is not None:
+                line_edit.setFocus(Qt.FocusReason.MouseFocusReason)
 
     @staticmethod
     def _is_left_mouse_release(event: QEvent) -> bool:
