@@ -53,23 +53,6 @@ class QtAboutWidget(QWidget):
         return QtAboutWidget(title, description, docs, parent=parent)
 
 
-# class QtAboutPopup(QtTransparentPopup):
-#     """About popup."""
-#
-#     def __init__(self, text: str, parent: ty.Optional[QWidget] = None):
-#         super().__init__(parent=parent)
-#         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-#
-#         self.label = hp.make_label(self, text)
-#         layout = QVBoxLayout(self.frame)
-#         layout.setContentsMargins(5, 5, 5, 5)
-#         layout.addWidget(self.label)
-#
-#     def on_show(self, state: bool):
-#         """Show popup."""
-#         self.show() if state else self.hide()
-
-
 class QtPanelWidget(QWidget):
     """A vertical toolbar paired with a stacked panel area.
 

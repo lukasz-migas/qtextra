@@ -1535,7 +1535,7 @@ def make_combobox(
     if func:
         [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func)]
     if func_index:
-        [widget.currentTextChanged.connect(func_) for func_ in _validate_func(func_index)]
+        [widget.currentIndexChanged.connect(func_) for func_ in _validate_func(func_index)]
     return widget
 
 
