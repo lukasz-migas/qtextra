@@ -5,7 +5,7 @@
   "foreground": "rgb(0, 18, 4)",
   "primary": "rgb(0, 77, 32)",
   "secondary": "rgb(0, 185, 60)",
-  "highlight": "rgb(0, 210, 80)",
+  "highlight": "rgb(0, 134, 80)",
   "text": "rgb(0, 255, 65)",
   "icon": "rgb(0, 200, 50)",
   "warning": "rgb(255, 170, 0)",
