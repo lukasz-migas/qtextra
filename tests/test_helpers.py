@@ -279,9 +279,9 @@ class TestMakeCombobox:
         qtbot.addWidget(w)
         received = []
         cb = hp.make_combobox(w, items=["A", "B"], func_index=lambda t: received.append(t))
-        cb.setCurrentIndex(0)
+        cb.setCurrentText("A")
         assert received[-1] == 0
-        cb.setCurrentIndex(1)
+        cb.setCurrentText("B")
         assert received[-1] == 1
 
     def test_object_name(self, qtbot):
