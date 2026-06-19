@@ -1,0 +1,23 @@
+{
+  "name": "solarized_light",
+  "type": "light",
+  "background": "rgb(253, 246, 227)",
+  "foreground": "rgb(238, 232, 213)",
+  "primary": "rgb(181, 137, 0)",
+  "secondary": "rgb(133, 153, 0)",
+  "highlight": "rgb(203, 75, 22)",
+  "text": "rgb(101, 123, 131)",
+  "icon": "rgb(131, 148, 150)",
+  "warning": "rgb(203, 75, 22)",
+  "error": "rgb(220, 50, 47)",
+  "success": "rgb(133, 153, 0)",
+  "info": "rgb(38, 139, 210)",
+  "progress": "rgb(181, 137, 0)",
+  "current": "rgb(42, 161, 152)",
+  "console": "rgb(253, 246, 227)",
+  "canvas": "rgb(238, 232, 213)",
+  "standout": "rgb(108, 113, 196)",
+  "syntax_style": "solarized-light",
+  "font_size": "14pt",
+  "header_size": "18pt"
+}
