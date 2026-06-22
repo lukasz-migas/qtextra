@@ -165,6 +165,27 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=620,
     ),
     WidgetDoc(
+        slug="qt_dependency_graph",
+        title="QtDependencyGraph",
+        section="Labels And Display",
+        summary="Interactive task graphs with movable nodes, custom states, icons, and automatic layout.",
+        example="qt_dependency_graph.py",
+        classes=(
+            "qtextra.widgets.qt_dependency_graph.DependencyGraphNode",
+            "qtextra.widgets.qt_dependency_graph.QtDependencyGraph",
+        ),
+        notes=(
+            "Dependency graphs are read-only and validate that the supplied task topology is acyclic.",
+            "State names are arbitrary strings configured through a state-to-color mapping.",
+            "Drag nodes to reposition them, with live edge routing and optional dotted-grid snapping.",
+            "Position APIs support runtime layout persistence; reset layout restores the automatic topology.",
+            "Drag empty canvas space to pan, use the wheel to zoom, or use the keyboard shortcuts.",
+            "Nodes accept optional QIcon values or qtextra icon aliases.",
+            "Click a task to highlight every upstream dependency and downstream dependant.",
+        ),
+        screenshot_width=920,
+    ),
+    WidgetDoc(
         slug="qt_filter_edit",
         title="QtFilterEdit",
         section="Selection And Input",

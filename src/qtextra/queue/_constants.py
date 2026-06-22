@@ -16,7 +16,9 @@ STATE_TO_ICON = {
     TaskState.CANCELLED: "cross_full",
 }
 STATE_TO_COLOR = {
+    TaskState.INVALID: "#000000",
     TaskState.QUEUED: "#00C851",
+    TaskState.INCOMPLETE: "#ffbb33",
     TaskState.RUN_NEXT: "#e04196",
     TaskState.RUNNING: "#8E24AA",
     TaskState.PAUSING: "#1DE9B6",
