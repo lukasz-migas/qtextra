@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Mapping, Sequence
+from math import isfinite
 from typing import ClassVar
 
 from qtpy.QtCore import Property, QPointF, QRectF, Qt, Signal
@@ -17,6 +18,7 @@ from qtpy.QtGui import (
     QPainterPath,
     QPen,
     QPolygonF,
+    QWheelEvent,
 )
 from qtpy.QtWidgets import (
     QGraphicsItem,
@@ -44,7 +46,7 @@ class DependencyGraphNode(BaseModel):
     title: str
     description: str = ""
     dependencies: tuple[str, ...] = ()
-    state: TaskState = TaskState.QUEUED
+    state: str = TaskState.QUEUED.value
 
 
 class _DependencyNodeItem(QGraphicsObject):
@@ -114,7 +116,7 @@ class _DependencyNodeItem(QGraphicsObject):
         self.setOpacity(0.28 if relation == "unrelated" else 1.0)
         self.update()
 
-    def set_state(self, state: TaskState, color: QColor) -> None:
+    def set_state(self, state: str, color: QColor) -> None:
         """Update state data and repaint without changing graph geometry."""
         self.node.state = state
         self.state_color = QColor(color)
@@ -146,7 +148,7 @@ class _DependencyNodeItem(QGraphicsObject):
 
         content_left = self.PADDING + self.ACCENT_WIDTH
         content_width = card.width() - content_left - self.PADDING
-        state_text = self.node.state.value.replace("-", " ").title()
+        state_text = self.node.state.replace("-", " ").replace("_", " ").title()
         state_metrics = QFontMetricsF(self._state_font)
         state_width = state_metrics.horizontalAdvance(state_text) + 14.0
         state_height = state_metrics.height() + 6.0
@@ -305,16 +307,20 @@ class QtDependencyGraph(QGraphicsView):
     evt_node_clicked = Signal(str)
     evt_selection_changed = Signal(object)
     evt_node_state_changed = Signal(str, object)
+    evt_zoom_changed = Signal(float)
 
     LAYER_SPACING: ClassVar[float] = 110.0
     NODE_SPACING: ClassVar[float] = 42.0
     SCENE_MARGIN: ClassVar[float] = 40.0
+    ZOOM_STEP: ClassVar[float] = 1.2
+    MIN_ZOOM: ClassVar[float] = 0.1
+    MAX_ZOOM: ClassVar[float] = 4.0
 
     def __init__(
         self,
         nodes: Sequence[DependencyGraphNode | Mapping[str, object]] | None = None,
         orientation: Orientation | Qt.Orientation = "horizontal",
-        state_colors: Mapping[TaskState | str, QColor | str] | None = None,
+        state_colors: Mapping[str | TaskState, QColor | str] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         """Initialize the graph view with optional node data."""
@@ -328,12 +334,15 @@ class QtDependencyGraph(QGraphicsView):
         self._node_items: dict[str, _DependencyNodeItem] = {}
         self._edge_items: dict[tuple[str, str], _DependencyEdgeItem] = {}
         self._selected_node_id: str | None = None
-        self._state_colors: dict[TaskState, QColor] = {}
+        self._state_colors: dict[str, QColor] = {}
 
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
         self.set_state_colors(state_colors)
         THEMES.evt_theme_changed.connect(self._apply_theme)
         self._apply_theme()
@@ -378,35 +387,37 @@ class QtDependencyGraph(QGraphicsView):
 
     orientation = Property(str, fget=get_orientation, fset=set_orientation)
 
-    def get_state_colors(self) -> dict[TaskState, QColor]:
-        """Return copies of the effective task-state colors."""
+    def get_state_colors(self) -> dict[str, QColor]:
+        """Return copies of the effective state colors, keyed by state name."""
         return {state: QColor(color) for state, color in self._state_colors.items()}
 
-    def set_state_colors(self, colors: Mapping[TaskState | str, QColor | str] | None = None) -> None:
-        """Reset state colors to defaults and apply optional caller overrides."""
-        state_colors = {state: QColor(color) for state, color in STATE_TO_COLOR.items()}
+    def set_state_colors(self, colors: Mapping[str | TaskState, QColor | str] | None = None) -> None:
+        """Reset built-in colors and apply arbitrary state-color definitions."""
+        state_colors = {state.value: QColor(color) for state, color in STATE_TO_COLOR.items()}
         for state, color_value in (colors or {}).items():
-            task_state = TaskState(state)
+            state_name = self._normalize_state(state)
             color = QColor(color_value)
             if not color.isValid():
-                raise ValueError(f"Invalid color for task state '{task_state.value}': {color_value}")
-            state_colors[task_state] = color
-        missing = set(TaskState).difference(state_colors)
+                raise ValueError(f"Invalid color for node state '{state_name}': {color_value}")
+            state_colors[state_name] = color
+        missing = {node.state for node in self._nodes}.difference(state_colors)
         if missing:
-            names = ", ".join(sorted(state.value for state in missing))
-            raise ValueError(f"Missing colors for task states: {names}")
+            names = ", ".join(sorted(missing))
+            raise ValueError(f"Missing colors for node states: {names}")
         self._state_colors = state_colors
         for node_id, item in self._node_items.items():
             item.set_state(item.node.state, self._state_color(self._nodes_by_id[node_id].state))
 
-    def set_node_state(self, node_id: str, state: TaskState | str) -> None:
+    def set_node_state(self, node_id: str, state: str | TaskState) -> None:
         """Update one node state without rebuilding or repositioning the graph."""
         if node_id not in self._nodes_by_id:
             raise KeyError(f"Unknown dependency graph node: {node_id}")
-        task_state = TaskState(state)
-        self._nodes_by_id[node_id].state = task_state
-        self._node_items[node_id].set_state(task_state, self._state_color(task_state))
-        self.evt_node_state_changed.emit(node_id, task_state)
+        state_name = self._normalize_state(state)
+        if state_name not in self._state_colors:
+            raise ValueError(f"No color configured for node state: {state_name}")
+        self._nodes_by_id[node_id].state = state_name
+        self._node_items[node_id].set_state(state_name, self._state_color(state_name))
+        self.evt_node_state_changed.emit(node_id, state_name)
 
     def selected_node_id(self) -> str | None:
         """Return the selected node ID, or ``None`` when nothing is selected."""
@@ -431,7 +442,49 @@ class QtDependencyGraph(QGraphicsView):
     def fit_to_view(self) -> None:
         """Scale the complete graph to fit inside the viewport."""
         if self._node_items:
+            previous_zoom = self.zoom_factor()
             self.fitInView(self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+            self._emit_zoom_changed(previous_zoom)
+
+    def zoom_factor(self) -> float:
+        """Return the current canvas scale factor."""
+        return self.transform().m11()
+
+    def set_zoom_factor(self, factor: float) -> None:
+        """Set the canvas scale factor within the supported zoom range."""
+        factor = float(factor)
+        if not isfinite(factor) or factor <= 0.0:
+            raise ValueError(f"Zoom factor must be a positive finite number: {factor}")
+        factor = min(self.MAX_ZOOM, max(self.MIN_ZOOM, factor))
+        current = self.zoom_factor()
+        if abs(current - factor) < 1e-9:
+            return
+        self.scale(factor / current, factor / current)
+        self.evt_zoom_changed.emit(self.zoom_factor())
+
+    def zoom_in(self) -> None:
+        """Increase the canvas scale by one zoom step."""
+        self.set_zoom_factor(self.zoom_factor() * self.ZOOM_STEP)
+
+    def zoom_out(self) -> None:
+        """Decrease the canvas scale by one zoom step."""
+        self.set_zoom_factor(self.zoom_factor() / self.ZOOM_STEP)
+
+    def reset_zoom(self) -> None:
+        """Restore the canvas to its unscaled view."""
+        previous_zoom = self.zoom_factor()
+        self.resetTransform()
+        self._emit_zoom_changed(previous_zoom)
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        """Zoom around the mouse cursor in response to the wheel."""
+        delta = event.angleDelta().y()
+        if delta == 0:
+            super().wheelEvent(event)
+            return
+        factor = self.ZOOM_STEP ** (delta / 120.0)
+        self.set_zoom_factor(self.zoom_factor() * factor)
+        event.accept()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Select clicked nodes and clear selection on empty canvas clicks."""
@@ -456,8 +509,13 @@ class QtDependencyGraph(QGraphicsView):
             return "vertical"
         raise ValueError(f"Unsupported dependency graph orientation: {orientation}")
 
-    @staticmethod
+    def _emit_zoom_changed(self, previous_zoom: float) -> None:
+        current_zoom = self.zoom_factor()
+        if abs(current_zoom - previous_zoom) >= 1e-9:
+            self.evt_zoom_changed.emit(current_zoom)
+
     def _validate_nodes(
+        self,
         nodes: Sequence[DependencyGraphNode | Mapping[str, object]],
     ) -> tuple[list[DependencyGraphNode], dict[str, list[str]]]:
         validated = [
@@ -469,6 +527,12 @@ class QtDependencyGraph(QGraphicsView):
             raise ValueError("Dependency graph node IDs cannot be empty")
         if any(not node.title.strip() for node in validated):
             raise ValueError("Dependency graph node titles cannot be empty")
+        if any(not node.state.strip() for node in validated):
+            raise ValueError("Dependency graph node states cannot be empty")
+        missing_states = {node.state for node in validated}.difference(self._state_colors)
+        if missing_states:
+            names = ", ".join(sorted(missing_states))
+            raise ValueError(f"No colors configured for node states: {names}")
         if len(node_ids) != len(set(node_ids)):
             duplicates = sorted({node_id for node_id in node_ids if node_ids.count(node_id) > 1})
             raise ValueError(f"Duplicate dependency graph node IDs: {', '.join(duplicates)}")
@@ -580,8 +644,16 @@ class QtDependencyGraph(QGraphicsView):
     def _cross_size(self, item: _DependencyNodeItem) -> float:
         return item.card_rect().height() if self._orientation == "horizontal" else item.card_rect().width()
 
-    def _state_color(self, state: TaskState) -> QColor:
+    def _state_color(self, state: str) -> QColor:
         return QColor(self._state_colors[state])
+
+    @staticmethod
+    def _normalize_state(state: str | TaskState) -> str:
+        state_name = state.value if isinstance(state, TaskState) else str(state)
+        state_name = state_name.strip()
+        if not state_name:
+            raise ValueError("Dependency graph node states cannot be empty")
+        return state_name
 
     def _walk(self, node_id: str, adjacency: Mapping[str, Sequence[str]]) -> set[str]:
         related: set[str] = set()

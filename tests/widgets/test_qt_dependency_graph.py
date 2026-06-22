@@ -27,11 +27,13 @@ def _graph_nodes() -> list[dict[str, object]]:
 def test_dependency_graph_node_defaults_and_dictionary_coercion(qtbot: Any) -> None:
     widget = QtDependencyGraph(_graph_nodes())
     qtbot.addWidget(widget)
+    model = DependencyGraphNode(id="model", title="Model", state=TaskState.RUNNING)
 
     nodes = {node.id: node for node in widget.get_nodes()}
 
-    assert nodes["prepare"].state == TaskState.FINISHED
-    assert nodes["right"].state == TaskState.QUEUED
+    assert model.state == "running"
+    assert nodes["prepare"].state == "finished"
+    assert nodes["right"].state == "queued"
     assert nodes["left"].dependencies == ("prepare",)
 
 
@@ -124,30 +126,48 @@ def test_dependency_graph_set_node_state_updates_without_relayout(qtbot: Any) ->
     with qtbot.waitSignal(widget.evt_node_state_changed, timeout=500) as blocker:
         widget.set_node_state("right", TaskState.FAILED)
 
-    assert blocker.args == ["right", TaskState.FAILED]
+    assert blocker.args == ["right", "failed"]
     assert widget._node_items["right"] is item
     assert item.pos() == position
-    assert item.node.state == TaskState.FAILED
+    assert item.node.state == "failed"
     assert item.state_color == QColor(STATE_TO_COLOR[TaskState.FAILED])
 
     with pytest.raises(KeyError, match="unknown"):
         widget.set_node_state("unknown", TaskState.RUNNING)
 
 
-def test_dependency_graph_supports_state_color_overrides(qtbot: Any) -> None:
+def test_dependency_graph_supports_arbitrary_states_and_colors(qtbot: Any) -> None:
     widget = QtDependencyGraph(
-        [{"id": "task", "title": "Task"}],
-        state_colors={TaskState.QUEUED: "#123456"},
+        [{"id": "task", "title": "Task", "state": "waiting_review"}],
+        state_colors={"waiting_review": "#123456", "approved": "#abcdef"},
     )
     qtbot.addWidget(widget)
 
-    assert widget.get_state_colors()[TaskState.QUEUED] == QColor("#123456")
+    assert widget.get_state_colors()["waiting_review"] == QColor("#123456")
     assert widget._node_items["task"].state_color == QColor("#123456")
 
-    widget.set_state_colors({"finished": "#abcdef"})
-    widget.set_node_state("task", TaskState.FINISHED)
+    widget.set_node_state("task", "approved")
 
     assert widget._node_items["task"].state_color == QColor("#abcdef")
+    assert widget.get_nodes()[0].state == "approved"
+
+
+def test_dependency_graph_rejects_unconfigured_or_invalid_state_colors(qtbot: Any) -> None:
+    widget = QtDependencyGraph(
+        [{"id": "task", "title": "Task", "state": "custom"}],
+        state_colors={"custom": "#123456"},
+    )
+    qtbot.addWidget(widget)
+
+    with pytest.raises(ValueError, match="No color configured"):
+        widget.set_node_state("task", "missing")
+    with pytest.raises(ValueError, match="Missing colors"):
+        widget.set_state_colors()
+    with pytest.raises(ValueError, match="Invalid color"):
+        widget.set_state_colors({"custom": "not-a-color"})
+
+    assert widget.get_nodes()[0].state == "custom"
+    assert widget.get_state_colors()["custom"] == QColor("#123456")
 
 
 def test_dependency_graph_has_colors_for_every_task_state(qtbot: Any) -> None:
@@ -156,7 +176,7 @@ def test_dependency_graph_has_colors_for_every_task_state(qtbot: Any) -> None:
 
     colors = widget.get_state_colors()
 
-    assert set(colors) == set(TaskState)
+    assert set(colors) == {state.value for state in TaskState}
     assert all(color.isValid() for color in colors.values())
 
 
@@ -166,6 +186,7 @@ def test_dependency_graph_has_colors_for_every_task_state(qtbot: Any) -> None:
         ([{"id": "a", "title": "A"}, {"id": "a", "title": "Again"}], "Duplicate"),
         ([{"id": "a", "title": "A", "dependencies": ["missing"]}], "unknown dependencies"),
         ([{"id": "a", "title": "A", "dependencies": ["a"]}], "depend on itself"),
+        ([{"id": "a", "title": "A", "state": "custom"}], "No colors configured"),
         (
             [
                 {"id": "a", "title": "A", "dependencies": ["b"]},
@@ -205,6 +226,33 @@ def test_dependency_graph_navigation_and_rendering(qtbot: Any) -> None:
     widget.fit_to_view()
 
     assert widget.grab().isNull() is False
+
+
+def test_dependency_graph_supports_interactive_pan_and_bounded_zoom(qtbot: Any) -> None:
+    widget = QtDependencyGraph([{"id": "task", "title": "Task"}])
+    qtbot.addWidget(widget)
+
+    assert widget.dragMode() == widget.DragMode.ScrollHandDrag
+    assert widget.zoom_factor() == pytest.approx(1.0)
+
+    with qtbot.waitSignal(widget.evt_zoom_changed, timeout=500) as blocker:
+        widget.zoom_in()
+
+    assert blocker.args == [pytest.approx(widget.ZOOM_STEP)]
+    assert widget.zoom_factor() == pytest.approx(widget.ZOOM_STEP)
+
+    widget.zoom_out()
+    assert widget.zoom_factor() == pytest.approx(1.0)
+
+    widget.set_zoom_factor(100.0)
+    assert widget.zoom_factor() == pytest.approx(widget.MAX_ZOOM)
+    widget.set_zoom_factor(0.001)
+    assert widget.zoom_factor() == pytest.approx(widget.MIN_ZOOM)
+    widget.reset_zoom()
+    assert widget.zoom_factor() == pytest.approx(1.0)
+
+    with pytest.raises(ValueError, match="positive finite"):
+        widget.set_zoom_factor(0.0)
 
 
 def test_dependency_graph_repaints_after_theme_change(qtbot: Any) -> None:

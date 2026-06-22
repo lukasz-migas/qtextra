@@ -168,7 +168,7 @@ CATALOG: tuple[WidgetDoc, ...] = (
         slug="qt_dependency_graph",
         title="QtDependencyGraph",
         section="Labels And Display",
-        summary="Scrollable stateful task graphs with automatic dependency layout and relationship highlighting.",
+        summary="Scrollable task graphs with custom state colors, automatic layout, and relationship highlighting.",
         example="qt_dependency_graph.py",
         classes=(
             "qtextra.widgets.qt_dependency_graph.DependencyGraphNode",
@@ -176,6 +176,8 @@ CATALOG: tuple[WidgetDoc, ...] = (
         ),
         notes=(
             "Dependency graphs are read-only and validate that the supplied task topology is acyclic.",
+            "State names are arbitrary strings configured through a state-to-color mapping.",
+            "Drag empty canvas space to pan, use the wheel to zoom around the cursor, or call the public zoom methods.",
             "Click a task to highlight every upstream dependency and downstream dependant.",
         ),
         screenshot_width=920,
