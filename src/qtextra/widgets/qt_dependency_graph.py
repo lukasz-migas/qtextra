@@ -305,6 +305,7 @@ class QtDependencyGraph(QGraphicsView):
     """Display a stateful directed acyclic task graph on a scrollable canvas."""
 
     evt_node_clicked = Signal(str)
+    evt_node_double_clicked = Signal(str)
     evt_selection_changed = Signal(object)
     evt_node_state_changed = Signal(str, object)
     evt_zoom_changed = Signal(float)
@@ -498,6 +499,18 @@ class QtDependencyGraph(QGraphicsView):
             else:
                 self.select_node(None)
         super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            event.accept()
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        """Handle double-click events to select nodes and emit the clicked signal."""
+        if event.button() == Qt.MouseButton.LeftButton:
+            item: QGraphicsItem | None = self.itemAt(event.pos())
+            while item is not None and not isinstance(item, _DependencyNodeItem):
+                item = item.parentItem()
+            if isinstance(item, _DependencyNodeItem):
+                self.evt_node_double_clicked.emit(item.node.id)
+        super().mouseDoubleClickEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
             event.accept()
 
