@@ -35,7 +35,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 ## Labels And Display
 
 - [QReadMoreLessLabel](./qt_label_read_more.md): rich text that can stay compact by default and expand into a two-column explanation when needed.
-- [QtDependencyGraph](./qt_dependency_graph.md): scrollable task graphs with custom state colors, automatic layout, and relationship highlighting.
+- [QtDependencyGraph](./qt_dependency_graph.md): interactive task graphs with movable nodes, custom states, icons, and automatic layout.
 - [QtQtaLabel (variants)](./qt_label_icon.md): theme-aware static and animated icon labels built on QtAwesome mappings.
 - [QtScrollableLabel](./qt_label_scroll.md): scrollable rich text labels for longer explanations inside constrained layouts.
 

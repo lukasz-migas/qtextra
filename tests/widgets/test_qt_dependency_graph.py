@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from qtpy.QtCore import Qt
-from qtpy.QtGui import QColor
+from qtpy.QtCore import QPoint, QPointF, Qt
+from qtpy.QtGui import QColor, QIcon, QPixmap
+from qtpy.QtWidgets import QGraphicsItem
 
 from qtextra.config import THEMES
 from qtextra.queue._constants import STATE_TO_COLOR
@@ -228,6 +229,136 @@ def test_dependency_graph_navigation_and_rendering(qtbot: Any) -> None:
     assert widget.grab().isNull() is False
 
 
+def test_dependency_graph_movement_updates_connected_edges_and_snaps(qtbot: Any) -> None:
+    widget = QtDependencyGraph(
+        [
+            {"id": "a", "title": "A"},
+            {"id": "b", "title": "B", "dependencies": ["a"]},
+            {"id": "c", "title": "C", "dependencies": ["b"]},
+        ],
+        grid_spacing=20.0,
+    )
+    qtbot.addWidget(widget)
+    item = widget._node_items["b"]
+    start = QPointF(item.pos())
+    incoming_before = widget._edge_items[("a", "b")].path().boundingRect()
+    outgoing_before = widget._edge_items[("b", "c")].path().boundingRect()
+
+    item.setPos(start + QPointF(13.0, 27.0))
+
+    assert widget._edge_items[("a", "b")].path().boundingRect() != incoming_before
+    assert widget._edge_items[("b", "c")].path().boundingRect() != outgoing_before
+
+    with qtbot.waitSignal(widget.evt_node_moved, timeout=500) as blocker:
+        widget._on_node_drag_finished("b", start)
+
+    expected = QPointF(round((start.x() + 13.0) / 20.0) * 20.0, round((start.y() + 27.0) / 20.0) * 20.0)
+    assert item.pos() == expected
+    assert blocker.args == ["b", expected]
+    assert widget.sceneRect().contains(item.sceneBoundingRect())
+
+
+def test_dependency_graph_free_drag_and_movement_locking(qtbot: Any) -> None:
+    widget = QtDependencyGraph([{"id": "task", "title": "Task"}], snap_to_grid=False)
+    widget.resize(600, 400)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+    item = widget._node_items["task"]
+    start = QPointF(item.pos())
+    center = widget.mapFromScene(item.mapToScene(item.card_rect().center()))
+
+    with qtbot.waitSignal(widget.evt_node_moved, timeout=500):
+        qtbot.mousePress(widget.viewport(), Qt.MouseButton.LeftButton, pos=center)
+        qtbot.mouseMove(widget.viewport(), pos=center + QPoint(40, 20))
+        qtbot.mouseRelease(widget.viewport(), Qt.MouseButton.LeftButton, pos=center + QPoint(40, 20))
+
+    assert item.pos() == start + QPointF(40.0, 20.0)
+    assert item.flags() & QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+
+    widget.set_nodes_movable(False)
+
+    assert widget.get_nodes_movable() is False
+    assert not item.flags() & QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+
+
+def test_dependency_graph_position_api_preserves_and_resets_layout(qtbot: Any) -> None:
+    nodes = [
+        {"id": "a", "title": "A"},
+        {"id": "b", "title": "B", "dependencies": ["a"]},
+    ]
+    widget = QtDependencyGraph(nodes)
+    qtbot.addWidget(widget)
+    automatic = widget.get_node_positions()
+
+    widget.set_node_position("a", (123.0, 234.0))
+    assert widget.get_node_positions()["a"] == (123.0, 234.0)
+
+    widget.set_nodes(nodes)
+    assert widget.get_node_positions()["a"] == (123.0, 234.0)
+
+    before_invalid = widget.get_node_positions()
+    with pytest.raises(KeyError, match="missing"):
+        widget.set_node_positions({"a": (5.0, 6.0), "missing": (7.0, 8.0)})
+    assert widget.get_node_positions() == before_invalid
+
+    widget.reset_layout()
+    assert widget.get_node_positions() == automatic
+
+    widget.set_node_position("a", (321.0, 432.0))
+    widget.set_orientation("vertical")
+    assert widget.get_node_positions()["a"] != (321.0, 432.0)
+
+
+def test_dependency_graph_supports_icons_and_safe_node_copies(qtbot: Any) -> None:
+    pixmap = QPixmap(16, 16)
+    pixmap.fill(QColor("#ff0000"))
+    direct_icon = QIcon(pixmap)
+    widget = QtDependencyGraph(
+        [
+            DependencyGraphNode(id="direct", title="Direct", description="Full description", icon=direct_icon),
+            {"id": "alias", "title": "Alias", "icon": "graph"},
+        ]
+    )
+    qtbot.addWidget(widget)
+
+    copied_nodes = {node.id: node for node in widget.get_nodes()}
+
+    assert isinstance(copied_nodes["direct"].icon, QIcon)
+    assert copied_nodes["direct"].icon is not direct_icon
+    assert widget._node_items["direct"]._icon.isNull() is False
+    assert widget._node_items["alias"]._icon.isNull() is False
+    assert "Full description" in widget._node_items["direct"].toolTip()
+    assert "State: queued" in widget._node_items["direct"].toolTip()
+
+    widget.set_node_icon("direct", "info")
+
+    assert widget.get_nodes()[0].icon == "info"
+    assert widget._node_items["direct"]._icon.isNull() is False
+
+
+def test_dependency_graph_grid_configuration_and_zoom_density(qtbot: Any) -> None:
+    widget = QtDependencyGraph([{"id": "task", "title": "Task"}])
+    qtbot.addWidget(widget)
+
+    assert widget.get_grid_visible() is True
+    assert widget.get_snap_to_grid() is True
+    assert widget.get_grid_spacing() == 20.0
+    assert widget._effective_grid_spacing() == 20.0
+
+    widget.set_zoom_factor(0.1)
+    assert widget._effective_grid_spacing() > widget.get_grid_spacing()
+    widget.set_grid_spacing(25.0)
+    widget.set_grid_visible(False)
+    widget.set_snap_to_grid(False)
+
+    assert widget.get_grid_spacing() == 25.0
+    assert widget.get_grid_visible() is False
+    assert widget.get_snap_to_grid() is False
+    with pytest.raises(ValueError, match="positive finite"):
+        widget.set_grid_spacing(0.0)
+
+
 def test_dependency_graph_supports_interactive_pan_and_bounded_zoom(qtbot: Any) -> None:
     widget = QtDependencyGraph([{"id": "task", "title": "Task"}])
     qtbot.addWidget(widget)
@@ -253,6 +384,30 @@ def test_dependency_graph_supports_interactive_pan_and_bounded_zoom(qtbot: Any) 
 
     with pytest.raises(ValueError, match="positive finite"):
         widget.set_zoom_factor(0.0)
+
+
+def test_dependency_graph_keyboard_navigation_and_double_click(qtbot: Any) -> None:
+    widget = QtDependencyGraph([{"id": "task", "title": "Task"}])
+    widget.resize(500, 300)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+
+    qtbot.keyClick(widget, Qt.Key.Key_Plus)
+    assert widget.zoom_factor() == pytest.approx(widget.ZOOM_STEP)
+    qtbot.keyClick(widget, Qt.Key.Key_Minus)
+    assert widget.zoom_factor() == pytest.approx(1.0)
+    widget.zoom_in()
+    qtbot.keyClick(widget, Qt.Key.Key_0)
+    assert widget.zoom_factor() == pytest.approx(1.0)
+
+    position = widget.mapFromScene(
+        widget._node_items["task"].mapToScene(widget._node_items["task"].card_rect().center())
+    )
+    with qtbot.waitSignal(widget.evt_node_double_clicked, timeout=500) as blocker:
+        qtbot.mouseDClick(widget.viewport(), Qt.MouseButton.LeftButton, pos=position)
+
+    assert blocker.args == ["task"]
 
 
 def test_dependency_graph_repaints_after_theme_change(qtbot: Any) -> None:

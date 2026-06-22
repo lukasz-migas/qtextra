@@ -23,6 +23,7 @@ NODES = [
         "title": "Prepare inputs",
         "description": "Validate source files and initialize the workspace.",
         "state": "complete",
+        "icon": "check",
     },
     {
         "id": "analyze",
@@ -30,6 +31,7 @@ NODES = [
         "description": "Run the primary analysis.",
         "dependencies": ["prepare"],
         "state": "processing",
+        "icon": "active",
     },
     {
         "id": "preview",
@@ -37,6 +39,7 @@ NODES = [
         "description": "Generate a lightweight preview in parallel.",
         "dependencies": ["prepare"],
         "state": "waiting",
+        "icon": "wait",
     },
     {
         "id": "publish",
@@ -44,12 +47,14 @@ NODES = [
         "description": "Wait for both branches, then publish the completed result.",
         "dependencies": ["analyze", "preview"],
         "state": "waiting",
+        "icon": "graph",
     },
     {
         "id": "cleanup",
         "title": "Cleanup cache",
         "description": "An independent maintenance task with no connections.",
         "state": "on_hold",
+        "icon": "pause",
     },
 ]
 
@@ -70,6 +75,11 @@ reset_button = QPushButton("Reset zoom")
 buttons.addWidget(reset_button)
 fit_button = QPushButton("Fit graph")
 buttons.addWidget(fit_button)
+layout_button = QPushButton("Reset layout")
+buttons.addWidget(layout_button)
+lock_button = QPushButton("Lock nodes")
+lock_button.setCheckable(True)
+buttons.addWidget(lock_button)
 layout.addLayout(buttons)
 
 
@@ -79,11 +89,19 @@ def switch_orientation() -> None:
     graph.fit_to_view()
 
 
+def toggle_node_movement(locked: bool) -> None:
+    """Lock or unlock direct node dragging."""
+    graph.set_nodes_movable(not locked)
+    lock_button.setText("Unlock nodes" if locked else "Lock nodes")
+
+
 orientation_button.clicked.connect(switch_orientation)
 zoom_out_button.clicked.connect(graph.zoom_out)
 zoom_in_button.clicked.connect(graph.zoom_in)
 reset_button.clicked.connect(graph.reset_zoom)
 fit_button.clicked.connect(graph.fit_to_view)
+layout_button.clicked.connect(graph.reset_layout)
+lock_button.toggled.connect(toggle_node_movement)
 
 preview_states = cycle(["waiting", "processing", "complete"])
 timer = QTimer(window)

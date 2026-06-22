@@ -1,6 +1,6 @@
 # QtDependencyGraph
 
-Scrollable task graphs with custom state colors, automatic layout, and relationship highlighting.
+Interactive task graphs with movable nodes, custom states, icons, and automatic layout.
 
 ## Screenshot
 
@@ -15,7 +15,10 @@ Source: `examples/qt_dependency_graph.py`
 
 - Dependency graphs are read-only and validate that the supplied task topology is acyclic.
 - State names are arbitrary strings configured through a state-to-color mapping.
-- Drag empty canvas space to pan, use the wheel to zoom around the cursor, or call the public zoom methods.
+- Drag nodes to reposition them, with live edge routing and optional dotted-grid snapping.
+- Position APIs support runtime layout persistence; reset layout restores the automatic topology.
+- Drag empty canvas space to pan, use the wheel to zoom, or use the keyboard shortcuts.
+- Nodes accept optional `QIcon` values or qtextra icon aliases.
 - Click a task to highlight every upstream dependency and downstream dependant.
 
 ## API

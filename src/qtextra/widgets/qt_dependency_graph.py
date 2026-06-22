@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Mapping, Sequence
-from math import isfinite
-from typing import ClassVar
+from math import ceil, floor, isfinite
+from typing import Callable, ClassVar
 
 from qtpy.QtCore import Property, QPointF, QRectF, Qt, Signal
 from qtpy.QtGui import (
@@ -13,6 +13,8 @@ from qtpy.QtGui import (
     QColor,
     QFont,
     QFontMetricsF,
+    QIcon,
+    QKeyEvent,
     QMouseEvent,
     QPainter,
     QPainterPath,
@@ -25,6 +27,7 @@ from qtpy.QtWidgets import (
     QGraphicsObject,
     QGraphicsPathItem,
     QGraphicsScene,
+    QGraphicsSceneMouseEvent,
     QGraphicsView,
     QStyleOptionGraphicsItem,
     QWidget,
@@ -47,18 +50,26 @@ class DependencyGraphNode(BaseModel):
     description: str = ""
     dependencies: tuple[str, ...] = ()
     state: str = TaskState.QUEUED.value
+    icon: QIcon | str | None = None
+
+    class Config:
+        """Allow Qt icon values in the declarative node model."""
+
+        arbitrary_types_allowed = True
 
 
 class _DependencyNodeItem(QGraphicsObject):
     """Paint one task card and its derived connection ports."""
 
-    WIDTH: ClassVar[float] = 240.0
+    WIDTH: ClassVar[float] = 300.0
     MIN_HEIGHT: ClassVar[float] = 112.0
     PADDING: ClassVar[float] = 14.0
     ACCENT_WIDTH: ClassVar[float] = 6.0
     PORT_RADIUS: ClassVar[float] = 5.0
     TITLE_GAP: ClassVar[float] = 8.0
     DESCRIPTION_GAP: ClassVar[float] = 10.0
+    ICON_SIZE: ClassVar[float] = 22.0
+    ICON_GAP: ClassVar[float] = 8.0
 
     def __init__(
         self,
@@ -67,6 +78,10 @@ class _DependencyNodeItem(QGraphicsObject):
         state_color: QColor,
         has_input: bool,
         has_output: bool,
+        icon_resolver: Callable[[QIcon | str | None], QIcon | None],
+        position_changed: Callable[[str], None],
+        drag_finished: Callable[[str, QPointF], None],
+        movable: bool,
     ) -> None:
         """Initialize a task card."""
         super().__init__()
@@ -75,6 +90,11 @@ class _DependencyNodeItem(QGraphicsObject):
         self.state_color = QColor(state_color)
         self.has_input = has_input
         self.has_output = has_output
+        self._icon_resolver = icon_resolver
+        self._position_changed = position_changed
+        self._drag_finished = drag_finished
+        self._icon = self._icon_resolver(node.icon)
+        self._drag_start_position: QPointF | None = None
         self.relation = "normal"
         self._title_font = QFont()
         self._title_font.setBold(True)
@@ -83,7 +103,11 @@ class _DependencyNodeItem(QGraphicsObject):
         self._description_font = QFont()
         self._height = self.MIN_HEIGHT
         self._update_height()
+        self._update_tooltip()
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
+        self.set_movable(movable)
+        self.setZValue(1.0)
 
     def boundingRect(self) -> QRectF:
         """Return the task card bounds, including its ports."""
@@ -114,17 +138,54 @@ class _DependencyNodeItem(QGraphicsObject):
         """Set the relationship highlight applied to this node."""
         self.relation = relation
         self.setOpacity(0.28 if relation == "unrelated" else 1.0)
+        if self._drag_start_position is None:
+            self.setZValue(2.0 if relation == "selected" else 1.0)
         self.update()
 
     def set_state(self, state: str, color: QColor) -> None:
         """Update state data and repaint without changing graph geometry."""
         self.node.state = state
         self.state_color = QColor(color)
+        self._update_tooltip()
         self.update()
+
+    def set_icon(self, icon: QIcon | str | None) -> None:
+        """Update the node icon and repaint the card."""
+        self.node.icon = QIcon(icon) if isinstance(icon, QIcon) else icon
+        self._icon = self._icon_resolver(self.node.icon)
+        self.update()
+
+    def set_movable(self, movable: bool) -> None:
+        """Enable or disable direct node dragging."""
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, movable)
 
     def refresh_theme(self) -> None:
         """Repaint the node using the active application theme."""
+        if isinstance(self.node.icon, str):
+            self._icon = self._icon_resolver(self.node.icon)
         self.update()
+
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
+        """Notify the graph when this node moves."""
+        result = super().itemChange(change, value)
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged and self.scene() is not None:
+            self._position_changed(self.node.id)
+        return result
+
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """Remember the initial position for final movement notification."""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start_position = QPointF(self.pos())
+            self.setZValue(3.0)
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """Finalize a node drag and restore normal stacking."""
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self._drag_start_position is not None:
+            self._drag_finished(self.node.id, self._drag_start_position)
+            self._drag_start_position = None
+        self.setZValue(2.0 if self.relation == "selected" else 1.0)
 
     def paint(
         self,
@@ -161,8 +222,18 @@ class _DependencyNodeItem(QGraphicsObject):
         painter.setPen(get_text_color(self.state_color))
         painter.drawText(state_rect, Qt.AlignmentFlag.AlignCenter, state_text)
 
-        title_width = max(20.0, content_width - state_width - self.TITLE_GAP)
-        title_rect = QRectF(content_left, self.PADDING, title_width, state_height)
+        title_left = content_left
+        if self._icon is not None:
+            icon_rect = QRectF(
+                content_left,
+                self.PADDING + (state_height - self.ICON_SIZE) / 2.0,
+                self.ICON_SIZE,
+                self.ICON_SIZE,
+            )
+            self._icon.paint(painter, icon_rect.toRect(), Qt.AlignmentFlag.AlignCenter)
+            title_left = icon_rect.right() + self.ICON_GAP
+        title_width = max(20.0, card.right() - self.PADDING - state_width - self.TITLE_GAP - title_left)
+        title_rect = QRectF(title_left, self.PADDING, title_width, state_height)
         painter.setFont(self._title_font)
         painter.setPen(THEMES.get_qt_color("text"))
         title = QFontMetricsF(self._title_font).elidedText(
@@ -214,6 +285,13 @@ class _DependencyNodeItem(QGraphicsObject):
         if self.relation == "downstream":
             return THEMES.get_qt_color("secondary"), 2.5
         return THEMES.get_qt_color("primary"), 1.5
+
+    def _update_tooltip(self) -> None:
+        lines = [self.node.title]
+        if self.node.description:
+            lines.append(self.node.description)
+        lines.append(f"State: {self.node.state}")
+        self.setToolTip("\n".join(lines))
 
 
 class _DependencyEdgeItem(QGraphicsPathItem):
@@ -308,6 +386,7 @@ class QtDependencyGraph(QGraphicsView):
     evt_node_double_clicked = Signal(str)
     evt_selection_changed = Signal(object)
     evt_node_state_changed = Signal(str, object)
+    evt_node_moved = Signal(str, QPointF)
     evt_zoom_changed = Signal(float)
 
     LAYER_SPACING: ClassVar[float] = 110.0
@@ -316,6 +395,7 @@ class QtDependencyGraph(QGraphicsView):
     ZOOM_STEP: ClassVar[float] = 1.2
     MIN_ZOOM: ClassVar[float] = 0.1
     MAX_ZOOM: ClassVar[float] = 4.0
+    MIN_GRID_SCREEN_SPACING: ClassVar[float] = 8.0
 
     def __init__(
         self,
@@ -323,6 +403,11 @@ class QtDependencyGraph(QGraphicsView):
         orientation: Orientation | Qt.Orientation = "horizontal",
         state_colors: Mapping[str | TaskState, QColor | str] | None = None,
         parent: QWidget | None = None,
+        *,
+        nodes_movable: bool = True,
+        grid_visible: bool = True,
+        snap_to_grid: bool = True,
+        grid_spacing: float = 20.0,
     ) -> None:
         """Initialize the graph view with optional node data."""
         self._scene = QGraphicsScene()
@@ -334,8 +419,15 @@ class QtDependencyGraph(QGraphicsView):
         self._dependants: dict[str, list[str]] = {}
         self._node_items: dict[str, _DependencyNodeItem] = {}
         self._edge_items: dict[tuple[str, str], _DependencyEdgeItem] = {}
+        self._edges_by_node: dict[str, list[_DependencyEdgeItem]] = {}
         self._selected_node_id: str | None = None
         self._state_colors: dict[str, QColor] = {}
+        self._nodes_movable = bool(nodes_movable)
+        self._grid_visible = bool(grid_visible)
+        self._snap_to_grid = bool(snap_to_grid)
+        self._grid_spacing = self._validate_grid_spacing(grid_spacing)
+        self._updating_scene_rect = False
+        self._rebuilding_scene = False
 
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -344,6 +436,7 @@ class QtDependencyGraph(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.set_state_colors(state_colors)
         THEMES.evt_theme_changed.connect(self._apply_theme)
         self._apply_theme()
@@ -352,24 +445,112 @@ class QtDependencyGraph(QGraphicsView):
 
     def get_nodes(self) -> list[DependencyGraphNode]:
         """Return deep copies of the configured graph nodes."""
-        return [node.copy(deep=True) for node in self._nodes]
+        return [self._copy_node(node) for node in self._nodes]
 
     def set_nodes(self, nodes: Sequence[DependencyGraphNode | Mapping[str, object]]) -> None:
         """Validate and replace all task nodes, leaving the old graph intact on failure."""
         validated, dependants = self._validate_nodes(nodes)
         previous_selection = self._selected_node_id
+        previous_positions = self.get_node_positions()
         self._nodes = validated
         self._nodes_by_id = {node.id: node for node in validated}
         self._dependencies = {node.id: node.dependencies for node in validated}
         self._dependants = dependants
         self._selected_node_id = None
-        self._rebuild_scene()
+        self._rebuild_scene(previous_positions)
         if previous_selection is not None:
             self.evt_selection_changed.emit(None)
 
     def clear(self) -> None:
         """Remove every node, edge, and active selection from the graph."""
         self.set_nodes([])
+
+    def get_nodes_movable(self) -> bool:
+        """Return whether users can drag graph nodes."""
+        return self._nodes_movable
+
+    def set_nodes_movable(self, movable: bool) -> None:
+        """Enable or disable direct dragging for all graph nodes."""
+        self._nodes_movable = bool(movable)
+        for item in self._node_items.values():
+            item.set_movable(self._nodes_movable)
+
+    nodes_movable = Property(bool, fget=get_nodes_movable, fset=set_nodes_movable)
+
+    def get_grid_visible(self) -> bool:
+        """Return whether the dotted canvas grid is visible."""
+        return self._grid_visible
+
+    def set_grid_visible(self, visible: bool) -> None:
+        """Show or hide the dotted canvas grid."""
+        self._grid_visible = bool(visible)
+        self.viewport().update()
+
+    grid_visible = Property(bool, fget=get_grid_visible, fset=set_grid_visible)
+
+    def get_snap_to_grid(self) -> bool:
+        """Return whether dragged nodes snap to the grid on release."""
+        return self._snap_to_grid
+
+    def set_snap_to_grid(self, enabled: bool) -> None:
+        """Enable or disable grid snapping after node drags."""
+        self._snap_to_grid = bool(enabled)
+
+    snap_to_grid = Property(bool, fget=get_snap_to_grid, fset=set_snap_to_grid)
+
+    def get_grid_spacing(self) -> float:
+        """Return the grid spacing in scene pixels."""
+        return self._grid_spacing
+
+    def set_grid_spacing(self, spacing: float) -> None:
+        """Set the grid spacing used for dots and future snapping."""
+        self._grid_spacing = self._validate_grid_spacing(spacing)
+        self.viewport().update()
+
+    grid_spacing = Property(float, fget=get_grid_spacing, fset=set_grid_spacing)
+
+    def get_node_positions(self) -> dict[str, tuple[float, float]]:
+        """Return serializable scene positions keyed by node ID."""
+        return {node_id: (item.pos().x(), item.pos().y()) for node_id, item in self._node_items.items()}
+
+    def set_node_position(self, node_id: str, position: QPointF | tuple[float, float]) -> None:
+        """Set one node position and emit its final movement signal."""
+        self.set_node_positions({node_id: position})
+
+    def set_node_positions(self, positions: Mapping[str, QPointF | tuple[float, float]]) -> None:
+        """Atomically validate and apply one or more node positions."""
+        unknown = set(positions).difference(self._node_items)
+        if unknown:
+            names = ", ".join(sorted(unknown))
+            raise KeyError(f"Unknown dependency graph nodes: {names}")
+        normalized = {node_id: self._normalize_position(position) for node_id, position in positions.items()}
+        changed: list[tuple[str, QPointF]] = []
+        for node_id, position in normalized.items():
+            item = self._node_items[node_id]
+            if item.pos() != position:
+                item.setPos(position)
+                changed.append((node_id, QPointF(position)))
+        self._update_all_edges()
+        self._update_scene_rect()
+        for node_id, position in changed:
+            self.evt_node_moved.emit(node_id, position)
+
+    def reset_layout(self) -> None:
+        """Restore the automatic topological layout for all nodes."""
+        if not self._node_items:
+            return
+        self._layout_nodes()
+        self._update_all_edges()
+        self._update_scene_rect()
+
+    def set_node_icon(self, node_id: str, icon: QIcon | str | None) -> None:
+        """Update the optional icon rendered by one graph node."""
+        if node_id not in self._nodes_by_id:
+            raise KeyError(f"Unknown dependency graph node: {node_id}")
+        icon_value = self._copy_icon(icon)
+        self._resolve_icon(icon_value)
+        self._nodes_by_id[node_id].icon = icon_value
+        self._node_items[node_id].set_icon(icon_value)
 
     def get_orientation(self) -> Orientation:
         """Return the current graph flow direction."""
@@ -487,6 +668,48 @@ class QtDependencyGraph(QGraphicsView):
         self.set_zoom_factor(self.zoom_factor() * factor)
         event.accept()
 
+    def drawBackground(self, painter: QPainter, rect: QRectF) -> None:
+        """Paint the theme background and a zoom-aware dotted grid."""
+        super().drawBackground(painter, rect)
+        if not self._grid_visible:
+            return
+        spacing = self._effective_grid_spacing()
+        left = floor(rect.left() / spacing) * spacing
+        right = ceil(rect.right() / spacing) * spacing
+        top = floor(rect.top() / spacing) * spacing
+        bottom = ceil(rect.bottom() / spacing) * spacing
+        color = THEMES.get_qt_color("primary")
+        color.setAlpha(110)
+        pen = QPen(color)
+        pen.setWidthF(1.5)
+        pen.setCosmetic(True)
+        painter.save()
+        painter.setPen(pen)
+        y = top
+        while y <= bottom:
+            x = left
+            while x <= right:
+                painter.drawPoint(QPointF(x, y))
+                x += spacing
+            y += spacing
+        painter.restore()
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        """Handle standard keyboard navigation shortcuts."""
+        key = event.key()
+        if key in (Qt.Key.Key_Plus, Qt.Key.Key_Equal):
+            self.zoom_in()
+        elif key == Qt.Key.Key_Minus:
+            self.zoom_out()
+        elif key == Qt.Key.Key_0:
+            self.reset_zoom()
+        elif key == Qt.Key.Key_F:
+            self.fit_to_view()
+        else:
+            super().keyPressEvent(event)
+            return
+        event.accept()
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """Select clicked nodes and clear selection on empty canvas clicks."""
         if event.button() == Qt.MouseButton.LeftButton:
@@ -502,7 +725,7 @@ class QtDependencyGraph(QGraphicsView):
         if event.button() == Qt.MouseButton.LeftButton:
             event.accept()
 
-    def mouseDoubleClickEvent(self, event) -> None:
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         """Handle double-click events to select nodes and emit the clicked signal."""
         if event.button() == Qt.MouseButton.LeftButton:
             item: QGraphicsItem | None = self.itemAt(event.pos())
@@ -532,9 +755,12 @@ class QtDependencyGraph(QGraphicsView):
         nodes: Sequence[DependencyGraphNode | Mapping[str, object]],
     ) -> tuple[list[DependencyGraphNode], dict[str, list[str]]]:
         validated = [
-            node.copy(deep=True) if isinstance(node, DependencyGraphNode) else DependencyGraphNode.parse_obj(node)
+            self._copy_node(node) if isinstance(node, DependencyGraphNode) else DependencyGraphNode.parse_obj(node)
             for node in nodes
         ]
+        for node in validated:
+            node.icon = self._copy_icon(node.icon)
+            self._resolve_icon(node.icon)
         node_ids = [node.id for node in validated]
         if any(not node_id.strip() for node_id in node_ids):
             raise ValueError("Dependency graph node IDs cannot be empty")
@@ -577,42 +803,49 @@ class QtDependencyGraph(QGraphicsView):
             raise ValueError("Dependency graph contains a cycle")
         return validated, dependants
 
-    def _rebuild_scene(self) -> None:
+    def _rebuild_scene(self, positions: Mapping[str, tuple[float, float]] | None = None) -> None:
         self._scene.clear()
         self._node_items.clear()
         self._edge_items.clear()
+        self._edges_by_node = {node.id: [] for node in self._nodes}
         if not self._nodes:
             self._scene.setSceneRect(QRectF())
             return
-
-        for node in self._nodes:
-            item = _DependencyNodeItem(
-                node,
-                self._orientation,
-                self._state_color(node.state),
-                has_input=bool(node.dependencies),
-                has_output=bool(self._dependants[node.id]),
-            )
-            self._scene.addItem(item)
-            self._node_items[node.id] = item
-
-        self._layout_nodes()
-        for target in self._nodes:
-            for source_id in target.dependencies:
-                edge = _DependencyEdgeItem(
-                    self._node_items[source_id],
-                    self._node_items[target.id],
+        self._rebuilding_scene = True
+        try:
+            for node in self._nodes:
+                item = _DependencyNodeItem(
+                    node,
                     self._orientation,
+                    self._state_color(node.state),
+                    has_input=bool(node.dependencies),
+                    has_output=bool(self._dependants[node.id]),
+                    icon_resolver=self._resolve_icon,
+                    position_changed=self._on_node_position_changed,
+                    drag_finished=self._on_node_drag_finished,
+                    movable=self._nodes_movable,
                 )
-                self._scene.addItem(edge)
-                self._edge_items[(source_id, target.id)] = edge
-        bounds = self._scene.itemsBoundingRect().adjusted(
-            -self.SCENE_MARGIN,
-            -self.SCENE_MARGIN,
-            self.SCENE_MARGIN,
-            self.SCENE_MARGIN,
-        )
-        self._scene.setSceneRect(bounds)
+                self._scene.addItem(item)
+                self._node_items[node.id] = item
+
+            self._layout_nodes()
+            for node_id, position in (positions or {}).items():
+                if node_id in self._node_items:
+                    self._node_items[node_id].setPos(*position)
+            for target in self._nodes:
+                for source_id in target.dependencies:
+                    edge = _DependencyEdgeItem(
+                        self._node_items[source_id],
+                        self._node_items[target.id],
+                        self._orientation,
+                    )
+                    self._scene.addItem(edge)
+                    self._edge_items[(source_id, target.id)] = edge
+                    self._edges_by_node[source_id].append(edge)
+                    self._edges_by_node[target.id].append(edge)
+        finally:
+            self._rebuilding_scene = False
+        self._update_scene_rect()
         self._update_highlights()
 
     def _layout_nodes(self) -> None:
@@ -659,6 +892,101 @@ class QtDependencyGraph(QGraphicsView):
 
     def _state_color(self, state: str) -> QColor:
         return QColor(self._state_colors[state])
+
+    @staticmethod
+    def _copy_icon(icon: QIcon | str | None) -> QIcon | str | None:
+        return QIcon(icon) if isinstance(icon, QIcon) else icon
+
+    @classmethod
+    def _copy_node(cls, node: DependencyGraphNode) -> DependencyGraphNode:
+        return DependencyGraphNode(
+            id=node.id,
+            title=node.title,
+            description=node.description,
+            dependencies=tuple(node.dependencies),
+            state=node.state,
+            icon=cls._copy_icon(node.icon),
+        )
+
+    @staticmethod
+    def _resolve_icon(icon: QIcon | str | None) -> QIcon | None:
+        if icon is None:
+            return None
+        if isinstance(icon, QIcon):
+            return QIcon(icon)
+        icon_name = icon.strip()
+        if not icon_name:
+            raise ValueError("Dependency graph node icon aliases cannot be empty")
+        from qtextra.helpers import make_qta_icon
+
+        return make_qta_icon(icon_name)
+
+    @staticmethod
+    def _validate_grid_spacing(spacing: float) -> float:
+        spacing = float(spacing)
+        if not isfinite(spacing) or spacing <= 0.0:
+            raise ValueError(f"Grid spacing must be a positive finite number: {spacing}")
+        return spacing
+
+    @staticmethod
+    def _normalize_position(position: QPointF | tuple[float, float]) -> QPointF:
+        if isinstance(position, QPointF):
+            point = QPointF(position)
+        else:
+            try:
+                x, y = position
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Node positions must contain exactly two coordinates: {position}") from exc
+            point = QPointF(float(x), float(y))
+        if not isfinite(point.x()) or not isfinite(point.y()):
+            raise ValueError(f"Node positions must contain finite coordinates: {position}")
+        return point
+
+    def _effective_grid_spacing(self) -> float:
+        spacing = self._grid_spacing
+        zoom = max(self.zoom_factor(), 1e-9)
+        while spacing * zoom < self.MIN_GRID_SCREEN_SPACING:
+            spacing *= 2.0
+        return spacing
+
+    def _snap_position(self, position: QPointF) -> QPointF:
+        spacing = self._grid_spacing
+        return QPointF(round(position.x() / spacing) * spacing, round(position.y() / spacing) * spacing)
+
+    def _on_node_position_changed(self, node_id: str) -> None:
+        if self._rebuilding_scene:
+            return
+        for edge in self._edges_by_node.get(node_id, []):
+            edge.update_path()
+
+    def _on_node_drag_finished(self, node_id: str, start_position: QPointF) -> None:
+        item = self._node_items[node_id]
+        if item.pos() == start_position:
+            return
+        if self._snap_to_grid:
+            item.setPos(self._snap_position(item.pos()))
+        self._update_scene_rect()
+        if item.pos() != start_position:
+            self.evt_node_moved.emit(node_id, QPointF(item.pos()))
+
+    def _update_all_edges(self) -> None:
+        for edge in self._edge_items.values():
+            edge.update_path()
+
+    def _update_scene_rect(self) -> None:
+        if self._updating_scene_rect:
+            return
+        self._updating_scene_rect = True
+        try:
+            bounds = self._scene.itemsBoundingRect().adjusted(
+                -self.SCENE_MARGIN,
+                -self.SCENE_MARGIN,
+                self.SCENE_MARGIN,
+                self.SCENE_MARGIN,
+            )
+            self._scene.setSceneRect(bounds)
+        finally:
+            self._updating_scene_rect = False
 
     @staticmethod
     def _normalize_state(state: str | TaskState) -> str:
