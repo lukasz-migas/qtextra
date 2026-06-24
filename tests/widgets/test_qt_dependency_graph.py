@@ -229,6 +229,139 @@ def test_dependency_graph_navigation_and_rendering(qtbot: Any) -> None:
     assert widget.grab().isNull() is False
 
 
+def test_dependency_graph_collapses_grouped_nodes_and_aggregates_edges(qtbot: Any) -> None:
+    nodes = [
+        {"id": "source", "title": "Source"},
+        {"id": "batch-a", "title": "Batch task", "dependencies": ["source"], "group": "batch"},
+        {"id": "batch-b", "title": "Batch task", "dependencies": ["source"], "group": "batch", "state": "running"},
+        {"id": "batch-c", "title": "Batch task", "dependencies": ["batch-a"], "group": "batch"},
+        {"id": "finish", "title": "Finish", "dependencies": ["batch-b", "batch-c"]},
+        {"id": "single", "title": "Single", "group": "single"},
+        {"id": "blank", "title": "Blank", "group": "  "},
+    ]
+    widget = QtDependencyGraph(nodes)
+    qtbot.addWidget(widget)
+    group_id = widget._group_visible_id("batch")
+
+    assert [node.id for node in widget.get_group_nodes("batch")] == ["batch-a", "batch-b", "batch-c"]
+    assert widget.is_group_collapsed("batch") is True
+    assert set(widget._node_items) == {"source", group_id, "finish", "single", "blank"}
+    assert set(widget._edge_items) == {("source", group_id), (group_id, "finish")}
+    assert widget._node_items[group_id].node.title == "Batch task"
+    assert "3 tasks" in widget._node_items[group_id].node.description
+    assert "running: 1" in widget._node_items[group_id].node.description
+    assert widget.get_nodes()[-1].group is None
+    assert "single" not in widget._groups
+
+
+def test_dependency_graph_expands_groups_and_preserves_state(qtbot: Any) -> None:
+    nodes = [
+        {"id": "source", "title": "Source"},
+        {"id": "batch-a", "title": "Batch A", "dependencies": ["source"], "group": "batch"},
+        {"id": "batch-b", "title": "Batch B", "dependencies": ["batch-a"], "group": "batch"},
+        {"id": "finish", "title": "Finish", "dependencies": ["batch-b"]},
+    ]
+    widget = QtDependencyGraph(nodes)
+    qtbot.addWidget(widget)
+
+    widget.set_group_collapsed("batch", False)
+
+    assert widget.is_group_collapsed("batch") is False
+    assert {"batch-a", "batch-b"}.issubset(widget._node_items)
+    assert widget._group_visible_id("batch") not in widget._node_items
+    assert set(widget._edge_items) == {("source", "batch-a"), ("batch-a", "batch-b"), ("batch-b", "finish")}
+    assert widget._node_items["source"].x() < widget._node_items["batch-a"].x()
+    assert widget._node_items["batch-a"].x() < widget._node_items["batch-b"].x()
+    assert widget._node_items["batch-b"].x() < widget._node_items["finish"].x()
+
+    widget.set_nodes(nodes)
+
+    assert widget.is_group_collapsed("batch") is False
+    assert {"batch-a", "batch-b"}.issubset(widget._node_items)
+
+
+def test_dependency_graph_group_clicks_and_double_click_toggles(qtbot: Any) -> None:
+    widget = QtDependencyGraph(
+        [
+            {"id": "task-a", "title": "Task", "group": "tasks"},
+            {"id": "task-b", "title": "Task", "group": "tasks"},
+        ]
+    )
+    widget.resize(500, 300)
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.waitExposed(widget)
+    group_id = widget._group_visible_id("tasks")
+    position = widget.mapFromScene(
+        widget._node_items[group_id].mapToScene(widget._node_items[group_id].card_rect().center())
+    )
+
+    with qtbot.waitSignal(widget.evt_group_clicked, timeout=500) as click_blocker:
+        qtbot.mouseClick(widget.viewport(), Qt.MouseButton.LeftButton, pos=position)
+
+    assert click_blocker.args == ["tasks"]
+    assert widget.selected_node_id() is None
+
+    with qtbot.waitSignal(widget.evt_group_double_clicked, timeout=500) as double_click_blocker:
+        qtbot.mouseDClick(widget.viewport(), Qt.MouseButton.LeftButton, pos=position)
+
+    assert double_click_blocker.args == ["tasks"]
+    assert widget.is_group_collapsed("tasks") is False
+    assert {"task-a", "task-b"}.issubset(widget._node_items)
+
+    node_position = widget.mapFromScene(
+        widget._node_items["task-a"].mapToScene(widget._node_items["task-a"].card_rect().center())
+    )
+    with qtbot.waitSignal(widget.evt_node_clicked, timeout=500) as node_click_blocker:
+        qtbot.mouseClick(widget.viewport(), Qt.MouseButton.LeftButton, pos=node_position)
+
+    assert node_click_blocker.args == ["task-a"]
+    assert widget.selected_node_id() == "task-a"
+
+    with qtbot.waitSignal(widget.evt_group_double_clicked, timeout=500) as collapse_blocker:
+        qtbot.mouseDClick(widget.viewport(), Qt.MouseButton.LeftButton, pos=node_position)
+
+    assert collapse_blocker.args == ["tasks"]
+    assert widget.is_group_collapsed("tasks") is True
+    assert set(widget._node_items) == {group_id}
+
+
+def test_dependency_graph_node_state_updates_collapsed_group_summary(qtbot: Any) -> None:
+    widget = QtDependencyGraph(
+        [
+            {"id": "task-a", "title": "Task", "group": "tasks"},
+            {"id": "task-b", "title": "Task", "group": "tasks"},
+        ]
+    )
+    qtbot.addWidget(widget)
+    group_id = widget._group_visible_id("tasks")
+    original_item = widget._node_items[group_id]
+
+    with qtbot.waitSignal(widget.evt_node_state_changed, timeout=500) as blocker:
+        widget.set_node_state("task-a", TaskState.FAILED)
+
+    assert blocker.args == ["task-a", "failed"]
+    assert widget._node_items[group_id] is not original_item
+    assert "failed: 1" in widget._node_items[group_id].node.description
+    assert "queued: 1" in widget._node_items[group_id].node.description
+    assert widget.get_nodes()[0].state == "failed"
+
+
+def test_dependency_graph_group_api_rejects_unknown_groups(qtbot: Any) -> None:
+    widget = QtDependencyGraph(
+        [
+            {"id": "task-a", "title": "Task", "group": "tasks"},
+            {"id": "task-b", "title": "Task", "group": "tasks"},
+        ]
+    )
+    qtbot.addWidget(widget)
+
+    with pytest.raises(KeyError, match="missing"):
+        widget.get_group_nodes("missing")
+    with pytest.raises(ValueError, match="cannot be empty"):
+        widget.is_group_collapsed(" ")
+
+
 def test_dependency_graph_movement_updates_connected_edges_and_snaps(qtbot: Any) -> None:
     widget = QtDependencyGraph(
         [

@@ -51,6 +51,7 @@ class DependencyGraphNode(BaseModel):
     dependencies: tuple[str, ...] = ()
     state: str = TaskState.QUEUED.value
     icon: QIcon | str | None = None
+    group: str | None = None
 
     class Config:
         """Allow Qt icon values in the declarative node model."""
@@ -384,6 +385,8 @@ class QtDependencyGraph(QGraphicsView):
 
     evt_node_clicked = Signal(str)
     evt_node_double_clicked = Signal(str)
+    evt_group_clicked = Signal(str)
+    evt_group_double_clicked = Signal(str)
     evt_selection_changed = Signal(object)
     evt_node_state_changed = Signal(str, object)
     evt_node_moved = Signal(str, QPointF)
@@ -396,6 +399,7 @@ class QtDependencyGraph(QGraphicsView):
     MIN_ZOOM: ClassVar[float] = 0.1
     MAX_ZOOM: ClassVar[float] = 4.0
     MIN_GRID_SCREEN_SPACING: ClassVar[float] = 8.0
+    GROUP_ID_PREFIX: ClassVar[str] = "__group__:"
 
     def __init__(
         self,
@@ -417,11 +421,23 @@ class QtDependencyGraph(QGraphicsView):
         self._nodes_by_id: dict[str, DependencyGraphNode] = {}
         self._dependencies: dict[str, tuple[str, ...]] = {}
         self._dependants: dict[str, list[str]] = {}
+        self._groups: dict[str, tuple[str, ...]] = {}
+        self._group_collapsed: dict[str, bool] = {}
+        self._visible_nodes: list[DependencyGraphNode] = []
+        self._visible_dependencies: dict[str, tuple[str, ...]] = {}
+        self._visible_dependants: dict[str, list[str]] = {}
+        self._visible_to_group: dict[str, str] = {}
+        self._node_to_visible_id: dict[str, str] = {}
         self._node_items: dict[str, _DependencyNodeItem] = {}
         self._edge_items: dict[tuple[str, str], _DependencyEdgeItem] = {}
         self._edges_by_node: dict[str, list[_DependencyEdgeItem]] = {}
         self._selected_node_id: str | None = None
+        self._selected_visible_id: str | None = None
         self._state_colors: dict[str, QColor] = {}
+        self._node_positions: dict[str, tuple[float, float]] = {}
+        self._group_positions: dict[str, tuple[float, float]] = {}
+        self._manual_node_positions: set[str] = set()
+        self._manual_group_positions: set[str] = set()
         self._nodes_movable = bool(nodes_movable)
         self._grid_visible = bool(grid_visible)
         self._snap_to_grid = bool(snap_to_grid)
@@ -452,11 +468,23 @@ class QtDependencyGraph(QGraphicsView):
         validated, dependants = self._validate_nodes(nodes)
         previous_selection = self._selected_node_id
         previous_positions = self.get_node_positions()
+        previous_group_positions = dict(self._group_positions)
         self._nodes = validated
         self._nodes_by_id = {node.id: node for node in validated}
         self._dependencies = {node.id: node.dependencies for node in validated}
         self._dependants = dependants
+        self._refresh_groups()
+        self._group_positions = {
+            group: position for group, position in previous_group_positions.items() if group in self._groups
+        }
+        self._manual_node_positions = {
+            node_id for node_id in self._manual_node_positions if node_id in self._nodes_by_id
+        }
+        self._manual_group_positions = {
+            group_id for group_id in self._manual_group_positions if group_id in self._groups
+        }
         self._selected_node_id = None
+        self._selected_visible_id = None
         self._rebuild_scene(previous_positions)
         if previous_selection is not None:
             self.evt_selection_changed.emit(None)
@@ -511,7 +539,10 @@ class QtDependencyGraph(QGraphicsView):
 
     def get_node_positions(self) -> dict[str, tuple[float, float]]:
         """Return serializable scene positions keyed by node ID."""
-        return {node_id: (item.pos().x(), item.pos().y()) for node_id, item in self._node_items.items()}
+        self._remember_visible_positions()
+        return {
+            node_id: self._node_positions[node_id] for node_id in self._nodes_by_id if node_id in self._node_positions
+        }
 
     def set_node_position(self, node_id: str, position: QPointF | tuple[float, float]) -> None:
         """Set one node position and emit its final movement signal."""
@@ -519,17 +550,20 @@ class QtDependencyGraph(QGraphicsView):
 
     def set_node_positions(self, positions: Mapping[str, QPointF | tuple[float, float]]) -> None:
         """Atomically validate and apply one or more node positions."""
-        unknown = set(positions).difference(self._node_items)
+        unknown = set(positions).difference(self._nodes_by_id)
         if unknown:
             names = ", ".join(sorted(unknown))
             raise KeyError(f"Unknown dependency graph nodes: {names}")
         normalized = {node_id: self._normalize_position(position) for node_id, position in positions.items()}
         changed: list[tuple[str, QPointF]] = []
         for node_id, position in normalized.items():
-            item = self._node_items[node_id]
-            if item.pos() != position:
-                item.setPos(position)
+            previous = self._node_positions.get(node_id)
+            if previous != (position.x(), position.y()):
+                self._node_positions[node_id] = (position.x(), position.y())
+                self._manual_node_positions.add(node_id)
                 changed.append((node_id, QPointF(position)))
+            if node_id in self._node_items and self._node_items[node_id].pos() != position:
+                self._node_items[node_id].setPos(position)
         self._update_all_edges()
         self._update_scene_rect()
         for node_id, position in changed:
@@ -539,7 +573,12 @@ class QtDependencyGraph(QGraphicsView):
         """Restore the automatic topological layout for all nodes."""
         if not self._node_items:
             return
+        self._node_positions.clear()
+        self._group_positions.clear()
+        self._manual_node_positions.clear()
+        self._manual_group_positions.clear()
         self._layout_nodes()
+        self._remember_visible_positions()
         self._update_all_edges()
         self._update_scene_rect()
 
@@ -550,7 +589,8 @@ class QtDependencyGraph(QGraphicsView):
         icon_value = self._copy_icon(icon)
         self._resolve_icon(icon_value)
         self._nodes_by_id[node_id].icon = icon_value
-        self._node_items[node_id].set_icon(icon_value)
+        if node_id in self._node_items:
+            self._node_items[node_id].set_icon(icon_value)
 
     def get_orientation(self) -> Orientation:
         """Return the current graph flow direction."""
@@ -563,6 +603,10 @@ class QtDependencyGraph(QGraphicsView):
             return
         selected = self._selected_node_id
         self._orientation = normalized
+        self._node_positions.clear()
+        self._group_positions.clear()
+        self._manual_node_positions.clear()
+        self._manual_group_positions.clear()
         self._rebuild_scene()
         if selected is not None:
             self.select_node(selected)
@@ -588,7 +632,10 @@ class QtDependencyGraph(QGraphicsView):
             raise ValueError(f"Missing colors for node states: {names}")
         self._state_colors = state_colors
         for node_id, item in self._node_items.items():
-            item.set_state(item.node.state, self._state_color(self._nodes_by_id[node_id].state))
+            if node_id in self._nodes_by_id:
+                item.set_state(item.node.state, self._state_color(self._nodes_by_id[node_id].state))
+            elif node_id in self._visible_to_group:
+                item.set_state(item.node.state, self._group_state_color(self._visible_to_group[node_id]))
 
     def set_node_state(self, node_id: str, state: str | TaskState) -> None:
         """Update one node state without rebuilding or repositioning the graph."""
@@ -598,7 +645,12 @@ class QtDependencyGraph(QGraphicsView):
         if state_name not in self._state_colors:
             raise ValueError(f"No color configured for node state: {state_name}")
         self._nodes_by_id[node_id].state = state_name
-        self._node_items[node_id].set_state(state_name, self._state_color(state_name))
+        visible_id = self._node_to_visible_id.get(node_id, node_id)
+        if visible_id == node_id and node_id in self._node_items:
+            self._node_items[node_id].set_state(state_name, self._state_color(state_name))
+        elif visible_id in self._visible_to_group:
+            self._remember_visible_positions()
+            self._rebuild_scene(self._node_positions)
         self.evt_node_state_changed.emit(node_id, state_name)
 
     def selected_node_id(self) -> str | None:
@@ -611,15 +663,43 @@ class QtDependencyGraph(QGraphicsView):
             raise KeyError(f"Unknown dependency graph node: {node_id}")
         changed = node_id != self._selected_node_id
         self._selected_node_id = node_id
+        self._selected_visible_id = None if node_id is None else self._node_to_visible_id.get(node_id, node_id)
         self._update_highlights()
         if changed:
             self.evt_selection_changed.emit(node_id)
 
     def center_on_node(self, node_id: str) -> None:
         """Center the viewport on a graph node."""
-        if node_id not in self._node_items:
+        visible_id = self._node_to_visible_id.get(node_id, node_id)
+        if visible_id not in self._node_items:
             raise KeyError(f"Unknown dependency graph node: {node_id}")
-        self.centerOn(self._node_items[node_id])
+        self.centerOn(self._node_items[visible_id])
+
+    def set_group_collapsed(self, group_id: str, collapsed: bool) -> None:
+        """Collapse or expand a configured dependency graph group."""
+        group_id = self._normalize_group_id(group_id, allow_empty=False)
+        if group_id not in self._groups:
+            raise KeyError(f"Unknown dependency graph group: {group_id}")
+        collapsed = bool(collapsed)
+        if self._group_collapsed.get(group_id, True) == collapsed:
+            return
+        self._remember_visible_positions()
+        self._group_collapsed[group_id] = collapsed
+        self._rebuild_scene(self._manual_visible_positions())
+
+    def is_group_collapsed(self, group_id: str) -> bool:
+        """Return whether a configured dependency graph group is collapsed."""
+        group_id = self._normalize_group_id(group_id, allow_empty=False)
+        if group_id not in self._groups:
+            raise KeyError(f"Unknown dependency graph group: {group_id}")
+        return self._group_collapsed.get(group_id, True)
+
+    def get_group_nodes(self, group_id: str) -> list[DependencyGraphNode]:
+        """Return deep copies of nodes that belong to a dependency graph group."""
+        group_id = self._normalize_group_id(group_id, allow_empty=False)
+        if group_id not in self._groups:
+            raise KeyError(f"Unknown dependency graph group: {group_id}")
+        return [self._copy_node(self._nodes_by_id[node_id]) for node_id in self._groups[group_id]]
 
     def fit_to_view(self) -> None:
         """Scale the complete graph to fit inside the viewport."""
@@ -717,8 +797,13 @@ class QtDependencyGraph(QGraphicsView):
             while item is not None and not isinstance(item, _DependencyNodeItem):
                 item = item.parentItem()
             if isinstance(item, _DependencyNodeItem):
-                self.select_node(item.node.id)
-                self.evt_node_clicked.emit(item.node.id)
+                group_id = self._visible_to_group.get(item.node.id)
+                if group_id is not None:
+                    self._select_group(group_id)
+                    self.evt_group_clicked.emit(group_id)
+                else:
+                    self.select_node(item.node.id)
+                    self.evt_node_clicked.emit(item.node.id)
             else:
                 self.select_node(None)
         super().mousePressEvent(event)
@@ -732,7 +817,15 @@ class QtDependencyGraph(QGraphicsView):
             while item is not None and not isinstance(item, _DependencyNodeItem):
                 item = item.parentItem()
             if isinstance(item, _DependencyNodeItem):
-                self.evt_node_double_clicked.emit(item.node.id)
+                group_id = self._visible_to_group.get(item.node.id)
+                if group_id is not None:
+                    self.evt_group_double_clicked.emit(group_id)
+                    self.set_group_collapsed(group_id, not self.is_group_collapsed(group_id))
+                elif item.node.group in self._groups and not self.is_group_collapsed(item.node.group):
+                    self.evt_group_double_clicked.emit(item.node.group)
+                    self.set_group_collapsed(item.node.group, True)
+                else:
+                    self.evt_node_double_clicked.emit(item.node.id)
         super().mouseDoubleClickEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
             event.accept()
@@ -761,6 +854,7 @@ class QtDependencyGraph(QGraphicsView):
         for node in validated:
             node.icon = self._copy_icon(node.icon)
             self._resolve_icon(node.icon)
+            node.group = self._normalize_group_id(node.group)
         node_ids = [node.id for node in validated]
         if any(not node_id.strip() for node_id in node_ids):
             raise ValueError("Dependency graph node IDs cannot be empty")
@@ -807,19 +901,25 @@ class QtDependencyGraph(QGraphicsView):
         self._scene.clear()
         self._node_items.clear()
         self._edge_items.clear()
-        self._edges_by_node = {node.id: [] for node in self._nodes}
+        self._build_visible_graph()
+        if self._selected_node_id is not None:
+            self._selected_visible_id = self._node_to_visible_id.get(self._selected_node_id)
+        elif self._selected_visible_id not in self._visible_dependencies:
+            self._selected_visible_id = None
+        self._edges_by_node = {node.id: [] for node in self._visible_nodes}
         if not self._nodes:
             self._scene.setSceneRect(QRectF())
             return
         self._rebuilding_scene = True
         try:
-            for node in self._nodes:
+            for node in self._visible_nodes:
+                group_id = self._visible_to_group.get(node.id)
                 item = _DependencyNodeItem(
                     node,
                     self._orientation,
-                    self._state_color(node.state),
-                    has_input=bool(node.dependencies),
-                    has_output=bool(self._dependants[node.id]),
+                    self._group_state_color(group_id) if group_id is not None else self._state_color(node.state),
+                    has_input=bool(self._visible_dependencies[node.id]),
+                    has_output=bool(self._visible_dependants[node.id]),
                     icon_resolver=self._resolve_icon,
                     position_changed=self._on_node_position_changed,
                     drag_finished=self._on_node_drag_finished,
@@ -832,8 +932,14 @@ class QtDependencyGraph(QGraphicsView):
             for node_id, position in (positions or {}).items():
                 if node_id in self._node_items:
                     self._node_items[node_id].setPos(*position)
-            for target in self._nodes:
-                for source_id in target.dependencies:
+            for group_id, position in self._group_positions.items():
+                if group_id not in self._manual_group_positions:
+                    continue
+                visible_id = self._group_visible_id(group_id)
+                if visible_id in self._node_items:
+                    self._node_items[visible_id].setPos(*position)
+            for target in self._visible_nodes:
+                for source_id in self._visible_dependencies[target.id]:
                     edge = _DependencyEdgeItem(
                         self._node_items[source_id],
                         self._node_items[target.id],
@@ -847,21 +953,22 @@ class QtDependencyGraph(QGraphicsView):
             self._rebuilding_scene = False
         self._update_scene_rect()
         self._update_highlights()
+        self._remember_visible_positions()
 
     def _layout_nodes(self) -> None:
-        levels = {node.id: 0 for node in self._nodes}
-        indegree = {node.id: len(node.dependencies) for node in self._nodes}
-        queue = deque(node.id for node in self._nodes if indegree[node.id] == 0)
+        levels = {node.id: 0 for node in self._visible_nodes}
+        indegree = {node.id: len(self._visible_dependencies[node.id]) for node in self._visible_nodes}
+        queue = deque(node.id for node in self._visible_nodes if indegree[node.id] == 0)
         while queue:
             node_id = queue.popleft()
-            for dependant_id in self._dependants[node_id]:
+            for dependant_id in self._visible_dependants[node_id]:
                 levels[dependant_id] = max(levels[dependant_id], levels[node_id] + 1)
                 indegree[dependant_id] -= 1
                 if indegree[dependant_id] == 0:
                     queue.append(dependant_id)
 
         layer_ids: dict[int, list[str]] = {}
-        for node in self._nodes:
+        for node in self._visible_nodes:
             layer_ids.setdefault(levels[node.id], []).append(node.id)
 
         layer_extents: dict[int, float] = {}
@@ -890,6 +997,83 @@ class QtDependencyGraph(QGraphicsView):
     def _cross_size(self, item: _DependencyNodeItem) -> float:
         return item.card_rect().height() if self._orientation == "horizontal" else item.card_rect().width()
 
+    def _refresh_groups(self) -> None:
+        groups: dict[str, list[str]] = {}
+        for node in self._nodes:
+            if node.group is not None:
+                groups.setdefault(node.group, []).append(node.id)
+        self._groups = {group_id: tuple(node_ids) for group_id, node_ids in groups.items() if len(node_ids) > 1}
+        self._group_collapsed = {group_id: self._group_collapsed.get(group_id, True) for group_id in self._groups}
+
+    def _build_visible_graph(self) -> None:
+        self._visible_nodes = []
+        self._visible_dependencies = {}
+        self._visible_dependants = {}
+        self._visible_to_group = {}
+        self._node_to_visible_id = {}
+
+        added: set[str] = set()
+        for node in self._nodes:
+            visible_id = self._visible_id_for_node(node.id)
+            self._node_to_visible_id[node.id] = visible_id
+            if visible_id in added:
+                continue
+            added.add(visible_id)
+            group_id = self._group_from_visible_id(visible_id)
+            if group_id is None:
+                self._visible_nodes.append(self._copy_node(node))
+            else:
+                self._visible_to_group[visible_id] = group_id
+                self._visible_nodes.append(self._make_group_node(group_id))
+
+        self._visible_dependencies = {node.id: () for node in self._visible_nodes}
+        dependency_lists: dict[str, list[str]] = {node.id: [] for node in self._visible_nodes}
+        dependant_lists: dict[str, list[str]] = {node.id: [] for node in self._visible_nodes}
+        for target in self._nodes:
+            target_visible_id = self._node_to_visible_id[target.id]
+            for source_id in target.dependencies:
+                source_visible_id = self._node_to_visible_id[source_id]
+                if source_visible_id == target_visible_id:
+                    continue
+                if source_visible_id not in dependency_lists[target_visible_id]:
+                    dependency_lists[target_visible_id].append(source_visible_id)
+                    dependant_lists[source_visible_id].append(target_visible_id)
+        self._visible_dependencies = {node_id: tuple(ids) for node_id, ids in dependency_lists.items()}
+        self._visible_dependants = dependant_lists
+
+    def _visible_id_for_node(self, node_id: str) -> str:
+        group_id = self._nodes_by_id[node_id].group
+        if group_id is not None and group_id in self._groups and self._group_collapsed.get(group_id, True):
+            return self._group_visible_id(group_id)
+        return node_id
+
+    def _make_group_node(self, group_id: str) -> DependencyGraphNode:
+        members = [self._nodes_by_id[node_id] for node_id in self._groups[group_id]]
+        titles = {member.title for member in members}
+        states: dict[str, int] = {}
+        for member in members:
+            states[member.state] = states.get(member.state, 0) + 1
+        state_parts = [f"{state.replace('-', ' ').replace('_', ' ')}: {count}" for state, count in states.items()]
+        shared_state = next(iter(states)) if len(states) == 1 else "group"
+        title = members[0].title if len(titles) == 1 else group_id
+        description = f"{len(members)} tasks"
+        if state_parts:
+            description = f"{description}\n{', '.join(state_parts)}"
+        return DependencyGraphNode(
+            id=self._group_visible_id(group_id),
+            title=title,
+            description=description,
+            state=shared_state,
+        )
+
+    def _group_state_color(self, group_id: str | None) -> QColor:
+        if group_id is None:
+            return THEMES.get_qt_color("secondary")
+        states = {self._nodes_by_id[node_id].state for node_id in self._groups[group_id]}
+        if len(states) == 1:
+            return self._state_color(next(iter(states)))
+        return THEMES.get_qt_color("secondary")
+
     def _state_color(self, state: str) -> QColor:
         return QColor(self._state_colors[state])
 
@@ -906,6 +1090,7 @@ class QtDependencyGraph(QGraphicsView):
             dependencies=tuple(node.dependencies),
             state=node.state,
             icon=cls._copy_icon(node.icon),
+            group=node.group,
         )
 
     @staticmethod
@@ -953,6 +1138,22 @@ class QtDependencyGraph(QGraphicsView):
         spacing = self._grid_spacing
         return QPointF(round(position.x() / spacing) * spacing, round(position.y() / spacing) * spacing)
 
+    def _remember_visible_positions(self) -> None:
+        for visible_id, item in self._node_items.items():
+            position = (item.pos().x(), item.pos().y())
+            group_id = self._visible_to_group.get(visible_id)
+            if group_id is None:
+                self._node_positions[visible_id] = position
+            else:
+                self._group_positions[group_id] = position
+
+    def _manual_visible_positions(self) -> dict[str, tuple[float, float]]:
+        return {
+            node_id: self._node_positions[node_id]
+            for node_id in self._manual_node_positions
+            if node_id in self._node_positions
+        }
+
     def _on_node_position_changed(self, node_id: str) -> None:
         if self._rebuilding_scene:
             return
@@ -966,7 +1167,13 @@ class QtDependencyGraph(QGraphicsView):
         if self._snap_to_grid:
             item.setPos(self._snap_position(item.pos()))
         self._update_scene_rect()
-        if item.pos() != start_position:
+        group_id = self._visible_to_group.get(node_id)
+        if group_id is not None:
+            self._group_positions[group_id] = (item.pos().x(), item.pos().y())
+            self._manual_group_positions.add(group_id)
+        elif item.pos() != start_position:
+            self._node_positions[node_id] = (item.pos().x(), item.pos().y())
+            self._manual_node_positions.add(node_id)
             self.evt_node_moved.emit(node_id, QPointF(item.pos()))
 
     def _update_all_edges(self) -> None:
@@ -996,6 +1203,37 @@ class QtDependencyGraph(QGraphicsView):
             raise ValueError("Dependency graph node states cannot be empty")
         return state_name
 
+    @classmethod
+    def _group_visible_id(cls, group_id: str) -> str:
+        return f"{cls.GROUP_ID_PREFIX}{group_id}"
+
+    @classmethod
+    def _group_from_visible_id(cls, visible_id: str) -> str | None:
+        if visible_id.startswith(cls.GROUP_ID_PREFIX):
+            return visible_id.removeprefix(cls.GROUP_ID_PREFIX)
+        return None
+
+    @staticmethod
+    def _normalize_group_id(group_id: object, *, allow_empty: bool = True) -> str | None:
+        if group_id is None:
+            if allow_empty:
+                return None
+            raise ValueError("Dependency graph group IDs cannot be empty")
+        normalized = str(group_id).strip()
+        if normalized:
+            return normalized
+        if allow_empty:
+            return None
+        raise ValueError("Dependency graph group IDs cannot be empty")
+
+    def _select_group(self, group_id: str) -> None:
+        previous_node = self._selected_node_id
+        self._selected_node_id = None
+        self._selected_visible_id = self._group_visible_id(group_id)
+        self._update_highlights()
+        if previous_node is not None:
+            self.evt_selection_changed.emit(None)
+
     def _walk(self, node_id: str, adjacency: Mapping[str, Sequence[str]]) -> set[str]:
         related: set[str] = set()
         queue = deque(adjacency[node_id])
@@ -1008,7 +1246,7 @@ class QtDependencyGraph(QGraphicsView):
         return related
 
     def _update_highlights(self) -> None:
-        selected = self._selected_node_id
+        selected = self._selected_visible_id
         if selected is None:
             for item in self._node_items.values():
                 item.set_relation("normal")
@@ -1016,8 +1254,8 @@ class QtDependencyGraph(QGraphicsView):
                 edge.set_relation("normal")
             return
 
-        upstream = self._walk(selected, self._dependencies)
-        downstream = self._walk(selected, self._dependants)
+        upstream = self._walk(selected, self._visible_dependencies)
+        downstream = self._walk(selected, self._visible_dependants)
         for node_id, item in self._node_items.items():
             if node_id == selected:
                 relation = "selected"
@@ -1040,7 +1278,10 @@ class QtDependencyGraph(QGraphicsView):
 
     def _apply_theme(self) -> None:
         self.setBackgroundBrush(QBrush(THEMES.get_qt_color("background")))
-        for item in self._node_items.values():
+        for node_id, item in self._node_items.items():
+            group_id = self._visible_to_group.get(node_id)
+            if group_id is not None:
+                item.set_state(item.node.state, self._group_state_color(group_id))
             item.refresh_theme()
         self._update_highlights()
         self.viewport().update()
