@@ -412,6 +412,7 @@ class QtDependencyGraph(QGraphicsView):
         grid_visible: bool = True,
         snap_to_grid: bool = True,
         grid_spacing: float = 20.0,
+        minimum_group_size: int = 5,
     ) -> None:
         """Initialize the graph view with optional node data."""
         self._scene = QGraphicsScene()
@@ -442,6 +443,7 @@ class QtDependencyGraph(QGraphicsView):
         self._grid_visible = bool(grid_visible)
         self._snap_to_grid = bool(snap_to_grid)
         self._grid_spacing = self._validate_grid_spacing(grid_spacing)
+        self._minimum_group_size = self._validate_minimum_group_size(minimum_group_size)
         self._updating_scene_rect = False
         self._rebuilding_scene = False
 
@@ -536,6 +538,28 @@ class QtDependencyGraph(QGraphicsView):
         self.viewport().update()
 
     grid_spacing = Property(float, fget=get_grid_spacing, fset=set_grid_spacing)
+
+    def get_minimum_group_size(self) -> int:
+        """Return the minimum member count required to collapse a node group."""
+        return self._minimum_group_size
+
+    def set_minimum_group_size(self, size: int) -> None:
+        """Set the minimum member count required to collapse a node group."""
+        size = self._validate_minimum_group_size(size)
+        if size == self._minimum_group_size:
+            return
+        self._remember_visible_positions()
+        self._minimum_group_size = size
+        self._refresh_groups()
+        self._group_positions = {
+            group: position for group, position in self._group_positions.items() if group in self._groups
+        }
+        self._manual_group_positions = {
+            group_id for group_id in self._manual_group_positions if group_id in self._groups
+        }
+        self._rebuild_scene(self._manual_visible_positions())
+
+    minimum_group_size = Property(int, fget=get_minimum_group_size, fset=set_minimum_group_size)
 
     def get_node_positions(self) -> dict[str, tuple[float, float]]:
         """Return serializable scene positions keyed by node ID."""
@@ -1002,7 +1026,11 @@ class QtDependencyGraph(QGraphicsView):
         for node in self._nodes:
             if node.group is not None:
                 groups.setdefault(node.group, []).append(node.id)
-        self._groups = {group_id: tuple(node_ids) for group_id, node_ids in groups.items() if len(node_ids) > 1}
+        self._groups = {
+            group_id: tuple(node_ids)
+            for group_id, node_ids in groups.items()
+            if len(node_ids) >= self._minimum_group_size
+        }
         self._group_collapsed = {group_id: self._group_collapsed.get(group_id, True) for group_id in self._groups}
 
     def _build_visible_graph(self) -> None:
@@ -1112,6 +1140,14 @@ class QtDependencyGraph(QGraphicsView):
         if not isfinite(spacing) or spacing <= 0.0:
             raise ValueError(f"Grid spacing must be a positive finite number: {spacing}")
         return spacing
+
+    @staticmethod
+    def _validate_minimum_group_size(size: int) -> int:
+        if not isinstance(size, int) or isinstance(size, bool):
+            raise TypeError("Minimum group size must be a positive integer")
+        if size <= 0:
+            raise ValueError("Minimum group size must be a positive integer")
+        return size
 
     @staticmethod
     def _normalize_position(position: QPointF | tuple[float, float]) -> QPointF:
