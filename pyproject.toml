@@ -315,6 +315,6 @@ ignore = [
     "examples/**/*",
     "MANIFEST.in",
     "uv.lock",
-    ".claude/*",
+    "justfile",
     "scripts/**/*",
 ]
