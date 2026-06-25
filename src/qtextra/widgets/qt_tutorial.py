@@ -61,6 +61,7 @@ class TutorialStep(BaseModel):
     position: Position = Position.RIGHT
     position_offset: tuple[int, int] = (0, 0)
     func: tuple[ty.Callable, ...] | None = None
+    skip: bool = False
 
     @field_validator("widget", mode="before")
     def validate_widget(widget: QWidget) -> QWidget:
@@ -79,7 +80,7 @@ class QtTutorial(QDialog):
     MIN_HEIGHT = 40
     ALLOW_CHEVRON = True
 
-    _current = -1
+    # _current is set in __init__
     steps: list[TutorialStep]
     chevrons: dict[str, QWidget | None]
 
@@ -92,6 +93,7 @@ class QtTutorial(QDialog):
         self.setModal(False)
 
         self.setMinimumWidth(self.MIN_WIDTH)
+        self.setMaximumWidth(self.MAX_WIDTH)
         self.setMinimumHeight(self.MIN_HEIGHT)
 
         self._animation = QVariantAnimation()
@@ -104,6 +106,7 @@ class QtTutorial(QDialog):
         # self._move_animation.valueChanged.connect(self._update_position)
         # self._move_animation.setEasingCurve(QEasingCurve.InOutCubic)
 
+        self._current = -1
         self.steps = []
         self.make_ui()
         if not self.ALLOW_CHEVRON:
@@ -248,19 +251,24 @@ class QtTutorial(QDialog):
         """Update progress bar."""
         self._step_indicator.setValue(value)
 
-    def set_steps(self, steps: ty.List[TutorialStep]) -> None:
+    def set_steps(self, steps: list[TutorialStep]) -> None:
         """Set steps."""
-        self.steps = steps
+        self.steps = [step for step in steps if not step.skip]
+        if not self.steps:
+            return
         self._step_indicator.setMinimum(0)
-        self._step_indicator.setMaximum(len(steps) * 100)
+        self._step_indicator.setMaximum(len(self.steps) * 100)
         self.set_step(0)
 
     def add_step(self, step: TutorialStep) -> None:
         """Add a step to the tutorial."""
+        if step.skip:
+            return
         self.steps.append(step)
         self._step_indicator.setMinimum(0)
         self._step_indicator.setMaximum(len(self.steps) * 100)
-        self.set_step(0)
+        if self._current == -1:
+            self.set_step(0)
 
     def set_step(self, index: int) -> None:
         """Show step."""
@@ -310,19 +318,19 @@ class QtTutorial(QDialog):
 
         x_pos_offset, y_pos_offset = position_offset
         rect_of_widget = widget.rect()
-        if position in ["right", "right_top", "right_bottom"]:
+        if position in (Position.RIGHT, Position.RIGHT_TOP, Position.RIGHT_BOTTOM):
             x = rect_of_widget.left() - popup_size.width() - x_pad - x_pos_offset
             y = rect_of_widget.center().y() - icon_pos.y() - y_offset - y_pos_offset
-        elif position in ["left", "left_top", "left_bottom"]:
+        elif position in (Position.LEFT, Position.LEFT_TOP, Position.LEFT_BOTTOM):
             x = rect_of_widget.right() + x_pad - x_pos_offset
             y = rect_of_widget.center().y() - icon_pos.y() - y_offset - y_pos_offset
-        elif position in ["bottom", "bottom_left", "bottom_right"]:
+        elif position in (Position.BOTTOM, Position.BOTTOM_LEFT, Position.BOTTOM_RIGHT):
             x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
             y = rect_of_widget.top() - popup_size.height() - y_pad - y_pos_offset
-        elif position in ["top", "top_left", "top_right"]:
+        elif position in (Position.TOP, Position.TOP_LEFT, Position.TOP_RIGHT):
             x = rect_of_widget.center().x() - icon_pos.x() - x_offset - x_pos_offset
             y = rect_of_widget.bottom() + y_pad - y_pos_offset
-        elif position == "center":
+        elif position == Position.CENTER:
             x = rect_of_widget.center().x() - popup_size.width() / 2
             y = rect_of_widget.center().y() - popup_size.height() / 2
         else:
