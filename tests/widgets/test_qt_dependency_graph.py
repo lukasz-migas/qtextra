@@ -239,7 +239,7 @@ def test_dependency_graph_collapses_grouped_nodes_and_aggregates_edges(qtbot: An
         {"id": "single", "title": "Single", "group": "single"},
         {"id": "blank", "title": "Blank", "group": "  "},
     ]
-    widget = QtDependencyGraph(nodes)
+    widget = QtDependencyGraph(nodes, minimum_group_size=2)
     qtbot.addWidget(widget)
     group_id = widget._group_visible_id("batch")
 
@@ -254,6 +254,26 @@ def test_dependency_graph_collapses_grouped_nodes_and_aggregates_edges(qtbot: An
     assert "single" not in widget._groups
 
 
+def test_dependency_graph_uses_minimum_group_size_before_collapsing(qtbot: Any) -> None:
+    nodes = [{"id": f"small-{index}", "title": f"Small {index}", "group": "small"} for index in range(4)] + [
+        {"id": f"large-{index}", "title": f"Large {index}", "group": "large"} for index in range(5)
+    ]
+    widget = QtDependencyGraph(nodes)
+    qtbot.addWidget(widget)
+
+    assert widget.get_minimum_group_size() == 5
+    assert "small" not in widget._groups
+    assert "large" in widget._groups
+    assert widget._group_visible_id("small") not in widget._node_items
+    assert widget._group_visible_id("large") in widget._node_items
+
+    widget.set_minimum_group_size(4)
+
+    assert "small" in widget._groups
+    assert widget._group_visible_id("small") in widget._node_items
+    assert all(node_id not in widget._node_items for node_id in [f"small-{index}" for index in range(4)])
+
+
 def test_dependency_graph_expands_groups_and_preserves_state(qtbot: Any) -> None:
     nodes = [
         {"id": "source", "title": "Source"},
@@ -261,7 +281,7 @@ def test_dependency_graph_expands_groups_and_preserves_state(qtbot: Any) -> None
         {"id": "batch-b", "title": "Batch B", "dependencies": ["batch-a"], "group": "batch"},
         {"id": "finish", "title": "Finish", "dependencies": ["batch-b"]},
     ]
-    widget = QtDependencyGraph(nodes)
+    widget = QtDependencyGraph(nodes, minimum_group_size=2)
     qtbot.addWidget(widget)
 
     widget.set_group_collapsed("batch", False)
@@ -285,7 +305,8 @@ def test_dependency_graph_group_clicks_and_double_click_toggles(qtbot: Any) -> N
         [
             {"id": "task-a", "title": "Task", "group": "tasks"},
             {"id": "task-b", "title": "Task", "group": "tasks"},
-        ]
+        ],
+        minimum_group_size=2,
     )
     widget.resize(500, 300)
     qtbot.addWidget(widget)
@@ -331,7 +352,8 @@ def test_dependency_graph_node_state_updates_collapsed_group_summary(qtbot: Any)
         [
             {"id": "task-a", "title": "Task", "group": "tasks"},
             {"id": "task-b", "title": "Task", "group": "tasks"},
-        ]
+        ],
+        minimum_group_size=2,
     )
     qtbot.addWidget(widget)
     group_id = widget._group_visible_id("tasks")
@@ -352,7 +374,8 @@ def test_dependency_graph_group_api_rejects_unknown_groups(qtbot: Any) -> None:
         [
             {"id": "task-a", "title": "Task", "group": "tasks"},
             {"id": "task-b", "title": "Task", "group": "tasks"},
-        ]
+        ],
+        minimum_group_size=2,
     )
     qtbot.addWidget(widget)
 
@@ -490,6 +513,10 @@ def test_dependency_graph_grid_configuration_and_zoom_density(qtbot: Any) -> Non
     assert widget.get_snap_to_grid() is False
     with pytest.raises(ValueError, match="positive finite"):
         widget.set_grid_spacing(0.0)
+    with pytest.raises(ValueError, match="positive integer"):
+        widget.set_minimum_group_size(0)
+    with pytest.raises(TypeError, match="positive integer"):
+        widget.set_minimum_group_size(2.5)  # type: ignore[arg-type]
 
 
 def test_dependency_graph_supports_interactive_pan_and_bounded_zoom(qtbot: Any) -> None:
