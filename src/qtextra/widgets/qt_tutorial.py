@@ -51,6 +51,10 @@ class TutorialStep(BaseModel):
         The position of the tutorial chevron.
     position_offset: tuple[int, int]
         Offset position of the tutorial chevron.
+    func: tuple[Callable, ...] | None
+        Optional callables to invoke when this step is shown.
+    skip: bool
+        If True, the step is excluded from the tutorial and does not count towards the step total.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -100,11 +104,6 @@ class QtTutorial(QDialog):
         self._animation.setDuration(500)
         self._animation.valueChanged.connect(self._update_progress)
         self._animation.setEasingCurve(QEasingCurve.Type.InOutCubic)
-
-        # self._move_animation = QVariantAnimation()
-        # self._move_animation.setDuration(1000)
-        # self._move_animation.valueChanged.connect(self._update_position)
-        # self._move_animation.setEasingCurve(QEasingCurve.InOutCubic)
 
         self._current = -1
         self.steps = []
