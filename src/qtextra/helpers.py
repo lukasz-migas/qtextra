@@ -2590,9 +2590,10 @@ def make_icon_toggle_group(
     else:
         orientation = get_orientation(orientation)
         layout = make_h_layout() if orientation == Qt.Orientation.Horizontal else make_v_layout()
-        alignment = {"horizontal": Qt.AlignmentFlag.AlignVCenter, "vertical": Qt.AlignmentFlag.AlignHCenter}[
-            orientation
-        ]
+        alignment = {
+            Qt.Orientation.Horizontal: Qt.AlignmentFlag.AlignVCenter,
+            Qt.Orientation.Vertical: Qt.AlignmentFlag.AlignHCenter,
+        }[orientation]
     layout.setSpacing(2)
     for btn_id, (icon, check_icon) in enumerate(zip(qta_icon, checked_qta_icon)):
         radio_btn = make_qta_btn(
