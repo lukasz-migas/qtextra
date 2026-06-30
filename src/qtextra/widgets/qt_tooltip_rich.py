@@ -742,7 +742,7 @@ if __name__ == "__main__":  # pragma: no cover
                     ),
                 ],
                 target=btn_rich,
-                parent=frame,
+                # parent=frame,
             )
 
         btn_rich = hp.make_btn(frame, "Rich Tooltip + Actions", func=_show_rich)

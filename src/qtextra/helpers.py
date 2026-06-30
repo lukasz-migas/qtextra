@@ -775,6 +775,7 @@ def set_combobox_data(
     current_item: str | None = None,
     block_signals: bool = True,
     clear: bool = True,
+    inverse: bool = False,
 ):
     """Set data/value on combobox."""
     if not isinstance(data, (dict, ty.OrderedDict)):
@@ -784,7 +785,9 @@ def set_combobox_data(
         if clear:
             widget.clear()
         for index, (item, text) in enumerate(data.items()):
-            if not isinstance(text, str):
+            if inverse:
+                item, text = text, item
+            if not isinstance(text, (type(None), str)):
                 text = item.value
             widget.addItem(text, item)
 
@@ -3082,6 +3085,7 @@ def get_directories(parent: Qw.QWidget | None, title: str = "Select directories.
     from qtpy.QtWidgets import QAbstractItemView, QFileDialog, QListView, QTreeView
 
     file_dialog = QFileDialog(parent)
+    file_dialog.setWindowTitle(title)
     file_dialog.setFileMode(QFileDialog.FileMode.Directory)
     file_dialog.setOption(QFileDialog.DontUseNativeDialog, True)
     file_view = file_dialog.findChild(QListView, "listView")
@@ -3672,6 +3676,7 @@ def make_loading_gif(
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,
+    tooltip: str = "",
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
     from qtextra.assets import LOADING_GIFS
@@ -3685,6 +3690,7 @@ def make_loading_gif(
         set_retain_hidden_size_policy(label)
     if hide:
         label.hide()
+    label.setToolTip(tooltip)
     return label, movie
 
 
