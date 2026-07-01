@@ -257,7 +257,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         """Paint event."""
         super().paintEvent(*args)
         if self.menu_enabled:
-            self._pain_menu_corner()
+            self._paint_menu_corner()
         elif self.has_right_click:
             self._paint_right_click_corner()
 
@@ -279,7 +279,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         painter.setBrush(color)
         painter.drawPolygon(QPolygonF(points))
 
-    def _pain_menu_corner(self) -> None:
+    def _paint_menu_corner(self) -> None:
         """Draw a small downward chevron in the bottom-right corner."""
         self._paint_corner("info")
 

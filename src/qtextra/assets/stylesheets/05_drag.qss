@@ -1,0 +1,7 @@
+QtDragWidget, QtDragWidget[drag=false] {
+    background: {{ background }};
+}
+
+QtDragWidget[drag=true] {
+    border: 5px solid {{ highlight }};
+}

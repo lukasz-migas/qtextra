@@ -46,14 +46,6 @@ QLabel#step_label {
     background: transparent;
 }
 
-QtDragWidget, QtDragWidget[drag=false] {
-    background: {{ background }};
-}
-
-QtDragWidget[drag=true] {
-    border: 5px solid {{ highlight }};
-}
-
 QtWelcomeLabel {
     font-size: 20px;
     color: {{ text }};
@@ -126,7 +118,9 @@ QLabel#72px_300w {
     font-size: 72px;
     font-weight: 300;
 }
-
+QLabel#empty_label {
+    font-size: {{ increase(font_size, 18) }};
+}
 QLabel#extra_large_text {
     font-size: {{ increase(font_size, 8) }};
 }
@@ -153,13 +147,11 @@ QLabel#tip_label {
     font-size: {{ decrease(font_size, 1) }};
     color: {{ lighten(text, 30) }};
 }
-
 QLabel#watch_dir {
     font-size: {{ increase(font_size, 2) }};
     font-weight: bold;
     min-height: 80px;
 }
-
 QLabel#match_label {
     padding: 2px 8px;
     border-radius: 5px;
@@ -167,14 +159,30 @@ QLabel#match_label {
     background-color: {{ highlight }};
     font-weight: 600;
 }
-
 QLabel#toolbar_label {
     /*font-size: {{ decrease(font_size, 2) }};*/
     padding: 0px;
     margin: 0px;
     background: transparent;
 }
-
+QLabel#version_label {
+    font-size: {{ increase(font_size, 2) }};
+    font-weight: bold;
+}
+QLabel#version_label[text='N/A'] {
+    color: {{ darken_or_lighten(warning, 30) }};
+}
+QLabel#version_label[text="v1"],
+QLabel#version_label[text="v2"],
+QLabel#version_label[text="v3"],
+QLabel#version_label[text="v4"],
+QLabel#version_label[text="v5"],
+QLabel#version_label[text="v6"],
+QLabel#version_label[text="v7"],
+QLabel#version_label[text="v8"],
+QLabel#version_label[text="v9"] {
+    color: {{ darken_or_lighten(success, 30) }};
+}
 
 /* ------------- QtClickableLabel --------- */
 QtClickableLabel{

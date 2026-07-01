@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as ty
 
 from qtpy.QtCore import QEvent, QPointF, QSize, Qt, Signal
-from qtpy.QtGui import QColor, QMovie, QPainter
+from qtpy.QtGui import QColor, QMovie, QPainter, QPolygonF
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QWidget
 
 from qtextra.config import THEMES
@@ -71,16 +71,35 @@ class QtPushButton(QPushButton):
     def paintEvent(self, event) -> None:
         """Paint event/."""
         super().paintEvent(event)
-        painter = QPainter(self)
         if self.has_right_click:
-            width = 4
-            radius = 4
-            x = self.rect().width() - (width * 2.0)
-            y = self.rect().height() - (width * 2.0)
-            color = THEMES.get_hex_color("success")
-            painter.setPen(QColor(color))
-            painter.setBrush(QColor(color))
-            painter.drawEllipse(QPointF(x, y), radius, radius)
+            self._paint_right_click_corner()
+
+    def _paint_menu_corner(self) -> None:
+        """Draw a small downward chevron in the bottom-right corner."""
+        self._paint_corner("info")
+
+    def _paint_right_click_corner(self) -> None:
+        """Draw a filled triangular 'page-fold' in the bottom-right corner."""
+        self._paint_corner("success")
+
+    def _paint_corner(self, color: str) -> None:
+        rect = self.rect()
+        edge = min(rect.width(), rect.height())
+        glyph_size = max(5, min(14, int(edge * 0.25)))
+        margin = max(1, edge // 12)
+        right = rect.right() - margin
+        bottom = rect.bottom() - margin
+        points = [
+            QPointF(right, bottom - glyph_size),
+            QPointF(right - glyph_size, bottom),
+            QPointF(right, bottom),
+        ]
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        color = QColor(THEMES.get_hex_color(color))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(color)
+        painter.drawPolygon(QPolygonF(points))
 
     def connect_to_right_click(self, func: ty.Callable) -> None:
         """Connect function right right-click.
