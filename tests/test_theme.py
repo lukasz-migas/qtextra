@@ -83,11 +83,11 @@ def test_qsplitter_stylesheet_uses_centered_line_handles() -> None:
     assert "image:" not in splitter_handle_rules
     assert "horizontal_separator.svg" not in splitter_handle_rules
     assert "vertical_separator.svg" not in splitter_handle_rules
-    assert "height: 7px;" in splitter_handle_rules
-    assert "margin: 3px 0px 3px 0px;" in splitter_handle_rules
-    assert "width: 7px;" in splitter_handle_rules
-    assert "margin: 0px 3px 0px 3px;" in splitter_handle_rules
-    assert "background: #414851;" in splitter_handle_rules
+    assert "height: 2px;" in splitter_handle_rules
+    assert "margin: 1px 0px 1px 0px;" in splitter_handle_rules
+    assert "width: 2px;" in splitter_handle_rules
+    assert "margin: 0px 1px 0px 1px;" in splitter_handle_rules
+    assert "background: #bd93f9;" in splitter_handle_rules
 
 
 def test_loading_legacy_theme_config_without_info_keeps_default(tmp_path):

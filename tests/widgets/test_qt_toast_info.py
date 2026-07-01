@@ -82,6 +82,35 @@ def test_make_notification_toast_is_child_overlay_and_restores_focus(monkeypatch
             self.position = position
             self.is_closable = is_closable
             self.duration = duration
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+            self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        @classmethod
+        def new(
+            cls,
+            *,
+            icon: str,
+            title: str,
+            content: str,
+            position: object,
+            is_closable: bool,
+            duration: int,
+            parent: QWidget | None,
+            min_width: int = 0,
+        ) -> _FakeToast:
+            """Create a fake toast using the same class factory shape as QtInfoToast."""
+            widget = cls(
+                icon=icon,
+                title=title,
+                content=content,
+                position=position,
+                is_closable=is_closable,
+                duration=duration,
+                parent=parent,
+            )
+            if min_width > 0:
+                widget.setMinimumWidth(min_width)
+            return widget
 
     restored: list[tuple[QWidget | None, QWidget | None]] = []
     monkeypatch.setattr("qtextra.widgets.qt_toast_info.QtInfoToast", _FakeToast)
@@ -99,7 +128,7 @@ def test_make_notification_toast_is_child_overlay_and_restores_focus(monkeypatch
 
     assert toast.parent() is dialog
     assert not toast.isWindow()
-    assert toast.position == ToastPosition.NONE
+    assert toast.position == ToastPosition.TOP_LEFT
     assert toast.testAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
     assert toast.focusPolicy() == Qt.FocusPolicy.NoFocus
     assert restored[0] == (dialog, line_edit)
