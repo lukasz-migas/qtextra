@@ -71,6 +71,25 @@ def test_get_theme_as_dict_returns_serialized_colors():
     assert isinstance(theme["info"], str)
 
 
+def test_qsplitter_stylesheet_uses_centered_line_handles() -> None:
+    """Ensure splitter handles are rendered as full-length lines, not icons."""
+    stylesheet = Themes().get_theme_stylesheet("dark")
+
+    vertical_start = stylesheet.index("QSplitter::handle:vertical")
+    horizontal_start = stylesheet.index("QSplitter::handle:horizontal", vertical_start)
+    background_start = stylesheet.index("QSplitter#with_background::handle", horizontal_start)
+    splitter_handle_rules = stylesheet[vertical_start:background_start]
+
+    assert "image:" not in splitter_handle_rules
+    assert "horizontal_separator.svg" not in splitter_handle_rules
+    assert "vertical_separator.svg" not in splitter_handle_rules
+    assert "height: 7px;" in splitter_handle_rules
+    assert "margin: 3px 0px 3px 0px;" in splitter_handle_rules
+    assert "width: 7px;" in splitter_handle_rules
+    assert "margin: 0px 3px 0px 3px;" in splitter_handle_rules
+    assert "background: #414851;" in splitter_handle_rules
+
+
 def test_loading_legacy_theme_config_without_info_keeps_default(tmp_path):
     themes = Themes()
     legacy_dark = dict(DARK_THEME)

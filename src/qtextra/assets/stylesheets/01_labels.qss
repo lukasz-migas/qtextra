@@ -1,3 +1,10 @@
+/* ----------------- QLabel ------------------ */
+
+QLabel {
+  background-color: transparent;
+  font-size: {{ increase(font_size, 1) }};
+}
+
 QLabel#error_label, QLabel#error_status_label {
     color : {{ error }};
 }
@@ -32,6 +39,11 @@ QLabel#window_title {
 QLabel#overlay_label {
     font-size: {{ increase(font_size, 14) }};
     color: {{ lighten(text, 40) }};
+}
+
+QLabel#step_label {
+    color: {{ highlight }};
+    background: transparent;
 }
 
 QtDragWidget, QtDragWidget[drag=false] {

@@ -3,29 +3,6 @@ QWidget#transparent {
     background-color: transparent;
 }
 
-/* ------------- QtVertLine / QtHorzLine --------- */
-QtVertLine, QtHorzLine{
-    border: 2px solid {{ secondary }};
-    background-color: {{ secondary }};
-}
-
-QtVertLine#thin, QtHorzLine#thin{
-    border: 1px solid {{ secondary }};
-    border: 1px solid {{ secondary }};
-}
-
-/* controls the area around the canvas */
-QSplitter {
-  spacing: 0px;
-  padding: 0px;
-  margin: 0px;
-}
-
-QLabel#step_label {
-    color: {{ highlight }};
-    background: transparent;
-}
-
 /* ----------------- QWidget state borders ----------------- */
 QWidget#success {
     border: 2px solid {{ lighten(success, 30) }};
@@ -118,18 +95,7 @@ QAbstractItemView#search_box_popup::item:hover
     background-color:lightGrey;
 }
 
-/* ----------------- QtViewer / Layer controls ----------------- */
-
-QtViewer {
-   padding-top: 0px;
-}
-
-QtLayerButtons, QtViewerButtons, QtLayerList {
-  min-width: 242px;
-}
-
 /* ------------- QtScrollableHLayoutWidget --------- */
-
 QtScrollableHLayoutWidget QScrollBar:horizontal {
     height: 0px;
     margin: 0px;

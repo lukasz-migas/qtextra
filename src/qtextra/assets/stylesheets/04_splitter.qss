@@ -1,0 +1,32 @@
+/* ----------------- QSplitter ----------------- */
+QSplitter {
+  spacing: 0px;
+  padding: 0px;
+  margin: 0px;
+}
+QSplitter::handle:vertical {
+    height: 2px;
+    margin: 1px 0px 1px 0px;
+    background: {{ secondary }};
+}
+
+QSplitter::handle:horizontal {
+    width: 2px;
+    margin: 0px 1px 0px 1px;
+    background: {{ secondary }};
+}
+
+QSplitter#with_background::handle {
+    background: {{ darken_or_lighten_for_theme(secondary, 50) }};
+}
+
+/* ------------- QtVertLine / QtHorzLine --------- */
+QtVertLine, QtHorzLine{
+    border: 2px solid {{ secondary }};
+    background-color: {{ secondary }};
+}
+
+QtVertLine#thin, QtHorzLine#thin{
+    border: 1px solid {{ secondary }};
+    border: 1px solid {{ secondary }};
+}
