@@ -78,13 +78,6 @@ QWidget[emphasized="true"] QLineEdit {
   background-color: {{ background }};
 }
 
-/* ----------------- QLabel ------------------ */
-
-QLabel {
-  background-color: transparent;
-  font-size: {{ increase(font_size, 1) }};
-}
-
 /* ----------------- QMenuBar ------------------ */
 
 QMenuBar::item:selected {
@@ -105,23 +98,4 @@ QToolTip {
     padding: 2px;
     background-color: {{ background }};
     color: {{ text }};
-}
-
-/* ----------------- QSplitter ----------------- */
-
-QSplitter::handle:vertical {
-    /*background: {{ secondary }};*/
-    image: url("theme_{{ id }}://horizontal_separator.svg");
-    height: 7px;
-}
-
-QSplitter::handle:horizontal {
-    /*background: {{ secondary }};*/
-    image: url("theme_{{ id }}://vertical_separator.svg");
-    width: 7px;
-}
-
-QSplitter#with_background::handle {
-    /*background: {{ secondary }};*/
-    background: {{ darken_or_lighten_for_theme(secondary, 50) }};
 }

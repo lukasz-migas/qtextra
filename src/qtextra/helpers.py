@@ -775,6 +775,7 @@ def set_combobox_data(
     current_item: str | None = None,
     block_signals: bool = True,
     clear: bool = True,
+    inverse: bool = False,
 ):
     """Set data/value on combobox."""
     if not isinstance(data, (dict, ty.OrderedDict)):
@@ -784,7 +785,9 @@ def set_combobox_data(
         if clear:
             widget.clear()
         for index, (item, text) in enumerate(data.items()):
-            if not isinstance(text, str):
+            if inverse:
+                item, text = text, item
+            if not isinstance(text, (type(None), str)):
                 text = item.value
             widget.addItem(text, item)
 
@@ -2951,18 +2954,96 @@ def notification(
     min_width: int = 0,
 ) -> None:
     """Show notification."""
-    from qtextra.widgets.qt_toast_info import TOAST_POSITION_DICT, QtInfoToast
+    _make_notification_toast(
+        parent,
+        icon=icon,
+        title=title,
+        message=message,
+        position=position,
+        is_closable=is_closable,
+        duration=duration,
+        min_width=min_width,
+    )
 
-    QtInfoToast.new(
+
+def _is_valid_widget(widget: Qw.QWidget | None) -> bool:
+    """Return whether a Qt widget wrapper still points to a live widget."""
+    if widget is None:
+        return False
+    try:
+        widget.isVisible()
+    except RuntimeError:
+        return False
+    return True
+
+
+def _is_owned_by(widget: Qw.QWidget, owner: Qw.QWidget) -> bool:
+    """Return whether a widget belongs to an owner parent chain."""
+    parent = widget.parentWidget()
+    while parent is not None:
+        if parent is owner:
+            return True
+        parent = parent.parentWidget()
+    return False
+
+
+def _owned_top_level_dialogs(owner: Qw.QWidget) -> list[Qw.QDialog]:
+    """Return visible top-level dialogs owned by a widget."""
+    dialogs: list[Qw.QDialog] = []
+    for widget in Qw.QApplication.topLevelWidgets():
+        if not isinstance(widget, Qw.QDialog) or not widget.isVisible():
+            continue
+        if _is_owned_by(widget, owner):
+            dialogs.append(widget)
+    return dialogs
+
+
+def restore_focus(window: Qw.QWidget | None, focus_widget: Qw.QWidget | None) -> None:
+    """Restore window activation and widget focus after showing a popup notification."""
+    if not _is_valid_widget(window):
+        return
+
+    app = Qw.QApplication.instance()
+    if app is not None and app.activeWindow() is not window:
+        window.activateWindow()
+        window.raise_()
+
+    if _is_valid_widget(focus_widget) and focus_widget.window() is window:
+        focus_widget.setFocus(Qt.FocusReason.OtherFocusReason)
+
+
+def _make_notification_toast(
+    parent: Qw.QWidget,
+    *,
+    title: str,
+    message: str,
+    icon: ty.Literal["none", "debug", "info", "success", "warning", "error", "critical"] = "info",
+    position: ty.Literal["top", "bottom", "top_left", "top_right", "bottom_left", "bottom_right", "none"] = "top",
+    is_closable: bool = False,
+    duration: int = 5000,
+    min_width: int = 0,
+) -> Qw.QWidget:
+    """Create and show a focus-safe info toast."""
+    from qtextra.widgets.qt_toast_info import QtInfoToast
+
+    parent = get_current_parent(parent)
+    app = Qw.QApplication.instance()
+    focus_widget = app.focusWidget() if app is not None else None
+    restore_window = parent.window()
+
+    widget = QtInfoToast.new(
         icon=icon,
         title=title,
         content=message,
-        position=TOAST_POSITION_DICT[position],
+        position=position,
         is_closable=is_closable,
         duration=duration,
         parent=parent,
         min_width=min_width,
     )
+    restore_focus(restore_window, focus_widget)
+    QTimer.singleShot(0, partial(restore_focus, restore_window, focus_widget))
+    return widget
 
 
 def toast(
@@ -2982,7 +3063,7 @@ def toast(
     QtToast(parent).show_message(title, message, position=position, icon=icon, duration=duration)
 
 
-def toast_alt(
+def toast_system(
     parent: Qw.QWidget | None,
     title: str,
     message: str,
@@ -3082,6 +3163,7 @@ def get_directories(parent: Qw.QWidget | None, title: str = "Select directories.
     from qtpy.QtWidgets import QAbstractItemView, QFileDialog, QListView, QTreeView
 
     file_dialog = QFileDialog(parent)
+    file_dialog.setWindowTitle(title)
     file_dialog.setFileMode(QFileDialog.FileMode.Directory)
     file_dialog.setOption(QFileDialog.DontUseNativeDialog, True)
     file_view = file_dialog.findChild(QListView, "listView")
@@ -3672,6 +3754,7 @@ def make_loading_gif(
     size: tuple[int, int] = (20, 20),
     retain_size: bool = True,
     hide: bool = False,
+    tooltip: str = "",
 ) -> tuple[Qw.QLabel, QMovie]:
     """Make QMovie animation using GIF."""
     from qtextra.assets import LOADING_GIFS
@@ -3685,6 +3768,7 @@ def make_loading_gif(
         set_retain_hidden_size_policy(label)
     if hide:
         label.hide()
+    label.setToolTip(tooltip)
     return label, movie
 
 
@@ -3917,6 +4001,33 @@ def get_parent(parent: QObject | None = None) -> Qw.QWidget | None:
                     parent = i
                     break
     return parent
+
+
+def get_current_parent(fallback: Qw.QWidget) -> Qw.QWidget:
+    """
+    Return the best parent for a new dialog:
+    1. active modal dialog, if one exists.
+    2. active window, if one exists.
+    3. optional fallback, e.g. your main window.
+    """
+    app = Qw.QApplication.instance()
+    if app is None:
+        return fallback
+
+    parent = app.activeModalWidget()
+    if isinstance(parent, Qw.QWidget):
+        return parent
+
+    owner = fallback.window()
+    owned_dialogs = _owned_top_level_dialogs(owner)
+    parent = app.activeWindow()
+    if isinstance(parent, Qw.QDialog) and parent in owned_dialogs:
+        return parent
+    if owned_dialogs:
+        return owned_dialogs[-1]
+    if isinstance(parent, Qw.QWidget):
+        return parent
+    return fallback
 
 
 def trim_dialog_size(dlg: Qw.QWidget) -> tuple[int, int]:

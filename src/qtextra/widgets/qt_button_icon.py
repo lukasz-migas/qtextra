@@ -39,7 +39,7 @@ from qtextra.config import THEMES
 from qtextra.typing import QtaSizePreset
 from qtextra.widgets._qta_mixin import QtaMixin
 from qtextra.widgets.qt_notification_badge import BadgeMode, BadgeSize, BadgeState, QtNotificationBadge
-from qtextra.widgets.qt_tooltip import QtToolTip, TipPosition
+from qtextra.widgets.qt_tooltip_rich import QtRichToolTip
 
 INDICATOR_TYPES = {"success": "success", "warning": "warning", "active": "progress"}
 
@@ -257,7 +257,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         """Paint event."""
         super().paintEvent(*args)
         if self.menu_enabled:
-            self._pain_menu_corner()
+            self._paint_menu_corner()
         elif self.has_right_click:
             self._paint_right_click_corner()
 
@@ -279,7 +279,7 @@ class QtImagePushButton(QPushButton, QtaMixin):
         painter.setBrush(color)
         painter.drawPolygon(QPolygonF(points))
 
-    def _pain_menu_corner(self) -> None:
+    def _paint_menu_corner(self) -> None:
         """Draw a small downward chevron in the bottom-right corner."""
         self._paint_corner("info")
 
@@ -900,6 +900,7 @@ class QtToolbarPushButton(QtImagePushButton):
     N_LOOPS = 5
 
     indicator: str = ""
+    _title: str = ""
     _text: str = ""
     _tooltip = None
     _suppress_hover_tooltip = False
@@ -928,6 +929,11 @@ class QtToolbarPushButton(QtImagePushButton):
         """Override tooltip."""
         self._text = text
 
+    def setRichToolTip(self, title: str, content: str) -> None:
+        """Override tooltip."""
+        self._title = title
+        self._text = content
+
     def _get_position(self) -> QPoint:
         rect = self.rect()
         pos = self.mapToGlobal(rect.topRight())
@@ -950,19 +956,14 @@ class QtToolbarPushButton(QtImagePushButton):
         if not self._text or self._tooltip is not None or self._suppress_hover_tooltip:
             return
         try:
-            self._tooltip = QtToolTip.init(
-                self,
-                title="",
+            self._tooltip = QtRichToolTip.show_tooltip(
+                title=self._title,
                 content=self._text,
-                icon=None,
-                parent=self,
-                tail_position=TipPosition.LEFT,
-                is_closable=True,
-                duration=-1,
+                target=self,
+                parent=hp.get_main_window(self),
             )
             self._tooltip.destroyed.connect(self._on_tooltip_closed)
         except AttributeError:
-            # fallback to QToolTip if QtToolTip is not available
             QToolTip.showText(self._get_position(), self._text, self)
 
     def event(self, evt: QEvent) -> bool:  # type: ignore[override]

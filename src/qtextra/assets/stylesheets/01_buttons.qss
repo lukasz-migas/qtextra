@@ -46,6 +46,34 @@ QWidget[emphasized="true"] QPushButton:checked {
   background-color: {{ current }};
 }
 
+/* ------------- QPushButton --------- */
+QPushButton#update_btn{
+    color: {{ replace(success) }};
+    background-color: {{ success }};
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+}
+
+QtPushButton#action_btn {
+    color: {{ replace(warning) }};
+    background-color: {{ lighten(warning, 30) }};
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+}
+QtPushButton#action_btn:hover {
+    background-color: {{ warning }};
+}
+
+QtPushButton#standout_btn {
+    color: {{ replace(highlight) }};
+    background-color: {{ current }};
+    font-size: {{ increase(font_size, 1) }};
+    font-weight: bold;
+}
+QtPushButton#standout_btn:hover {
+    background-color: {{ darken(current, 30) }};
+}
+
 /* ----------------- QtImagePushButton ----------------- */
 QtImagePushButton{
     padding: 1px;

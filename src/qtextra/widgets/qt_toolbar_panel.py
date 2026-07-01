@@ -20,7 +20,6 @@ from qtpy.QtWidgets import (  # type: ignore[attr-defined]
 )
 
 import qtextra.helpers as hp
-from qtextra.utils.utilities import connect
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, QtToolbarPushButton
 
 
@@ -220,23 +219,21 @@ class QtPanelWidget(QWidget):
         index = self.get_index(button)
 
         # create a custom tooltip if it's possible
-        if not tooltip and hasattr(widget, "_make_html_description"):
-            tooltip = widget._make_html_description()  # type: ignore[union-attr]
+        if hasattr(widget, "_make_rich_tooltip") and hasattr(button, "setRichToolTip"):
+            title, content = widget._make_rich_tooltip()
+            button.setRichToolTip(title, content)
+        else:
+            if not tooltip and hasattr(widget, "_make_html_description"):
+                tooltip = widget._make_html_description()
+            button.setToolTip(tooltip or "")
 
-        # about_widget = None
-        # if hasattr(widget, "_make_html_metadata"):
-        #     about_widget = QtAboutWidget.make_widget(*widget._make_html_metadata(), parent=self._about_stack)
-        # elif hasattr(widget, "_make_html_description"):
-        #     tooltip = widget._make_html_description()
-        if tooltip:
-            button.setToolTip(tooltip)
         button.panel_widget = widget
         if hasattr(widget, "toggle_button"):
             widget.toggle_button = button
         if hasattr(widget, "evt_indicate"):
-            connect(widget.evt_indicate, button.set_indicator)
+            hp.connect(widget.evt_indicate, button.set_indicator)
         if hasattr(widget, "evt_indicate_about"):
-            connect(widget.evt_indicate_about, button.set_indicator)
+            hp.connect(widget.evt_indicate_about, button.set_indicator)
         self._stack.insertWidget(index, widget)
         if self._stack.count() == 1:
             self._toggle_widget(button, True)
