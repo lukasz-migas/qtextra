@@ -193,7 +193,8 @@ def test_restore_notification_focus_reactivates_target_window(monkeypatch) -> No
     window = _Window()
     focus_widget = _FocusWidget(window)
     app = SimpleNamespace(activeWindow=lambda: object())
-    monkeypatch.setattr(hp.Qw.QApplication, "instance", lambda: app)
+    fake_qw = SimpleNamespace(QApplication=SimpleNamespace(instance=lambda: app))
+    monkeypatch.setattr(hp, "Qw", fake_qw)
 
     hp.restore_focus(ty.cast(QWidget, window), ty.cast(QWidget, focus_widget))
 
