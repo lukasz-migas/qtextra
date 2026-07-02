@@ -398,6 +398,18 @@ class TestTableView:
 
 
 class TestFilterProxy:
+    @staticmethod
+    def _make_proxy_table(qtbot) -> tuple[QtCheckableTableView, TableConfig, MultiColumnSingleValueProxyModel]:
+        cfg = TableConfig().add("Name", "name").add("Pixels", "pixels")
+        w = QtCheckableTableView(None, config=cfg, sortable=True)
+        qtbot.addWidget(w)
+        proxy = MultiColumnSingleValueProxyModel(w)
+        proxy.setSourceModel(w.model())
+        w.model().table_proxy = proxy
+        w.setModel(proxy)
+        w.add_data([["Large", 100], ["Small", 2], ["Medium", 9]])
+        return w, cfg, proxy
+
     def test_filter_uses_begin_end_filter_change_when_available(self, qtbot, monkeypatch):
         w = QtCheckableTableView(None)
         qtbot.addWidget(w)
@@ -486,6 +498,33 @@ class TestFilterProxy:
         proxy.setFilterByColumn("", 0)
         # After clearing, dict must not contain the column key
         assert 0 not in proxy.filters_by_text
+
+    def test_proxy_sort_updates_source_and_visible_order(self, qtbot):
+        w, cfg, proxy = self._make_proxy_table(qtbot)
+
+        proxy.sort(cfg.pixels, Qt.SortOrder.AscendingOrder)
+
+        assert [proxy.index(row, cfg.pixels).data() for row in range(proxy.rowCount())] == [2, 9, 100]
+        assert w.get_col_data(cfg.pixels) == [2, 9, 100]
+        assert w.model().get_data() == [["Small", 2], ["Medium", 9], ["Large", 100]]
+
+    def test_proxy_sort_and_table_sort_by_column_share_order(self, qtbot):
+        w, cfg, proxy = self._make_proxy_table(qtbot)
+
+        proxy.sort(cfg.name, Qt.SortOrder.DescendingOrder)
+        w.sort_by_column(cfg.pixels, "ascending")
+
+        assert [proxy.index(row, cfg.pixels).data() for row in range(proxy.rowCount())] == [2, 9, 100]
+        assert w.get_col_data(cfg.name) == ["Small", "Medium", "Large"]
+
+    def test_proxy_header_sort_and_table_helpers_share_order(self, qtbot):
+        w, cfg, proxy = self._make_proxy_table(qtbot)
+
+        w.horizontalHeader().setSortIndicator(cfg.pixels, Qt.SortOrder.DescendingOrder)
+        w.sortByColumn(cfg.pixels)
+
+        assert [proxy.index(row, cfg.pixels).data() for row in range(proxy.rowCount())] == [100, 9, 2]
+        assert w.get_col_data(cfg.pixels) == [100, 9, 2]
 
     def test_update_column_raises_when_index_equals_column_count(self, qtbot):
         w = QtCheckableTableView(None)
