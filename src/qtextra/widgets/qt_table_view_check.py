@@ -537,9 +537,10 @@ class FilterProxyModelBase(QSortFilterProxyModel):
 
     def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
         """Sort table."""
-        if self.sourceModel().no_sort_columns and column in self.sourceModel().no_sort_columns:
+        source_model = self.sourceModel()
+        if source_model.no_sort_columns and column in source_model.no_sort_columns:
             return
-        super().sort(column, order)
+        source_model.sort(column, order)
 
     def setFilterByColumn(self, *args: ty.Any) -> None:
         """Set filter by column."""

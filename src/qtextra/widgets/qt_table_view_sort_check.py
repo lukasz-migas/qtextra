@@ -45,6 +45,13 @@ class ProxySortFilterProxyModel(MultiColumnSingleValueProxyModel):
         """Check whether two indexes are sorted."""
         return self._sort_key(self._raw_value(left)) < self._sort_key(self._raw_value(right))
 
+    def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
+        """Sort rows in the proxy while leaving source rows unchanged."""
+        source_model = self.sourceModel()
+        if source_model.no_sort_columns and column in source_model.no_sort_columns:
+            return
+        QSortFilterProxyModel.sort(self, column, order)
+
 
 class QtProxySortCheckableTableView(QtCheckableTableView):
     """Alternative checkable table view that leaves source rows unsorted."""
