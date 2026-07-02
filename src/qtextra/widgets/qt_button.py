@@ -85,7 +85,7 @@ class QtPushButton(QPushButton):
     def _paint_corner(self, color: str) -> None:
         rect = self.rect()
         edge = min(rect.width(), rect.height())
-        glyph_size = max(5, min(14, int(edge * 0.25)))
+        glyph_size = max(5, min(14, int(edge * 0.35)))
         margin = max(1, edge // 12)
         right = rect.right() - margin
         bottom = rect.bottom() - margin
