@@ -50,6 +50,7 @@ if ty.TYPE_CHECKING:
     from qtextra.utils.table_config import TableConfig
     from qtextra.widgets.qt_action import QtQtaAction
     from qtextra.widgets.qt_button import QtActivePushButton, QtPushButton, QtRichTextButton
+    from qtextra.widgets.qt_button_clipboard import QtCopyToClipboardButton
     from qtextra.widgets.qt_button_color import QtColorSwatch
     from qtextra.widgets.qt_button_icon import (
         QtImagePushButton,
@@ -2033,6 +2034,18 @@ def make_qta_btn(
         widget.setProperty("with_text", True)
     if standout:
         widget.setProperty("standout", True)
+    return widget
+
+
+def make_clipboard_btn(
+    parent: Qw.QWidget, text_edit: Qw.QLabel | Qw.QTextEdit, tooltip: str | None = None
+) -> QtCopyToClipboardButton:
+    """Make clipboard button."""
+    from qtextra.widgets.qt_button_clipboard import QtCopyToClipboardButton
+
+    widget = QtCopyToClipboardButton(parent=parent, text_edit=text_edit)
+    if tooltip:
+        widget.setToolTip(tooltip)
     return widget
 
 
