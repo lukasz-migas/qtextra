@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 from typing import Any
 
 import numpy as np
@@ -146,10 +147,14 @@ def test_polygon_view_clear_and_parent(qtbot: Any) -> None:
     parent = QWidget()
     qtbot.addWidget(parent)
     widget = QPolygonView(_square(), parent=parent)
+    scene = widget.scene()
+
+    gc.collect()
 
     widget.clear()
 
     assert widget.parent() is parent
+    assert widget.scene() is scene
     assert widget.shape_count() == 0
     assert widget.scene().sceneRect().isEmpty()
 

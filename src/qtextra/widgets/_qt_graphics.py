@@ -22,8 +22,9 @@ class QBaseGraphicsScene(QtW.QGraphicsScene):
 
 class QBaseGraphicsView(QtW.QGraphicsView):
     def __init__(self, parent: QtW.QWidget | None = None):
-        scene = QBaseGraphicsScene(parent)
+        scene = QBaseGraphicsScene()
         super().__init__(scene, parent)
+        self._scene = scene
         self.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -34,4 +35,4 @@ class QBaseGraphicsView(QtW.QGraphicsView):
         return item
 
     def scene(self) -> QBaseGraphicsScene:
-        return super().scene()
+        return self._scene
