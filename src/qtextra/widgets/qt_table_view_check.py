@@ -205,12 +205,16 @@ class ColorSwatchDelegate(QStyledItemDelegate):
 
 
 class ElidedTextDelegate(QStyledItemDelegate):
+    """Elided text delegate."""
+
     def initStyleOption(self, option, index):
         super().initStyleOption(option, index)
         option.textElideMode = Qt.TextElideMode.ElideRight
 
 
 class TruncationTooltipDelegate(QStyledItemDelegate):
+    """Truncation tooltip delegate."""
+
     def helpEvent(self, event, view, option, index):
         if event is None or view is None:
             return False
@@ -226,6 +230,8 @@ class TruncationTooltipDelegate(QStyledItemDelegate):
 
 
 class ProgressBarDelegate(QStyledItemDelegate):
+    """Progress bar delegate."""
+
     def paint(self, painter, option, index):
         value = index.data(Qt.ItemDataRole.DisplayRole)
         if value is None:
@@ -252,6 +258,8 @@ class ProgressBarDelegate(QStyledItemDelegate):
 
 
 class StarRatingDelegate(QStyledItemDelegate):
+    """Star rating delegate."""
+
     def _star_polygon(self, cx, cy, r_outer, r_inner, n=5):
         pts = []
         for i in range(2 * n):
@@ -290,6 +298,8 @@ class StarRatingDelegate(QStyledItemDelegate):
 
 
 class BadgeDelegate(QStyledItemDelegate):
+    """Badge delegate."""
+
     COLORS: ty.ClassVar[dict[str, QColor]] = {
         "ok": QColor("#2e7d32"),
         "warning": QColor("#ed6c02"),
@@ -321,6 +331,8 @@ class BadgeDelegate(QStyledItemDelegate):
 
 
 class ToggleDelegate(QStyledItemDelegate):
+    """Toggle delegate."""
+
     def paint(self, painter, option, index):
         value = index.data(Qt.ItemDataRole.CheckStateRole)
         checked = value == Qt.CheckState.Checked
@@ -346,6 +358,8 @@ class ToggleDelegate(QStyledItemDelegate):
 
 
 class HyperlinkDelegate(QStyledItemDelegate):
+    """Hyperlink delegate."""
+
     def paint(self, painter, option, index):
         text = str(index.data(Qt.ItemDataRole.DisplayRole) or "")
         painter.save()
@@ -366,6 +380,8 @@ class HyperlinkDelegate(QStyledItemDelegate):
 
 
 class HeatmapDelegate(QStyledItemDelegate):
+    """Heatmap delegate."""
+
     def __init__(self, vmin=0.0, vmax=1.0, parent=None):
         super().__init__(parent)
         self.vmin = vmin
@@ -391,6 +407,8 @@ class HeatmapDelegate(QStyledItemDelegate):
 
 
 class BarDelegate(QStyledItemDelegate):
+    """Bar delegate."""
+
     def __init__(self, vmin=0.0, vmax=1.0, parent=None):
         super().__init__(parent)
         self.vmin = vmin
@@ -417,6 +435,8 @@ class BarDelegate(QStyledItemDelegate):
 
 
 class SparklineDelegate(QStyledItemDelegate):
+    """Sparkline delegate."""
+
     def paint(self, painter, option, index):
         values = index.data(Qt.ItemDataRole.UserRole)
         if values is None:
@@ -461,6 +481,8 @@ class SparklineDelegate(QStyledItemDelegate):
 
 
 class ComboBoxDelegate(QStyledItemDelegate):
+    """ComboBox delegate."""
+
     def __init__(self, items, parent=None):
         super().__init__(parent)
         self.items = list(items)
@@ -481,6 +503,8 @@ class ComboBoxDelegate(QStyledItemDelegate):
 
 
 class DoubleSpinBoxDelegate(QStyledItemDelegate):
+    """DoubleSpinBox delegate."""
+
     def __init__(self, minimum=0.0, maximum=1.0, step=0.1, decimals=3, parent=None):
         super().__init__(parent)
         self.minimum = minimum
