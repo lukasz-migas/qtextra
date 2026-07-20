@@ -15,7 +15,7 @@ COLORS = {
 
 def _error_sort_key(error: str) -> tuple[bool, bool, bool]:
     """Return the priority tuple used to order help messages."""
-    return ('class="hint"' in error, 'class="error"' in error, 'class="warning"' in error)
+    return 'class="hint"' in error, 'class="error"' in error, 'class="warning"' in error
 
 
 def _make_message(
