@@ -56,6 +56,19 @@ CATALOG: tuple[WidgetDoc, ...] = (
         ),
     ),
     WidgetDoc(
+        slug="qt_button_attribute",
+        title="QtAttributeTagManager",
+        section="Data Editors",
+        summary="Compact editable key-value pills with typed popup editing.",
+        example="qt_button_attribute.py",
+        classes=(
+            "qtextra.widgets.qt_button_attribute.QtAttributeTagButton",
+            "qtextra.widgets.qt_button_attribute.QtAttributeTagManager",
+        ),
+        notes=("Use this instead of a table when attributes must fit inside a small form or panel.",),
+        screenshot_width=520,
+    ),
+    WidgetDoc(
         slug="qt_button_icon",
         title="QtIconButtons",
         section="Actions And Buttons",
