@@ -16,6 +16,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 
 ## Data Editors
 
+- [QtAttributeTagManager](./qt_button_attribute.md): compact editable key-value pills with typed popup editing.
 - [QtArrayTableView](./qt_table_view_array.md): high-volume array tables with sorting, lazy row loading, and optional colormap rendering.
 - [QtDataFrameWidget](./qt_table_view_dataframe.md): a dataframe viewer with synchronized headers and support for pandas and polars inputs.
 - [QtDictTagEditor](./qt_dict_tag_editor.md): editable key-value tables for small dictionaries with search and typed values.

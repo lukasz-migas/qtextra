@@ -1,0 +1,54 @@
+/* ------------ QtAttributeTagButton ------------ */
+QtAttributeTagButton {
+    border: 1px solid {{ darken(foreground, 8) }};
+    border-radius: 10px;
+    background-color: {{ foreground }};
+    color: {{ text }};
+}
+
+QtAttributeTagButton:hover {
+    border-color: {{ highlight }};
+    background-color: {{ darken(foreground, 5) }};
+}
+
+QtAttributeTagButton QtElidingLabel,
+QtAttributeTagButton QtImagePushButton {
+    border: none;
+    background: transparent;
+}
+
+QtAttributeTagButton QtImagePushButton#delete:hover {
+    border-radius: 8px;
+    background-color: {{ lighten(warning, 25) }};
+}
+
+QtAttributeTagManager QtImagePushButton#add {
+    padding: 1px;
+    border: 1px solid transparent;
+}
+
+/*QtAttributeTagManager QtImagePushButton#add:hover {*/
+/*    border-radius: 8px;*/
+/*    background-color: {{ lighten(success, 25) }};*/
+/*}*/
+
+/* ------------ Attribute editor popup ------------ */
+QFrame#attributeTagPopup {
+    border: 1px solid {{ darken(foreground, 10) }};
+    border-radius: 8px;
+    background-color: {{ background }};
+}
+
+QFrame#attributeTagPopup QLineEdit[invalid="true"] {
+    border: 1px solid {{ warning }};
+}
+
+QFrame#attributeTagPopup QLabel#attributeTagError {
+    border: none;
+    background: transparent;
+    color: {{ warning }};
+}
+
+QFrame#attributeTagPopup QtToolButton#save:hover {
+    background-color: {{ lighten(success, 25) }};
+}
