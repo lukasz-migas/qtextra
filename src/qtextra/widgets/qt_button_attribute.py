@@ -10,7 +10,6 @@ from qtpy.QtWidgets import QComboBox, QFrame, QLabel, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dict_tag_editor import DictTagValue
-from qtextra.widgets.qt_label_elide import QtElidingLabel
 from qtextra.widgets.qt_layout_scroll import QtScrollableHLayoutWidget
 
 
@@ -184,9 +183,8 @@ class QtAttributeTagButton(QFrame):
         if maximum_width > 0:
             self.setMaximumWidth(maximum_width)
 
-        self.label = QtElidingLabel(parent=self, elide=Qt.TextElideMode.ElideMiddle)
+        self.label = hp.make_label(parent=self, min_width=24)
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.label.setMinimumWidth(24)
         self.label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
 
         self.delete_button = hp.make_qta_btn(
