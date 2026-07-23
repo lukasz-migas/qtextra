@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from qtpy.QtCore import QPoint, Qt
+from qtpy.QtWidgets import QComboBox
 
 from qtextra.widgets.qt_button_attribute import QtAttributeTagManager
 from qtextra.widgets.qt_layout_scroll import QtScrollableHLayoutWidget
@@ -88,6 +89,8 @@ def test_attribute_popup_adds_typed_values(qtbot):
     manager.add_button.click()
     popup = manager._popup
     assert popup.isVisible()
+    assert popup.key_combo.isEditable()
+    assert popup.key_combo.count() == 0
 
     popup.key_edit.setText("count")
     popup.type_combo.setCurrentText("int")
@@ -212,3 +215,92 @@ def test_attribute_manager_case_sensitive_keys(qtbot):
     assert manager.add_item("Alpha", 1) is True
     assert manager.add_item("alpha", 2) is True
     assert manager.items() == {"Alpha": 1, "alpha": 2}
+
+
+def test_attribute_popup_accepts_suggested_and_custom_keys(qtbot):
+    manager = QtAttributeTagManager(key_options=["name", "count"])
+    qtbot.addWidget(manager)
+    manager.show()
+
+    manager.add_button.click()
+    popup = manager._popup
+    assert isinstance(popup.key_combo, QComboBox)
+    assert popup.key_combo.isEditable()
+    assert popup.key_combo.height() == popup.value_edit.height()
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["name", "count"]
+
+    popup.key_combo.setCurrentText("count")
+    popup.type_combo.setCurrentText("int")
+    popup.value_edit.setText("3")
+    popup.save_button.click()
+    assert manager.items() == {"count": 3}
+
+    manager.add_button.click()
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["name"]
+    popup.key_edit.setText("custom")
+    popup.value_edit.setText("value")
+    popup.save_button.click()
+    assert manager.items() == {"count": 3, "custom": "value"}
+
+
+def test_attribute_popup_restores_removed_suggestions(qtbot):
+    manager = QtAttributeTagManager(key_options=["Alpha", "Beta"])
+    qtbot.addWidget(manager)
+    manager.add_item("alpha", 1)
+    manager.show()
+
+    manager.add_button.click()
+    popup = manager._popup
+    assert popup.key_combo is not None
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["Beta"]
+
+    popup.hide()
+    manager.remove_item("ALPHA")
+    manager.add_button.click()
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["Alpha", "Beta"]
+
+
+def test_attribute_popup_edit_filters_options_and_preserves_current_key(qtbot):
+    manager = QtAttributeTagManager(key_options=["alpha", "beta", "gamma"])
+    qtbot.addWidget(manager)
+    manager.set_items({"alpha": 1, "beta": 2})
+    manager.show()
+
+    assert manager.edit_item("alpha") is True
+    popup = manager._popup
+    assert popup.key_combo is not None
+    assert popup.key_edit.text() == "alpha"
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["alpha", "gamma"]
+
+
+def test_attribute_popup_filters_suggestions_with_case_sensitive_keys(qtbot):
+    manager = QtAttributeTagManager(key_options=["Alpha", "alpha"], case_sensitive=True)
+    qtbot.addWidget(manager)
+    manager.add_item("Alpha", 1)
+    manager.show()
+
+    manager.add_button.click()
+    popup = manager._popup
+    assert popup.key_combo is not None
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["alpha"]
+
+
+def test_attribute_manager_sets_key_options_after_creation(qtbot):
+    manager = QtAttributeTagManager()
+    qtbot.addWidget(manager)
+    manager.add_item("alpha", 1)
+    manager.show()
+
+    manager.add_button.click()
+    popup = manager._popup
+    popup.key_edit.setText("custom")
+
+    manager.set_key_options(["Alpha", "Beta"])
+    assert popup.key_edit is popup.key_combo.lineEdit()
+    assert popup.key_edit.text() == "custom"
+    assert [popup.key_combo.itemText(index) for index in range(popup.key_combo.count())] == ["Beta"]
+
+    manager.set_key_options(None)
+    assert popup.key_edit is popup.key_combo.lineEdit()
+    assert popup.key_edit.text() == "custom"
+    assert popup.key_combo.count() == 0
