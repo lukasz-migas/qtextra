@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QDoubleValidator, QIntValidator, QKeySequence, QMouseEvent, QShortcut
-from qtpy.QtWidgets import QComboBox, QFrame, QLabel, QSizePolicy, QWidget
+from qtpy.QtWidgets import QComboBox, QFrame, QLineEdit, QSizePolicy, QWidget
 
 import qtextra.helpers as hp
 from qtextra.widgets.qt_dict_tag_editor import DictTagValue
@@ -39,27 +39,38 @@ class _QtAttributeEditorPopup(QFrame):
         self,
         parent: QWidget,
         commit: Callable[[str | None, str, DictTagValue], str | None],
+        key_options: Sequence[str] | None = None,
     ) -> None:
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setObjectName("attributeTagPopup")
         self._commit = commit
         self._original_key: str | None = None
 
-        self.key_edit = hp.make_line_edit(self, placeholder="Key...", func_enter=self._save)
+        self.key_combo = hp.make_combobox(self, expand=False)
+        self.key_combo.setEditable(True)
+        self.key_combo.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        combo_key_edit = self.key_combo.lineEdit()
+        if combo_key_edit is None:
+            raise RuntimeError("Editable key combo must provide a line edit.")
+        self._combo_key_edit: QLineEdit = combo_key_edit
+        self._combo_key_edit.setPlaceholderText("Key...")
+        self._combo_key_edit.returnPressed.connect(self._save)
+        self.key_edit = self._combo_key_edit
+        self.set_key_options(key_options)
         self.value_edit = hp.make_line_edit(self, placeholder="Value...", func_enter=self._save)
-        self.type_combo = QComboBox(self)
-        self.type_combo.addItems(["str", "int", "float", "None"])
-        self.type_combo.currentTextChanged.connect(self._on_type_changed)
+        self.type_combo = hp.make_combobox(
+            self,
+            items=["str", "int", "float", "None"],
+            func=self._on_type_changed,
+            expand=False,
+        )
 
-        self.error_label = QLabel(self)
-        self.error_label.setObjectName("attributeTagError")
-        self.error_label.setWordWrap(True)
-        self.error_label.hide()
+        self.error_label = hp.make_label(self, object_name="attributeTagError", wrap=True, hide=True)
 
         self.save_button = hp.make_btn(self, "Add", func=self._save, object_name="save")
         self.cancel_button = hp.make_btn(self, "Cancel", func=self.hide, object_name="cancel")
 
-        fields = hp.make_h_layout(self.key_edit, self.value_edit, self.type_combo, spacing=4, margin=0)
+        fields = hp.make_h_layout(self.key_combo, self.value_edit, self.type_combo, spacing=4, margin=0)
         fields.setStretch(0, 2)
         fields.setStretch(1, 2)
         actions = hp.make_h_layout(stretch_before=True, spacing=4, margin=0)
@@ -76,10 +87,12 @@ class _QtAttributeEditorPopup(QFrame):
         anchor: QWidget,
         key: str | None = None,
         value: DictTagValue = None,
+        key_options: Sequence[str] | None = None,
     ) -> None:
         """Open the popup beneath an anchor for an add or edit operation."""
         self._original_key = key
         self._set_error("")
+        self.set_key_options(key_options)
         self.key_edit.setText("" if key is None else key)
         self.type_combo.setCurrentText("str" if key is None else _value_type(value))
         self.value_edit.setText("" if key is None or value is None else str(value))
@@ -89,6 +102,13 @@ class _QtAttributeEditorPopup(QFrame):
         self.activateWindow()
         self.key_edit.setFocus()
         self.key_edit.selectAll()
+
+    def set_key_options(self, key_options: Sequence[str] | None) -> None:
+        """Replace the editable key suggestions."""
+        current_text = self.key_edit.text()
+        self.key_combo.clear()
+        self.key_combo.addItems(key_options or ())
+        self.key_edit.setText(current_text)
 
     def _save(self) -> None:
         key = self.key_edit.text().strip()
@@ -239,7 +259,11 @@ class QtAttributeTagButton(QFrame):
 
 
 class QtAttributeTagManager(QWidget):
-    """Manage compact pills representing a typed key-value dictionary."""
+    """Manage compact pills representing a typed key-value dictionary.
+
+    Suggested keys can be provided through ``key_options`` without restricting
+    users from entering their own keys.
+    """
 
     evt_items_changed = Signal(dict)
     evt_item_added = Signal(str, object)
@@ -253,10 +277,12 @@ class QtAttributeTagManager(QWidget):
         flow: bool = True,
         case_sensitive: bool = False,
         tag_maximum_width: int = 240,
+        key_options: Sequence[str] | None = None,
     ) -> None:
         super().__init__(parent)
         self.case_sensitive = case_sensitive
         self.tag_maximum_width = tag_maximum_width
+        self._key_options = None if key_options is None else tuple(key_options)
         self._items: dict[str, DictTagValue] = {}
         self.widgets: dict[str, QtAttributeTagButton] = {}
 
@@ -288,7 +314,7 @@ class QtAttributeTagManager(QWidget):
         self.add_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         layout.addWidget(self.add_button, alignment=Qt.AlignmentFlag.AlignTop)
 
-        self._popup = _QtAttributeEditorPopup(self, self._commit_popup)
+        self._popup = _QtAttributeEditorPopup(self, self._commit_popup, self._key_options)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
     def items(self) -> dict[str, DictTagValue]:
@@ -305,6 +331,12 @@ class QtAttributeTagManager(QWidget):
         for key, value in items.items():
             self._set_item(key, value, emit_signal=False)
         self._emit_items_changed()
+
+    def set_key_options(self, key_options: Sequence[str] | None) -> None:
+        """Set suggested keys, or clear the suggestions with ``None``."""
+        self._key_options = None if key_options is None else tuple(key_options)
+        original_key = self._popup._original_key if self._popup.isVisible() else None
+        self._popup.set_key_options(self._available_key_options(original_key))
 
     def add_item(self, key: str, value: DictTagValue) -> bool:
         """Add or update one attribute."""
@@ -358,7 +390,12 @@ class QtAttributeTagManager(QWidget):
         if existing_key is None:
             return False
         widget = self.widgets[self._key_id(existing_key)]
-        self._popup.open_for(widget, existing_key, self._items[existing_key])
+        self._popup.open_for(
+            widget,
+            existing_key,
+            self._items[existing_key],
+            self._available_key_options(existing_key),
+        )
         return True
 
     def _set_item(self, key: str, value: DictTagValue, *, emit_signal: bool) -> bool:
@@ -429,7 +466,24 @@ class QtAttributeTagManager(QWidget):
         return None
 
     def _open_add_popup(self) -> None:
-        self._popup.open_for(self.add_button)
+        self._popup.open_for(self.add_button, key_options=self._available_key_options())
+
+    def _available_key_options(self, original_key: str | None = None) -> list[str] | None:
+        if self._key_options is None:
+            return None
+
+        original_id = None if original_key is None else self._key_id(original_key)
+        used_ids = {self._key_id(key) for key in self._items if original_id is None or self._key_id(key) != original_id}
+        available: list[str] = []
+        available_ids: set[str] = set()
+        for option in self._key_options:
+            display_option = option.strip()
+            option_id = self._key_id(display_option)
+            if not display_option or option_id in used_ids or option_id in available_ids:
+                continue
+            available.append(display_option)
+            available_ids.add(option_id)
+        return available
 
     def _find_key(self, key: str) -> str | None:
         normalized = self._key_id(key.strip())
@@ -459,6 +513,7 @@ class QtAttributeTagManager(QWidget):
     clearItems = clear_items
     hasItem = has_item
     setItems = set_items
+    setKeyOptions = set_key_options
     getItems = items
     getValue = get_value
     editItem = edit_item
