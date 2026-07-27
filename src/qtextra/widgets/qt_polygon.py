@@ -50,14 +50,42 @@ def _normalize_ring(ring: Ring, name: str) -> np.ndarray:
     return np.ascontiguousarray(coordinates)
 
 
+def _normalize_ring_segments(ring: Ring, name: str) -> list[np.ndarray]:
+    try:
+        coordinates = np.asarray(ring, dtype=np.float64)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must contain numeric (y, x) coordinates") from exc
+    if coordinates.ndim != 2 or coordinates.shape[1] != 2:
+        raise ValueError(f"{name} must have shape (N, 2), received {coordinates.shape}")
+
+    separators = np.any(np.isnan(coordinates), axis=1)
+    if not np.any(separators):
+        return [_normalize_ring(coordinates, name)]
+
+    normalized: list[np.ndarray] = []
+    start = 0
+    for stop in (*np.flatnonzero(separators), len(coordinates)):
+        if stop > start:
+            segment_name = f"{name}[{len(normalized)}]"
+            normalized.append(_normalize_ring(coordinates[start:stop], segment_name))
+        start = int(stop) + 1
+    if not normalized:
+        raise ValueError(f"{name} must contain at least one coordinate ring")
+    return normalized
+
+
 def _normalize_rings(rings: Rings | None, name: str) -> list[np.ndarray]:
     if rings is None:
         return []
     if isinstance(rings, np.ndarray):
         if rings.ndim == 2:
-            return [_normalize_ring(rings, name)]
+            return _normalize_ring_segments(rings, name)
         if rings.ndim == 3:
-            return [_normalize_ring(ring, f"{name}[{index}]") for index, ring in enumerate(rings)]
+            return [
+                segment
+                for index, ring in enumerate(rings)
+                for segment in _normalize_ring_segments(ring, f"{name}[{index}]")
+            ]
         raise ValueError(f"{name} must have shape (N, 2) or (M, N, 2), received {rings.shape}")
     if isinstance(rings, Sequence) and not isinstance(rings, (str, bytes)) and len(rings) == 0:
         return []
@@ -66,10 +94,12 @@ def _normalize_rings(rings: Rings | None, name: str) -> list[np.ndarray]:
     except (TypeError, ValueError):
         array = None
     if array is not None and array.ndim == 2 and array.shape[1:] == (2,):
-        return [_normalize_ring(rings, name)]
+        return _normalize_ring_segments(rings, name)
     if not isinstance(rings, Sequence) or isinstance(rings, (str, bytes)):
         raise TypeError(f"{name} must be a coordinate ring or a sequence of rings")
-    return [_normalize_ring(ring, f"{name}[{index}]") for index, ring in enumerate(rings)]
+    return [
+        segment for index, ring in enumerate(rings) for segment in _normalize_ring_segments(ring, f"{name}[{index}]")
+    ]
 
 
 def _signed_area_twice(coordinates: np.ndarray) -> float:
@@ -217,10 +247,20 @@ class QPolygonView(QBaseGraphicsView):
         return len(self._item._paths)
 
     def set_shape(self, exterior: Ring, *, holes: Rings | None = None) -> None:
-        """Replace the view contents with one exterior ring and optional holes."""
-        normalized_exterior = _normalize_ring(exterior, "exterior")
+        """Replace the view contents with exterior coordinates and optional holes.
+
+        Rows containing NaN split the exterior into separate polygons. Holes are
+        only supported when the exterior contains a single polygon.
+        """
+        normalized_exteriors = _normalize_ring_segments(exterior, "exterior")
         normalized_holes = _normalize_rings(holes, "holes")
-        self._set_normalized_shapes([normalized_exterior], [normalized_holes])
+        if len(normalized_exteriors) > 1 and normalized_holes:
+            raise ValueError(
+                "holes cannot be combined with a NaN-separated exterior; "
+                "use set_shapes(..., holes=...) to align holes with each polygon"
+            )
+        holes_by_polygon = [normalized_holes] if len(normalized_exteriors) == 1 else [[] for _ in normalized_exteriors]
+        self._set_normalized_shapes(normalized_exteriors, holes_by_polygon)
 
     def set_shapes(
         self,
@@ -228,7 +268,11 @@ class QPolygonView(QBaseGraphicsView):
         *,
         holes: Sequence[Rings | None] | None = None,
     ) -> None:
-        """Replace the displayed polygons and their optional aligned hole groups."""
+        """Replace the displayed polygons and their optional aligned hole groups.
+
+        Rows containing NaN split an exterior into separate polygons before hole
+        groups are aligned.
+        """
         normalized_exteriors = _normalize_rings(exteriors, "exteriors")
         if holes is None or len(holes) == 0:
             normalized_holes = [[] for _ in normalized_exteriors]

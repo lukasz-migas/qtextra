@@ -57,6 +57,52 @@ def test_polygon_view_supports_multiple_polygons_and_holes(qtbot: Any) -> None:
     assert widget._item.boundingRect().getRect() == (0.0, 0.0, 30.0, 30.0)
 
 
+def test_polygon_view_splits_nan_separated_exteriors(qtbot: Any) -> None:
+    widget = QPolygonView()
+    qtbot.addWidget(widget)
+    shapes = np.vstack(
+        (
+            [[np.nan, 0.0], [np.nan, np.nan]],
+            _square(),
+            [[0.0, np.nan], [np.nan, np.nan]],
+            _square(20, 20),
+            [[np.nan, np.nan], [0.0, np.nan]],
+        )
+    )
+
+    widget.set_shape(shapes)
+
+    assert widget.shape_count() == 2
+    assert widget._item._paths[0].contains(QPointF(5, 5))
+    assert widget._item._paths[1].contains(QPointF(25, 25))
+
+
+def test_polygon_view_aligns_holes_after_splitting_exteriors(qtbot: Any) -> None:
+    widget = QPolygonView()
+    qtbot.addWidget(widget)
+    exteriors = np.vstack((_square(), [[np.nan, np.nan]], _square(20, 20)))
+    holes = [[_square(3, 3, 4)], [_square(23, 23, 4)]]
+
+    widget.set_shapes(exteriors, holes=holes)
+
+    assert widget.shape_count() == 2
+    assert not widget._item._paths[0].contains(QPointF(5, 5))
+    assert not widget._item._paths[1].contains(QPointF(25, 25))
+
+
+def test_polygon_view_rejects_holes_with_split_set_shape(qtbot: Any) -> None:
+    widget = QPolygonView(_square())
+    qtbot.addWidget(widget)
+    original_path = widget._item._paths[0]
+    exteriors = np.vstack((_square(), [[np.nan, np.nan]], _square(20, 20)))
+
+    with pytest.raises(ValueError, match="use set_shapes"):
+        widget.set_shape(exteriors, holes=[_square(3, 3, 4)])
+
+    assert widget.shape_count() == 1
+    assert widget._item._paths[0] is original_path
+
+
 def test_polygon_view_applies_global_and_per_shape_colors(qtbot: Any) -> None:
     widget = QPolygonView([_square(), _square(x=20)], face_color="#112233", edge_color="#abcdef")
     qtbot.addWidget(widget)
@@ -95,7 +141,9 @@ def test_replacing_shapes_preserves_global_colors_and_clears_overrides(qtbot: An
     [
         ([[0, 0], [1, 1]], "at least three"),
         ([[0, 0, 1], [1, 1, 2], [2, 2, 3]], "shape"),
-        ([[0, 0], [1, np.nan], [2, 0]], "finite"),
+        ([[0, 0], [1, np.inf], [2, 0]], "finite"),
+        ([[np.nan, np.nan], [0, np.nan]], "coordinate ring"),
+        ([[0, 0], [1, np.nan], [2, 0]], "at least three"),
         ([[0, 0], [1, 1], [2, 2]], "non-zero area"),
     ],
 )
