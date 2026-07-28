@@ -40,6 +40,15 @@ def test_qt_dataframe_widget_renders_pandas_dataframe_and_keeps_headers_aligned(
     assert widget.cornerView.height() == widget.columnHeader.height()
 
 
+def test_qt_dataframe_widget_keeps_range_index_compact(qtbot):
+    widget = QtDataFrameWidget(None, pd.DataFrame({"mz": [692.5625, 701.5610]}))
+    qtbot.addWidget(widget)
+    widget.show()
+    qtbot.wait(10)
+
+    assert widget.indexHeader.width() < widget.dataView.columnWidth(0)
+
+
 def test_qt_dataframe_widget_supports_column_display_formatters(qtbot):
     df = pd.DataFrame(
         {
