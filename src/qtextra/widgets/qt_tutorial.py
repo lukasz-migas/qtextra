@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import typing as ty
+from contextlib import suppress
 
 from koyo.typing import StrEnum
 from pydantic import BaseModel, ConfigDict, field_validator
-from qtpy.QtCore import QEasingCurve, QPoint, Qt, QVariantAnimation
-from qtpy.QtGui import QKeyEvent
+from qtpy.QtCore import QEasingCurve, QEvent, QObject, QPoint, QRect, Qt, QVariantAnimation
+from qtpy.QtGui import QCloseEvent, QColor, QHideEvent, QKeyEvent, QPainter, QPaintEvent, QPen
 from qtpy.QtWidgets import QDialog, QGridLayout, QHBoxLayout, QProgressBar, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
+from qtextra.config import THEMES
 
 
 class Position(StrEnum):
@@ -75,8 +77,61 @@ class TutorialStep(BaseModel):
         return widget
 
 
+class QtTutorialOverlay(QWidget):
+    """Tutorial overlay."""
+
+    def __init__(self, parent: QWidget, *, accent_color: str) -> None:
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self._spotlight: QRect | None = None
+        self._accent_color = accent_color
+
+    def set_spotlight(self, rect: QRect | None) -> None:
+        """Spotlight overlay."""
+        self._spotlight = rect
+        self.update()
+
+    def paintEvent(self, _event: QPaintEvent | None) -> None:
+        """Paint overlay."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        overlay = QColor(0, 0, 0, 150)
+        if self._spotlight is None:
+            painter.fillRect(self.rect(), overlay)
+            return
+
+        rect = self._spotlight.adjusted(-6, -6, 6, 6)
+        painter.fillRect(0, 0, self.width(), rect.top(), overlay)
+        painter.fillRect(
+            0,
+            rect.bottom() + 1,
+            self.width(),
+            self.height() - rect.bottom() - 1,
+            overlay,
+        )
+        painter.fillRect(0, rect.top(), rect.left(), rect.height(), overlay)
+        painter.fillRect(
+            rect.right() + 1,
+            rect.top(),
+            self.width() - rect.right() - 1,
+            rect.height(),
+            overlay,
+        )
+        pen = QPen(QColor(self._accent_color), 2)
+        painter.setPen(pen)
+        painter.drawRect(rect)
+
+
 class QtTutorial(QDialog):
-    """Tutorial step widget."""
+    """Tutorial step widget.
+
+    Parameters
+    ----------
+    parent : QWidget | None
+        Parent used to position the tutorial and host its overlay.
+    show_overlay : bool
+        Whether to dim the parent window and highlight the current step widget.
+    """
 
     # Window attributes
     MIN_WIDTH = 350
@@ -88,7 +143,7 @@ class QtTutorial(QDialog):
     steps: list[TutorialStep]
     chevrons: dict[str, QWidget | None]
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: QWidget | None = None, *, show_overlay: bool = True) -> None:
         super().__init__(parent=parent)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -107,7 +162,16 @@ class QtTutorial(QDialog):
 
         self._current = -1
         self.steps = []
+        self._overlay_host = parent.window() if parent is not None and show_overlay else None
+        self._overlay: QtTutorialOverlay | None = None
+        self._overlay_tracked_widgets: list[QWidget] = []
         self.make_ui()
+        if self._overlay_host is not None:
+            self._overlay = QtTutorialOverlay(
+                self._overlay_host,
+                accent_color=THEMES.get_hex_color("highlight"),
+            )
+            self._overlay_host.installEventFilter(self)
         if not self.ALLOW_CHEVRON:
             for chevron in self.chevrons.values():
                 chevron.hide()
@@ -289,6 +353,8 @@ class QtTutorial(QDialog):
         self.adjustSize()
         self.set_chevron(step.position)
         self.move_to_widget(step.widget, step.position, step.position_offset)
+        self._track_overlay_target(step.widget)
+        self._sync_overlay()
 
         # update animation
         self._animation.setStartValue(self._step_indicator.value())
@@ -359,20 +425,110 @@ class QtTutorial(QDialog):
         if self._current > 0:
             self.set_step(self._current - 1)
 
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # type: ignore[override]
+        """Keep the overlay aligned with its host and current target."""
+        is_host = watched is self._overlay_host
+        is_tracked = any(watched is widget for widget in self._overlay_tracked_widgets)
+        if is_host or is_tracked:
+            event_type = event.type()
+            if event_type in (
+                QEvent.Type.Resize,
+                QEvent.Type.Move,
+                QEvent.Type.LayoutRequest,
+                QEvent.Type.Show,
+                QEvent.Type.ShowToParent,
+                QEvent.Type.Hide,
+                QEvent.Type.HideToParent,
+                QEvent.Type.WindowStateChange,
+            ):
+                self._sync_overlay()
+            elif event_type == QEvent.Type.ParentChange and is_tracked:
+                self._track_overlay_target(self._current_target())
+                self._sync_overlay()
+        return super().eventFilter(watched, event)
+
+    def _current_target(self) -> QWidget | None:
+        if 0 <= self._current < len(self.steps):
+            return self.steps[self._current].widget
+        return None
+
+    def _track_overlay_target(self, target: QWidget | None) -> None:
+        self._clear_overlay_target_tracking()
+        if target is None or self._overlay_host is None:
+            return
+
+        widget: QWidget | None = target
+        while widget is not None and widget is not self._overlay_host:
+            widget.installEventFilter(self)
+            self._overlay_tracked_widgets.append(widget)
+            widget = widget.parentWidget()
+
+    def _clear_overlay_target_tracking(self) -> None:
+        for widget in self._overlay_tracked_widgets:
+            with suppress(RuntimeError):
+                widget.removeEventFilter(self)
+        self._overlay_tracked_widgets.clear()
+
+    def _sync_overlay(self) -> None:
+        overlay = self._overlay
+        host = self._overlay_host
+        target = self._current_target()
+        if overlay is None or host is None:
+            return
+
+        overlay.setGeometry(host.rect())
+        target_is_visible = (
+            target is not None
+            and target.window() is host
+            and host.isVisible()
+            and (target is host or target.isVisibleTo(host))
+        )
+        if not self.isVisible() or not target_is_visible:
+            overlay.hide()
+            return
+
+        top_left = overlay.mapFromGlobal(target.mapToGlobal(QPoint(0, 0)))
+        overlay.set_spotlight(QRect(top_left, target.size()))
+        overlay.show()
+        overlay.raise_()
+
+    def _teardown_overlay(self) -> None:
+        self._clear_overlay_target_tracking()
+        if self._overlay_host is not None:
+            with suppress(RuntimeError):
+                self._overlay_host.removeEventFilter(self)
+        if self._overlay is not None:
+            self._overlay.hide()
+            self._overlay.deleteLater()
+        self._overlay = None
+        self._overlay_host = None
+
     def show(self) -> None:
         """Show widget."""
         if self._current == -1:
             self.on_next()
         super().show()
+        self._sync_overlay()
         self.raise_()
+
+    def hideEvent(self, event: QHideEvent) -> None:
+        """Hide the overlay with the tutorial."""
+        if self._overlay is not None:
+            self._overlay.hide()
+        super().hideEvent(event)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Remove the overlay when the tutorial closes."""
+        self._teardown_overlay()
+        super().closeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Key press event handler."""
         key = event.key()
-        if key == Qt.Key.Key_Left:
+        if key in [Qt.Key.Key_Left, Qt.Key.Key_P]:
             self.on_prev()
             event.accept()
-        elif key == Qt.Key.Key_Right:
+        elif key in [Qt.Key.Key_Right, Qt.Key.Key_N]:
             self.on_next()
             event.accept()
         else:
