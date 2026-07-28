@@ -31,6 +31,7 @@ AUTO_SIZE_SAMPLE = 100
 AUTO_SIZE_COLUMN_LIMIT = 200
 AUTO_SIZE_ROW_LIMIT = 200
 DEFAULT_COLUMN_WIDTH = 120
+DEFAULT_INDEX_WIDTH = 40
 DEFAULT_ROW_HEIGHT = 30
 MAX_COLUMN_WIDTH = 500
 MAX_ROW_HEIGHT = 100
@@ -2155,12 +2156,12 @@ class HeaderView(Qw.QTableView):
                 self.setColumnWidth(col, width)
         else:
             for col in range(self.model().columnCount()):
-                width = DEFAULT_COLUMN_WIDTH
+                width = DEFAULT_INDEX_WIDTH
                 for row in range(_sample_count(self.model().rowCount(), AUTO_SIZE_SAMPLE)):
                     index = self.model().index(row, col)
                     text = self.model().data(index, Qt.ItemDataRole.DisplayRole) or ""
-                    width = max(width, _text_width(metrics, text))
-                self.setColumnWidth(col, min(width + HEADER_PADDING, MAX_COLUMN_WIDTH))
+                    width = max(width, _text_width(metrics, text) + HEADER_PADDING)
+                self.setColumnWidth(col, min(width, MAX_COLUMN_WIDTH))
 
     def header_extent(self) -> int:
         """Return the visible extent needed by this header."""
