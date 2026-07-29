@@ -6,11 +6,12 @@ import typing as ty
 from functools import partial
 
 from loguru import logger
-from qtpy.QtCore import Qt, Slot  # type: ignore[attr-defined]
+from qtpy.QtCore import QEvent, QObject, Qt, QTimer, Slot  # type: ignore[attr-defined]
 from qtpy.QtWidgets import (  # type: ignore[attr-defined]
     QAction,
     QButtonGroup,
     QHBoxLayout,
+    QMenu,
     QSizePolicy,
     QStackedLayout,
     QStackedWidget,
@@ -66,11 +67,15 @@ class QtPanelWidget(QWidget):
         parent: QWidget | None = None,
         position: ty.Literal["left", "right"] = "left",
         label_hidden: bool = True,
+        auto_hide: bool = True,
     ):
         if position not in {"left", "right"}:
             raise ValueError("`position` must be either 'left' or 'right'.")
         super().__init__(parent)
         self._label_hidden = label_hidden
+        self._auto_hide = auto_hide
+        self._overflow_update_pending = False
+        self._updating_overflow = False
 
         self._about_stack = QWidget(self)
         self._about_stack.setMinimumWidth(0)
@@ -84,6 +89,15 @@ class QtPanelWidget(QWidget):
 
         self._buttons = QToolBar(self)
         self._buttons.setContentsMargins(0, 0, 0, 0)
+        self._buttons.setOrientation(Qt.Orientation.Vertical)
+
+        self._overflow_menu = QMenu(self)
+        self._overflow_menu.aboutToShow.connect(self._sync_overflow_menu)
+        self._overflow_button = hp.make_toolbar_btn(self, "more", tooltip="More toolbar actions", size_preset="large")
+        self._overflow_button.clicked.connect(self._show_overflow_menu)
+        self._overflow_button.setObjectName("toolbar_overflow")
+        self._overflow_action = self._buttons.addWidget(self._overflow_button)
+        self._overflow_action.setVisible(False)
 
         spacer = hp.make_spacer_widget()
         self._spacer = self._buttons.addWidget(spacer)
@@ -91,9 +105,13 @@ class QtPanelWidget(QWidget):
         self._group = QButtonGroup(self)
         self._button_dict: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
         self._hidden_dict: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
+        self._top_buttons: list[QtToolbarPushButton | QtLabelledToolbarPushButton] = []
+        self._overflow_hidden: set[QtToolbarPushButton | QtLabelledToolbarPushButton] = set()
+        self._overflow_enabled: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, bool] = {}
+        self._overflow_menu_actions: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
+        self._overflow_labels: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, str] = {}
 
         # Widget setup
-        self._buttons.setOrientation(Qt.Orientation.Vertical)
         self._group.setExclusive(True)
         self._group.buttonToggled.connect(self._toggle_widget)
 
@@ -110,6 +128,17 @@ class QtPanelWidget(QWidget):
 
         self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self._layout)
+        self._buttons.installEventFilter(self)
+
+    @property
+    def auto_hide(self) -> bool:
+        """Return whether top buttons automatically collapse into the overflow menu."""
+        return self._auto_hide
+
+    @auto_hide.setter
+    def auto_hide(self, value: bool) -> None:
+        self._auto_hide = value
+        self._update_overflow()
 
     @property
     def label_hidden(self) -> bool:
@@ -123,6 +152,7 @@ class QtPanelWidget(QWidget):
             if hasattr(button, "label_hidden"):
                 button.label_hidden = value
         self._sync_button_widths()
+        self._update_overflow()
 
     @property
     def stack_widget(self) -> QStackedWidget:
@@ -198,6 +228,9 @@ class QtPanelWidget(QWidget):
 
         # get action button
         self._button_dict[button] = self._add_before(button) if location == "top" else self._add_after(button)
+        if location == "top":
+            self._top_buttons.append(button)
+            self._add_overflow_menu_action(button, title or tooltip or name.replace("_", " ").title())
         if isinstance(button, QtLabelledToolbarPushButton):
             self._group.addButton(button.image_btn)
         else:
@@ -207,6 +240,7 @@ class QtPanelWidget(QWidget):
             self.connect_widget(name, widget, tooltip)
         elif func:
             button.evt_click.connect(func)
+        self._update_overflow()
         return button
 
     def connect_widget(self, name: str, widget: QWidget, tooltip: str | None = None) -> None:
@@ -240,12 +274,107 @@ class QtPanelWidget(QWidget):
         button.evt_click.connect(partial(self._toggle_widget, button, True))
 
     def _add_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
-        """Add button after."""
-        return self._buttons.insertWidget(self._spacer, button)  # type: ignore[return-value]
+        """Insert a top button immediately before the overflow control."""
+        return self._buttons.insertWidget(self._overflow_action, button)  # type: ignore[return-value]
 
     def _add_after(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
         """Append a toolbar button after the spacer."""
         return self._buttons.addWidget(button)  # type: ignore[return-value]
+
+    def _add_overflow_menu_action(
+        self,
+        button: QtToolbarPushButton | QtLabelledToolbarPushButton,
+        label: str,
+    ) -> None:
+        """Create the menu action representing a top toolbar button."""
+        source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
+        action = QAction(source.icon(), label, self._overflow_menu)
+        action.setVisible(False)
+        action.triggered.connect(partial(self._activate_overflow_button, button))
+        self._overflow_menu.addAction(action)
+        self._overflow_menu_actions[button] = action
+        self._overflow_labels[button] = label
+
+    def _activate_overflow_button(
+        self,
+        button: QtToolbarPushButton | QtLabelledToolbarPushButton,
+        _: bool = False,
+    ) -> None:
+        """Invoke a hidden button with the same signals as a pointer click."""
+        source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
+        source.on_click()
+        if source.isCheckable() and not source.isChecked():
+            source.setChecked(True)
+        source.clicked.emit(source.isChecked())
+        self._sync_overflow_menu()
+
+    def _show_overflow_menu(self) -> None:
+        """Show the overflow menu."""
+        hp.show_menu(self._overflow_menu)
+
+    def _sync_overflow_menu(self) -> None:
+        """Synchronize overflow menu actions with their toolbar buttons."""
+        for button in self._top_buttons:
+            source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
+            action = self._overflow_menu_actions[button]
+            action.setText(self._overflow_labels[button])
+            action.setIcon(source.icon())
+            action.setCheckable(source.isCheckable())
+            action.setChecked(source.isChecked())
+            action.setEnabled(self._overflow_enabled.get(button, source.isEnabled()))
+            action.setVisible(button in self._overflow_hidden and button not in self._hidden_dict)
+
+    def _schedule_overflow_update(self) -> None:
+        """Queue one overflow update after Qt finishes the current layout pass."""
+        if self._overflow_update_pending:
+            return
+        self._overflow_update_pending = True
+        QTimer.singleShot(0, self._run_scheduled_overflow_update)
+
+    def _run_scheduled_overflow_update(self) -> None:
+        """Run a previously queued overflow update."""
+        self._overflow_update_pending = False
+        self._update_overflow()
+
+    def _update_overflow(self) -> None:
+        """Collapse trailing top buttons until the toolbar fits its height."""
+        if self._updating_overflow:
+            return
+
+        self._updating_overflow = True
+        try:
+            self._overflow_hidden.clear()
+            self._overflow_enabled.clear()
+            self._overflow_action.setVisible(False)
+            for button in self._top_buttons:
+                self._button_dict[button].setVisible(button not in self._hidden_dict)
+
+            if self._auto_hide and self._buttons.isVisible() and self._buttons.height() > 0:
+                available_height = self._buttons.height()
+                if self._buttons.sizeHint().height() > available_height:
+                    self._overflow_action.setVisible(True)
+                    candidates = [button for button in self._top_buttons if button not in self._hidden_dict]
+                    for button in reversed(candidates):
+                        if self._buttons.sizeHint().height() <= available_height:
+                            break
+                        self._overflow_hidden.add(button)
+                        source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
+                        self._overflow_enabled[button] = source.isEnabled()
+                        self._button_dict[button].setVisible(False)
+
+                    if not self._overflow_hidden:
+                        self._overflow_action.setVisible(False)
+
+            self._sync_overflow_menu()
+            self._sync_button_widths()
+        finally:
+            self._updating_overflow = False
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """Recalculate overflow after the internal toolbar is shown or resized."""
+        if watched is self._buttons and event.type() in {QEvent.Type.Resize, QEvent.Type.Show}:
+            self._schedule_overflow_update()
+        return super().eventFilter(watched, event)
 
     def _sync_button_widths(self) -> None:
         """Keep visible toolbar widgets centered when one button widens."""
@@ -257,6 +386,7 @@ class QtPanelWidget(QWidget):
         target_width = max(button.sizeHint().width() for button in buttons)
         for button in self._button_dict:
             button.setFixedWidth(target_width)
+        self._overflow_button.setFixedWidth(target_width)
 
     def add_separator_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Add separator before button."""
@@ -306,10 +436,8 @@ class QtPanelWidget(QWidget):
     def enable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Enable widget."""
         if button in self._hidden_dict:
-            action = self._hidden_dict.pop(button, None)
-            if action:
-                action.setVisible(True)
-            self._sync_button_widths()
+            self._hidden_dict.pop(button, None)
+            self._update_overflow()
 
     def disable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Disable widget."""
@@ -318,7 +446,8 @@ class QtPanelWidget(QWidget):
         action = self._button_dict[button]
         self._hidden_dict[button] = action
         action.setVisible(False)
-        self._sync_button_widths()
+        self._overflow_hidden.discard(button)
+        self._update_overflow()
         if button.isChecked():
             self._show_another(button)
 
@@ -348,9 +477,10 @@ class QtPanelToolbar(QToolBar):
         parent: QWidget | None = None,
         position: ty.Literal["left", "right"] = "left",
         label_hidden: bool = True,
+        auto_hide: bool = True,
     ):
         super().__init__(parent=parent)
-        self._widget = QtPanelWidget(self, position=position, label_hidden=label_hidden)
+        self._widget = QtPanelWidget(self, position=position, label_hidden=label_hidden, auto_hide=auto_hide)
 
         # Get methods from the internal widget
         self.widget_iter = self._widget.widget_iter
@@ -383,6 +513,15 @@ class QtPanelToolbar(QToolBar):
     @label_hidden.setter
     def label_hidden(self, value: bool) -> None:
         self._widget.label_hidden = value
+
+    @property
+    def auto_hide(self) -> bool:
+        """Return whether top buttons automatically collapse into an overflow menu."""
+        return self._widget.auto_hide
+
+    @auto_hide.setter
+    def auto_hide(self, value: bool) -> None:
+        self._widget.auto_hide = value
 
     def set_disabled(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton, disable: bool) -> None:
         """Set the widget as disabled."""
