@@ -2234,7 +2234,12 @@ def make_swatch_grid(
     return layout, swatches
 
 
-def show_menu(menu: Qw.QMenu | None = None, func_menu: ty.Callable | None = None, **kwargs: ty.Any) -> None:
+def show_menu(
+    menu: Qw.QMenu | None = None,
+    func_menu: ty.Callable | None = None,
+    position: ty.Literal["above", "below", "left", "right"] = "below",
+    **kwargs: ty.Any,
+) -> None:
     """Set menu on widget."""
     menu_func = kwargs.pop("menu_func", None)
     if menu_func:
@@ -2246,7 +2251,13 @@ def show_menu(menu: Qw.QMenu | None = None, func_menu: ty.Callable | None = None
     if menu is None and callable(func_menu):
         menu = func_menu()
     if menu:
-        show_below_mouse(menu, show=True)
+        where_func = {
+            "above": show_above_mouse,
+            "below": show_below_mouse,
+            "left": show_left_of_mouse,
+            "right": show_right_of_mouse,
+        }[position]
+        where_func(menu, show=True)
 
 
 def make_bitmap_tool_btn(

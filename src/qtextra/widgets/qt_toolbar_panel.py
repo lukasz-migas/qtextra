@@ -74,8 +74,10 @@ class QtPanelWidget(QWidget):
         super().__init__(parent)
         self._label_hidden = label_hidden
         self._auto_hide = auto_hide
-        self._overflow_update_pending = False
         self._updating_overflow = False
+        self._overflow_timer = QTimer(self)
+        self._overflow_timer.setSingleShot(True)
+        self._overflow_timer.timeout.connect(self._run_scheduled_overflow_update)
 
         self._about_stack = QWidget(self)
         self._about_stack.setMinimumWidth(0)
@@ -271,7 +273,7 @@ class QtPanelWidget(QWidget):
         self._stack.insertWidget(index, widget)
         if self._stack.count() == 1:
             self._toggle_widget(button, True)
-        button.evt_click.connect(partial(self._toggle_widget, button, True))
+        button.evt_click.connect(partial(self._toggle_widget_from_click, button))
 
     def _add_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
         """Insert a top button immediately before the overflow control."""
@@ -305,7 +307,6 @@ class QtPanelWidget(QWidget):
         source.on_click()
         if source.isCheckable() and not source.isChecked():
             source.setChecked(True)
-        source.clicked.emit(source.isChecked())
         self._sync_overflow_menu()
 
     def _show_overflow_menu(self) -> None:
@@ -326,14 +327,11 @@ class QtPanelWidget(QWidget):
 
     def _schedule_overflow_update(self) -> None:
         """Queue one overflow update after Qt finishes the current layout pass."""
-        if self._overflow_update_pending:
-            return
-        self._overflow_update_pending = True
-        QTimer.singleShot(0, self._run_scheduled_overflow_update)
+        if not self._overflow_timer.isActive():
+            self._overflow_timer.start(0)
 
     def _run_scheduled_overflow_update(self) -> None:
         """Run a previously queued overflow update."""
-        self._overflow_update_pending = False
         self._update_overflow()
 
     def _update_overflow(self) -> None:
@@ -432,6 +430,14 @@ class QtPanelWidget(QWidget):
         # This is a bit of a hack but it's required to force-update vispy canvas after changing to view the panel
         if value and widget and hasattr(widget, "update_after_activation"):
             hp.call_later(self, widget.update_after_activation, 50)
+
+    def _toggle_widget_from_click(
+        self,
+        button: QtToolbarPushButton | QtLabelledToolbarPushButton,
+        *_: ty.Any,
+    ) -> None:
+        """Activate a panel while ignoring binding-specific signal payloads."""
+        self._toggle_widget(button, True)
 
     def enable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Enable widget."""
