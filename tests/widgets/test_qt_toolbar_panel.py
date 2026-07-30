@@ -1,8 +1,34 @@
 import pytest
-from qtpy.QtWidgets import QWidget
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QMainWindow, QWidget
 
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton
 from qtextra.widgets.qt_toolbar_panel import QtPanelToolbar
+
+
+def _make_overflow_toolbar(qtbot, *, height=180, auto_hide=True):
+    window = QMainWindow()
+    window.resize(320, height)
+    qtbot.addWidget(window)
+
+    toolbar = QtPanelToolbar(window, label_hidden=False, auto_hide=auto_hide)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    top_buttons = [
+        toolbar.add_widget(name, title=title)
+        for name, title in [
+            ("home", "Home"),
+            ("zoom", "Search"),
+            ("gear", "Settings"),
+            ("help", "Help"),
+            ("info", "Extensions"),
+        ]
+    ]
+    bottom_buttons = [
+        toolbar.add_widget("bug", location="bottom"),
+        toolbar.add_widget("save", location="bottom"),
+    ]
+    window.show()
+    return window, toolbar, top_buttons, bottom_buttons
 
 
 def test_qt_labelled_toolbar_push_button_constrains_label_width(qtbot):
@@ -118,3 +144,142 @@ def test_qt_panel_toolbar_hiding_wide_button_reduces_shared_width(qtbot):
     toolbar.disable_widget(wide_button)
 
     assert plain_button.width() < expanded_width
+
+
+def test_qt_panel_toolbar_collapses_trailing_top_buttons_into_menu(qtbot):
+    window, toolbar, top_buttons, bottom_buttons = _make_overflow_toolbar(qtbot, height=240)
+    panel = toolbar._widget
+
+    qtbot.waitUntil(lambda: bool(panel._overflow_hidden))
+
+    visible_top = [button for button in top_buttons if button not in panel._overflow_hidden]
+    hidden_top = [button for button in top_buttons if button in panel._overflow_hidden]
+    assert top_buttons == visible_top + hidden_top
+    assert all(panel._button_dict[button].isVisible() for button in bottom_buttons)
+    assert all(button.isVisible() for button in bottom_buttons)
+    assert panel._overflow_action.isVisible()
+    assert all(
+        panel._buttons.actions().index(panel._button_dict[button])
+        < panel._buttons.actions().index(panel._overflow_action)
+        for button in top_buttons
+    )
+    assert panel._buttons.actions().index(panel._overflow_action) < panel._buttons.actions().index(panel._spacer)
+    last_visible_geometry = panel._buttons.actionGeometry(panel._button_dict[visible_top[-1]])
+    overflow_geometry = panel._buttons.actionGeometry(panel._overflow_action)
+    button_gap = overflow_geometry.top() - last_visible_geometry.bottom()
+    assert 0 < button_gap <= panel._buttons.layout().spacing() + 1
+
+    visible_menu_actions = [action for action in panel._overflow_menu.actions() if action.isVisible()]
+    assert [action.text() for action in visible_menu_actions] == [
+        panel._overflow_labels[button] for button in hidden_top
+    ]
+    assert all(not action.icon().isNull() for action in visible_menu_actions)
+
+    window.resize(320, 600)
+    qtbot.waitUntil(lambda: not panel._overflow_hidden)
+    assert all(panel._button_dict[button].isVisible() for button in top_buttons)
+    assert not panel._overflow_action.isVisible()
+
+
+def test_qt_panel_toolbar_overflow_action_invokes_original_callback(qtbot):
+    window, toolbar, _, _ = _make_overflow_toolbar(qtbot)
+    panel = toolbar._widget
+    calls = []
+    callback_button = toolbar.add_widget("reload", title="Reload", func=lambda: calls.append("reload"))
+
+    qtbot.waitUntil(lambda: callback_button in panel._overflow_hidden)
+    panel._overflow_menu_actions[callback_button].trigger()
+
+    assert calls == ["reload"]
+    window.close()
+
+
+def test_qt_panel_toolbar_keeps_active_overflowed_panel_selected(qtbot):
+    window = QMainWindow()
+    window.resize(320, 600)
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+
+    panels = [QWidget() for _ in range(5)]
+    buttons = [
+        toolbar.add_widget(name, title=title, widget=widget)
+        for name, title, widget in zip(
+            ["home", "zoom", "gear", "help", "info"],
+            ["Home", "Search", "Settings", "Help", "Extensions"],
+            panels,
+            strict=True,
+        )
+    ]
+    toolbar.add_widget("bug", location="bottom")
+    window.show()
+    qtbot.mouseClick(buttons[-1].image_btn, Qt.MouseButton.LeftButton)
+    assert toolbar.stack_widget.currentWidget() is panels[-1]
+
+    window.resize(320, 180)
+    panel = toolbar._widget
+    qtbot.waitUntil(lambda: buttons[-1] in panel._overflow_hidden)
+    panel._sync_overflow_menu()
+
+    assert toolbar.stack_widget.currentWidget() is panels[-1]
+    assert buttons[-1].isChecked()
+    assert panel._overflow_menu_actions[buttons[-1]].isChecked()
+
+
+def test_qt_panel_toolbar_overflow_menu_action_activates_panel(qtbot):
+    window = QMainWindow()
+    window.resize(320, 180)
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+
+    home_panel = QWidget()
+    settings_panel = QWidget()
+    toolbar.add_widget("home", title="Home", widget=home_panel)
+    toolbar.add_widget("zoom", title="Search")
+    settings_button = toolbar.add_widget("gear", title="Settings", widget=settings_panel)
+    toolbar.add_widget("help", title="Help")
+    toolbar.add_widget("bug", location="bottom")
+    window.show()
+
+    panel = toolbar._widget
+    qtbot.waitUntil(lambda: settings_button in panel._overflow_hidden)
+    panel._overflow_menu_actions[settings_button].trigger()
+
+    assert toolbar.stack_widget.currentWidget() is settings_panel
+    assert settings_button.isChecked()
+
+
+def test_qt_panel_toolbar_manual_hidden_state_survives_resize(qtbot):
+    window, toolbar, top_buttons, _ = _make_overflow_toolbar(qtbot)
+    panel = toolbar._widget
+    disabled_button = top_buttons[-1]
+    toolbar.disable_widget(disabled_button)
+
+    qtbot.waitUntil(lambda: bool(panel._overflow_hidden))
+    assert disabled_button not in panel._overflow_hidden
+    assert not panel._overflow_menu_actions[disabled_button].isVisible()
+
+    window.resize(320, 600)
+    qtbot.waitUntil(lambda: not panel._overflow_hidden)
+    assert not panel._button_dict[disabled_button].isVisible()
+    assert not panel._overflow_menu_actions[disabled_button].isVisible()
+
+
+def test_qt_panel_toolbar_auto_hide_can_be_disabled(qtbot):
+    window, toolbar, top_buttons, _ = _make_overflow_toolbar(qtbot, auto_hide=False)
+    panel = toolbar._widget
+    qtbot.wait(0)
+
+    assert toolbar.auto_hide is False
+    assert not panel._overflow_hidden
+    assert not panel._overflow_action.isVisible()
+
+    toolbar.auto_hide = True
+    qtbot.waitUntil(lambda: bool(panel._overflow_hidden))
+
+    toolbar.auto_hide = False
+    assert not panel._overflow_hidden
+    assert not panel._overflow_action.isVisible()
+    assert all(panel._button_dict[button].isVisible() for button in top_buttons)
+    window.close()
