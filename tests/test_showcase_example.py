@@ -11,6 +11,7 @@ from qtpy.QtWidgets import QLabel, QPushButton
 from scripts.capture_readme_showcase import _activate_capture_button, _display_path, _get_capture_buttons
 
 from qtextra.widgets.qt_countdown import QtCountdownWidget
+from qtextra.widgets.qt_showcase import QtShowcaseWidget
 from qtextra.widgets.qt_toolbar_panel import QtPanelToolbar
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,13 +39,14 @@ def test_build_showcase_uses_toolbar_capture_buttons(qtbot):
     assert isinstance(toolbar, QtPanelToolbar)
 
     capture_buttons = _get_capture_buttons(window)
-    assert len(capture_buttons) == 4
+    assert len(capture_buttons) == 5
 
     expected_panels = [
         "showcase_overview_panel",
         "showcase_inputs_panel",
         "showcase_tables_panel",
         "showcase_tools_panel",
+        "showcase_carousel_panel",
     ]
     assert toolbar.stack_widget.currentWidget().objectName() == expected_panels[0]
 
@@ -102,6 +104,26 @@ def test_showcase_overview_embeds_countdown_controls(qtbot):
     start_btn.click()
     qtbot.wait(200)
     assert countdown.remaining_seconds < 45.0
+
+
+def test_showcase_example_embeds_carousel(qtbot):
+    module = _load_showcase_module()
+
+    window = module.build_showcase()
+    qtbot.addWidget(window)
+    window.show()
+
+    carousel = window.findChild(QtShowcaseWidget, "showcase_carousel")
+    status_label = window.findChild(QLabel, "showcase_carousel_status")
+
+    assert carousel is not None
+    assert status_label is not None
+    assert len(carousel.pages) == 3
+    assert carousel.interval_ms == 8_000
+
+    carousel.next_page()
+    assert carousel.current_index == 1
+    assert status_label.text() == "Current page: 2"
 
 
 def test_capture_readme_showcase_display_path_handles_external_paths():
