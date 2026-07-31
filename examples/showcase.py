@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from qtpy.QtCore import Qt
@@ -31,11 +33,14 @@ from qtextra.widgets.qt_combobox_search import QtSearchableComboBox, QtSearchCom
 from qtextra.widgets.qt_countdown import QtCountdownWidget
 from qtextra.widgets.qt_label_icon import QtPulsingAttentionLabel, QtQtaLabel
 from qtextra.widgets.qt_progress_step import QtStepProgressBar
+from qtextra.widgets.qt_showcase import QtShowcaseWidget, ShowcasePage
 from qtextra.widgets.qt_table_view_array import QtArrayTableView
 from qtextra.widgets.qt_table_view_dataframe import QtDataFrameWidget
 from qtextra.widgets.qt_toggle_group import QtToggleGroup
 from qtextra.widgets.qt_toolbar_mini import QtMiniToolbar
 from qtextra.widgets.qt_toolbar_panel import QtPanelToolbar
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _set_countdown_status(label: QLabel, remaining_seconds: float) -> None:
@@ -352,6 +357,58 @@ def _make_tools_panel(window: QWidget) -> QWidget:
     return panel
 
 
+def _make_showcase_panel() -> QWidget:
+    panel = QWidget()
+    panel.setObjectName("showcase_carousel_panel")
+    layout = QVBoxLayout(panel)
+    layout.setSpacing(12)
+
+    layout.addWidget(section("Showcase carousel"))
+    copy = QLabel(
+        "QtShowcaseWidget presents linked image highlights with overlaid copy, manual navigation, "
+        "and automatic page advancement."
+    )
+    copy.setWordWrap(True)
+    layout.addWidget(copy)
+
+    assets = ROOT / "docs" / "assets"
+    pages = [
+        ShowcasePage(
+            title="What's New dialog",
+            description="Present release highlights with polished, themed Qt components.",
+            image_path=str(assets / "dialog_whats_new.jpg"),
+            link_text="Open the What's New documentation",
+            link_url="https://github.com/lukasz-migas/qtextra",
+        ),
+        ShowcasePage(
+            title="Rich tooltips",
+            description="Combine formatted copy and images in compact contextual help.",
+            image_path=str(assets / "qt_tooltip_rich.jpg"),
+            link_text="Explore qtextra widgets",
+            link_url="https://github.com/lukasz-migas/qtextra/tree/main/src/qtextra/widgets",
+        ),
+        ShowcasePage(
+            title="Theme editor",
+            description="Preview and refine consistent light and dark application themes.",
+            image_path=str(assets / "dialog_theme_editor.jpg"),
+            link_text="Browse the theme tools",
+            link_url="https://github.com/lukasz-migas/qtextra/tree/main/src/qtextra/config",
+        ),
+    ]
+    showcase = QtShowcaseWidget(pages, interval_ms=8_000, parent=panel)
+    showcase.setObjectName("showcase_carousel")
+    showcase.setMinimumHeight(440)
+    layout.addWidget(showcase, stretch=1)
+
+    status = QLabel("Current page: 1", panel)
+    status.setObjectName("showcase_carousel_status")
+    status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    showcase.evt_current_changed.connect(lambda index: status.setText(f"Current page: {index + 1}"))
+    showcase.evt_link_activated.connect(lambda url: status.setText(f"Link activated: {url}"))
+    layout.addWidget(status)
+    return panel
+
+
 def build_showcase() -> QMainWindow:
     """Build the toolbar-panel showcase window."""
     window = QMainWindow()
@@ -393,7 +450,7 @@ def build_showcase() -> QMainWindow:
     layout.addWidget(header_row)
 
     intro = QLabel(
-        "Use the left toolbar to move between the overview, input, table, and tools panels shown in the README."
+        "Use the left toolbar to move between the overview, input, table, tools, and showcase panels shown in the README."
     )
     intro.setWordWrap(True)
     layout.addWidget(intro)
@@ -425,6 +482,12 @@ def build_showcase() -> QMainWindow:
             title="Tools",
             tooltip="Show the tools panel.",
             widget=_make_tools_panel(window),
+        ),
+        toolbar.add_widget(
+            "image",
+            title="Showcase",
+            tooltip="Show the image showcase carousel.",
+            widget=_make_showcase_panel(),
         ),
     ]
 
