@@ -333,6 +333,11 @@ class QtTutorial(QDialog):
         if self._current == -1:
             self.set_step(0)
 
+    def add_steps(self, *step: TutorialStep) -> None:
+        """Add steps to the tutorial."""
+        for step_ in step:
+            self.add_step(step_)
+
     def set_step(self, index: int) -> None:
         """Show step."""
         self._current = index
