@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QObject, QPoint, Qt, Signal
-from qtpy.QtGui import QImage, QPixmap
+from qtpy.QtCore import QBuffer, QByteArray, QIODevice, QObject, QPoint, QSize, Qt, Signal
+from qtpy.QtGui import QImage, QPixmap, QResizeEvent
 from qtpy.QtWidgets import QApplication, QDialog, QWidget
 
 from qtextra.widgets.qt_side_overlay import (
@@ -91,6 +91,19 @@ def test_side_overlay_opens_on_right_and_clamps_width(qtbot) -> None:
     assert overlay._panel.width() == host.width()
     assert overlay._panel.x() == 0
     assert overlay.header_title_label.text() == "July 14"
+
+
+def test_side_overlay_ignores_early_resize_before_panel_construction(qtbot) -> None:
+    host = _host(qtbot)
+    overlay = QtSideOverlay(host)
+    qtbot.addWidget(overlay)
+    panel = overlay._panel
+    del overlay._panel
+
+    try:
+        overlay.resizeEvent(QResizeEvent(QSize(320, 240), QSize(1, 1)))
+    finally:
+        overlay._panel = panel
 
 
 def test_side_overlay_supports_left_placement_and_host_resize(qtbot) -> None:

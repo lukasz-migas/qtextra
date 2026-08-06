@@ -294,7 +294,9 @@ class QtSideOverlay(QWidget):
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # type: ignore[override]
         """Resize the panel with its host while preserving its selected edge."""
-        self._panel.setGeometry(self._panel_geometry())
+        panel = getattr(self, "_panel", None)
+        if panel is not None:
+            panel.setGeometry(self._panel_geometry())
         super().resizeEvent(event)
 
     def paintEvent(self, event: QPaintEvent) -> None:  # type: ignore[override]
