@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeAlias
@@ -202,6 +201,7 @@ class QtSideOverlay(QWidget):
         self._slide_animation = QPropertyAnimation(self._panel, b"pos", self)
         self._scrim_animation = QPropertyAnimation(self, b"scrimOpacity", self)
         self._configure_animations()
+        self._slide_animation.finished.connect(self._on_slide_finished)
         self._escape_shortcut = QShortcut(QKeySequence(Qt.Key.Key_Escape), self)
         self._escape_shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
         self._escape_shortcut.activated.connect(self.dismiss)
@@ -250,7 +250,6 @@ class QtSideOverlay(QWidget):
         self._slide_animation.setEndValue(self._panel_geometry().topLeft())
         self._scrim_animation.setStartValue(0.0)
         self._scrim_animation.setEndValue(self._SCRIM_OPACITY)
-        self._slide_animation.finished.connect(self._on_open_finished)
         self._slide_animation.start()
         self._scrim_animation.start()
 
@@ -265,7 +264,6 @@ class QtSideOverlay(QWidget):
         self._slide_animation.setEndValue(self._hidden_panel_position())
         self._scrim_animation.setStartValue(self._scrim_opacity)
         self._scrim_animation.setEndValue(0.0)
-        self._slide_animation.finished.connect(self._on_dismiss_finished)
         self._slide_animation.start()
         self._scrim_animation.start()
 
@@ -498,11 +496,16 @@ class QtSideOverlay(QWidget):
             animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
     def _stop_animations(self) -> None:
-        """Stop current animations and clear any one-shot completion callback."""
+        """Stop the current panel and scrim animations."""
         self._slide_animation.stop()
         self._scrim_animation.stop()
-        with suppress(TypeError):
-            self._slide_animation.finished.disconnect()
+
+    def _on_slide_finished(self) -> None:
+        """Finalize the transition represented by the current overlay state."""
+        if self._state == "opening":
+            self._on_open_finished()
+        elif self._state == "closing":
+            self._on_dismiss_finished()
 
     def _on_open_finished(self) -> None:
         """Finalize a completed opening transition."""
