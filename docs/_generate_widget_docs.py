@@ -309,6 +309,23 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=560,
     ),
     WidgetDoc(
+        slug="qt_side_overlay",
+        title="QtSideOverlay",
+        section="Feedback And Teaching",
+        summary="Modal, scrollable reader panels with typed mixed text and image content.",
+        example="qt_side_overlay.py",
+        classes=(
+            "qtextra.widgets.qt_side_overlay.QtSideOverlay",
+            "qtextra.widgets.qt_side_overlay.SideOverlayTitle",
+            "qtextra.widgets.qt_side_overlay.SideOverlaySubtitle",
+            "qtextra.widgets.qt_side_overlay.SideOverlayText",
+            "qtextra.widgets.qt_side_overlay.SideOverlaySeparator",
+            "qtextra.widgets.qt_side_overlay.SideOverlayImage",
+        ),
+        notes=("Remote images load asynchronously and report failures through evt_image_failed.",),
+        screenshot_width=760,
+    ),
+    WidgetDoc(
         slug="qt_popout",
         title="QtPopout",
         section="Feedback And Teaching",

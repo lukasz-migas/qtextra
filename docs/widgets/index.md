@@ -31,6 +31,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 ## Feedback And Teaching
 
 - [QtPopout](./qt_popout.md): contextual popouts that point back to a target widget.
+- [QtSideOverlay](./qt_side_overlay.md): modal, scrollable reader panels with typed mixed text and image content.
 - [QtTutorial](./qt_tutorial.md): guided tutorial overlays that walk the user through a sequence of widgets.
 
 ## Labels And Display
