@@ -1,0 +1,100 @@
+/* ----------------- QtWelcomeDialog ----------------- */
+
+QtWelcomeDialog {
+  background: transparent;
+}
+
+QFrame#qtWelcomeFrame {
+  background-color: {{ background }};
+  border: 1px solid {{ foreground }};
+  border-radius: 12px;
+}
+
+QFrame#qtWelcomeHeader,
+QFrame#qtWelcomeFooter,
+QWidget#qtWelcomePage,
+QWidget#qtWelcomePageContent,
+QWidget#qtWelcomeListItem,
+QWidget#qtWelcomeItemList,
+QWidget#qtWelcomeItemText,
+QStackedWidget#qtWelcomeStack,
+QScrollArea#qtWelcomeScroll,
+QScrollArea#qtWelcomeScroll > QWidget,
+QScrollArea#qtWelcomeScroll > QWidget > QWidget {
+  background: transparent;
+}
+
+QLabel#qtWelcomeHeaderTitle {
+  color: {{ text }};
+  font-weight: bold;
+}
+
+QLabel#qtWelcomeStepCount {
+  color: {{ primary }};
+}
+
+QLabel#qtWelcomePageDescription,
+QLabel#qtWelcomeItemDescription {
+  color: {{ opacity(text, 145) }};
+}
+
+QLabel#qtWelcomePageTitle {
+  color: {{ text }};
+  font-weight: bold;
+}
+
+QLabel#qtWelcomeItemTitle {
+  color: {{ text }};
+  font-weight: bold;
+}
+
+QFrame#qtWelcomeItemIconFrame {
+  background: transparent;
+  border: 1px solid {{ primary }};
+  border-radius: 20px;
+}
+
+QtImagePushButton#qtWelcomeCloseButton {
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+}
+
+QtImagePushButton#qtWelcomeCloseButton:hover {
+  background-color: {{ foreground }};
+}
+
+QtPushButton#qtWelcomeBackButton,
+QtPushButton#qtWelcomeSkipButton {
+  background: transparent;
+  border: none;
+}
+
+QtPushButton#qtWelcomeBackButton:hover,
+QtPushButton#qtWelcomeSkipButton:hover {
+  background-color: {{ foreground }};
+}
+
+QtPushButton#qtWelcomeBackButton:disabled {
+  background: transparent;
+  border: none;
+  color: {{ opacity(text, 75) }};
+}
+
+QtPushButton#qtWelcomePrimaryButton {
+  color: {{ replace(secondary) }};
+  background-color: {{ secondary }};
+  border-radius: 8px;
+  min-height: 28px;
+  padding: 8px 18px;
+  font-weight: bold;
+}
+
+QtPushButton#qtWelcomePrimaryButton:hover {
+  background-color: {{ darken(secondary, 15) }};
+}
+
+QtPushButton#qtWelcomePrimaryButton:pressed {
+  background-color: {{ darken(secondary, 30) }};
+}
