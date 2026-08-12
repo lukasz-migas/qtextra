@@ -2561,6 +2561,7 @@ def make_toggle_group(
     orientation: Orientation = "horizontal",
     exclusive: bool = True,
     multiline: bool = True,
+    **_kwargs: ty.Any,
 ) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
     """Make toggle button."""
     widget = Qw.QButtonGroup(parent)
@@ -2598,6 +2599,8 @@ def make_icon_toggle_group(
     value: str | list[str] = "",
     orientation: Orientation = "horizontal",
     exclusive: bool = True,
+    size_preset: QtaSizePreset = "24px",
+    **_kwargs: ty.Any,
 ) -> tuple[Qw.QHBoxLayout, Qw.QButtonGroup]:
     """Make toggle button."""
     widget = Qw.QButtonGroup(parent)
@@ -2631,7 +2634,7 @@ def make_icon_toggle_group(
             checkable=True,
             tooltip=tooltip,
             checked=icon in value,
-            size_preset="24px",
+            size_preset=size_preset,
         )
         widget.addButton(radio_btn, btn_id)
         layout.addWidget(radio_btn, alignment=alignment)

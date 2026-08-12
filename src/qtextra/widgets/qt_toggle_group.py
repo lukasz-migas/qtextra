@@ -7,7 +7,7 @@ import typing as ty
 from qtpy.QtCore import Signal
 from qtpy.QtWidgets import QButtonGroup, QFrame, QWidget
 
-from qtextra.typing import OptionalCallback
+from qtextra.typing import OptionalCallback, QtaSizePreset
 
 
 class QtToggleGroup(QFrame):
@@ -68,6 +68,7 @@ class QtToggleGroup(QFrame):
             orientation=orientation,
             exclusive=exclusive,
             multiline=multiline,
+            **kwargs,
         )
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(1)
@@ -182,7 +183,7 @@ class QtToggleGroup(QFrame):
 class QtQtaToggleGroup(QtToggleGroup):
     """Widget for icon toggle group."""
 
-    allowed_kwargs = ("checked_options",)
+    allowed_kwargs = ("checked_options", "size_preset")
 
     def _make_button_group(
         self,
@@ -193,6 +194,7 @@ class QtQtaToggleGroup(QtToggleGroup):
         exclusive: bool = True,
         multiline: bool = False,
         checked_options: list[str] | None = None,
+        size_preset: QtaSizePreset = "24px",
         **kwargs: ty.Any,
     ):
         import qtextra.helpers as hp
@@ -206,6 +208,8 @@ class QtQtaToggleGroup(QtToggleGroup):
             func=self._on_changed,
             orientation=orientation,
             exclusive=exclusive,
+            size_preset=size_preset,
+            **kwargs,
         )
         self.setMinimumHeight(32)
         layout.setContentsMargins(3, 3, 3, 3)
@@ -285,6 +289,15 @@ if __name__ == "__main__":  # pragma: no cover
         func=print,
     )
     wdg.setObjectName("warning")
+    ha.addWidget(wdg)
+
+    wdg = QtQtaToggleGroup.from_schema(
+        None,
+        ["top_left", "top_middle", "top_right", "bottom_left", "bottom_middle", "bottom_right"],
+        value="top_left",
+        size_preset="40px",
+        func=print,
+    )
     ha.addWidget(wdg)
 
     frame.show()

@@ -313,6 +313,13 @@ QTA_MAPPING: dict[str, IconType] = {
     "pong": "ri.ping-pong-fill",
     "game": "fa6s.gamepad",
     "pacman": "fa6s.face-grin-wide",
+    # position
+    "top_left": "mdi6.arrow-top-left-bold-box",
+    "top_middle": "mdi6.arrow-up-bold-box",
+    "top_right": "mdi6.arrow-top-right-bold-box",
+    "bottom_left": "mdi6.arrow-bottom-left-bold-box",
+    "bottom_middle": "mdi6.arrow-down-bold-box",
+    "bottom_right": "mdi6.arrow-bottom-right-bold-box",
 }
 
 
