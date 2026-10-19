@@ -148,8 +148,8 @@ class QProcessWrapper(QObject):
         return self.task.task_id
 
     def is_running(self) -> bool:
-        """Flag to indicate whether the task is running."""
-        return bool(self.process.state() == QProcess.ProcessState.Running)
+        """Return whether the process is starting or running."""
+        return bool(self.process.state() != QProcess.ProcessState.NotRunning)
 
     def summary(self) -> str:
         """Return task summary."""
@@ -157,6 +157,9 @@ class QProcessWrapper(QObject):
 
     def on_started(self) -> None:
         """The process has started."""
+        if self._cancelled:
+            self.process.terminate()
+            return
         self.task.state = TaskState.RUNNING
         _safe_call(self.func_start, self.task, "task_started")
         self.master_started = True
@@ -264,6 +267,12 @@ class QProcessWrapper(QObject):
 
     def on_finished(self, exit_code: int, exit_status: QProcess.ExitStatus) -> None:
         """The process has finished."""
+        if self._cancelled:
+            self.task.state = TaskState.CANCELLED
+            self.task.end_time = time_()
+            self.master_started = False
+            self._emit_cancel()
+            return
         # handle non-zero exit code
         if exit_code != 0:
             self.logger.error(f"Task exited with non-zero exit code. ({exit_code}; {exit_status!s})")
