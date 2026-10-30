@@ -125,14 +125,12 @@ class CLIQueueHandler(QObject):
         """Triggered whenever function finished processing."""
         task_id = task.task_id
         worker_obj = self.active_tasks.pop(task_id, None)  # remove from threads
+        with suppress(ValueError):
+            self.running_queue.remove(task_id)
+        with suppress(ValueError):
+            self.pending_queue.remove(task_id)
         if worker_obj:
             logger.trace(f"Removed '{task_id}' from active tasks (cancelled).")
-            # this condition is always going to be false because we don't allow cancellation of running tasks
-            if worker_obj.is_running():
-                self.running_queue.remove(task_id)
-            else:
-                with suppress(ValueError):
-                    self.pending_queue.remove(task_id)
             logger.trace(f"Task '{worker_obj.summary()}' was cancelled.")
         else:
             logger.trace(f"Failed to remove '{task_id}' from active tasks (cancelled).")

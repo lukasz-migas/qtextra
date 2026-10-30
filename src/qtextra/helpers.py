@@ -2663,8 +2663,8 @@ def make_toggle(
 
 
 def make_h_line_with_text(
-    label: str,
-    parent: Qw.QWidget | None = None,
+    label_or_parent: str | Qw.QWidget,
+    parent_or_label: Qw.QWidget | None = None,
     bold: bool = False,
     position: str = "center",
     **kwargs: ty.Any,
@@ -2672,6 +2672,12 @@ def make_h_line_with_text(
     """Make a horizontal line with text."""
     from qtextra.widgets.qt_separator import QtHorzLineWithText
 
+    if not isinstance(label_or_parent, str):
+        parent = label_or_parent
+        label = parent_or_label if isinstance(parent_or_label, str) else ""
+    else:
+        label = label_or_parent
+        parent = parent_or_label if isinstance(parent_or_label, Qw.QWidget) else None
     return QtHorzLineWithText(parent=parent, label=label, bold=bold, position=position, **kwargs)
 
 
