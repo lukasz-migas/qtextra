@@ -2815,8 +2815,11 @@ def make_menu(
     func_hover: Callback | None = None,
 ) -> Qw.QMenu:
     """Make menu."""
+    from qtextra.widgets.qt_action import _prepare_menu_icons
+
     widget = Qw.QMenu(parent)
     widget.setTitle(title)
+    widget.aboutToShow.connect(partial(_prepare_menu_icons, widget))
     if func:
         [widget.triggered.connect(func_) for func_ in _validate_func(func)]
     if func_hover:

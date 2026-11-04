@@ -16,7 +16,7 @@ from loguru import logger
 from psygnal import EventedModel
 from pydantic import ConfigDict, ValidationError, field_validator
 from pydantic_extra_types.color import Color
-from qtpy.QtCore import QDateTime, QTime, Signal
+from qtpy.QtCore import QDateTime, Qt, QTime, Signal
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QApplication, QWidget
 
@@ -717,6 +717,33 @@ def build_theme_svgs(theme_name: str) -> str:
 def is_dark() -> bool:
     """Check if theme is dark."""
     return THEMES.is_dark
+
+
+def get_system_theme() -> ty.Literal["dark", "light"] | None:
+    """Return Qt's system color scheme, or None if it is unavailable.
+
+    Qt 6.5 and later expose this hint. An explicit Qt color-scheme override
+    may cause it to differ from the system appearance.
+    """
+    app = QApplication.instance()
+    color_scheme = getattr(Qt, "ColorScheme", None)
+    if app is None or color_scheme is None:
+        return None
+    get_scheme = getattr(app.styleHints(), "colorScheme", None)
+    if get_scheme is None:
+        return None
+    scheme = get_scheme()
+    if scheme == color_scheme.Dark:
+        return "dark"
+    if scheme == color_scheme.Light:
+        return "light"
+    return None
+
+
+def is_system_dark() -> bool | None:
+    """Return whether the system theme is dark, or None if unknown."""
+    theme = get_system_theme()
+    return theme == "dark" if theme is not None else None
 
 
 class QtStyler:
