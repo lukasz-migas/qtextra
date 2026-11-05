@@ -3,11 +3,59 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import pytest
 
 from qtextra.assets import THEME_PATH
+from qtextra.config import theme as theme_module
 from qtextra.config.theme import DARK_THEME, LIGHT_THEME, THEMES, Theme, Themes, get_builtin_theme_data
+
+
+@pytest.mark.parametrize(
+    ("scheme", "expected", "expected_dark"),
+    [("Dark", "dark", True), ("Light", "light", False), ("Unknown", None, None)],
+)
+def test_system_theme_color_scheme(
+    qapp: Any, monkeypatch: Any, scheme: str, expected: str | None, expected_dark: bool | None
+) -> None:
+    class ColorScheme:
+        Dark = 1
+        Light = 2
+        Unknown = 3
+
+    class FakeApp:
+        def styleHints(self) -> FakeApp:
+            return self
+
+        def colorScheme(self) -> int:
+            return getattr(ColorScheme, scheme)
+
+    monkeypatch.setattr(theme_module, "Qt", type("FakeQt", (), {"ColorScheme": ColorScheme}))
+    monkeypatch.setattr(theme_module.QApplication, "instance", lambda: FakeApp())
+    assert theme_module.get_system_theme() == expected
+    assert theme_module.is_system_dark() is expected_dark
+
+
+def test_system_theme_unavailable(qapp: Any, monkeypatch: Any) -> None:
+    monkeypatch.setattr(theme_module, "Qt", object())
+    assert theme_module.get_system_theme() is None
+    assert theme_module.is_system_dark() is None
+
+
+def test_system_theme_without_style_hint(qapp: Any, monkeypatch: Any) -> None:
+    class FakeApp:
+        def styleHints(self) -> object:
+            return object()
+
+    monkeypatch.setattr(theme_module, "Qt", type("FakeQt", (), {"ColorScheme": object()}))
+    monkeypatch.setattr(theme_module.QApplication, "instance", lambda: FakeApp())
+    assert theme_module.get_system_theme() is None
+
+
+def test_system_theme_without_application(monkeypatch: Any) -> None:
+    monkeypatch.setattr(theme_module.QApplication, "instance", lambda: None)
+    assert theme_module.get_system_theme() is None
 
 
 def test_themes(qtbot):
