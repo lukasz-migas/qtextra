@@ -392,7 +392,7 @@ class QtTagManager(QWidget):
     def selected_options(self) -> list[str]:
         """Get list of selected tags."""
         selected = []
-        for _hash_id, tag in self.widgets.items():
+        for tag in self.widgets.values():
             if tag.active:
                 selected.append(tag.text)
         return selected

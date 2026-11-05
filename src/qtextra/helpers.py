@@ -616,7 +616,6 @@ def close_widget(widget: Qw.QWidget):
             widget.setParent(None)
         with suppress(Exception):
             widget.deleteLater()
-    return
 
 
 # ---------------------------------------------------------------------------
@@ -2141,7 +2140,8 @@ def make_toolbar_btn(
 
     widget = QtLabelledToolbarPushButton(parent=parent, elide=elide) if title else QtToolbarPushButton(parent=parent)
     widget.set_qta(name, **icon_kwargs)
-    widget.setText(text)
+    if text:
+        widget.setText(text)
     if title:
         widget.set_label(title)
     resolved_size_preset = _resolve_qta_size_preset(

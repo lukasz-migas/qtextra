@@ -1255,8 +1255,7 @@ class QtCheckableTableView(QTableView):
             for column in range(self.model().columnCount()):
                 index = self.model().index(row, column)
                 height = self.itemDelegate().sizeHint(QStyleOptionViewItem(), index).height()
-                if height > new_height:
-                    new_height = height
+                new_height = max(new_height, height)
             self.setRowHeight(row, new_height)
 
     @Slot()

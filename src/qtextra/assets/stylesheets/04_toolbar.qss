@@ -19,12 +19,9 @@ QToolBar::handle {
 
 /* ----------------- QtToolbarPushButton ----------------- */
 QtPanelWidget > QtImagePushButton[checkable=true], QtToolbarPushButton {
-    min-width: 32px;
-    max-width: 32px;
-    min-height: 32px;
-    max-height: 32px;
-    padding: 5px;
+    padding: 3px;
     border: 1px solid transparent;
+    border-left: 3px solid transparent;
     border-radius: 4px;
     margin: 1px;
     background-color: transparent;
@@ -32,7 +29,7 @@ QtPanelWidget > QtImagePushButton[checkable=true], QtToolbarPushButton {
 
 
 QtPanelWidget > QtImagePushButton[checkable=true]::checked, QtToolbarPushButton:checked {
-    border-left: 6px solid {{ success }};
+    border-left: 3px solid {{ success }};
     border-radius: 0px;
     background-color: transparent;
 }
@@ -53,8 +50,10 @@ QWidget#toolbarSpacer{
 
 QtPanelToolbar {
     background-color: {{ darken(background, 5) }};
+    padding: 1px;
 }
 
 QtPanelToolbar  QToolBar {
     background-color: {{ darken(background, 5) }};
+    padding: 1px;
 }

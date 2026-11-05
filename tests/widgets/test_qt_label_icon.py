@@ -7,6 +7,7 @@ from qtpy.QtCore import QPointF, QSize, Qt
 from qtpy.QtGui import QEnterEvent
 
 import qtextra.helpers as hp
+from qtextra.dialogs import qt_info_popup as info_popup
 from qtextra.widgets import qt_label_icon as label_icon
 from qtextra.widgets.qt_label_icon import (
     QtActiveIcon,
@@ -263,7 +264,7 @@ def test_qt_qta_help_label_creates_and_clears_dialog(qapp, monkeypatch, qtbot):
         def show_right_of_widget(self, widget):
             self.shown_for = widget
 
-    monkeypatch.setattr(label_icon, "InfoDialog", _DummyDialog)
+    monkeypatch.setattr(info_popup, "InfoDialog", _DummyDialog)
 
     widget = QtQtaHelpLabel()
     qtbot.addWidget(widget)

@@ -73,15 +73,13 @@ class ScreenManager:
         obj = cls()
         x_left, y_top = point.x(), point.y()
         # verify position horizontally
-        if x_left < 0:
-            x_left = 0
+        x_left = max(x_left, 0)
         x_right = x_left + width
         if x_right > obj.width:
             x_right = obj.width
             x_left = x_right - width
         # verify position vertically
-        if y_top < 0:
-            y_top = 0
+        y_top = max(y_top, 0)
         y_bottom = y_top - height
         if y_bottom > obj.height:
             y_bottom = obj.height
