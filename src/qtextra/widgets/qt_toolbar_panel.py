@@ -21,6 +21,7 @@ from qtpy.QtWidgets import (  # type: ignore[attr-defined]
 )
 
 import qtextra.helpers as hp
+from qtextra.typing import QtaSizePreset
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, QtToolbarPushButton
 
 
@@ -68,10 +69,12 @@ class QtPanelWidget(QWidget):
         position: ty.Literal["left", "right"] = "left",
         label_hidden: bool = True,
         auto_hide: bool = True,
+        size_preset: QtaSizePreset = "large",
     ):
         if position not in {"left", "right"}:
             raise ValueError("`position` must be either 'left' or 'right'.")
         super().__init__(parent)
+        self.qta_size_preset = size_preset
         self._label_hidden = label_hidden
         self._auto_hide = auto_hide
         self._updating_overflow = False
@@ -95,7 +98,9 @@ class QtPanelWidget(QWidget):
 
         self._overflow_menu = QMenu(self)
         self._overflow_menu.aboutToShow.connect(self._sync_overflow_menu)
-        self._overflow_button = hp.make_toolbar_btn(self, "more", tooltip="More toolbar actions", size_preset="large")
+        self._overflow_button = hp.make_toolbar_btn(
+            self, "more", tooltip="More toolbar actions", size_preset=size_preset
+        )
         self._overflow_button.clicked.connect(self._show_overflow_menu)
         self._overflow_button.setObjectName("toolbar_overflow")
         self._overflow_action = self._buttons.addWidget(self._overflow_button)
@@ -188,6 +193,7 @@ class QtPanelWidget(QWidget):
         title: str | None = None,
         elide: bool = True,
         func: ty.Callable | None = None,
+        size_preset: QtaSizePreset | None = None,
     ) -> QtToolbarPushButton | QtLabelledToolbarPushButton:
         """Add a toolbar button and optionally bind it to a panel widget.
 
@@ -206,10 +212,14 @@ class QtPanelWidget(QWidget):
         title : str, optional
             Title to be given to the button.
         elide : bool, optional
-            Whether labAelled toolbar buttons should elide their text to stay compact.
+            Whether labelled toolbar buttons should elide their text to stay compact.
         func : Optional[Callable]
             function that will be connected to the button click event
+        size_preset : QtaSizePreset, optional
+            Size preset for the button. Defaults to the toolbar's preset.
         """
+        if size_preset is None:
+            size_preset = self.qta_size_preset
         if location not in {"top", "bottom"}:
             raise ValueError("Incorrect location provided - use `top` or `bottom`.")
         if self.get_widget(name):
@@ -219,7 +229,7 @@ class QtPanelWidget(QWidget):
             self,
             name,
             checkable=widget is not None,
-            size_preset="large",
+            size_preset=size_preset,
             title=title,
             elide=elide,
         )
@@ -385,6 +395,7 @@ class QtPanelWidget(QWidget):
         for button in self._button_dict:
             button.setFixedWidth(target_width)
         self._overflow_button.setFixedWidth(target_width)
+        self._buttons.updateGeometry()
 
     def add_separator_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
         """Add separator before button."""
@@ -484,9 +495,12 @@ class QtPanelToolbar(QToolBar):
         position: ty.Literal["left", "right"] = "left",
         label_hidden: bool = True,
         auto_hide: bool = True,
+        size_preset: QtaSizePreset = "large",
     ):
         super().__init__(parent=parent)
-        self._widget = QtPanelWidget(self, position=position, label_hidden=label_hidden, auto_hide=auto_hide)
+        self._widget = QtPanelWidget(
+            self, position=position, label_hidden=label_hidden, auto_hide=auto_hide, size_preset=size_preset
+        )
 
         # Get methods from the internal widget
         self.widget_iter = self._widget.widget_iter

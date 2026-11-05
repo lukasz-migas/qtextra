@@ -16,8 +16,7 @@ class QtElideComboBox(QComboBox):
 
         # Calculate the available width for text (subtract some space for the arrow).
         text_width = self.width() - 20
-        if text_width < 0:
-            text_width = 0
+        text_width = max(text_width, 0)
 
         # Use self.font() (instead of option.font) to create the QFontMetrics.
         font_metrics = QFontMetrics(self.font())

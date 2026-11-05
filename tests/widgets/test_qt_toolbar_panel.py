@@ -2,6 +2,7 @@ import pytest
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QMainWindow, QWidget
 
+from qtextra.config import THEMES
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton
 from qtextra.widgets.qt_toolbar_panel import QtPanelToolbar
 
@@ -29,6 +30,45 @@ def _make_overflow_toolbar(qtbot, *, height=180, auto_hide=True):
     ]
     window.show()
     return window, toolbar, top_buttons, bottom_buttons
+
+
+@pytest.mark.parametrize("preset, button_size", [("16px", 16), ("24px", 24), ("large", 40), ("60px", 60)])
+@pytest.mark.parametrize("title", [None, "Home"])
+def test_themed_panel_toolbar_size_follows_preset(qtbot, preset, button_size, title):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    window.setStyleSheet(THEMES.get_theme_stylesheet("dark"))
+    window.resize(320, 400)
+    toolbar = QtPanelToolbar(window, size_preset=preset)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    button = toolbar.add_widget("home", title=title)
+    source = button.image_btn if title else button
+    window.show()
+
+    qtbot.waitUntil(lambda: toolbar.width() == toolbar.sizeHint().width())
+    assert source.size().width() == button_size
+    assert source.size().height() == button_size
+    assert toolbar.width() <= button_size + 10
+    assert toolbar._widget._overflow_button.sizeHint().width() == button_size
+
+
+def test_themed_panel_toolbar_respects_button_size_override(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    window.setStyleSheet(THEMES.get_theme_stylesheet("dark"))
+    toolbar = QtPanelToolbar(window, size_preset="16px")
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    small = toolbar.add_widget("home")
+    large = toolbar.add_widget("gear", title="Settings", size_preset="40px")
+    window.show()
+
+    qtbot.waitUntil(lambda: toolbar.width() == toolbar.sizeHint().width())
+    assert small.sizeHint().width() == 16
+    assert large.image_btn.size().width() == 40
+    assert large.label.width() == 40
+    assert small.width() == large.width() == 40
+    toolbar.disable_widget(large)
+    qtbot.waitUntil(lambda: small.width() == 16 and toolbar.width() <= 26)
 
 
 def test_qt_labelled_toolbar_push_button_constrains_label_width(qtbot):

@@ -143,7 +143,7 @@ class TaskInfoDialog(QtDialog):
 
     def _on_set_task_choice_failed(self, res: Exception) -> None:
         """Set task choice failed."""
-        logger.exception(f"Failed to get task choice data: {res}")
+        logger.error(f"Failed to get task choice data: {res}")
         self.task_id.setText("<Failed to retrieve>")
         self.task_title.setText("<Failed to retrieve>")
         self.task_state.setText("<Failed to retrieve>")

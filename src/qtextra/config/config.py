@@ -100,7 +100,7 @@ class ConfigBase(QObject):
                 continue
             # check if its dictionary of dictionaries
             if all(isinstance(group_config, dict) for group_config in _config_group.values()):
-                for _, group_config in _config_group.items():
+                for group_config in _config_group.values():
                     _set_values(group_config)
             else:
                 _set_values(_config_group)

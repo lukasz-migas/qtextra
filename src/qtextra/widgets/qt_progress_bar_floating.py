@@ -101,10 +101,8 @@ class QtFloatingProgressBar(QtOverlay):
         """Set the determinate range for the progress bar."""
         self._determinate_minimum = int(minimum)
         self._determinate_maximum = int(maximum)
-        if self._determinate_value < self._determinate_minimum:
-            self._determinate_value = self._determinate_minimum
-        if self._determinate_value > self._determinate_maximum:
-            self._determinate_value = self._determinate_maximum
+        self._determinate_value = max(self._determinate_value, self._determinate_minimum)
+        self._determinate_value = min(self._determinate_value, self._determinate_maximum)
         if not self._busy:
             self._apply_determinate_state()
         self._sync_completion_visibility()

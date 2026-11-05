@@ -74,7 +74,7 @@ class TableConfig(MutableMapping[int, Column]):
 
     def update_attribute(self, name: str, attr: str, value: ty.Any) -> None:
         """Update attribute value by column name or tag."""
-        for _, meta_ in self.items():
+        for meta_ in self.values():
             if meta_["name"] == name or meta_["tag"] == name:
                 meta_[attr] = value
 

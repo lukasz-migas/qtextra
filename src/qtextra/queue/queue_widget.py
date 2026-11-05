@@ -99,7 +99,7 @@ class QueueList(QScrollArea):
             if widget.task:
                 widget.setVisible(widget.task.state in self.selected)
 
-    def purge_finished(self, max_tasks: ty.Union[None, int] = None) -> None:
+    def purge_finished(self, max_tasks: ty.Union[int, None] = None) -> None:
         """Purge tasks that are no longer necessary."""
         if max_tasks is None:
             max_tasks = self.MAX_TASKS

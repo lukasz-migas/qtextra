@@ -128,11 +128,11 @@ def format_interval(t: float) -> str:
 
 def format_timestamp(timestamp: float) -> str:
     """Format timestamp so it returns a human-readable string."""
-    import datetime
+    import datetime as dt
 
     if not timestamp:
         return "N/A"
-    return datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    return dt.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def iterable_callbacks(func: ty.Union[ty.Callable, Callback] | None) -> ty.Sequence[ty.Callable]:

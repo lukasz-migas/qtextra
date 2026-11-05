@@ -10,16 +10,16 @@ Orientation = ty.Literal["horizontal", "vertical"]
 IconType = ty.Union[str, tuple[str, dict[str, ty.Any]]]
 GifOption = ty.Literal["dots", "infinity", "oval", "circle", "square"]
 QtaSizePreset = ty.Literal[
-    "xxsmall",
-    "xsmall",
-    "small",
-    "normal",
-    "average",
-    "medium",
-    "large",
-    "xlarge",
-    "xxlarge",
-    "xxxlarge",
+    "xxsmall",  # 10px
+    "xsmall",  # 16px
+    "small",  # 20px
+    "normal",  # 24px
+    "average",  # 28px
+    "medium",  # 32px
+    "large",  # 40px
+    "xlarge",  # 60px
+    "xxlarge",  # 80px
+    "xxxlarge",  # 120px
     # also let's now add some better naming since it's not clear...
     "10px",  # xxsmall
     "16px",  # xsmall

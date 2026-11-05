@@ -925,6 +925,10 @@ class QtToolbarPushButton(QtImagePushButton):
         self.evt_click.connect(self.stop_pulse)
         self.evt_click.connect(self._suppress_tooltip_until_leave)
 
+    def sizeHint(self) -> QSize:  # type: ignore[override]
+        """Use the configured button footprint when laying out toolbars."""
+        return QSize(self._base_button_size)
+
     def setToolTip(self, text: str) -> None:  # type: ignore[override]
         """Override tooltip."""
         self._text = text
@@ -1089,7 +1093,6 @@ class QtLabelledToolbarPushButton(QWidget):
         self.isChecked = self.image_btn.isChecked
         self.click = self.image_btn.click
         self.set_qta_size = self.image_btn.set_qta_size
-        self.set_qta_size_preset = self.image_btn.set_qta_size_preset
 
     @property
     def label_hidden(self) -> bool:
