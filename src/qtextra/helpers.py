@@ -2678,6 +2678,7 @@ def make_h_line_with_text(
     else:
         label = label_or_parent
         parent = parent_or_label if isinstance(parent_or_label, Qw.QWidget) else None
+    parent = kwargs.pop("parent", parent)
     return QtHorzLineWithText(parent=parent, label=label, bold=bold, position=position, **kwargs)
 
 
