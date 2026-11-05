@@ -18,8 +18,10 @@ from qtpy.QtWidgets import QLabel, QToolTip, QWidget
 from superqt.utils import qdebounced
 
 from qtextra.config import THEMES
-from qtextra.dialogs.qt_info_popup import InfoDialog
 from qtextra.widgets._qta_mixin import QtaMixin
+
+if ty.TYPE_CHECKING:
+    from qtextra.dialogs.qt_info_popup import InfoDialog
 
 
 def make_png_label(icon_path: str, size: tuple[int, int] = (40, 40)) -> QLabel:
@@ -386,6 +388,8 @@ class QtQtaHelpLabel(QtQtaLabel):
     def enterEvent(self, event: QEnterEvent) -> None:  # type: ignore[override]
         """Override to show tooltips instantly."""
         if self.toolTip() and not self._dlg:
+            from qtextra.dialogs.qt_info_popup import InfoDialog
+
             self._dlg = InfoDialog(self, self.toolTip())
             self._dlg.evt_close.connect(self._removeDialog)
             self._dlg.show_right_of_widget(self)

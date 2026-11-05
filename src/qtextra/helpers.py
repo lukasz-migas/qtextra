@@ -45,7 +45,6 @@ from qtpy.QtGui import (
 from superqt import QElidingLabel, QEnumComboBox, QLabeledDoubleSlider, QLabeledSlider
 
 from qtextra.typing import Callback, Connectable, GifOption, IconType, Orientation, QtaSizePreset
-from qtextra.widgets.qt_label_icon import QtIconLabel
 
 if ty.TYPE_CHECKING:
     from qtextra.utils.table_config import TableConfig
@@ -65,7 +64,7 @@ if ty.TYPE_CHECKING:
     from qtextra.widgets.qt_combobox_search import QtSearchableComboBox
     from qtextra.widgets.qt_label_click import QtClickableLabel, QtClickLabel
     from qtextra.widgets.qt_label_elide import QtElidingLabel
-    from qtextra.widgets.qt_label_icon import QtQtaLabel, QtQtaTooltipLabel
+    from qtextra.widgets.qt_label_icon import QtIconLabel, QtQtaLabel, QtQtaTooltipLabel
     from qtextra.widgets.qt_label_scroll import QtScrollableLabel
     from qtextra.widgets.qt_layout_flow import QtFlowLayout
     from qtextra.widgets.qt_notification_badge import BadgeMode, BadgeSize, BadgeState, QtNotificationBadge

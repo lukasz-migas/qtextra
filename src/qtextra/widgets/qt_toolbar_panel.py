@@ -21,8 +21,10 @@ from qtpy.QtWidgets import (  # type: ignore[attr-defined]
 )
 
 import qtextra.helpers as hp
-from qtextra.typing import QtaSizePreset
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, QtToolbarPushButton
+
+if ty.TYPE_CHECKING:
+    from qtextra.typing import QtaSizePreset
 
 
 class QtAboutWidget(QWidget):
