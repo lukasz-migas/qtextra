@@ -32,7 +32,7 @@ def test_system_theme_color_scheme(
             return getattr(ColorScheme, scheme)
 
     monkeypatch.setattr(theme_module, "Qt", type("FakeQt", (), {"ColorScheme": ColorScheme}))
-    monkeypatch.setattr(theme_module.QApplication, "instance", lambda: FakeApp())
+    monkeypatch.setattr(theme_module, "QApplication", type("FakeQApplication", (), {"instance": staticmethod(FakeApp)}))
     assert theme_module.get_system_theme() == expected
     assert theme_module.is_system_dark() is expected_dark
 
@@ -49,12 +49,14 @@ def test_system_theme_without_style_hint(qapp: Any, monkeypatch: Any) -> None:
             return object()
 
     monkeypatch.setattr(theme_module, "Qt", type("FakeQt", (), {"ColorScheme": object()}))
-    monkeypatch.setattr(theme_module.QApplication, "instance", lambda: FakeApp())
+    monkeypatch.setattr(theme_module, "QApplication", type("FakeQApplication", (), {"instance": staticmethod(FakeApp)}))
     assert theme_module.get_system_theme() is None
 
 
 def test_system_theme_without_application(monkeypatch: Any) -> None:
-    monkeypatch.setattr(theme_module.QApplication, "instance", lambda: None)
+    monkeypatch.setattr(
+        theme_module, "QApplication", type("FakeQApplication", (), {"instance": staticmethod(lambda: None)})
+    )
     assert theme_module.get_system_theme() is None
 
 

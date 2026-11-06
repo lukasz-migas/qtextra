@@ -280,3 +280,48 @@ class TestQtMultiStatePushButton:
 
         menu.close.assert_not_called()
         assert widget._menu is menu
+
+
+def test_image_button_click_signals_and_right_click_property(qtbot):
+    widget = QtImagePushButton()
+    qtbot.addWidget(widget)
+    left = []
+    right = []
+    widget.evt_click.connect(left.append)
+    widget.connect_to_right_click(right.append)
+
+    qtbot.mouseClick(widget, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(widget, Qt.MouseButton.RightButton)
+
+    assert left == [widget]
+    assert right == [widget]
+    assert widget.has_right_click
+    assert widget.property("right_click") is True
+
+
+def test_toggle_button_emits_only_changes_and_can_block_signal(qtbot):
+    widget = QtAnimationPlayButton(auto_connect=True)
+    qtbot.addWidget(widget)
+    states = []
+    widget.evt_toggled.connect(states.append)
+
+    qtbot.mouseClick(widget, Qt.MouseButton.LeftButton)
+    widget.set_state(True)
+    widget.set_state(False, trigger=False)
+    widget.toggle_state()
+
+    assert widget.playing is True
+    assert states == [True, True]
+
+
+def test_priority_button_state_and_change_signal(setup_priority_widget):
+    widget = setup_priority_widget(auto_show_menu_on_hover=False)
+    states = []
+    widget.evt_changed.connect(states.append)
+
+    assert widget.priority == "normal"
+    widget.priority = "high"
+    widget.set_state("low")
+
+    assert widget.priority == "low"
+    assert states == ["high", "low"]
