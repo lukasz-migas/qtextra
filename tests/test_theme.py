@@ -31,6 +31,9 @@ def test_system_theme_color_scheme(
         def colorScheme(self) -> int:
             return getattr(ColorScheme, scheme)
 
+        def processEvents(self) -> None:
+            pass
+
     monkeypatch.setattr(theme_module, "Qt", type("FakeQt", (), {"ColorScheme": ColorScheme}))
     monkeypatch.setattr(theme_module.QApplication, "instance", lambda: FakeApp())
     assert theme_module.get_system_theme() == expected
