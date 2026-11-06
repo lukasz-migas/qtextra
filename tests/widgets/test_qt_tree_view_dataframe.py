@@ -7,7 +7,7 @@ import time
 import numpy as np
 import pandas as pd
 import pytest
-from qtpy.QtCore import QModelIndex, Qt
+from qtpy.QtCore import QModelIndex, QPoint, Qt
 
 from qtextra.widgets.qt_tree_view_dataframe import TREE_COLUMN, QtDataFrameTreeWidget
 
@@ -109,8 +109,14 @@ def test_sorting_orders_groups_by_aggregate_and_leaves_within_groups(qtbot, fram
     widget.clear_sorting()
     assert _top(model) == ["PC 32:0 (3)", "SM 34:1 (2)", "TG 50:1 (1)"]
 
-    widget.header._on_section_clicked(ppm)  # header click toggles sorting
+    widget.show()
+    header = widget.tree_view.header()
+    position = QPoint(header.sectionViewportPosition(ppm) + header.sectionSize(ppm) // 2, header.height() // 2)
+    qtbot.mouseClick(header.viewport(), Qt.MouseButton.LeftButton, pos=position)  # a real click sorts
     assert model.sort_column == model._column_index("ppm")
+    assert model.sort_order == Qt.SortOrder.AscendingOrder
+    qtbot.mouseClick(header.viewport(), Qt.MouseButton.LeftButton, pos=position)  # still clickable after refresh
+    assert model.sort_order == Qt.SortOrder.DescendingOrder
 
 
 def test_two_levels_and_flat_mode(qtbot, frame) -> None:
@@ -268,3 +274,12 @@ def test_set_data_group_by_none_means_flat(qtbot, frame) -> None:
     widget.set_data(frame, group_by=None)
     assert widget.model.group_by == []
     assert not widget.model.is_column_visible(widget.model._column_index("compound"))  # visibility kept
+
+
+def test_log_color_scale(qtbot) -> None:
+    df = pd.DataFrame({"g": ["a", "a", "b"], "intensity": [1e-4, 1e-1, 0.0]})
+    widget = _widget(qtbot, df, group_by="g")
+    widget.color_numeric("intensity", colormap="viridis", log=True)
+    colors = widget.model.leaf_colors("intensity")
+    assert colors[0].tolist() != colors[1].tolist()
+    assert colors[2][3] == 0  # zero is undefined on a log scale

@@ -721,6 +721,8 @@ class DataFrameTreeModel(Qc.QAbstractItemModel):
     def _rgba(rule: _ColorRule, values: np.ndarray) -> np.ndarray:
         if rule.kind == "numeric":
             floats = pd.to_numeric(pd.Series(values), errors="coerce").to_numpy(np.float64)
+            if type(rule.norm).__name__ == "LogNorm":
+                floats = np.where(floats > 0, floats, np.nan)  # undefined on a log scale: leave uncoloured
             return _rgba_array_from_colormap(floats, rule.norm, rule.cmap)
         background = np.zeros((len(values), 4), dtype=np.uint8)
         for index, value in enumerate(values):
