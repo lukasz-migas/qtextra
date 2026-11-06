@@ -7,14 +7,14 @@ QTreeWidget::item {
 QTreeWidget::branch {
     color: {{ text }};
 }
-QTreeWidget::branch:open {
+QTreeView::branch:open {
     color: #92000A;
 }
-QTreeWidget::branch:closed:has-children {
+QTreeView::branch:closed:has-children {
     color: {{ text }};
     image: url("theme_{{ id }}:/right_arrow.svg");
 }
-QTreeWidget::branch:open:has-children {
+QTreeView::branch:open:has-children {
     color: {{ text }};
     image: url("theme_{{ id }}:/down_arrow.svg");
 }
