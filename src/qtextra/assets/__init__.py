@@ -211,6 +211,8 @@ QTA_MAPPING: dict[str, IconType] = {
     "caret_right": "fa5s.caret-right",
     "caret_up": "fa5s.caret-up",
     "caret_down": "fa5s.caret-down",
+    "unfold_on": "mdi6.unfold-more-horizontal",
+    "unfold_off": "mdi6.unfold-less-horizontal",
     # run/play
     "run": "mdi6.run-fast",
     "start": "fa5s.play-circle",

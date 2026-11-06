@@ -461,6 +461,25 @@ class QtExpandButton(QtTogglePushButton):
         self.state = state
 
 
+class QtUnfoldButton(QtTogglePushButton):
+    """Button that has chevron point up or down."""
+
+    ICON_ON = "unfold_on"
+    ICON_OFF = "unfold_off"
+
+    def __init__(self, *args: ty.Any, **kwargs: ty.Any):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def expanded(self) -> bool:
+        """Get state."""
+        return self.state
+
+    @expanded.setter
+    def expanded(self, state: bool) -> None:
+        self.state = state
+
+
 class QtSortButton(QtTogglePushButton):
     """Button that has chevron point up or down."""
 
@@ -1256,6 +1275,7 @@ if __name__ == "__main__":  # pragma: no cover
         lay.addWidget(QtVerticalDirectionButton(parent=frame, auto_connect=True))
         lay.addWidget(QtToggleButton(parent=frame, auto_connect=True))
         lay.addWidget(QtExpandButton(parent=frame, auto_connect=True))
+        lay.addWidget(QtUnfoldButton(parent=frame, auto_connect=True))
         lay.addWidget(QtSortButton(parent=frame, auto_connect=True))
         lay.addWidget(QtPinButton(parent=frame, auto_connect=True))
         lay.addWidget(QtFullscreenButton(parent=frame, auto_connect=True))
