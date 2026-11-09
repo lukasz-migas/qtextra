@@ -25,20 +25,26 @@ class QtHorzLineWithText(QWidget):
         super().__init__(parent=parent)
 
         self.label = hp.make_label(parent, label, bold=bold, **kwargs)
+        self.help_label = hp.make_help_label(parent, "", hide=True)
         if position == "center":
-            widgets = (QtHorzLine(parent), self.label, QtHorzLine(parent))
-            stretch_ids = (0, 2)
+            widgets = (QtHorzLine(parent), self.label, self.help_label, QtHorzLine(parent))
+            stretch_ids = (0, 3)
         elif position == "left":
-            widgets = (self.label, QtHorzLine(parent))
-            stretch_ids = (1,)
+            widgets = (self.label, self.help_label, QtHorzLine(parent))
+            stretch_ids = (2,)
         else:
-            widgets = (QtHorzLine(parent), self.label)
+            widgets = (QtHorzLine(parent), self.label, self.help_label)
             stretch_ids = (0,)
         hp.make_h_layout(*widgets, stretch_id=stretch_ids, spacing=2, margin=1, parent=self)
 
     def setText(self, text: str) -> None:
         """Set text of the label."""
         self.label.setText(text)
+
+    def setHelpText(self, text: str) -> None:
+        """Set help text of the label."""
+        self.help_label.setToolTip(text)
+        self.help_label.setHidden(not bool(text))
 
 
 class QtVertLine(QFrame):
@@ -57,6 +63,7 @@ class QtVertLineWithText(QWidget):
         super().__init__(parent=parent)
 
         self.label = hp.make_label(parent, label, bold=bold, vertical=True, **kwargs)
+
         if position == "center":
             widgets = (QtVertLine(parent), self.label, QtVertLine(parent))
             stretch_ids = (0, 2)
