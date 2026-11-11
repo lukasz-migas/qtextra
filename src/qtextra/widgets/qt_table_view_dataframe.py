@@ -648,7 +648,7 @@ class ColumnVisibilityDialog(Qw.QDialog):
         self.columns_list = Qw.QListWidget(self)
         self.columns_list.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
         self.columns_list.setUniformItemSizes(True)
-        self.columns_list.setAlternatingRowColors(True)
+        # self.columns_list.setAlternatingRowColors(True)
         self.columns_list.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         for column in range(proxy_model.df.columns.shape[0]):
             label = _column_label_to_text(proxy_model.df.columns[column])
@@ -751,7 +751,7 @@ class RowVisibilityDialog(Qw.QDialog):
         self.rows_list = Qw.QListWidget(self)
         self.rows_list.setSelectionMode(Qw.QAbstractItemView.SelectionMode.NoSelection)
         self.rows_list.setUniformItemSizes(True)
-        self.rows_list.setAlternatingRowColors(True)
+        # self.rows_list.setAlternatingRowColors(True)
         self.rows_list.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         for row in range(proxy_model.df.index.shape[0]):
             label = _row_label_to_text(proxy_model.df.index[row])
@@ -1597,7 +1597,7 @@ class DataTableView(Qw.QTableView):
         self.verticalHeader().hide()
 
         # Settings
-        self.setAlternatingRowColors(True)
+        # self.setAlternatingRowColors(True)
         self.setWordWrap(False)
         self.setHorizontalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.setVerticalScrollMode(Qw.QAbstractItemView.ScrollMode.ScrollPerPixel)
