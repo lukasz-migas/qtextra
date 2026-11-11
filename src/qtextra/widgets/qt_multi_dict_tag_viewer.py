@@ -154,7 +154,7 @@ class QtMultiDictTagViewer(QWidget):
         return item.data(VALUE_ROLE)
 
     def _configure_table(self, table: QTableWidget) -> None:
-        table.setAlternatingRowColors(True)
+        # table.setAlternatingRowColors(True)
         table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)

@@ -40,7 +40,7 @@ class QtDictTagViewer(QWidget):
 
         self.table = QTableWidget(0, 2, self)
         self.table.setHorizontalHeaderLabels(["Key", "Value"])
-        self.table.setAlternatingRowColors(True)
+        # self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)

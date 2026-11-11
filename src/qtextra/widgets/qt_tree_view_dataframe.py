@@ -1141,7 +1141,7 @@ class QtDataFrameTreeWidget(Qw.QWidget):
         )
         self.tree_view = Qw.QTreeView(self)
         self.tree_view.setUniformRowHeights(True)
-        self.tree_view.setAlternatingRowColors(True)
+        # self.tree_view.setAlternatingRowColors(True)
         self.tree_view.setSelectionBehavior(Qw.QAbstractItemView.SelectionBehavior.SelectRows)
         self.tree_view.setSelectionMode(Qw.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tree_view.setEditTriggers(Qw.QAbstractItemView.EditTrigger.NoEditTriggers)

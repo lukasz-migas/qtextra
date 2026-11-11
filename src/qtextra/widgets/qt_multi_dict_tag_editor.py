@@ -420,7 +420,7 @@ class QtMultiDictTagEditor(QWidget):
         self._on_target_changed()
 
     def _configure_table(self, table: QTableWidget) -> None:
-        table.setAlternatingRowColors(True)
+        # table.setAlternatingRowColors(True)
         table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
