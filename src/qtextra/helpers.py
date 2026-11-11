@@ -1803,16 +1803,19 @@ def make_btn(
     object_name: str = "",
     properties: dict[str, ty.Any] | None = None,
     hide: bool = False,
-    disable: bool = False,
     wrap: bool = False,
     retain_size: bool = False,
     disabled: bool = False,
+    **kwargs,
 ) -> QtPushButton:
     """Make button."""
     from qtextra.widgets.qt_button import QtPushButton
 
     if func_right_click is not None:
         func_menu = func_right_click
+    if "disable" in kwargs:
+        warnings.warn("`disable` is deprecated, use `disabled` instead.", DeprecationWarning, stacklevel=2)
+        disabled = kwargs.pop("disable")
 
     widget = QtPushButton(parent=parent)
     widget.setWordWrap(wrap)
@@ -1837,8 +1840,6 @@ def make_btn(
         disable_widgets(widget, disabled=disabled)
     if hide:
         widget.hide()
-    if disable:
-        disable_widgets(widget, disabled=disable)
     if retain_size:
         set_retain_hidden_size_policy(widget)
     set_properties(widget, properties)
@@ -2454,6 +2455,7 @@ def make_int_spin_box(
     func: Callback | None = None,
     keyboard_tracking: bool | None = None,
     properties: dict[str, ty.Any] | None = None,
+    special_value: str | None = None,
     **kwargs: ty.Any,
 ) -> Qw.QSpinBox:
     """Make double spinbox."""
@@ -2474,6 +2476,8 @@ def make_int_spin_box(
         widget.setPrefix(prefix)
     if suffix:
         widget.setSuffix(suffix)
+    if special_value:
+        widget.setSpecialValueText(special_value)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if func:
@@ -2495,6 +2499,7 @@ def make_double_spin_box(
     suffix: str | None = None,
     expand: bool = True,
     func: Callback | None = None,
+    special_value: str | None = None,
     **kwargs: ty.Any,
 ) -> Qw.QDoubleSpinBox:
     """Make double spinbox."""
@@ -2514,6 +2519,8 @@ def make_double_spin_box(
         widget.setSuffix(suffix)
     if tooltip:
         widget.setToolTip(tooltip)
+    if special_value:
+        widget.setSpecialValueText(special_value)
     if expand:
         widget.setSizePolicy(Qw.QSizePolicy.Policy.MinimumExpanding, Qw.QSizePolicy.Policy.Minimum)
     if func:
