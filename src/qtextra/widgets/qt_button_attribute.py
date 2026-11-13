@@ -43,6 +43,7 @@ class _QtAttributeEditorPopup(QFrame):
     ) -> None:
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setObjectName("attributeTagPopup")
+        self.setMinimumWidth(240)
         self._commit = commit
         self._original_key: str | None = None
 
