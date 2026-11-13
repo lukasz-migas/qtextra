@@ -5,6 +5,7 @@ from typing import Any, TypeVar
 
 import pytest
 from pytestqt.qtbot import QtBot
+from qtpy import API_NAME
 
 T = TypeVar("T")
 try:
@@ -33,16 +34,41 @@ def _hold_qtbot_widgets(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     Qt is painting it (pytest-qt processes events right after the test), PySide6 crashes with a segfault or
     'pure virtual method called'.
     """
+    import pytestqt.plugin
+
     held: list[Any] = []
     add_widget = QtBot.addWidget
+    close_widgets = pytestqt.plugin._close_widgets
 
     def _add_widget(self: QtBot, widget: Any, *args: Any, **kwargs: Any) -> None:
         held.append(widget)
         add_widget(self, widget, *args, **kwargs)
 
+    def _close_live_widgets(item: pytest.Item) -> None:
+        # widgets deleted on the C++ side during the test (e.g. WA_DeleteOnClose) are still referenced here, so
+        # drop them before pytest-qt tries to close them
+        widgets = getattr(item, "qt_widgets", None)
+        if widgets:
+            item.qt_widgets = [(ref, func) for ref, func in widgets if not _is_deleted(ref())]
+        close_widgets(item)
+
     monkeypatch.setattr(QtBot, "addWidget", _add_widget)
+    monkeypatch.setattr(pytestqt.plugin, "_close_widgets", _close_live_widgets)
     yield
     held.clear()
+
+
+def _is_deleted(widget: Any) -> bool:
+    """Return whether the C++ object behind a Qt wrapper no longer exists."""
+    if widget is None:
+        return True
+    if API_NAME.startswith("PySide"):
+        import shiboken6
+
+        return not shiboken6.isValid(widget)
+    from qtpy import sip
+
+    return sip.isdeleted(widget)
 
 
 @pytest.fixture(scope="session", autouse=False)

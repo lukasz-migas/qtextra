@@ -470,8 +470,8 @@ class QtRichToolTip(QWidget):
 
     def showEvent(self, event) -> None:  # noqa: D102
         # singleton — close the previous tooltip
-        if QtRichToolTip._active_instance is not None and QtRichToolTip._active_instance is not self:
-            QtRichToolTip._active_instance.close()
+        if QtRichToolTip._active_instance is not self:
+            QtRichToolTip.dismiss()
         QtRichToolTip._active_instance = self
 
         self._inject_code_style()
@@ -690,8 +690,11 @@ class QtRichToolTip(QWidget):
     @classmethod
     def dismiss(cls) -> None:
         """Dismiss the currently active tooltip, if any."""
-        if cls._active_instance is not None:
-            cls._active_instance.close()
+        active, QtRichToolTip._active_instance = QtRichToolTip._active_instance, None
+        if active is not None:
+            # the C++ object is gone if the tooltip was destroyed without being closed (e.g. with its parent)
+            with suppress(RuntimeError):
+                active.close()
 
 
 if __name__ == "__main__":  # pragma: no cover

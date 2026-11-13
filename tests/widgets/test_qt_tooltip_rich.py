@@ -183,6 +183,20 @@ class TestQtRichToolTip:
         assert QtRichToolTip._active_instance is tip2
         tip2.close()
 
+    def test_singleton_survives_deleted_previous_tooltip(self, qtbot, parent_widget):
+        # a tooltip destroyed without being closed must not break the next show (PySide6 crashes on the error)
+        tip1 = QtRichToolTip.show_tooltip(title="First", content="A", parent=parent_widget)
+        with qtbot.waitSignal(tip1.destroyed, timeout=1000):
+            tip1.deleteLater()
+        assert QtRichToolTip._active_instance is tip1
+
+        tip2 = QtRichToolTip.show_tooltip(title="Second", content="B", parent=parent_widget)
+        qtbot.addWidget(tip2)
+        assert QtRichToolTip._active_instance is tip2
+
+        QtRichToolTip.dismiss()
+        assert QtRichToolTip._active_instance is None
+
     def test_dismiss_class_method(self, qtbot, parent_widget):
         tip = QtRichToolTip.show_tooltip(title="Dismiss", content="me", parent=parent_widget)
         qtbot.addWidget(tip)
