@@ -56,27 +56,7 @@ jobs:
           qt: true
 
       - name: Test
-        if: ${{ !(matrix.os == 'ubuntu-latest' && matrix.backend == 'pyside6') }}
         run: uv run coverage run -p -m pytest -v --color=yes
-
-      # Temporary: run under gdb to capture the native backtrace of the intermittent
-      # "pure virtual method called" abort in QtImagePushButton.paintEvent (PySide6).
-      - name: Test (gdb)
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.backend == 'pyside6' }}
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq gdb
-          cat > "$RUNNER_TEMP/gdb.cmd" <<'EOF'
-          set pagination off
-          handle SIGPIPE nostop noprint pass
-          run
-          if $_isvoid($_exitcode)
-            thread apply 1 bt 60
-            kill
-            quit 1
-          end
-          quit $_exitcode
-          EOF
-          uv run gdb -q -batch -x "$RUNNER_TEMP/gdb.cmd" --args python -m coverage run -p -m pytest -v --color=yes
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
