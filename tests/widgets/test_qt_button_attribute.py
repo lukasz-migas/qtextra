@@ -157,10 +157,6 @@ def test_attribute_popup_rejects_duplicates_and_invalid_input(qtbot):
     assert popup.key_edit.property("invalid") is False
     assert manager.items() == {"alpha": 1, "beta": 2}
 
-    # close the popup so no Qt.Popup grab remains during event processing/teardown (Windows PySide6 abort)
-    popup.hide()
-    qtbot.waitUntil(lambda: not popup.isVisible())
-
 
 def test_attribute_popup_escape_cancels_changes(qtbot):
     manager = QtAttributeTagManager()
