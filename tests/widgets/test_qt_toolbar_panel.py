@@ -186,6 +186,21 @@ def test_qt_panel_toolbar_hiding_wide_button_reduces_shared_width(qtbot):
     assert plain_button.width() < expanded_width
 
 
+def test_qt_panel_toolbar_overflow_update_reshows_bottom_buttons_immediately(qtbot):
+    window, toolbar, _top_buttons, bottom_buttons = _make_overflow_toolbar(qtbot, height=240)
+    panel = toolbar._widget
+    qtbot.waitUntil(lambda: bool(panel._overflow_hidden))
+
+    # shrinking makes QToolBar hide the trailing (bottom) widgets until the next layout pass
+    window.resize(320, 160)
+    panel._buttons.layout().activate()
+    assert not any(button.isVisible() for button in bottom_buttons)
+
+    panel._update_overflow()
+    assert panel._overflow_hidden
+    assert all(button.isVisible() for button in bottom_buttons)
+
+
 def test_qt_panel_toolbar_collapses_trailing_top_buttons_into_menu(qtbot):
     window, toolbar, top_buttons, bottom_buttons = _make_overflow_toolbar(qtbot, height=240)
     panel = toolbar._widget

@@ -377,6 +377,9 @@ class QtPanelWidget(QWidget):
 
             self._sync_overflow_menu()
             self._sync_button_widths()
+            # re-layout now - QToolBar hides widgets that did not fit and only re-shows them on its next layout pass
+            if (layout := self._buttons.layout()) is not None:
+                layout.activate()
         finally:
             self._updating_overflow = False
 
