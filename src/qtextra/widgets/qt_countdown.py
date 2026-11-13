@@ -7,7 +7,7 @@ import time
 from contextlib import suppress
 
 from qtpy.QtCore import QRectF, QSize, Qt, QTimer, Signal
-from qtpy.QtGui import QPainter, QPaintEvent, QPen
+from qtpy.QtGui import QMouseEvent, QPainter, QPaintEvent, QPen
 from qtpy.QtWidgets import QHBoxLayout, QProgressBar, QSizePolicy, QVBoxLayout, QWidget
 
 import qtextra.helpers as hp
@@ -53,9 +53,12 @@ class QtCircularCountdownWidget(QWidget):
     -------
     evt_expired : Signal
         Emitted once when a countdown reaches zero.
+    evt_clicked : Signal
+        Emitted when the widget is clicked with the left mouse button.
     """
 
     evt_expired = Signal()
+    evt_clicked = Signal()
 
     def __init__(
         self,
@@ -94,11 +97,21 @@ class QtCircularCountdownWidget(QWidget):
             return min(math.ceil(self._remaining_ms), max(0, math.ceil((self._deadline - time.monotonic()) * 1000)))
         return max(0, math.ceil(self._remaining_ms))
 
-    def start(self) -> None:
-        """Start or resume the countdown; restart it after expiry."""
+    def start(self, remaining_ms: int | None = None) -> None:
+        """Start or resume the countdown; restart it after expiry.
+
+        Parameters
+        ----------
+        remaining_ms : int or None
+            Begin with this much time left (clamped to the duration) instead of resuming, e.g. when the
+            tracked event was scheduled before the countdown started. Ignored while the countdown is running.
+        """
         if self._deadline is not None:
             return
-        if self._expired:
+        if remaining_ms is not None:
+            self._remaining_ms = float(min(max(0, remaining_ms), self._duration_ms))
+            self._expired = False
+        elif self._expired:
             self._remaining_ms = float(self._duration_ms)
             self._expired = False
         if self._auto_hidden:
@@ -137,6 +150,12 @@ class QtCircularCountdownWidget(QWidget):
             raise ValueError("duration_ms must be non-negative")
         self._duration_ms = duration_ms
         self.stop()
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
+        """Emit `evt_clicked` after a left-button click inside the widget."""
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.pos()):
+            self.evt_clicked.emit()
 
     def _on_tick(self) -> None:
         if self._deadline is None:

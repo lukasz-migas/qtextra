@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
-from qtpy.QtCore import QSize
+from qtpy.QtCore import QSize, Qt
 
 from qtextra.widgets.qt_countdown import QtCircularCountdownWidget
 
@@ -164,3 +164,21 @@ def test_small_ring_changes_as_time_passes(qtbot, countdown, clock):
     empty = countdown.grab().toImage()
     assert full != half
     assert half != empty
+
+
+def test_start_with_remaining_time_shows_partial_countdown(countdown, clock):
+    countdown.start(remaining_ms=400)
+    assert countdown.remaining_ms == 400
+    clock[0] += 0.1
+    assert countdown.remaining_ms == pytest.approx(300, abs=1)
+
+
+def test_start_with_remaining_time_is_clamped_to_duration(countdown):
+    countdown.start(remaining_ms=5000)
+    assert countdown.remaining_ms == 1000
+
+
+def test_left_click_emits_clicked(countdown, qtbot):
+    countdown.resize(48, 48)
+    with qtbot.waitSignal(countdown.evt_clicked, timeout=500):
+        qtbot.mouseClick(countdown, Qt.MouseButton.LeftButton)

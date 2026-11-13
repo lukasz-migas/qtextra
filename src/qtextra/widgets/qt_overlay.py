@@ -48,12 +48,12 @@ class QtOverlay(QWidget):
         widget: QWidget | None = None,
         **kwargs,
     ):
-        super().__init__(parent, **kwargs)
-        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setContentsMargins(0, 0, 0, 0)
         self._alignment = alignment
         self._widget: QWidget | None = None
         self._tracked_ancestors: list[QWidget] = []
+        super().__init__(parent, **kwargs)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setContentsMargins(0, 0, 0, 0)
         if widget is not None:
             self.set_widget(widget)
 
