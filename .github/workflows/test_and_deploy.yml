@@ -56,7 +56,8 @@ jobs:
           qt: true
 
       - name: Test
-        run: uv run coverage run -p -m pytest -v --color=yes
+        # On Windows PySide6, disable pytest-qt log capture so Qt fatal messages reach stderr before an abort
+        run: uv run coverage run -p -m pytest -v --color=yes ${{ (matrix.os == 'windows-latest' && matrix.backend == 'pyside6') && '--no-qt-log' || '' }}
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7
