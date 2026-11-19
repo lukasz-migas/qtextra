@@ -13,6 +13,7 @@ from qtpy.QtWidgets import (
     QLayout,
     QListWidget,
     QListWidgetItem,
+    QSplitter,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -45,11 +46,14 @@ class QtSettingsPage(QWidget):
         Page title, shown above the page and in the sidebar. A search matching it shows the whole page.
     parent : QWidget | None
         Parent widget.
+    control_width : int
+        Width of the control column, shared by all rows so controls line up.
     """
 
-    def __init__(self, title: str, parent: QWidget | None = None) -> None:
+    def __init__(self, title: str, parent: QWidget | None = None, control_width: int = 320) -> None:
         super().__init__(parent)
         self.title = title
+        self.control_width = control_width
         self._sections: list[_Section] = []
 
         self._inner, scroll = hp.make_scroll_area(self)
@@ -112,20 +116,27 @@ class QtSettingsPage(QWidget):
             control = QWidget(row)
             widget.setContentsMargins(0, 0, 0, 0)
             control.setLayout(widget)
+        elif title:
+            # fixed-width column keeps controls aligned between rows; buttons (checkboxes, swatches) sit on the right
+            control = QWidget(row)
+            control_layout = QHBoxLayout(control)
+            control_layout.setContentsMargins(0, 0, 0, 0)
+            if isinstance(widget, QAbstractButton):
+                control_layout.addStretch(1)
+                control_layout.addWidget(widget)
+            else:
+                control_layout.addWidget(widget, 1)
         else:
             control = widget
         if title:
             label = hp.make_label(row, title, tooltip=tooltip or None, wrap=True)
+            control.setFixedWidth(self.control_width)
             layout.addWidget(label, stretch=1)
-            if isinstance(control, QAbstractButton):
-                layout.addWidget(control, 1, Qt.AlignmentFlag.AlignRight)
-            else:
-                layout.addWidget(control, 1)
-        else:
-            layout.addWidget(control, 1)
+        layout.addWidget(control, 0 if title else 1)
         self._insert(row)
 
-        text = " ".join((title, tooltip, keywords, control.toolTip())).lower()
+        tooltips = widget.toolTip() if isinstance(widget, QWidget) else ""
+        text = " ".join((title, tooltip, keywords, tooltips)).lower()
         section.rows.append(_Row(row, text))
         return row
 
@@ -155,6 +166,7 @@ class QtSettingsDialog(QtDialog):
     """
 
     SIDEBAR_WIDTH: int = 220
+    CONTROL_WIDTH: int = 320
 
     def make_pages(self) -> None:
         """Create the pages with `add_page`."""
@@ -178,8 +190,8 @@ class QtSettingsDialog(QtDialog):
 
         self.sidebar_footer_layout = hp.make_v_layout(spacing=2, margin=0)
         sidebar = QWidget(self)
-        sidebar.setFixedWidth(self.SIDEBAR_WIDTH)
-        sidebar_layout = hp.make_v_layout(spacing=6, margin=0, parent=sidebar)
+        sidebar.setMinimumWidth(150)
+        sidebar_layout = hp.make_v_layout(spacing=6, margin=(0, 0, 4, 0), parent=sidebar)
         sidebar_layout.addWidget(self._search)
         sidebar_layout.addWidget(self._list, stretch=1)
         sidebar_layout.addLayout(self.sidebar_footer_layout)
@@ -191,16 +203,23 @@ class QtSettingsDialog(QtDialog):
         )
         self.content_footer_layout = hp.make_h_layout(spacing=2, margin=0)
 
-        content_layout = hp.make_v_layout(spacing=8, margin=(12, 0, 0, 0))
+        content = QWidget(self)
+        content.setMinimumWidth(300)
+        content_layout = hp.make_v_layout(spacing=8, margin=(8, 0, 0, 0), parent=content)
         content_layout.addWidget(self._title)
         content_layout.addWidget(self._stack, stretch=1)
         content_layout.addWidget(self._empty_label, stretch=1)
         content_layout.addLayout(self.content_footer_layout)
 
-        layout = hp.make_h_layout(spacing=6, margin=6)
-        layout.addWidget(sidebar)
-        layout.addWidget(hp.make_v_line(self, thin=True))
-        layout.addLayout(content_layout, stretch=1)
+        self._splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        self._splitter.setChildrenCollapsible(False)
+        self._splitter.addWidget(sidebar)
+        self._splitter.addWidget(content)
+        self._splitter.setStretchFactor(1, 1)
+        self._splitter.setSizes([self.SIDEBAR_WIDTH, 10_000])
+
+        layout = hp.make_h_layout(spacing=0, margin=6)
+        layout.addWidget(self._splitter)
 
         self._search_shortcut = QShortcut(QKeySequence(QKeySequence.StandardKey.Find), self)
         self._search_shortcut.activated.connect(self.focus_search)
@@ -226,7 +245,7 @@ class QtSettingsDialog(QtDialog):
         icon : str
             qtextra icon key or qtawesome name (e.g. ``"mdi6.palette-outline"``).
         """
-        page = QtSettingsPage(title, self._stack)
+        page = QtSettingsPage(title, self._stack, control_width=self.CONTROL_WIDTH)
         item = QListWidgetItem(title)
         item.setSizeHint(QSize(0, 30))
         if icon:

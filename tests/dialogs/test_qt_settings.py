@@ -86,3 +86,9 @@ def test_focus_search(dialog: _Dialog, qtbot) -> None:
     dialog.activateWindow()
     dialog.focus_search()
     qtbot.waitUntil(lambda: dialog._search.hasFocus(), timeout=1000)
+
+
+def test_controls_share_column_width(dialog: _Dialog) -> None:
+    rows = (dialog.theme, dialog.sync, dialog.font)
+    widths = {row.layout().itemAt(1).widget().width() for row in rows}
+    assert widths == {dialog.CONTROL_WIDTH}
