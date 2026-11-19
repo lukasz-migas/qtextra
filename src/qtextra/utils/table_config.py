@@ -21,6 +21,7 @@ class Column(ty.TypedDict):
     order: int
     hidden: bool
     tooltip: str
+    formatter: str
     sizing: str | ColumnSizing
     selectable: bool
     resizable: bool
@@ -68,6 +69,16 @@ class TableConfig(MutableMapping[int, Column]):
         return [v["name"] for v in self.values()]
 
     @property
+    def tooltips(self) -> list[str]:
+        """Return header tooltips, in column order."""
+        return [v.get("tooltip", "") for v in self.values()]
+
+    @property
+    def formatters(self) -> dict[int, str]:
+        """Return display format strings (e.g. ``"{:.4f}"``) keyed by column index."""
+        return {v["order"]: v["formatter"] for v in self.values() if v.get("formatter")}
+
+    @property
     def hidden_columns(self) -> list[int]:
         """Returns list of hidden columns."""
         return [value["order"] for value in self.values() if value["hidden"]]
@@ -89,6 +100,7 @@ class TableConfig(MutableMapping[int, Column]):
         is_color: bool = False,
         no_sort: bool = False,
         tooltip: str = "",
+        formatter: str = "",
         sizing: str | ColumnSizing = "stretch",
         checkable: bool = False,
         selectable: bool = True,
@@ -111,6 +123,7 @@ class TableConfig(MutableMapping[int, Column]):
             "order": self.last_index,
             "hidden": hidden,
             "tooltip": tooltip,
+            "formatter": formatter,
             "sizing": sizing,
             "selectable": selectable,
             "resizable": resizable,

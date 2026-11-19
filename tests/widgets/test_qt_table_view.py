@@ -279,6 +279,24 @@ class TestTableView:
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         )
 
+    def test_config_header_tooltips_and_formatters(self, qtbot):
+        from qtpy.QtCore import Qt
+
+        cfg = TableConfig().add("Name", "name", tooltip="Display name").add("Value", "value", formatter="{:+.2f}")
+        w = QtCheckableTableView(None, config=cfg)
+        qtbot.addWidget(w)
+        w.add_data([["A", 1.234], ["B", None], ["C", -10.0]])
+        model = w.model()
+
+        assert model.headerData(0, Qt.Orientation.Horizontal, Qt.ItemDataRole.ToolTipRole) == "Display name"
+        assert model.headerData(1, Qt.Orientation.Horizontal, Qt.ItemDataRole.ToolTipRole) is None
+        rows = {row[0]: index for index, row in enumerate(model.get_data())}
+        assert model.data(model.index(rows["A"], 1), Qt.ItemDataRole.DisplayRole) == "+1.23"
+        assert model.data(model.index(rows["B"], 1), Qt.ItemDataRole.DisplayRole) is None
+        # sorting still uses the raw numeric values
+        model.sort(1, Qt.SortOrder.AscendingOrder)
+        assert [row[0] for row in model.get_data()] == ["C", "A", "B"]
+
     def test_setup_model_from_config_preserves_color_and_checkable_columns(self, qtbot):
         cfg = (
             TableConfig(text_alignment="left")
