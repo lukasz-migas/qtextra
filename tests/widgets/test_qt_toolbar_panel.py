@@ -375,11 +375,12 @@ def test_qt_labelled_toolbar_push_button_label_click_activates_panel(qtbot):
     assert settings_button.property("active") is True
 
 
-def _count_success_columns(widget) -> set[int]:
-    """Return the x positions of pixels painted in the theme's success colour."""
+def _count_success_columns(widget, theme: str) -> set[int]:
+    """Return the x positions of pixels painted in `theme`'s success colour."""
     image = widget.grab().toImage()
     ratio = image.devicePixelRatio()
-    success = QColor(THEMES.get_hex_color("success")).rgb()
+    # read the colour from the theme under test - the active theme may differ (and other tests modify it)
+    success = QColor(THEMES[theme].success.as_hex(format="long")).rgb()
     return {
         int(x / ratio)
         for x in range(image.width())
@@ -402,7 +403,7 @@ def test_qt_labelled_toolbar_push_button_single_active_bar_when_connected_late(q
 
     toolbar.connect_widget("gear", QWidget())
     assert button.isChecked()
-    columns = _count_success_columns(button)
+    columns = _count_success_columns(button, theme)
     assert columns, "active bar is not painted"
     assert max(columns) < 3, f"success colour painted outside the wrapper bar: {sorted(columns)}"
 
@@ -557,3 +558,24 @@ def test_qt_panel_toolbar_elided_labels_shrink_with_shared_width(qtbot):
     qtbot.waitUntil(lambda: elided.width() == icon_width)
     assert elided.label.width() <= icon_width
     assert "\N{HORIZONTAL ELLIPSIS}" in elided.label.text()
+
+
+def test_qt_labelled_toolbar_push_button_active_label_is_bold(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    window.setStyleSheet(THEMES.get_theme_stylesheet("light"))
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    first = toolbar.add_widget("home", title="Home", widget=QWidget())
+    second = toolbar.add_widget("gear", title="Settings", widget=QWidget(), elide=False)
+    window.show()
+    width = second.label.width()
+
+    assert first.label.font().bold()
+    assert not second.label.font().bold()
+
+    qtbot.mouseClick(second.image_btn, Qt.MouseButton.LeftButton)
+    assert not first.label.font().bold()
+    assert second.label.font().bold()
+    # label width is reserved for bold text, so activating does not shift the layout
+    assert second.label.width() == width

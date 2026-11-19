@@ -63,6 +63,10 @@ QtLabelledToolbarPushButton[active=true] {
     border-radius: 0px;
 }
 
+QtLabelledToolbarPushButton[active=true] QLabel#toolbar_label {
+    font-weight: bold;
+}
+
 /* keep the inner button's box model (icon position) but leave all highlighting to the wrapper;
    each selector out-ranks its QtToolbarPushButton counterpart above */
 QtLabelledToolbarPushButton QtToolbarPushButton,

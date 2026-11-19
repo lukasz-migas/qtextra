@@ -21,7 +21,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QEnterEvent, QIcon, QPainter, QPolygonF, QResizeEvent
+from qtpy.QtGui import QBrush, QColor, QEnterEvent, QFont, QFontMetrics, QIcon, QPainter, QPolygonF, QResizeEvent
 from qtpy.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -1220,7 +1220,8 @@ class QtLabelledToolbarPushButton(QWidget):
         active = self.image_btn.isChecked()
         if self.property("active") != active:
             self.setProperty("active", active)
-            hp.polish_widget(self)
+            # the label is styled from the wrapper's property (bold when active) so it needs a re-polish too
+            hp.polish_widget(self, self.label)
 
     def event(self, evt: QEvent) -> bool:  # type: ignore[override]
         """Show the hover tooltip while the cursor is anywhere over the icon or label."""
@@ -1320,7 +1321,11 @@ class QtLabelledToolbarPushButton(QWidget):
             self.label.setFixedSize(0, 0)
             return
 
-        metrics = self.label.fontMetrics()
+        # measure with the bold font used for the active state, so (de)activating does not change the width
+        self.label.ensurePolished()
+        font = QFont(self.label.font())
+        font.setBold(True)
+        metrics = QFontMetrics(font)
         lines = text.splitlines() or [text]
         icon_width = self.image_btn.sizeHint().width()
         natural_width = max(metrics.horizontalAdvance(line) for line in lines) + 2
