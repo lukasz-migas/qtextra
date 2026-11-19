@@ -275,7 +275,9 @@ class TestTableView:
         w.add_data([["Alice", 1]])
 
         index = w.model().index(0, 0)
-        assert w.model().data(index, Qt.ItemDataRole.TextAlignmentRole) == Qt.AlignmentFlag.AlignLeft
+        assert w.model().data(index, Qt.ItemDataRole.TextAlignmentRole) == (
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
 
     def test_setup_model_from_config_preserves_color_and_checkable_columns(self, qtbot):
         cfg = (

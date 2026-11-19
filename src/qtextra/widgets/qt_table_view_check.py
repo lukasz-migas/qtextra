@@ -45,6 +45,12 @@ from qtextra.utils.utilities import connect
 
 TEXT_COLOR: str = "#000000"
 LINK_COLOR: str = "#0000FF"
+# Horizontal alignment from a TableConfig, always vertically centered so text lines up with swatches/checkboxes.
+TEXT_ALIGNMENT: dict[str, Qt.AlignmentFlag] = {
+    "left": Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+    "center": Qt.AlignmentFlag.AlignCenter,
+    "right": Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+}
 
 __all__ = (
     "MultiColumnMultiValueProxyModel",
@@ -1418,11 +1424,7 @@ class QtCheckableTableView(QTableView):
             icon_columns=self._config.icon_columns,
             color_columns=self._config.color_columns,
             checkable_columns=self._config.checkable_columns,
-            text_alignment={
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[self._config.text_alignment],
+            text_alignment=TEXT_ALIGNMENT[self._config.text_alignment],
         )
 
     def set_model(self, model: QtCheckableItemModel) -> None:
@@ -1434,11 +1436,7 @@ class QtCheckableTableView(QTableView):
             model.no_sort_columns = self._config.no_sort_columns
             model.hidden_columns = self._config.hidden_columns
             model.checkable_columns = self._config.checkable_columns
-            model.text_alignment = {
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[self._config.text_alignment]
+            model.text_alignment = TEXT_ALIGNMENT[self._config.text_alignment]
         self.setModel(model)
 
     def setup_model_from_config(self, config: TableConfig):
@@ -1451,11 +1449,7 @@ class QtCheckableTableView(QTableView):
             icon_columns=config.icon_columns,
             color_columns=config.color_columns,
             checkable_columns=config.checkable_columns,
-            text_alignment={
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[config.text_alignment],
+            text_alignment=TEXT_ALIGNMENT[config.text_alignment],
         )
 
     def setup_model(
