@@ -18,8 +18,8 @@ Source: `examples/dialog_settings.py`
   from the sidebar and a "No settings match" message is shown when nothing matches. `Ctrl+F` focuses the search box.
 - Add extra buttons to `sidebar_footer_layout` (below the sidebar) or `content_footer_layout` (below the page).
 - Sidebar icons are re-colored when the theme changes.
-- The sidebar and content are in a splitter. Controls sit in a fixed-width column (`CONTROL_WIDTH`, default 320 px)
-  so they line up between rows; checkboxes and other buttons are right-aligned in it.
+- The sidebar and content are in a splitter. Labels and controls split each row 2:3 so controls line up between
+  rows; the control column grows up to `CONTROL_WIDTH` (default 320 px). Checkboxes and other buttons are right-aligned in it.
 
 ## API
 

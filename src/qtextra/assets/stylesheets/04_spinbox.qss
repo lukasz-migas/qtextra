@@ -10,6 +10,10 @@ QAbstractSpinBox {
   font-size: {{ font_size }};
 }
 
+QDateTimeEdit {
+  qproperty-alignment: AlignCenter;
+}
+
 QLabeledSlider > QAbstractSpinBox {
   min-width: 10px;
   padding: 0px;

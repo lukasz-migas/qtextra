@@ -13,6 +13,7 @@ from qtpy.QtWidgets import (
     QLayout,
     QListWidget,
     QListWidgetItem,
+    QSizePolicy,
     QSplitter,
     QStackedWidget,
     QVBoxLayout,
@@ -47,7 +48,7 @@ class QtSettingsPage(QWidget):
     parent : QWidget | None
         Parent widget.
     control_width : int
-        Width of the control column, shared by all rows so controls line up.
+        Maximum width of the control column. Controls take 3/5 of the row up to this width.
     """
 
     def __init__(self, title: str, parent: QWidget | None = None, control_width: int = 320) -> None:
@@ -117,7 +118,7 @@ class QtSettingsPage(QWidget):
             widget.setContentsMargins(0, 0, 0, 0)
             control.setLayout(widget)
         elif title:
-            # fixed-width column keeps controls aligned between rows; buttons (checkboxes, swatches) sit on the right
+            # buttons (checkboxes, swatches) sit on the right of the control column
             control = QWidget(row)
             control_layout = QHBoxLayout(control)
             control_layout.setContentsMargins(0, 0, 0, 0)
@@ -129,10 +130,16 @@ class QtSettingsPage(QWidget):
         else:
             control = widget
         if title:
+            # label and control split the row 2:3 regardless of their contents, so controls line up between rows;
+            # the control column stops growing at `control_width` and the label takes the rest
             label = hp.make_label(row, title, tooltip=tooltip or None, wrap=True)
-            control.setFixedWidth(self.control_width)
-            layout.addWidget(label, stretch=1)
-        layout.addWidget(control, 0 if title else 1)
+            label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            control.setSizePolicy(QSizePolicy.Policy.Ignored, control.sizePolicy().verticalPolicy())
+            control.setMaximumWidth(self.control_width)
+            layout.addWidget(label, stretch=2)
+            layout.addWidget(control, stretch=3)
+        else:
+            layout.addWidget(control, stretch=1)
         self._insert(row)
 
         tooltips = widget.toolTip() if isinstance(widget, QWidget) else ""
@@ -204,7 +211,7 @@ class QtSettingsDialog(QtDialog):
         self.content_footer_layout = hp.make_h_layout(spacing=2, margin=0)
 
         content = QWidget(self)
-        content.setMinimumWidth(300)
+        content.setMinimumWidth(400)
         content_layout = hp.make_v_layout(spacing=8, margin=(8, 0, 0, 0), parent=content)
         content_layout.addWidget(self._title)
         content_layout.addWidget(self._stack, stretch=1)
