@@ -95,3 +95,19 @@ QMainWindow::separator:vertical {
     height: 8px;
     padding: 2 1 2 1;
 }
+
+/* ----------------- QtSettingsDialog ----------------- */
+
+QtSettingsDialog QListWidget#settings_sidebar {
+    background: transparent;
+    border: none;
+}
+
+QtSettingsDialog QListWidget#settings_sidebar::item {
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+QtSettingsDialog QLabel#settings_section {
+    font-size: {{ increase(font_size, 1) }};
+}
