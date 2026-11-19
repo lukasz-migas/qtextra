@@ -6,8 +6,10 @@ import typing as ty
 from functools import partial
 
 from loguru import logger
-from qtpy.QtCore import QEvent, QObject, Qt, QTimer, Slot  # type: ignore[attr-defined]
+from qtpy.QtCore import QEvent, QObject, QPoint, Qt, QTimer, Slot  # type: ignore[attr-defined]
+from qtpy.QtGui import QContextMenuEvent
 from qtpy.QtWidgets import (  # type: ignore[attr-defined]
+    QAbstractButton,
     QAction,
     QButtonGroup,
     QHBoxLayout,
@@ -21,7 +23,7 @@ from qtpy.QtWidgets import (  # type: ignore[attr-defined]
 )
 
 import qtextra.helpers as hp
-from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, QtToolbarPushButton
+from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton, ToolbarButton
 
 if ty.TYPE_CHECKING:
     from qtextra.typing import QtaSizePreset
@@ -63,6 +65,9 @@ class QtPanelWidget(QWidget):
     `QtLabelledToolbarPushButton` instances and keeps them synchronized with
     the panel stack. Buttons can either trigger a callback directly or toggle
     a panel widget in the adjacent `QStackedWidget`.
+
+    Right-clicking the toolbar opens `context_menu`, which contains `toggle_titles_action` by default. Other
+    actions can be added to the menu by consumers.
     """
 
     def __init__(
@@ -108,21 +113,34 @@ class QtPanelWidget(QWidget):
         self._overflow_action = self._buttons.addWidget(self._overflow_button)
         self._overflow_action.setVisible(False)
 
+        # right-click menu - exposed so applications can add their own actions
+        self.context_menu = hp.make_menu(self, "Toolbar")
+        self.toggle_titles_action = hp.make_menu_item(
+            self,
+            "Show titles",
+            menu=self.context_menu,
+            checkable=True,
+            checked=not label_hidden,
+            func=self._on_toggle_titles,
+        )
+
         spacer = hp.make_spacer_widget()
         self._spacer = self._buttons.addWidget(spacer)
 
         self._group = QButtonGroup(self)
-        self._button_dict: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
-        self._hidden_dict: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
-        self._top_buttons: list[QtToolbarPushButton | QtLabelledToolbarPushButton] = []
-        self._overflow_hidden: set[QtToolbarPushButton | QtLabelledToolbarPushButton] = set()
-        self._overflow_enabled: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, bool] = {}
-        self._overflow_menu_actions: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, QAction] = {}
-        self._overflow_labels: dict[QtToolbarPushButton | QtLabelledToolbarPushButton, str] = {}
+        # the group holds the inner icon button of labelled buttons - map it back to the toolbar button
+        self._group_owners: dict[QAbstractButton, ToolbarButton] = {}
+        self._button_dict: dict[ToolbarButton, QAction] = {}
+        self._hidden_dict: dict[ToolbarButton, QAction] = {}
+        self._top_buttons: list[ToolbarButton] = []
+        self._overflow_hidden: set[ToolbarButton] = set()
+        self._overflow_enabled: dict[ToolbarButton, bool] = {}
+        self._overflow_menu_actions: dict[ToolbarButton, QAction] = {}
+        self._overflow_labels: dict[ToolbarButton, str] = {}
 
         # Widget setup
         self._group.setExclusive(True)
-        self._group.buttonToggled.connect(self._toggle_widget)
+        self._group.buttonToggled.connect(self._on_group_toggled)
 
         self._layout = QHBoxLayout()
         self._layout.setContentsMargins(0, 0, 0, 0)
@@ -157,6 +175,7 @@ class QtPanelWidget(QWidget):
     @label_hidden.setter
     def label_hidden(self, value: bool) -> None:
         self._label_hidden = value
+        self.toggle_titles_action.setChecked(not value)
         for button in self._button_dict:
             if hasattr(button, "label_hidden"):
                 button.label_hidden = value
@@ -168,21 +187,21 @@ class QtPanelWidget(QWidget):
         """Get stack widget."""
         return self._stack
 
-    def get_widget(self, name: str) -> QtToolbarPushButton | QtLabelledToolbarPushButton | None:
+    def get_widget(self, name: str) -> ToolbarButton | None:
         """Get widget."""
         for button in self._button_dict:
             if button.objectName() == name:
                 return button
         return None
 
-    def get_index(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> int:
+    def get_index(self, button: ToolbarButton) -> int:
         """Get index."""
         for i, btn in enumerate(self._button_dict):
             if btn == button:
                 return i
         return -1
 
-    def widget_iter(self) -> ty.Iterator[QtToolbarPushButton | QtLabelledToolbarPushButton]:
+    def widget_iter(self) -> ty.Iterator[ToolbarButton]:
         """Iterate over widgets."""
         yield from self._button_dict
 
@@ -196,7 +215,7 @@ class QtPanelWidget(QWidget):
         elide: bool = True,
         func: ty.Callable | None = None,
         size_preset: QtaSizePreset | None = None,
-    ) -> QtToolbarPushButton | QtLabelledToolbarPushButton:
+    ) -> ToolbarButton:
         """Add a toolbar button and optionally bind it to a panel widget.
 
         Parameters
@@ -227,7 +246,7 @@ class QtPanelWidget(QWidget):
         if self.get_widget(name):
             raise ValueError(f"Button with name '{name}' already exists.")
 
-        button: QtToolbarPushButton | QtLabelledToolbarPushButton = hp.make_toolbar_btn(
+        button: ToolbarButton = hp.make_toolbar_btn(
             self,
             name,
             checkable=widget is not None,
@@ -245,10 +264,9 @@ class QtPanelWidget(QWidget):
         if location == "top":
             self._top_buttons.append(button)
             self._add_overflow_menu_action(button, title or tooltip or name.replace("_", " ").title())
-        if isinstance(button, QtLabelledToolbarPushButton):
-            self._group.addButton(button.image_btn)
-        else:
-            self._group.addButton(button)
+        group_button = self._group_button(button)
+        self._group.addButton(group_button)
+        self._group_owners[group_button] = button
         self._sync_button_widths()
         if widget:
             self.connect_widget(name, widget, tooltip)
@@ -287,22 +305,21 @@ class QtPanelWidget(QWidget):
             self._toggle_widget(button, True)
         button.evt_click.connect(partial(self._toggle_widget_from_click, button))
 
-    def _add_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
+    def _add_before(self, button: ToolbarButton) -> QAction:
         """Insert a top button immediately before the overflow control."""
         return self._buttons.insertWidget(self._overflow_action, button)  # type: ignore[return-value]
 
-    def _add_after(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> QAction:
+    def _add_after(self, button: ToolbarButton) -> QAction:
         """Append a toolbar button after the spacer."""
         return self._buttons.addWidget(button)  # type: ignore[return-value]
 
     def _add_overflow_menu_action(
         self,
-        button: QtToolbarPushButton | QtLabelledToolbarPushButton,
+        button: ToolbarButton,
         label: str,
     ) -> None:
         """Create the menu action representing a top toolbar button."""
-        source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
-        action = QAction(source.icon(), label, self._overflow_menu)
+        action = QAction(button.icon(), label, self._overflow_menu)
         action.setVisible(False)
         action.triggered.connect(partial(self._activate_overflow_button, button))
         self._overflow_menu.addAction(action)
@@ -311,14 +328,13 @@ class QtPanelWidget(QWidget):
 
     def _activate_overflow_button(
         self,
-        button: QtToolbarPushButton | QtLabelledToolbarPushButton,
+        button: ToolbarButton,
         _: bool = False,
     ) -> None:
         """Invoke a hidden button with the same signals as a pointer click."""
-        source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
-        source.on_click()
-        if source.isCheckable() and not source.isChecked():
-            source.setChecked(True)
+        button.on_click()
+        if button.isCheckable() and not button.isChecked():
+            button.setChecked(True)
         self._sync_overflow_menu()
 
     def _show_overflow_menu(self) -> None:
@@ -328,13 +344,12 @@ class QtPanelWidget(QWidget):
     def _sync_overflow_menu(self) -> None:
         """Synchronize overflow menu actions with their toolbar buttons."""
         for button in self._top_buttons:
-            source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
             action = self._overflow_menu_actions[button]
             action.setText(self._overflow_labels[button])
-            action.setIcon(source.icon())
-            action.setCheckable(source.isCheckable())
-            action.setChecked(source.isChecked())
-            action.setEnabled(self._overflow_enabled.get(button, source.isEnabled()))
+            action.setIcon(button.icon())
+            action.setCheckable(button.isCheckable())
+            action.setChecked(button.isChecked())
+            action.setEnabled(self._overflow_enabled.get(button, button.isEnabled()))
             action.setVisible(button in self._overflow_hidden and button not in self._hidden_dict)
 
     def _schedule_overflow_update(self) -> None:
@@ -368,8 +383,7 @@ class QtPanelWidget(QWidget):
                         if self._buttons.sizeHint().height() <= available_height:
                             break
                         self._overflow_hidden.add(button)
-                        source = button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
-                        self._overflow_enabled[button] = source.isEnabled()
+                        self._overflow_enabled[button] = button.isEnabled()
                         self._button_dict[button].setVisible(False)
 
                     if not self._overflow_hidden:
@@ -382,6 +396,33 @@ class QtPanelWidget(QWidget):
                 layout.activate()
         finally:
             self._updating_overflow = False
+
+    def _on_toggle_titles(self, checked: bool) -> None:
+        """Show or hide the button titles from the context menu."""
+        self.label_hidden = not checked
+
+    def _button_at(self, pos: QPoint) -> ToolbarButton | None:
+        """Return the toolbar button under `pos` (in this widget's coordinates)."""
+        child = self.childAt(pos)
+        while child is not None and child is not self:
+            if child in self._button_dict:
+                return child  # type: ignore[return-value]
+            child = child.parentWidget()
+        return None
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # type: ignore[override]
+        """Show `context_menu` when the toolbar is right-clicked."""
+        if not self._buttons.geometry().contains(event.pos()):
+            event.ignore()
+            return
+        # buttons with their own right-click handler keep it to themselves
+        button = self._button_at(event.pos())
+        if button is not None and button.has_right_click:
+            event.accept()
+            return
+        self.context_menu.popup(event.globalPos())
+        # accept so `QMainWindow` does not show its own toolbar menu as well
+        event.accept()
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """Recalculate overflow after the internal toolbar is shown or resized."""
@@ -402,26 +443,35 @@ class QtPanelWidget(QWidget):
         self._overflow_button.setFixedWidth(target_width)
         self._buttons.updateGeometry()
 
-    def add_separator_before(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
+    def add_separator_before(self, button: ToolbarButton) -> None:
         """Add separator before button."""
         self._buttons.insertSeparator(button)
 
-    def add_separator_after(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
+    def add_separator_after(self, button: ToolbarButton) -> None:
         """Add separator."""
         self._buttons.addSeparator()
 
-    def _show_another(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
+    def _show_another(self, button: ToolbarButton) -> None:
         """Activate another visible button when the current one cannot stay active."""
         for btn in self._button_dict:
             if btn != button and btn not in self._hidden_dict:
                 btn.setChecked(True)
                 break
         else:
-            with hp.qt_signals_blocked(button):
+            with hp.qt_signals_blocked(self._group_button(button)):
                 button.setChecked(False)
             self._stack.setVisible(False)
 
-    def _toggle_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton, value: bool) -> None:
+    @staticmethod
+    def _group_button(button: ToolbarButton) -> QAbstractButton:
+        """Return the checkable button that is registered in the exclusive button group."""
+        return button.image_btn if isinstance(button, QtLabelledToolbarPushButton) else button
+
+    def _on_group_toggled(self, group_button: QAbstractButton, value: bool) -> None:
+        """Forward button-group toggles using the toolbar button (which owns `panel_widget`)."""
+        self._toggle_widget(self._group_owners.get(group_button, group_button), value)  # type: ignore[arg-type]
+
+    def _toggle_widget(self, button: ToolbarButton, value: bool) -> None:
         """Toggle widget and show appropriate widget."""
         if button in self._hidden_dict:
             self._show_another(button)
@@ -429,7 +479,7 @@ class QtPanelWidget(QWidget):
 
         for btn in self._button_dict:
             if btn != button:
-                with hp.qt_signals_blocked(btn):
+                with hp.qt_signals_blocked(self._group_button(btn)):
                     btn.setChecked(False)
 
         button.setChecked(value)
@@ -449,19 +499,19 @@ class QtPanelWidget(QWidget):
 
     def _toggle_widget_from_click(
         self,
-        button: QtToolbarPushButton | QtLabelledToolbarPushButton,
+        button: ToolbarButton,
         *_: ty.Any,
     ) -> None:
         """Activate a panel while ignoring binding-specific signal payloads."""
         self._toggle_widget(button, True)
 
-    def enable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
+    def enable_widget(self, button: ToolbarButton) -> None:
         """Enable widget."""
         if button in self._hidden_dict:
             self._hidden_dict.pop(button, None)
             self._update_overflow()
 
-    def disable_widget(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton) -> None:
+    def disable_widget(self, button: ToolbarButton) -> None:
         """Disable widget."""
         if button in self._hidden_dict:
             return
@@ -531,6 +581,16 @@ class QtPanelToolbar(QToolBar):
         return self._widget._stack
 
     @property
+    def context_menu(self) -> QMenu:
+        """Right-click menu of the toolbar; add actions to extend it."""
+        return self._widget.context_menu
+
+    @property
+    def toggle_titles_action(self) -> QAction:
+        """Checkable action that shows or hides the button titles."""
+        return self._widget.toggle_titles_action
+
+    @property
     def label_hidden(self) -> bool:
         """Get label hidden state."""
         return self._widget._label_hidden
@@ -548,7 +608,7 @@ class QtPanelToolbar(QToolBar):
     def auto_hide(self, value: bool) -> None:
         self._widget.auto_hide = value
 
-    def set_disabled(self, button: QtToolbarPushButton | QtLabelledToolbarPushButton, disable: bool) -> None:
+    def set_disabled(self, button: ToolbarButton, disable: bool) -> None:
         """Set the widget as disabled."""
         if disable:
             self.disable_widget(button)

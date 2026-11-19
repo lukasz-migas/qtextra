@@ -18,7 +18,10 @@ QToolBar::handle {
 }
 
 /* ----------------- QtToolbarPushButton ----------------- */
-QtPanelWidget > QtImagePushButton[checkable=true], QtToolbarPushButton {
+/* Checked rules are listed with and without `[checkable=true]`: the attribute form out-ranks
+   `QtImagePushButton[checkable=true]:checked` (03_qta.qss), the plain form does not depend on when
+   `checkable` was set (attribute selectors are only re-evaluated on polish). */
+QtToolbarPushButton {
     padding: 3px;
     border: 1px solid transparent;
     border-left: 3px solid transparent;
@@ -27,19 +30,54 @@ QtPanelWidget > QtImagePushButton[checkable=true], QtToolbarPushButton {
     background-color: transparent;
 }
 
-
-QtPanelWidget > QtImagePushButton[checkable=true]::checked, QtToolbarPushButton:checked {
+QtToolbarPushButton:checked,
+QtToolbarPushButton[checkable=true]:checked {
     border-left: 3px solid {{ success }};
     border-radius: 0px;
+    background: transparent;
+}
+
+/* after the checked rules so hover still shows on the active button */
+QtToolbarPushButton:hover,
+QtToolbarPushButton:pressed,
+QtToolbarPushButton:checked:hover,
+QtToolbarPushButton[checkable=true]:checked:hover {
+    background-color: {{ primary }};
+}
+
+/* ----------------- QtLabelledToolbarPushButton ----------------- */
+/* the wrapper owns hover/active styling so the icon and label are highlighted together */
+QtLabelledToolbarPushButton {
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: 4px;
     background-color: transparent;
 }
 
-QtPanelWidget > QtImagePushButton[checkable=true]:hover, QtToolbarPushButton:hover {
+QtLabelledToolbarPushButton:hover {
     background-color: {{ primary }};
 }
 
-QtPanelWidget > QtImagePushButton[checkable=true]:pressed, QtToolbarPushButton:pressed {
-    background-color: {{ primary }};
+QtLabelledToolbarPushButton[active=true] {
+    border-left: 3px solid {{ success }};
+    border-radius: 0px;
+}
+
+QtLabelledToolbarPushButton[active=true] QLabel#toolbar_label {
+    font-weight: bold;
+}
+
+/* keep the inner button's box model (icon position) but leave all highlighting to the wrapper;
+   each selector out-ranks its QtToolbarPushButton counterpart above */
+QtLabelledToolbarPushButton QtToolbarPushButton,
+QtLabelledToolbarPushButton QtToolbarPushButton:hover,
+QtLabelledToolbarPushButton QtToolbarPushButton:pressed,
+QtLabelledToolbarPushButton QtToolbarPushButton:checked,
+QtLabelledToolbarPushButton QtToolbarPushButton:checked:hover,
+QtLabelledToolbarPushButton QtToolbarPushButton[checkable=true]:checked,
+QtLabelledToolbarPushButton QtToolbarPushButton[checkable=true]:checked:hover {
+    border-left-color: transparent;
+    background: transparent;
 }
 
 /* ----------------- QtPanelToolbar ----------------- */

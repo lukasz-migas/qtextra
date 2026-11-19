@@ -21,7 +21,7 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     Signal,
     Slot,
 )
-from qtpy.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPolygonF
+from qtpy.QtGui import QBrush, QColor, QEnterEvent, QFont, QFontMetrics, QIcon, QPainter, QPolygonF, QResizeEvent
 from qtpy.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -923,6 +923,8 @@ class QtToolbarPushButton(QtImagePushButton):
     _text: str = ""
     _tooltip = None
     _suppress_hover_tooltip = False
+    # set by a wrapper (e.g. `QtLabelledToolbarPushButton`) that drives hover tooltips for the whole tile
+    _tooltip_target: QWidget | None = None
 
     panel_widget: QWidget | None = None
     about_widget: QWidget | None = None
@@ -948,6 +950,13 @@ class QtToolbarPushButton(QtImagePushButton):
         """Use the configured button footprint when laying out toolbars."""
         return QSize(self._base_button_size)
 
+    def setCheckable(self, checkable: bool) -> None:  # type: ignore[override]
+        """Set checkable state and re-apply `[checkable=...]` stylesheet selectors."""
+        changed = checkable != self.isCheckable()
+        super().setCheckable(checkable)
+        if changed:
+            hp.polish_widget(self)
+
     def setToolTip(self, text: str) -> None:  # type: ignore[override]
         """Override tooltip."""
         self._text = text
@@ -958,8 +967,8 @@ class QtToolbarPushButton(QtImagePushButton):
         self._text = content
 
     def _get_position(self) -> QPoint:
-        rect = self.rect()
-        pos = self.mapToGlobal(rect.topRight())
+        target = self._tooltip_target or self
+        pos = target.mapToGlobal(target.rect().topRight())
         pos -= QPoint(0, 22)
         return pos
 
@@ -982,24 +991,34 @@ class QtToolbarPushButton(QtImagePushButton):
             self._tooltip = QtRichToolTip.show_tooltip(
                 title=self._title,
                 content=self._text,
-                target=self,
+                target=self._tooltip_target or self,
                 parent=hp.get_main_window(self),
             )
             self._tooltip.destroyed.connect(self._on_tooltip_closed)
         except AttributeError:
             QToolTip.showText(self._get_position(), self._text, self)
 
+    def _on_hover_enter(self) -> None:
+        """Start the delayed hover tooltip."""
+        if not self._tooltip and not self._suppress_hover_tooltip:
+            self.tooltip_timer.start()
+
+    def _on_hover_leave(self) -> None:
+        """Cancel or close the hover tooltip."""
+        self._suppress_hover_tooltip = False
+        self.tooltip_timer.stop()
+        hp.close_widget(self._tooltip)
+        self._tooltip = None
+
     def event(self, evt: QEvent) -> bool:  # type: ignore[override]
         """Override event handler to quickly display/hide a tooltip."""
-        if evt.type() == QEvent.Type.Enter:
-            if not self._tooltip and not self._suppress_hover_tooltip:
-                self.tooltip_timer.start()
-            evt.ignore()
-        elif evt.type() == QEvent.Type.Leave:
-            self._suppress_hover_tooltip = False
-            self.tooltip_timer.stop()
-            hp.close_widget(self._tooltip)
-            self._tooltip = None
+        # when wrapped, the wrapper drives hover so moving between icon and label keeps the tooltip
+        if self._tooltip_target is None:
+            if evt.type() == QEvent.Type.Enter:
+                self._on_hover_enter()
+                evt.ignore()
+            elif evt.type() == QEvent.Type.Leave:
+                self._on_hover_leave()
         return super().event(evt)
 
     @Slot(int)  # type: ignore[misc]
@@ -1075,7 +1094,11 @@ class QtToolbarPushButton(QtImagePushButton):
 
 
 class QtLabelledToolbarPushButton(QWidget):
-    """A push button with a label."""
+    """A push button with a label.
+
+    The wrapper owns the hover and active (checked) styling so that the icon and the label are highlighted
+    together. The active state is exposed to stylesheets through the `active` dynamic property.
+    """
 
     LABEL_SPACING = 0
 
@@ -1083,9 +1106,20 @@ class QtLabelledToolbarPushButton(QWidget):
         self._label_hidden = False
         self._label_text = ""
         self._elide = elide
+        # width assigned to the tile by its owner (e.g. the toolbar's width sync); elided labels may use all of it
+        self._elide_width = 0
         super().__init__(*args, **kwargs)
+        # paint QSS background/border on this plain QWidget subclass and repaint on hover
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+        self.setProperty("active", False)
 
         self.image_btn = QtToolbarPushButton()
+        self.image_btn.toggled.connect(self._sync_active_state)
+        # the wrapper drives hover tooltips and pulses so icon and label behave as one tile
+        self.image_btn._tooltip_target = self
+        self.setGraphicsEffect(self.image_btn.opacity)  # moves the effect from the icon to the whole tile
+
         self.label = QLabel()
         self.label.setObjectName("toolbar_label")
         self.label.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
@@ -1099,19 +1133,111 @@ class QtLabelledToolbarPushButton(QWidget):
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignCenter)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-        # Add methods from the QtToolbarPushButton
-        self.evt_click = self.image_btn.evt_click
-        self.set_qta = self.image_btn.set_qta
-        self.setText = self.image_btn.setText
-        self.setChecked = self.image_btn.setChecked
-        self.set_indicator = self.image_btn.set_indicator
-        self.set_indicator = self.image_btn.set_indicator
-        self.stop_pulse = self.image_btn.stop_pulse
-        self.start_pulse = self.image_btn.start_pulse
-        self.setCheckable = self.image_btn.setCheckable
-        self.isChecked = self.image_btn.isChecked
-        self.click = self.image_btn.click
-        self.set_qta_size = self.image_btn.set_qta_size
+    # Forwarded `QtToolbarPushButton` API, so the panel can treat both button types the same way
+    @property
+    def evt_click(self) -> Signal:
+        """Signal emitted when the button is clicked."""
+        return self.image_btn.evt_click
+
+    @property
+    def evt_right_click(self) -> Signal:
+        """Signal emitted when the button is right-clicked."""
+        return self.image_btn.evt_right_click
+
+    def set_qta(self, name: str | tuple[str, dict], **kwargs: ty.Any) -> None:
+        """Set the qtawesome icon."""
+        self.image_btn.set_qta(name, **kwargs)
+
+    def set_qta_size(self, size: int | QSize | tuple[int, int]) -> None:
+        """Set the icon size."""
+        self.image_btn.set_qta_size(size)
+
+    def icon(self) -> QIcon:
+        """Return the button icon."""
+        return self.image_btn.icon()
+
+    def setText(self, text: str) -> None:
+        """Set the text drawn on the icon button."""
+        self.image_btn.setText(text)
+
+    def setToolTip(self, text: str) -> None:  # type: ignore[override]
+        """Set the hover tooltip shown for the whole tile."""
+        self.image_btn.setToolTip(text)
+
+    def setRichToolTip(self, title: str, content: str) -> None:
+        """Set the rich hover tooltip shown for the whole tile."""
+        self.image_btn.setRichToolTip(title, content)
+
+    def set_indicator(self, indicator_type: str, about: str | None = None) -> None:
+        """Set indicator type."""
+        self.image_btn.set_indicator(indicator_type, about)
+
+    def start_pulse(self) -> None:
+        """Start pulsating the whole tile."""
+        self.image_btn.start_pulse()
+
+    def stop_pulse(self) -> None:
+        """Stop pulsating."""
+        self.image_btn.stop_pulse()
+
+    def setCheckable(self, checkable: bool) -> None:
+        """Set whether the button is checkable."""
+        self.image_btn.setCheckable(checkable)
+
+    def isCheckable(self) -> bool:
+        """Return whether the button is checkable."""
+        return self.image_btn.isCheckable()
+
+    def isChecked(self) -> bool:
+        """Return whether the button is checked."""
+        return self.image_btn.isChecked()
+
+    def setChecked(self, checked: bool) -> None:
+        """Set the checked state and keep the wrapper highlight in sync."""
+        self.image_btn.setChecked(checked)
+        # `toggled` is not emitted when the inner button's signals are blocked
+        self._sync_active_state()
+
+    def click(self) -> None:
+        """Programmatically click the icon button."""
+        self.image_btn.click()
+
+    @property
+    def has_right_click(self) -> bool:
+        """Return whether a right-click handler was connected via `connect_to_right_click`."""
+        return self.image_btn.has_right_click
+
+    def connect_to_right_click(self, func: ty.Callable) -> None:
+        """Connect function to right-click on the icon or label."""
+        self.image_btn.connect_to_right_click(func)
+
+    def on_click(self) -> None:
+        """Emit `evt_click` as a pointer press would."""
+        self.image_btn.on_click()
+
+    def _sync_active_state(self, *_: ty.Any) -> None:
+        """Mirror the inner button checked state onto the `active` property used by stylesheets."""
+        active = self.image_btn.isChecked()
+        if self.property("active") != active:
+            self.setProperty("active", active)
+            # the label is styled from the wrapper's property (bold when active) so it needs a re-polish too
+            hp.polish_widget(self, self.label)
+
+    def event(self, evt: QEvent) -> bool:  # type: ignore[override]
+        """Show the hover tooltip while the cursor is anywhere over the icon or label."""
+        if evt.type() == QEvent.Type.Enter:
+            self.image_btn._on_hover_enter()
+        elif evt.type() == QEvent.Type.Leave:
+            self.image_btn._on_hover_leave()
+        return super().event(evt)
+
+    def mousePressEvent(self, evt: QEvent) -> None:  # type: ignore[override]
+        """Forward presses on the label (or padding) to the icon button, matching `QtImagePushButton`."""
+        if evt.button() == Qt.MouseButton.LeftButton:  # type: ignore[attr-defined]
+            self.image_btn.on_click()
+        elif evt.button() == Qt.MouseButton.RightButton:  # type: ignore[attr-defined]
+            self.image_btn.on_right_click()
+        super().mousePressEvent(evt)  # type: ignore[arg-type]
 
     @property
     def label_hidden(self) -> bool:
@@ -1184,22 +1310,31 @@ class QtLabelledToolbarPushButton(QWidget):
         self.updateGeometry()
 
     def _update_label_geometry(self) -> None:
-        """Constrain the label so toolbar buttons stay compact."""
+        """Constrain the label so toolbar buttons stay compact.
+
+        Elided labels never widen the tile: they use the icon width, or the tile width once the owner (e.g. the
+        toolbar) made the tile wider, and are only elided when the text does not fit in that width.
+        """
         text = self._label_text.strip()
         if not text:
             self.label.clear()
             self.label.setFixedSize(0, 0)
             return
 
-        metrics = self.label.fontMetrics()
+        # measure with the bold font used for the active state, so (de)activating does not change the width
+        self.label.ensurePolished()
+        font = QFont(self.label.font())
+        font.setBold(True)
+        metrics = QFontMetrics(font)
         lines = text.splitlines() or [text]
         icon_width = self.image_btn.sizeHint().width()
+        natural_width = max(metrics.horizontalAdvance(line) for line in lines) + 2
 
         if self._elide:
-            width = icon_width
+            width = max(icon_width, min(self._elide_width, natural_width))
             display_text = "\n".join(metrics.elidedText(line, Qt.TextElideMode.ElideRight, width) for line in lines)
         else:
-            width = max(icon_width, max(metrics.horizontalAdvance(line) for line in lines) + 2)
+            width = max(icon_width, natural_width)
             display_text = "\n".join(lines)
 
         self.label.setText(display_text)
@@ -1214,9 +1349,17 @@ class QtLabelledToolbarPushButton(QWidget):
             return QSize(icon_size.width(), icon_size.height())
 
         spacing = self.layout().spacing() if self.layout() is not None else 0
-        width = max(icon_size.width(), self.label.width())
+        # elided labels follow the tile width, so they must not feed back into the requested width
+        width = icon_size.width() if self._elide else max(icon_size.width(), self.label.width())
         height = icon_size.height() + spacing + self.label.height()
         return QSize(width, height)
+
+    def resizeEvent(self, evt: QResizeEvent) -> None:  # type: ignore[override]
+        """Re-elide the label when the tile width changes."""
+        super().resizeEvent(evt)
+        if self._elide and evt.size().width() != self._elide_width:
+            self._elide_width = evt.size().width()
+            self._update_label_geometry()
 
     def minimumSizeHint(self) -> QSize:  # type: ignore[override]
         """Match the constrained size hint."""
@@ -1227,6 +1370,9 @@ class QtLabelledToolbarPushButton(QWidget):
     setQtaSizePreset = set_qta_size_preset
     setLabel = set_label
 
+
+#: Either toolbar button flavour; both expose the same forwarded API.
+ToolbarButton: ty.TypeAlias = QtToolbarPushButton | QtLabelledToolbarPushButton
 
 if __name__ == "__main__":  # pragma: no cover
     import sys
