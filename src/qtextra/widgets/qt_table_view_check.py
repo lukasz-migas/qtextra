@@ -45,6 +45,12 @@ from qtextra.utils.utilities import connect
 
 TEXT_COLOR: str = "#000000"
 LINK_COLOR: str = "#0000FF"
+# Horizontal alignment from a TableConfig, always vertically centered so text lines up with swatches/checkboxes.
+TEXT_ALIGNMENT: dict[str, Qt.AlignmentFlag] = {
+    "left": Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+    "center": Qt.AlignmentFlag.AlignCenter,
+    "right": Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+}
 
 __all__ = (
     "MultiColumnMultiValueProxyModel",
@@ -793,6 +799,9 @@ class QtCheckableItemModel(QAbstractTableModel):
         self.icon_columns = icon_columns or []
         self.checkable_columns = checkable_columns or []
         self.text_alignment = text_alignment or Qt.AlignmentFlag.AlignCenter
+        # optional per-column header tooltips and display format strings (e.g. "{:.4f}")
+        self.header_tooltips: list[str] = []
+        self.formatters: dict[int, str] = {}
         self._sort_index_by_initial: dict[int, int] = {}
         self._sort_key_cache: dict[int, list[ty.Any]] = {}
         self._sort_strategy_cache: dict[int, str] = {}
@@ -960,7 +969,12 @@ class QtCheckableItemModel(QAbstractTableModel):
         # value
         if role == Qt.ItemDataRole.DisplayRole:
             if column not in self.icon_columns and column not in self.checkable_columns and not is_color:
-                return self._table[row][column]
+                value = self._table[row][column]
+                formatter = self.formatters.get(column)
+                if formatter and value is not None and value != "":
+                    with suppress(TypeError, ValueError):
+                        return formatter.format(value)
+                return value
         # alignment
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             return self.text_alignment
@@ -977,6 +991,13 @@ class QtCheckableItemModel(QAbstractTableModel):
         """Get header data."""
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.header[col]
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.ToolTipRole
+            and col < len(self.header_tooltips)
+            and self.header_tooltips[col]
+        ):
+            return self.header_tooltips[col]
         return None
 
     def sort(self, column: int, order: Qt.SortOrder | None = None) -> None:
@@ -1418,12 +1439,16 @@ class QtCheckableTableView(QTableView):
             icon_columns=self._config.icon_columns,
             color_columns=self._config.color_columns,
             checkable_columns=self._config.checkable_columns,
-            text_alignment={
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[self._config.text_alignment],
+            text_alignment=TEXT_ALIGNMENT[self._config.text_alignment],
         )
+        self._apply_config_display(self._config)
+
+    def _apply_config_display(self, config: TableConfig) -> None:
+        """Copy header tooltips and display formatters from the config to the current model."""
+        model = self.model()
+        if isinstance(model, QtCheckableItemModel):
+            model.header_tooltips = config.tooltips
+            model.formatters = config.formatters
 
     def set_model(self, model: QtCheckableItemModel) -> None:
         """Set model."""
@@ -1434,11 +1459,9 @@ class QtCheckableTableView(QTableView):
             model.no_sort_columns = self._config.no_sort_columns
             model.hidden_columns = self._config.hidden_columns
             model.checkable_columns = self._config.checkable_columns
-            model.text_alignment = {
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[self._config.text_alignment]
+            model.text_alignment = TEXT_ALIGNMENT[self._config.text_alignment]
+            model.header_tooltips = self._config.tooltips
+            model.formatters = self._config.formatters
         self.setModel(model)
 
     def setup_model_from_config(self, config: TableConfig):
@@ -1451,12 +1474,9 @@ class QtCheckableTableView(QTableView):
             icon_columns=config.icon_columns,
             color_columns=config.color_columns,
             checkable_columns=config.checkable_columns,
-            text_alignment={
-                "left": Qt.AlignmentFlag.AlignLeft,
-                "center": Qt.AlignmentFlag.AlignCenter,
-                "right": Qt.AlignmentFlag.AlignRight,
-            }[config.text_alignment],
+            text_alignment=TEXT_ALIGNMENT[config.text_alignment],
         )
+        self._apply_config_display(config)
 
     def setup_model(
         self,
