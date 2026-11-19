@@ -1,6 +1,7 @@
 import pytest
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QMainWindow, QWidget
+from qtpy.QtCore import QEvent, Qt
+from qtpy.QtGui import QColor, QContextMenuEvent
+from qtpy.QtWidgets import QApplication, QMainWindow, QWidget
 
 from qtextra.config import THEMES
 from qtextra.widgets.qt_button_icon import QtLabelledToolbarPushButton
@@ -338,3 +339,221 @@ def test_qt_panel_toolbar_auto_hide_can_be_disabled(qtbot):
     assert not panel._overflow_action.isVisible()
     assert all(panel._button_dict[button].isVisible() for button in top_buttons)
     window.close()
+
+
+def test_qt_labelled_toolbar_push_button_active_property_tracks_checked_state(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    window.setStyleSheet(THEMES.get_theme_stylesheet("dark"))
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    first = toolbar.add_widget("home", title="Home", widget=QWidget())
+    second = toolbar.add_widget("gear", title="Settings", widget=QWidget())
+    window.show()
+
+    assert first.property("active") is True
+    assert second.property("active") is False
+
+    qtbot.mouseClick(second.image_btn, Qt.MouseButton.LeftButton)
+    assert first.property("active") is False
+    assert second.property("active") is True
+
+
+def test_qt_labelled_toolbar_push_button_label_click_activates_panel(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    toolbar.add_widget("home", title="Home", widget=QWidget())
+    settings_panel = QWidget()
+    settings_button = toolbar.add_widget("gear", title="Settings", widget=settings_panel)
+    window.show()
+
+    qtbot.mouseClick(settings_button.label, Qt.MouseButton.LeftButton)
+    assert toolbar.stack_widget.currentWidget() is settings_panel
+    assert settings_button.isChecked()
+    assert settings_button.property("active") is True
+
+
+def _count_success_columns(widget) -> set[int]:
+    """Return the x positions of pixels painted in the theme's success colour."""
+    image = widget.grab().toImage()
+    ratio = image.devicePixelRatio()
+    success = QColor(THEMES.get_hex_color("success")).rgb()
+    return {
+        int(x / ratio)
+        for x in range(image.width())
+        for y in range(0, image.height(), 2)
+        if image.pixelColor(x, y).rgb() == success
+    }
+
+
+@pytest.mark.parametrize("theme", ["light", "dark"])
+def test_qt_labelled_toolbar_push_button_single_active_bar_when_connected_late(qtbot, theme):
+    """Panels connected after the button was polished must not show a second bar on the icon."""
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    window.setStyleSheet(THEMES.get_theme_stylesheet(theme))
+    toolbar = QtPanelToolbar(window, label_hidden=False, size_preset="40px")
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    button = toolbar.add_widget("gear", title="Feature\nViewer", func=lambda *_: None)
+    window.show()
+    qtbot.waitExposed(window)
+
+    toolbar.connect_widget("gear", QWidget())
+    assert button.isChecked()
+    columns = _count_success_columns(button)
+    assert columns, "active bar is not painted"
+    assert max(columns) < 3, f"success colour painted outside the wrapper bar: {sorted(columns)}"
+
+
+def test_qt_labelled_toolbar_push_button_wrapper_drives_tooltip_and_pulse(qtbot):
+    widget = QtLabelledToolbarPushButton()
+    qtbot.addWidget(widget)
+    widget.set_label("Settings")
+    widget.setRichToolTip("Settings", "Configure things")
+
+    # tooltip text lives on the icon button but is anchored to the whole tile
+    assert widget.image_btn._title == "Settings"
+    assert widget.image_btn._tooltip_target is widget
+    QApplication.sendEvent(widget, QEvent(QEvent.Type.Enter))
+    assert widget.image_btn.tooltip_timer.isActive()
+    QApplication.sendEvent(widget, QEvent(QEvent.Type.Leave))
+    assert not widget.image_btn.tooltip_timer.isActive()
+
+    # the pulse effect fades icon and label together
+    assert widget.graphicsEffect() is widget.image_btn.opacity
+    assert widget.image_btn.graphicsEffect() is None
+
+
+def test_qt_labelled_toolbar_push_button_forwards_button_api(qtbot):
+    widget = QtLabelledToolbarPushButton()
+    qtbot.addWidget(widget)
+    widget.set_qta("gear")
+    widget.setCheckable(True)
+
+    assert widget.isCheckable()
+    assert not widget.icon().isNull()
+    calls = []
+    widget.evt_click.connect(lambda *_: calls.append("click"))
+    widget.on_click()
+    assert calls == ["click"]
+
+
+def _context_menu_at(panel, widget) -> None:
+    """Send a right-click context menu event to `panel` at the centre of `widget`."""
+    pos = widget.mapTo(panel, widget.rect().center())
+    event = QContextMenuEvent(QContextMenuEvent.Reason.Mouse, pos, panel.mapToGlobal(pos))
+    QApplication.sendEvent(panel, event)
+
+
+def test_qt_panel_toolbar_toggle_titles_action(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=True)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    button = toolbar.add_widget("gear", title="Settings")
+    window.show()
+
+    action = toolbar.toggle_titles_action
+    assert action in toolbar.context_menu.actions()
+    assert action.isCheckable() and not action.isChecked()
+
+    action.trigger()
+    assert not toolbar.label_hidden
+    assert not button.label.isHidden()
+
+    toolbar.label_hidden = True
+    assert not action.isChecked()
+    assert button.label.isHidden()
+
+
+def test_qt_panel_toolbar_right_click_shows_context_menu(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    button = toolbar.add_widget("gear", title="Settings", widget=QWidget())
+    custom = toolbar.add_widget("help", title="Help")
+    custom.connect_to_right_click(lambda *_: None)
+    window.show()
+    qtbot.waitExposed(window)
+    panel, menu = toolbar._widget, toolbar.context_menu
+
+    # the label is part of the button tile too
+    _context_menu_at(panel, button.label)
+    qtbot.waitUntil(menu.isVisible)
+    menu.close()
+
+    # buttons with their own right-click handler do not get the toolbar menu
+    _context_menu_at(panel, custom.image_btn)
+    assert not menu.isVisible()
+
+
+@pytest.mark.parametrize("title", [None, "Settings"])
+def test_qt_panel_toolbar_lazy_panel_activates_on_first_click(qtbot, title):
+    """A panel connected from the button's own click callback (lazy creation) shows on the first click."""
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False)
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    window.setCentralWidget(toolbar.stack_widget)
+    panels: dict[str, QWidget] = {}
+
+    def _lazy(name: str, *_) -> None:
+        if name not in panels:
+            panels[name] = QWidget()
+            toolbar.connect_widget(name, panels[name])
+
+    buttons = {
+        name: toolbar.add_widget(name, title=title and f"{title} {name}", func=lambda *_, n=name: _lazy(n))
+        for name in ("home", "gear")
+    }
+    window.show()
+    qtbot.waitExposed(window)
+
+    for name in ("home", "gear", "home"):
+        button = buttons[name]
+        qtbot.mouseClick(button.image_btn if title else button, Qt.MouseButton.LeftButton)
+        assert toolbar.stack_widget.currentWidget() is panels[name], name
+        assert toolbar.stack_widget.isVisible()
+        assert button.isChecked()
+        assert not buttons["gear" if name == "home" else "home"].isChecked()
+
+
+def test_qt_panel_toolbar_elided_labels_use_shared_tile_width(qtbot):
+    """Elided labels only elide when they do not fit the (shared) tile width, not the icon width."""
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False, size_preset="40px")
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    toolbar.add_widget("home", title="Unsupervised\nLearning", elide=False)
+    elided = toolbar.add_widget("gear", title="Import\nWizard", location="bottom")
+    too_long = toolbar.add_widget("help", title="Multi-dataset\nBuilder with a very long name", location="bottom")
+    window.show()
+    qtbot.waitExposed(window)
+
+    qtbot.waitUntil(lambda: elided.label.text() == "Import\nWizard")
+    assert elided.label.width() <= elided.width()
+    assert elided.sizeHint().width() == elided.image_btn.sizeHint().width()
+    # text wider than the tile is still elided
+    assert too_long.label.text().splitlines()[0] == "Multi-dataset"
+    assert "\N{HORIZONTAL ELLIPSIS}" in too_long.label.text().splitlines()[1]
+    assert too_long.label.width() <= too_long.width()
+
+
+def test_qt_panel_toolbar_elided_labels_shrink_with_shared_width(qtbot):
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    toolbar = QtPanelToolbar(window, label_hidden=False, size_preset="40px")
+    window.addToolBar(Qt.ToolBarArea.LeftToolBarArea, toolbar)
+    wide = toolbar.add_widget("home", title="Unsupervised Learning", elide=False)
+    elided = toolbar.add_widget("gear", title="Import Wizard", location="bottom")
+    window.show()
+    qtbot.waitUntil(lambda: elided.label.text() == "Import Wizard")
+
+    toolbar.disable_widget(wide)
+    icon_width = elided.image_btn.sizeHint().width()
+    qtbot.waitUntil(lambda: elided.width() == icon_width)
+    assert elided.label.width() <= icon_width
+    assert "\N{HORIZONTAL ELLIPSIS}" in elided.label.text()
