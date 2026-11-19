@@ -13,6 +13,7 @@ especially:
 - `dialog_confirm_with_text.py`
 - `dialog_theme_editor.py`
 - `dialog_text_replace.py`
+- `dialog_settings.py`
 - `qt_console.py`
 - `qt_logger.py`
 
@@ -27,6 +28,9 @@ them is a good next contribution target.
 - [WhatsNewDialog](./qt_whats_new.md): multi-page release notes and feature-introduction dialog
 
 - [UpdateAvailableDialog](./qt_update_available.md): update prompt with release-note and remind-later actions
+
+- [QtSettingsDialog](./qt_settings.md): searchable settings dialog with an icon sidebar
+  and label/control rows
 
 - [DialogThemeEditor](./qt_theme_editor.md): live theme editor for colors,
   font sizes, and console styles
