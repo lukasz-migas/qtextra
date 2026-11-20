@@ -23,6 +23,9 @@ class ConfigBase(QObject):
     DEFAULT_CONFIG_GROUPS: tuple[str, ...] = ()
 
     _is_saved: bool = False
+    # when set, `save_config()` without explicit path hands the config to this callable instead of writing a file,
+    # allowing applications to persist the configuration in their own settings
+    save_handler: ty.Callable[[dict[str, ty.Any]], None] | None = None
 
     evt_config_loaded = Signal()
 
@@ -41,11 +44,15 @@ class ConfigBase(QObject):
         self._is_saved = value
 
     def save_config(self, path: str | None = None):
-        """Export configuration file to JSON file."""
-        if path is None:
-            path = self.output_path
+        """Export configuration file to JSON file, or to `save_handler` when it is set and no path is given."""
         config = {}
         config = self._get_config_parameters(config)
+        if path is None and self.save_handler is not None:
+            self.save_handler(config)
+            self.saved = True
+            return
+        if path is None:
+            path = self.output_path
 
         # write to a JSON file
         write_json_data(path, config)
