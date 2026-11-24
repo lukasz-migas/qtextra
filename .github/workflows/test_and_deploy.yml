@@ -28,6 +28,7 @@ jobs:
     env:
       UV_NO_SYNC: "1"
       UV_MANAGED_PYTHON: "1"
+      QT_API: ${{ matrix.backend }}
     strategy:
       fail-fast: false
       matrix:

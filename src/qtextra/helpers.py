@@ -3571,7 +3571,7 @@ def qt_signals_blocked(*obj: Qw.QWidget, block_signals: bool = True) -> None:
 
 @contextmanager
 def event_hook_removed() -> None:
-    """Context manager to temporarily remove the PyQt5 input hook."""
+    """Context manager to temporarily remove the PyQt input hook."""
     from qtpy import QtCore
 
     if hasattr(QtCore, "pyqtRemoveInputHook"):

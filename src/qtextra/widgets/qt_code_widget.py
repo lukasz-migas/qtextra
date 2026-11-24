@@ -16,10 +16,7 @@ def get_text_char_format(style: dict[str, str]) -> QtGui.QTextCharFormat:
     https://pygments.org/docs/formatterdevelopment/#html-3-2-formatter
     """
     text_char_format = QtGui.QTextCharFormat()
-    try:
-        text_char_format.setFontFamilies(["monospace"])
-    except AttributeError:
-        text_char_format.setFontFamily("monospace")  # backward compatibility for pyqt5 5.12.3
+    text_char_format.setFontFamilies(["monospace"])
     if style.get("color"):
         text_char_format.setForeground(QtGui.QColor(f"#{style['color']}"))
 

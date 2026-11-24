@@ -90,9 +90,9 @@ def get_system_info(as_html=False) -> str:
     try:
         from qtpy import API_NAME, PYQT_VERSION, PYSIDE_VERSION, QtCore
 
-        if API_NAME == "PySide2":
+        if API_NAME == "PySide6":
             API_VERSION = PYSIDE_VERSION
-        elif API_NAME == "PyQt5":
+        elif API_NAME == "PyQt6":
             API_VERSION = PYQT_VERSION
         else:
             API_VERSION = ""
