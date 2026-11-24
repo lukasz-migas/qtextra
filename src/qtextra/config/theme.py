@@ -518,6 +518,29 @@ class Themes(ConfigBase):
         }
         return config
 
+    def get_overrides(self) -> dict[str, dict[str, str]]:
+        """Return theme values that differ from the built-in themes.
+
+        Built-in themes only include changed colors, custom themes are returned in full. Font sizes are excluded
+        since applications usually manage them separately.
+        """
+        excluded = {"font_size", "header_size"}
+        overrides: dict[str, dict[str, str]] = {}
+        for name, theme in self.themes.items():
+            data = {key: value for key, value in theme.to_dict().items() if key not in excluded}
+            if not (THEME_PATH / f"{name}.json").exists():
+                overrides[name] = data
+                continue
+            builtin = Theme(**get_builtin_theme_data(name)).to_dict()
+            changed = {key: value for key, value in data.items() if builtin.get(key) != value}
+            if changed:
+                overrides[name] = changed
+        return overrides
+
+    def apply_overrides(self, overrides: dict[str, dict[str, ty.Any]]) -> None:
+        """Apply theme values, e.g. those returned by `get_overrides`; unknown themes are added."""
+        self._set_config_parameters({"themes": overrides})
+
     def _emit_icon_color_change(self, name: str) -> None:
         """Emit icon color change event."""
         self.register_themes([name])

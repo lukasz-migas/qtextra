@@ -201,3 +201,51 @@ def test_setting_unknown_theme_raises_value_error():
 
     with pytest.raises(ValueError, match="Unrecognized theme"):
         themes.theme = "missing-theme"
+
+
+def test_get_overrides_returns_only_changed_values():
+    themes = Themes()
+    assert themes.get_overrides() == {}
+
+    themes["dark"].primary = "#123456"
+    themes["dark"].font_size = "20pt"
+    assert themes.get_overrides() == {"dark": {"primary": "#123456"}}
+
+
+def test_get_overrides_returns_custom_theme_in_full():
+    themes = Themes()
+    themes.add_theme("custom", Theme(**{**LIGHT_THEME, "name": "custom"}))
+
+    overrides = themes.get_overrides()
+    assert set(overrides) == {"custom"}
+    assert overrides["custom"]["name"] == "custom"
+    assert "font_size" not in overrides["custom"]
+
+
+def test_apply_overrides_round_trip():
+    source = Themes()
+    source["light"].highlight = "#abcdef"
+    source.add_theme("custom", Theme(**{**DARK_THEME, "name": "custom"}))
+
+    target = Themes()
+    target.apply_overrides(source.get_overrides())
+    assert target["light"].highlight.as_hex() == "#abcdef"
+    assert "custom" in target.themes
+    assert target.get_overrides() == source.get_overrides()
+
+
+def test_save_config_uses_save_handler(tmp_path, monkeypatch):
+    themes = Themes()
+    monkeypatch.setattr(themes, "CONFIG_DIR", tmp_path)
+    received = []
+    themes.save_handler = received.append
+
+    themes.save_config()
+    assert len(received) == 1
+    assert received[0]["settings"]["theme"] == themes.theme
+    assert not (tmp_path / themes.DEFAULT_CONFIG_NAME).exists()
+
+    # an explicit path still writes a file
+    themes.save_config(tmp_path / "explicit.json")
+    assert (tmp_path / "explicit.json").exists()
+    assert len(received) == 1

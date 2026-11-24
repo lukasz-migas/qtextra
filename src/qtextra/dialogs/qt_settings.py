@@ -143,7 +143,7 @@ class QtSettingsPage(QWidget):
         self._insert(row)
 
         tooltips = widget.toolTip() if isinstance(widget, QWidget) else ""
-        text = " ".join((title, tooltip, keywords, tooltips)).lower()
+        text = f"{title} {tooltip} {keywords} {tooltips}".lower()
         section.rows.append(_Row(row, text))
         return row
 
