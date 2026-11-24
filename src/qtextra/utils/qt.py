@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-import qtpy
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QApplication
 
 RICH_TEXT_PATTERN = re.compile("<[^\n]+>")
@@ -43,14 +43,9 @@ def _pycharm_has_eventloop(app: QApplication) -> bool:
     return in_pycharm and in_event_loop
 
 
-def qt_might_be_rich_text(text) -> bool:
+def qt_might_be_rich_text(text: str) -> bool:
     """Check if a text might be rich text in a cross-binding compatible way."""
-    if qtpy.PYSIDE2:
-        from qtpy.QtGui import Qt as _Qt
-    else:
-        from qtpy.QtCore import Qt as _Qt
-
     try:
-        return _Qt.mightBeRichText(text)
+        return Qt.mightBeRichText(text)
     except Exception:  # noqa: BLE001
         return bool(RICH_TEXT_PATTERN.search(text))

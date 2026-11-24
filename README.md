@@ -20,8 +20,8 @@ Components are tested on:
 
 - macOS, Windows & Linux
 - Python 3.10 and above
-- PyQt5 (5.11 and above) & PyQt6
-- PySide2 (5.11 and above) & PySide6
+- PyQt6
+- PySide6
 
 The project overlaps somewhat with [superqt](https://github.com/pyapp-kit/superqt),
 but it leans more heavily into application-ready widgets and bundled styling in

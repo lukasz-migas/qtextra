@@ -332,10 +332,8 @@ class _WelcomeHeader(QFrame):
 
     @staticmethod
     def _global_position(event: QMouseEvent) -> QPoint:
-        """Return a global mouse position on Qt 5 and Qt 6."""
-        if hasattr(event, "globalPosition"):
-            return event.globalPosition().toPoint()
-        return event.globalPos()
+        """Return the global mouse position."""
+        return event.globalPosition().toPoint()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # type: ignore[override]
         """Begin dragging when the primary mouse button is pressed."""
