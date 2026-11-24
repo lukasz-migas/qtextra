@@ -53,7 +53,7 @@ df = [
     "pandas",
     "polars[pandas]",
 ]
-sentry = ["sentry-sdk>2"]
+sentry = ["sentry-sdk>=2,<4"]
 console = [
     "qtconsole>=4.5.1,!=4.7.6,!=5.4.2",
     "ipykernel>=5.2.0",

@@ -107,8 +107,7 @@ def install_error_monitor(settings: Settings, **extra_kws: ty.Any) -> None:
 
     from qtextra.dialogs.sentry.utilities import configure_scope_tags, configure_user, get_sentry_settings
 
-    _settings = get_sentry_settings()
-    _settings["include_local_variables"] = getattr(settings, with_locals_attr)
+    _settings = get_sentry_settings(include_local_variables=getattr(settings, with_locals_attr))
     sentry_sdk.init(**_settings)
     configure_user()
     configure_scope_tags()

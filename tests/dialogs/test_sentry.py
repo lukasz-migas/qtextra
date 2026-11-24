@@ -5,8 +5,10 @@ import sys
 from contextlib import contextmanager
 from types import ModuleType, SimpleNamespace
 
+import pytest
 
-def _install_fake_sentry(monkeypatch):
+
+def _install_fake_sentry(monkeypatch, version="2.0.0"):
     state = SimpleNamespace(
         init_kwargs=None,
         tags=[],
@@ -37,7 +39,7 @@ def _install_fake_sentry(monkeypatch):
             }
             transport = self.client.kwargs.get("transport")
             if transport is not None:
-                transport(payload)
+                transport.capture_envelope(SimpleNamespace(get_event=lambda: payload))
             return "event-456"
 
     @contextmanager
@@ -60,6 +62,7 @@ def _install_fake_sentry(monkeypatch):
         value = 50
 
     fake_sentry = ModuleType("sentry_sdk")
+    fake_sentry.VERSION = version
     fake_sentry.capture_exception = lambda *args, **kwargs: None
     fake_sentry.capture_message = lambda message, level="info", scope=None: (
         state.captured_messages.append(
@@ -78,10 +81,13 @@ def _install_fake_sentry(monkeypatch):
     fake_loguru = ModuleType("sentry_sdk.integrations.loguru")
     fake_loguru.LoggingLevels = SimpleNamespace(CRITICAL=FakeCriticalLevel())
     fake_loguru.LoguruIntegration = FakeLoguruIntegration
+    fake_transport = ModuleType("sentry_sdk.transport")
+    fake_transport.Transport = type("Transport", (), {})
 
     monkeypatch.setitem(sys.modules, "sentry_sdk", fake_sentry)
     monkeypatch.setitem(sys.modules, "sentry_sdk.integrations", fake_integrations)
     monkeypatch.setitem(sys.modules, "sentry_sdk.integrations.loguru", fake_loguru)
+    monkeypatch.setitem(sys.modules, "sentry_sdk.transport", fake_transport)
     return state
 
 
@@ -118,6 +124,20 @@ def test_get_sentry_settings_reads_environment(monkeypatch):
     assert settings["profiles_sample_rate"] == 0.5
     assert "enable_tracing" not in settings
     assert settings["server_name"]
+
+
+@pytest.mark.parametrize("include_locals", [True, False])
+def test_sdk3_settings_and_loguru(monkeypatch, include_locals):
+    _install_fake_sentry(monkeypatch, "3.0.0")
+    utilities, _, _, _ = _reload_sentry_modules()
+
+    settings = utilities.get_sentry_settings(include_local_variables=include_locals)
+
+    assert settings["data_collection"]["stack_frame_variables"] == ({"mode": "denylist"} if include_locals else False)
+    assert settings["profile_session_sample_rate"] == 1.0
+    assert settings["profile_lifecycle"] == "trace"
+    assert not {"include_local_variables", "send_default_pii", "profiles_sample_rate"} & settings.keys()
+    assert utilities.SENTRY_LOGURU.kwargs == {"event_level": 50, "breadcrumb_level": 50, "level": None}
 
 
 def test_install_error_monitor_initializes_sdk(monkeypatch):

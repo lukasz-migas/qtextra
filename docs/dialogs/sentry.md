@@ -67,7 +67,8 @@ These are not required, but they control the event payload and presentation:
 - `QTEXTRA_TELEMETRY_TRACES_SAMPLE_RATE`: trace sampling rate between `0.0`
   and `1.0`. Defaults to `1.0`.
 - `QTEXTRA_TELEMETRY_PROFILES_SAMPLE_RATE`: profiling sampling rate between
-  `0.0` and `1.0`. Defaults to `1.0`.
+  `0.0` and `1.0`. Defaults to `1.0`. SDK 2 uses transaction profiling;
+  SDK 3 uses continuous profiling tied to traces.
 
 ## Feedback Configuration
 
@@ -88,8 +89,10 @@ The Sentry integration exposes two dialogs:
 ## Privacy Notes
 
 The default configuration sends stack traces, package and Qt metadata, and
-basic user information that `sentry-sdk` includes when `send_default_pii=True`.
+basic user information. The Sentry extra supports SDK versions 2 and 3.
 `qtextra` strips absolute file paths from stack frames before sending events.
+When local variables are enabled, SDK 3 filters names on its built-in denylist.
+Older SDK 2 releases may include sensitive variables without filtering them.
 
 The biggest debugging tradeoff is `QTEXTRA_TELEMETRY_SHOW_LOCALS`:
 
