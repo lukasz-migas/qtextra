@@ -158,6 +158,27 @@ CATALOG: tuple[WidgetDoc, ...] = (
         screenshot_width=520,
     ),
     WidgetDoc(
+        slug="qt_command_palette",
+        title="QtCommandPalette",
+        section="Actions And Buttons",
+        summary="A lazy, searchable popup for menu actions and custom commands.",
+        example="qt_command_palette.py",
+        classes=(
+            "qtextra.widgets.qt_command_palette.QtCommandPalette",
+            "qtextra.widgets.qt_command_palette.CommandPaletteController",
+        ),
+        notes=(
+            "Call `QtCommandPalette.install(window)` during setup. The first open creates the popup. "
+            "Each open discovers the visible, enabled actions already present in the window's menu bar.",
+            "Open it with Ctrl+Shift+P (Cmd+Shift+P on macOS) or call `palette.open()`. "
+            "Pass `shortcut=None` to disable the opening shortcut.",
+            "Use `add_command()` for a callback or `add_action()` to reuse an existing QAction. "
+            "Keep the returned handle if you need to call `remove_command()` when unloading a plugin.",
+            "Construct `QtCommandPalette(parent)` directly to use the popup from a dialog or other QWidget.",
+        ),
+        screenshot_width=700,
+    ),
+    WidgetDoc(
         slug="qt_dict_tag_editor",
         title="QtDictTagEditor",
         section="Data Editors",

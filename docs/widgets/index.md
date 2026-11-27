@@ -7,6 +7,7 @@ Browse by capability below, then open the individual pages for screenshots, runn
 
 ## Actions And Buttons
 
+- [QtCommandPalette](./qt_command_palette.md): a lazy, searchable popup for menu actions and custom commands.
 - [QtPushButton (variants)](./qt_button.md): theme-aware push buttons with activity and rich-text display helpers.
 - [Qt Icon Buttons](./qt_button_icon.md): a family of icon buttons for toggles, state indicators, and common toolbar actions.
 - [QtSegmentedButton](./qt_button_segmented.md): a unified segmented button combining a main text push-button with attached icon action buttons.
