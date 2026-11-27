@@ -43,6 +43,12 @@ class QtVerticalScrollArea(QScrollArea):
         native.rangeChanged.connect(self._sync_overlay_range)
         native.valueChanged.connect(self._overlay_bar.setValue)
         self._overlay_bar.valueChanged.connect(native.setValue)
+
+        # parented timer is destroyed with the area, so a pending rebalance never runs on a deleted widget
+        self._rebalance_timer = QTimer(self)
+        self._rebalance_timer.setSingleShot(True)
+        self._rebalance_timer.setInterval(0)
+        self._rebalance_timer.timeout.connect(self._rebalance_splitter)
         self._update_width()
 
     def _content_width(self) -> int:
@@ -56,7 +62,7 @@ class QtVerticalScrollArea(QScrollArea):
         self.setMinimumWidth(content_width)
         if self._max_width is not None:
             self.setMaximumWidth(min(max(self._max_width, content_width), QWIDGETSIZE_MAX))
-        QTimer.singleShot(0, self._rebalance_splitter)
+        self._rebalance_timer.start()
 
     def _rebalance_splitter(self) -> None:
         """Hand space back to the sibling panes when a parent splitter left this area wider than allowed.
