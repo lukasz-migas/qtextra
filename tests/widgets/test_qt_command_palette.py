@@ -205,3 +205,56 @@ def test_deleted_actions_cannot_be_run_from_stale_results(qtbot: QtBot) -> None:
     qtbot.keyClick(_search(palette), Qt.Key.Key_Return)
     assert _labels(palette) == []
     assert palette.isVisible()
+
+
+def test_enabled_callback_hides_unavailable_commands(qtbot: QtBot) -> None:
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    controller = QtCommandPalette.install(window, shortcut=None)
+    state = {"ready": False}
+
+    def broken() -> bool:
+        raise RuntimeError("no model")
+
+    controller.add_command("Train", lambda: None, enabled=lambda: state["ready"])
+    controller.add_command("Broken", lambda: None, enabled=broken)
+    controller.add_command("Always", lambda: None)
+    window.show()
+    controller.open()
+    palette = window.findChild(QtCommandPalette)
+    assert _labels(palette) == ["Always"]
+    palette.hide()
+    state["ready"] = True
+    controller.open()
+    assert _labels(palette) == ["Train", "Always"]
+
+
+def test_context_scope_and_recent_commands_order_results(qtbot: QtBot) -> None:
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    controller = QtCommandPalette.install(window, shortcut=None)
+    context = {"tab": "masks"}
+    controller.set_context_provider(lambda: context["tab"])
+    invoked: list[str] = []
+    controller.add_command("Run alpha", lambda: invoked.append("alpha"))
+    controller.add_command("Run beta", lambda: invoked.append("beta"))
+    controller.add_command("Recolor masks", lambda: None, scope="masks")
+    controller.add_command("Run spectral", lambda: None, scope="spectral")
+    window.show()
+    controller.open()
+    palette = window.findChild(QtCommandPalette)
+    assert _labels(palette) == ["Recolor masks", "Run alpha", "Run beta", "Run spectral"]
+
+    # Run "Run beta"; it is listed right after the scoped command next time.
+    _search(palette).setText("beta")
+    qtbot.keyClick(_search(palette), Qt.Key.Key_Return)
+    assert invoked == ["beta"]
+    controller.open()
+    assert _labels(palette) == ["Recolor masks", "Run beta", "Run alpha", "Run spectral"]
+
+    # Scope boosts equally good matches while searching.
+    palette.hide()
+    context["tab"] = "spectral"
+    controller.open()
+    _search(palette).setText("run")
+    assert _labels(palette)[0] == "Run spectral"

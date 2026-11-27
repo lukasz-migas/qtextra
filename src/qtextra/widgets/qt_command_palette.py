@@ -30,6 +30,7 @@ from qtpy.QtWidgets import (
 
 _DEFAULT_SHORTCUT = "Ctrl+Shift+P"
 _RESULT_LIMIT = 10
+_RECENT_LIMIT = 5
 _MENU_SEPARATOR = " \u203a "
 
 
@@ -46,19 +47,35 @@ class _Command:
     category: str | None = None
     icon: QIcon | str | None = None
     keywords: tuple[str, ...] = ()
+    enabled: Callable[[], bool] | None = None
+    scope: str | None = None
+
+    @property
+    def key(self) -> object:
+        """Identity used to remember recently run commands."""
+        return self.action if self.action is not None else self.callback
 
     def is_available(self) -> bool:
         action = self.action
-        return action is None or (
+        if action is not None and not (
             isalive(action)  # type: ignore[no-untyped-call]
             and action.isVisible()
             and action.isEnabled()
             and bool(_action_text(action.text()))
-        )
+        ):
+            return False
+        if self.enabled is None:
+            return True
+        try:
+            return bool(self.enabled())
+        except Exception:  # noqa: BLE001 - a failing app check must not break the palette
+            return False
 
 
 class _CommandRegistration:
     _registered: dict[object, _Command]
+    _recent: list[object]
+    _context_provider: Callable[[], str | None] | None
 
     def add_command(
         self,
@@ -68,25 +85,49 @@ class _CommandRegistration:
         category: str | None = None,
         icon: QIcon | str | None = None,
         keywords: Iterable[str] = (),
+        enabled: Callable[[], bool] | None = None,
+        scope: str | None = None,
     ) -> object:
         """Register a zero-argument callback and return its removal handle.
 
         An icon name refers to a qtextra icon. Keywords are optional search aliases.
+        `enabled` hides the command whenever it returns False (or raises). Commands whose
+        `scope` matches the current context (see :meth:`set_context_provider`) are listed first.
         """
         handle = object()
-        self._registered[handle] = _Command(title, callback, category=category, icon=icon, keywords=tuple(keywords))
+        self._registered[handle] = _Command(
+            title, callback, category=category, icon=icon, keywords=tuple(keywords), enabled=enabled, scope=scope
+        )
         self._registrations_changed()
         return handle
 
-    def add_action(self, action: QAction, *, category: str | None = None, keywords: Iterable[str] = ()) -> object:
+    def add_action(
+        self,
+        action: QAction,
+        *,
+        category: str | None = None,
+        keywords: Iterable[str] = (),
+        enabled: Callable[[], bool] | None = None,
+        scope: str | None = None,
+    ) -> object:
         """Register an existing QAction and return its removal handle.
 
         For menu actions, supplied metadata takes precedence over automatic discovery.
         """
         handle = object()
-        self._registered[handle] = _Command(action=action, category=category, keywords=tuple(keywords))
+        self._registered[handle] = _Command(
+            action=action, category=category, keywords=tuple(keywords), enabled=enabled, scope=scope
+        )
         self._registrations_changed()
         return handle
+
+    def set_context_provider(self, provider: Callable[[], str | None] | None) -> None:
+        """Set a callable returning the current scope, e.g. the active tab.
+
+        Commands registered with a matching `scope` are listed first when the search is
+        empty and ranked ahead of equally good matches otherwise.
+        """
+        self._context_provider = provider
 
     def remove_command(self, handle: object) -> None:
         """Remove a manual registration. Menu actions remain available through discovery."""
@@ -104,6 +145,8 @@ class CommandPaletteController(QObject, _CommandRegistration):
         super().__init__(window)
         self._window = window
         self._registered = {}
+        self._recent = []
+        self._context_provider = None
         self._palette: QtCommandPalette | None = None
         if shortcut is not None:
             binding = QShortcut(QKeySequence(shortcut), window)
@@ -116,6 +159,8 @@ class CommandPaletteController(QObject, _CommandRegistration):
         if self._palette is None:
             self._palette = QtCommandPalette(self._window)
             self._palette._registered = self._registered
+            self._palette._recent = self._recent
+        self._palette._context_provider = self._context_provider
         self._palette.open()
 
     def _registrations_changed(self) -> None:
@@ -228,6 +273,8 @@ class QtCommandPalette(QWidget, _CommandRegistration):
         self._themes = THEMES
         self._stylesheet_template = (STYLE_PATH / "04_command_palette.qss").read_text(encoding="utf-8")
         self._registered = {}
+        self._recent = []
+        self._context_provider = None
         self._commands: list[_Command] = []
         self._matches: list[_Result] = []
         self._results_height_limit = 0
@@ -359,19 +406,27 @@ class QtCommandPalette(QWidget, _CommandRegistration):
     def _show_matches(self, text: str) -> None:
         query = " ".join(text.casefold().split())
         letters = query.replace(" ", "")
-        results = []
+        context = self._current_context()
+        recent = {key: index for index, key in enumerate(self._recent)}
+        results: list[tuple[tuple[int, ...], _Result]] = []
         for command in self._commands:
             if not command.is_available():
                 continue
             title = _action_text(command.action.text()) if command.action is not None else command.title
             prefix = f"{command.category}: " if command.category else ""
             result = _Result(command, title, prefix)
+            in_scope = context is not None and command.scope == context
             if not query:
-                results.append(((0, 0, 0), result))
-                if len(results) == _RESULT_LIMIT:
-                    break
+                # Current scope first, then recently run commands, then everything else in discovery order.
+                if in_scope:
+                    results.append(((0, 0), result))
+                elif command.key in recent:
+                    results.append(((1, recent[command.key]), result))
+                else:
+                    results.append(((2, 0), result))
             elif (match := result.match(query, letters)) is not None:
-                results.append(match)
+                score, matched = match
+                results.append(((score[0], 0 if in_scope else 1, *score[1:]), matched))
         results.sort(key=lambda match: match[0])
         self._matches = [result for _, result in results[:_RESULT_LIMIT]]
         self._results.clear()
@@ -443,10 +498,28 @@ class QtCommandPalette(QWidget, _CommandRegistration):
                 self._registrations_changed()
                 return
             self.hide()
+            self._remember(command)
             if command.action is not None and command.is_available():
                 command.action.trigger()
             elif command.callback is not None:
                 command.callback()
+
+    def _current_context(self) -> str | None:
+        if self._context_provider is None:
+            return None
+        try:
+            return self._context_provider()
+        except Exception:  # noqa: BLE001 - a failing app check must not break the palette
+            return None
+
+    def _remember(self, command: _Command) -> None:
+        key = command.key
+        if key is None:
+            return
+        if key in self._recent:
+            self._recent.remove(key)
+        self._recent.insert(0, key)
+        del self._recent[_RECENT_LIMIT:]
 
     def _run_item(self, item: QListWidgetItem) -> None:
         self._results.setCurrentItem(item)
