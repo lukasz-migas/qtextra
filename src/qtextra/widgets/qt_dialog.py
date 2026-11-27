@@ -317,7 +317,7 @@ class QtBase(ConfigMixin, DocumentationMixin, IndicatorMixin, TimerMixin, Screen
             self.connect_events()
         self._is_init = True
 
-    def make_panel(self) -> QLayout:
+    def make_panel(self, *args: ty.Any) -> QLayout:
         """Make panel."""
         raise NotImplementedError("Must implement method")
 
@@ -433,6 +433,21 @@ class QtDialog(QDialog, DialogMixin, QtBase, CloseMixin):  # type: ignore[misc]
             if hasattr(self, "evt_close"):
                 self.evt_close.emit()
             super().closeEvent(event)
+
+    @staticmethod
+    def check_if_need_confirm() -> bool:
+        """Check if the dialog needs confirmation before closing."""
+        return False
+
+    def close_with_confirm(self, event: QCloseEvent | None = None) -> None:
+        """Close event handling."""
+        is_sure = True
+        if self.check_if_need_confirm():
+            is_sure = hp.confirm(self, "Are you sure you want to close the window?.")
+        if is_sure:
+            super().closeEvent(event)
+        else:
+            event.ignore()
 
     def close(self) -> bool:
         """Hide dialog rather than delete it."""
