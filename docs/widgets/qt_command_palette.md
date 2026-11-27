@@ -17,6 +17,7 @@ Source: `examples/qt_command_palette.py`
 - Open it with Ctrl+Shift+P (Cmd+Shift+P on macOS) or call `palette.open()`. Pass `shortcut=None` to disable the opening shortcut.
 - Use `add_command()` for a callback or `add_action()` to reuse an existing QAction. Keep the returned handle if you need to call `remove_command()` when unloading a plugin.
 - Construct `QtCommandPalette(parent)` directly to use the popup from a dialog or other QWidget.
+- Scroll to browse all matching commands. The list shows up to ten rows at a time.
 
 ## API
 

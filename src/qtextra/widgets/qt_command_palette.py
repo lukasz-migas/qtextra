@@ -29,7 +29,7 @@ from qtpy.QtWidgets import (
 )
 
 _DEFAULT_SHORTCUT = "Ctrl+Shift+P"
-_RESULT_LIMIT = 10
+_VISIBLE_ROWS = 10
 _RECENT_LIMIT = 5
 _MENU_SEPARATOR = " \u203a "
 
@@ -271,7 +271,10 @@ class QtCommandPalette(QWidget, _CommandRegistration):
 
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self._themes = THEMES
-        self._stylesheet_template = (STYLE_PATH / "04_command_palette.qss").read_text(encoding="utf-8")
+        self._stylesheet_template = "\n".join(
+            (STYLE_PATH / name).read_text(encoding="utf-8")
+            for name in ("04_command_palette.qss", "04_scrollbar_thin.qss")
+        )
         self._registered = {}
         self._recent = []
         self._context_provider = None
@@ -428,11 +431,12 @@ class QtCommandPalette(QWidget, _CommandRegistration):
                 score, matched = match
                 results.append(((score[0], 0 if in_scope else 1, *score[1:]), matched))
         results.sort(key=lambda match: match[0])
-        self._matches = [result for _, result in results[:_RESULT_LIMIT]]
+        self._matches = [result for _, result in results]
         self._results.clear()
         for result in self._matches:
             self._add_row(result)
-        self._results.setFixedHeight(min(len(self._matches) * self._row_height, self._results_height_limit))
+        visible_rows = min(len(self._matches), _VISIBLE_ROWS)
+        self._results.setFixedHeight(min(visible_rows * self._row_height, self._results_height_limit))
         self._results.setVisible(bool(self._matches))
         self._empty.setVisible(not self._matches)
         if self._matches:

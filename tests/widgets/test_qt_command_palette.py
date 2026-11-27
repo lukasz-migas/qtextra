@@ -122,7 +122,7 @@ def test_registrations_override_menu_metadata_and_can_be_removed(qtbot: QtBot) -
     assert _labels(palette) == ["Tools: Run"]
 
 
-def test_fuzzy_search_ranks_and_highlights_only_the_top_ten(qtbot: QtBot) -> None:
+def test_fuzzy_search_ranks_and_highlights_all_matches(qtbot: QtBot) -> None:
     window = QWidget()
     qtbot.addWidget(window)
     palette = QtCommandPalette(window)
@@ -133,11 +133,15 @@ def test_fuzzy_search_ranks_and_highlights_only_the_top_ten(qtbot: QtBot) -> Non
 
     window.show()
     palette.open()
-    assert _labels(palette) == [f"Extended dataset statistics {index}" for index in range(10)]
+    assert _labels(palette) == [
+        *(f"Extended dataset statistics {index}" for index in range(14)),
+        "Plugin: Export statistics",
+        "exst",
+    ]
     search = _search(palette)
     qtbot.keyClicks(search, "EXST")
     labels = _labels(palette)
-    assert len(labels) == 10
+    assert len(labels) == 16
     assert labels[:2] == ["exst", "Plugin: Export statistics"]
     results = _results(palette)
     export_row = results.itemWidget(results.item(labels.index("Plugin: Export statistics")))
@@ -159,7 +163,7 @@ def test_popup_height_follows_result_count(qtbot: QtBot) -> None:
     qtbot.addWidget(window)
     window.resize(700, 500)
     palette = QtCommandPalette(window)
-    for index in range(8):
+    for index in range(15):
         palette.add_command(f"Report {index}", lambda: None)
     palette.add_command("Mask creator", lambda: None)
     palette.add_command("Mask editor", lambda: None)
@@ -169,23 +173,39 @@ def test_popup_height_follows_result_count(qtbot: QtBot) -> None:
     search = _search(palette)
     results = _results(palette)
     full_height = palette.height()
+    full_results_height = results.height()
     row_height = results.sizeHintForRow(0)
     search_geometry = search.geometry()
     position = palette.pos()
+    assert results.count() == 17
+    assert full_results_height <= 10 * row_height
+
+    scrollbar = results.verticalScrollBar()
+    qtbot.waitUntil(lambda: scrollbar.maximum() > 0 and scrollbar.isVisible())
+    assert scrollbar.width() == 6
+    for _ in range(16):
+        qtbot.keyClick(search, Qt.Key.Key_Down)
+    assert results.currentRow() == 16
+    assert scrollbar.value() == scrollbar.maximum()
+    assert search.hasFocus()
+    assert palette.height() == full_height
 
     search.setText("mask")
     assert results.count() == 2
-    assert palette.height() == full_height - 8 * row_height
+    assert results.height() == 2 * row_height
+    assert palette.height() == full_height - full_results_height + 2 * row_height
     assert search.geometry() == search_geometry
     assert palette.pos() == position
+    filtered_height = palette.height()
 
     search.setText("unmatched")
-    assert palette.height() < full_height - 8 * row_height
+    assert palette.height() < filtered_height
     assert search.geometry() == search_geometry
     assert palette.pos() == position
 
     search.clear()
     assert palette.height() == full_height
+    assert scrollbar.value() == scrollbar.minimum()
     assert search.geometry() == search_geometry
     assert palette.pos() == position
 
