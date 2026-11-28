@@ -7,7 +7,7 @@ from qtpy.QtCore import QCoreApplication, QEvent, Qt
 from qtpy.QtGui import QKeySequence, QShortcut
 from qtpy.QtWidgets import QLabel, QLineEdit, QListWidget, QMainWindow, QWidget
 
-from qtextra.widgets.qt_command_palette import QtCommandPalette
+from qtextra.widgets.qt_command_palette import ANY_SCOPE, QtCommandPalette
 
 
 def _search(palette: QtCommandPalette) -> QLineEdit:
@@ -278,3 +278,17 @@ def test_context_scope_and_recent_commands_order_results(qtbot: QtBot) -> None:
     controller.open()
     _search(palette).setText("run")
     assert _labels(palette)[0] == "Run spectral"
+
+
+def test_any_scope_commands_follow_the_current_scope(qtbot: QtBot) -> None:
+    window = QMainWindow()
+    qtbot.addWidget(window)
+    controller = QtCommandPalette.install(window, shortcut=None)
+    controller.set_context_provider(lambda: "masks")
+    controller.add_command("Run alpha", lambda: None)
+    controller.add_command("Toggle colour bar", lambda: None, scope=ANY_SCOPE)
+    controller.add_command("Recolor masks", lambda: None, scope="masks")
+    window.show()
+    controller.open()
+    palette = window.findChild(QtCommandPalette)
+    assert _labels(palette) == ["Recolor masks", "Toggle colour bar", "Run alpha"]

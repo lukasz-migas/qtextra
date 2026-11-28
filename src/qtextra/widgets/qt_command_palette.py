@@ -31,6 +31,7 @@ from qtpy.QtWidgets import (
 _DEFAULT_SHORTCUT = "Ctrl+Shift+P"
 _VISIBLE_ROWS = 10
 _RECENT_LIMIT = 5
+ANY_SCOPE = "*"  # scope of commands that act on whatever the current context is
 _MENU_SEPARATOR = " \u203a "
 
 
@@ -92,7 +93,8 @@ class _CommandRegistration:
 
         An icon name refers to a qtextra icon. Keywords are optional search aliases.
         `enabled` hides the command whenever it returns False (or raises). Commands whose
-        `scope` matches the current context (see :meth:`set_context_provider`) are listed first.
+        `scope` matches the current context (see :meth:`set_context_provider`) are listed first;
+        `ANY_SCOPE` marks commands that act on the current context, whatever it is.
         """
         handle = object()
         self._registered[handle] = _Command(
@@ -418,11 +420,11 @@ class QtCommandPalette(QWidget, _CommandRegistration):
             title = _action_text(command.action.text()) if command.action is not None else command.title
             prefix = f"{command.category}: " if command.category else ""
             result = _Result(command, title, prefix)
-            in_scope = context is not None and command.scope == context
+            in_scope = context is not None and command.scope in (context, ANY_SCOPE)
             if not query:
                 # Current scope first, then recently run commands, then everything else in discovery order.
                 if in_scope:
-                    results.append(((0, 0), result))
+                    results.append(((0, 0 if command.scope == context else 1), result))
                 elif command.key in recent:
                     results.append(((1, recent[command.key]), result))
                 else:
