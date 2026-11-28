@@ -1,0 +1,58 @@
+/* ----------------- QtCommandPalette ----------------- */
+
+QWidget#command_palette,
+QWidget#command_palette_row,
+QListWidget#command_palette_results > QWidget#qt_scrollarea_viewport {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+QFrame#command_palette_panel {
+  background: {{ background }};
+  border: 1px solid {{ primary }};
+  border-radius: 10px;
+}
+
+QLineEdit#command_palette_search {
+  background: {{ foreground }};
+  color: {{ text }};
+  border: 1px solid {{ primary }};
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-size: {{ font_size }};
+}
+
+QListWidget#command_palette_results {
+  background: transparent;
+  border: 0;
+  outline: 0;
+  padding: 0;
+}
+
+QListWidget#command_palette_results::item {
+  background: transparent;
+  border: 0;
+}
+
+QListWidget#command_palette_results::item:hover,
+QListWidget#command_palette_results::item:selected {
+  background: {{ foreground }};
+  border-radius: 5px;
+}
+
+QListWidget#command_palette_results QLabel {
+  background: transparent;
+  color: {{ text }};
+  font-size: {{ font_size }};
+  padding: 0;
+}
+
+QListWidget#command_palette_results QLabel#command_palette_keys,
+QLabel#command_palette_empty {
+  color: {{ icon }};
+}
+
+QLabel#command_palette_empty {
+  padding: 10px;
+}

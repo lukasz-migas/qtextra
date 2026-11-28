@@ -1,0 +1,44 @@
+/* ----------------- Thin vertical scrollbars ------------------ */
+
+QtVerticalScrollArea QScrollBar:vertical,
+QListWidget#command_palette_results QScrollBar:vertical {
+    width: 6px;
+    min-width: 6px;
+    max-width: 6px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+}
+
+QtVerticalScrollArea QScrollBar::handle:vertical,
+QListWidget#command_palette_results QScrollBar::handle:vertical {
+    border-radius: 3px;
+    min-height: 26px;
+}
+
+QListWidget#command_palette_results QScrollBar::handle:vertical {
+    background: {{ highlight }};
+}
+
+QtVerticalScrollArea QScrollBar::add-line:vertical,
+QtVerticalScrollArea QScrollBar::sub-line:vertical,
+QtVerticalScrollArea QScrollBar::up-arrow:vertical,
+QtVerticalScrollArea QScrollBar::down-arrow:vertical,
+QListWidget#command_palette_results QScrollBar::add-line:vertical,
+QListWidget#command_palette_results QScrollBar::sub-line:vertical,
+QListWidget#command_palette_results QScrollBar::up-arrow:vertical,
+QListWidget#command_palette_results QScrollBar::down-arrow:vertical {
+    image: none;
+    height: 0;
+    min-height: 0;
+    max-height: 0;
+    border: none;
+    background: transparent;
+}
+
+QListWidget#command_palette_results QScrollBar::add-page:vertical,
+QListWidget#command_palette_results QScrollBar::sub-page:vertical {
+    background: transparent;
+}

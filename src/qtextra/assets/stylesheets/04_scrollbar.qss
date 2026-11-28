@@ -129,30 +129,3 @@ QScrollBar::add-page,
 QScrollBar::sub-page {
     background: transparent;
 }
-
-/* ----------------- QtVerticalScrollArea ------------------ */
-QtVerticalScrollArea QScrollBar:vertical {
-    width: 6px;
-    min-width: 6px;
-    max-width: 6px;
-    margin: 0px;
-    border-radius: 3px;
-    background: transparent;
-}
-
-QtVerticalScrollArea QScrollBar::handle:vertical {
-    border-radius: 3px;
-    min-height: 26px;
-}
-
-QtVerticalScrollArea QScrollBar::add-line:vertical,
-QtVerticalScrollArea QScrollBar::sub-line:vertical,
-QtVerticalScrollArea QScrollBar::up-arrow:vertical,
-QtVerticalScrollArea QScrollBar::down-arrow:vertical {
-    image: none;
-    height: 0px;
-    min-height: 0px;
-    max-height: 0px;
-    border: none;
-    background: transparent;
-}
